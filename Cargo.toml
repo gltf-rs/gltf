@@ -7,7 +7,7 @@ documentation = "https://docs.rs/gltf"
 repository = "https://github.com/Alteous/gltf"
 readme = "README.md"
 keywords = ["glTF", "3D", "asset", "model", "scene"]
-license-file = "LICENSE"
+license = "MIT"
  
 [dependencies]
 serde = "0.8"

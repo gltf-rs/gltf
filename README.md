@@ -6,7 +6,7 @@ This library is intended to load [.gltf files](https://www.khronos.org/gltf), a 
 
 ### Usage
 
-Currently `gltf` requires the lastest nightly compiler in order to build successfully. An up-to-date compiler may be obtained using [rustup](https://www.rustup.rs/) or from the [official downloads page](https://www.rust-lang.org/en-US/downloads.html). A stable version of the library is planned to be available soon.
+Currently `gltf` requires the latest nightly compiler in order to build successfully. An up-to-date compiler may be obtained using [rustup](https://www.rustup.rs/) or from the [official downloads page](https://www.rust-lang.org/en-US/downloads.html). A stable version of the library is planned to be available soon.
 
 Add `gltf` to the dependencies section of `Cargo.toml`:
 
@@ -33,7 +33,7 @@ fn main() {
 
 ### Future Goals
 
- * Able to be built with a stable toolchain
- * Conforms fully to the [specification](https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#techniques)
- * Type-safe constants where `GLenum`s are currently provided
+ * Ability to be compilied with the latest stable toolchain
+ * Full conformance to the [specification](https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#techniques)
+ * Replace untyped `GLenum` identifiers with equivalent type-safe constants
 
