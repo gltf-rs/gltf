@@ -2,6 +2,9 @@
 
 This library is intended to load [.gltf files](https://www.khronos.org/gltf), a file format designed for the efficient transmission of 3D models. It is in its early stages of development, hence it is not fully-featured and future releases are not guaranteed to be backward compatible.
 
+[![Build Status](https://travis-ci.org/Alteous/gltf.svg?branch=master)](https://travis-ci.org/Alteous/gltf)
+[![Crates.io](https://img.shields.io/crates/v/gltf.svg?maxAge=2592000)]()
+
 [Documentation](https://docs.rs/gltf)
 
 ### Usage

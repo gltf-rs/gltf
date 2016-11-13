@@ -286,7 +286,8 @@ impl Gltf {
     /// Basic usage:
     ///
     /// ```
-    /// let gltf = Gltf::new("foo.gltf").expect("Error loading glTF asset");
+    /// let gltf = gltf::Gltf::new("./examples/box/Box.gltf")
+    ///     .expect("Error loading glTF asset");
     /// ```
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
         let mut file = try!(File::open(path));
@@ -305,10 +306,9 @@ impl Gltf {
     /// Finding a buffer view:
     ///
     /// ```
-    /// use gltf::{BufferView, Gltf};
-    /// let gltf = Gltf::new("foo.gltf").unwrap();
+    /// let gltf = gltf::Gltf::new("./examples/box/Box.gltf").unwrap();
     /// let buffer_view = gltf
-    ///     .find::<BufferView>("bufferView-123")
+    ///     .find::<gltf::BufferView>("bufferView_29")
     ///     .expect("Buffer view not found");
     /// ```
     pub fn find<T>(&self, id: &str) -> Option<&T>
