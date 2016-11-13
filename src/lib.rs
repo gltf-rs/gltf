@@ -35,18 +35,18 @@ use std::path::Path;
 use serde_json::from_str;
 pub use serde_json::value::{Map, Value};
 
-/// Helper trait for looking up objects by their identifier in a glTF asset.
+/// Helper trait for looking up objects by their identifier in a glTF asset
 pub trait Find<T> {
-    /// Attempts to find the object with the given type and identifer.
+    /// Attempts to find the object with the given type and identifer
     fn find(&self, id: &str) -> Option<&T>;
 }
 
-/// Run time error encountered when loading a glTF asset.
+/// Run time error encountered when loading a glTF asset
 #[derive(Debug)]
 pub enum Error {
     /// Standard input / output error
     Io(std::io::Error),
-    /// Failure parsing a .gltf metadata file
+    /// Failure when parsing a .gltf metadata file
     Parse(serde_json::error::Error),
 }
 
@@ -75,12 +75,12 @@ pub struct Accessor {
     /// The size of each data item in the `BufferView`
     #[serde(rename = "byteStride")]
     pub byte_stride: u32,
-    /// e.g. "BYTE", "FLOAT", or "UNSIGNED_SHORT"
+    /// e.g. `GL_BYTE`, `GL_FLOAT`, or `GL_UNSIGNED_SHORT`
     #[serde(rename = "componentType")]
     pub component_type: u32,
     /// The number of attributes within the `BufferView` (N.B. not number of bytes)
     pub count: u32,
-    /// e.g. "SCALAR", "VEC3", or "MAT4"
+    /// e.g. `"SCALAR"`, `"VEC3"`, or `"MAT4"`
     #[serde(rename = "type")]
     pub data_type: String,
     /// Optional data for official extensions
@@ -182,7 +182,6 @@ pub struct Node {
 ///
 /// If `semantic` is not `None` then this parameter describes a [built-in uniform value]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#semantics)
-/// (e.g. `"MODELVIEW"`).
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Parameter {
     /// `"MODELVIEW"`, `"PROJECTION"`, etc.
@@ -280,7 +279,7 @@ impl_find!(shaders, Shader);
 impl_find!(techniques, Technique);
 
 impl Gltf {
-    /// Loads a glTF asset from the file system.
+    /// Loads a glTF asset
     ///
     /// # Examples
     ///
@@ -299,7 +298,7 @@ impl Gltf {
         }
     }
 
-    /// Looks up a top-level object by its identifier.
+    /// Looks up a top-level object by its identifier
     ///
     /// # Examples
     ///

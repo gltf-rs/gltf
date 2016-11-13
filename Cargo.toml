@@ -1,8 +1,9 @@
 [package]
 name = "gltf"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Alteous <alteous@outlook.com>"]
 description = "glTF asset loader"
+documentation = "https://docs.rs/gltf"
 repository = "https://github.com/Alteous/gltf"
 readme = "README.md"
 keywords = ["glTF", "3D", "asset", "model", "scene"]
