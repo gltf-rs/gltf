@@ -5,7 +5,7 @@ authors = ["Alteous <alteous@outlook.com>"]
 description = "glTF asset loader"
 repository = "https://github.com/Alteous/gltf"
 readme = "README.md"
-keywords = ["gl", "glTF", "3D", "asset", "model", "scene"]
+keywords = ["glTF", "3D", "asset", "model", "scene"]
 license = "MIT"
 license-file = "LICENSE"
  
