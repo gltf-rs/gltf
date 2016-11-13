@@ -6,7 +6,6 @@ description = "glTF asset loader"
 repository = "https://github.com/Alteous/gltf"
 readme = "README.md"
 keywords = ["glTF", "3D", "asset", "model", "scene"]
-license = "MIT"
 license-file = "LICENSE"
  
 [dependencies]

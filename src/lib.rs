@@ -35,13 +35,18 @@ use std::path::Path;
 use serde_json::from_str;
 pub use serde_json::value::{Map, Value};
 
+/// Helper trait for looking up objects by their identifier in a glTF asset.
 pub trait Find<T> {
+    /// Attempts to find the object with the given type and identifer.
     fn find(&self, id: &str) -> Option<&T>;
 }
 
+/// Run time error encountered when loading a glTF asset.
 #[derive(Debug)]
 pub enum Error {
+    /// Standard input / output error
     Io(std::io::Error),
+    /// Failure parsing a .gltf metadata file
     Parse(serde_json::error::Error),
 }
 
@@ -57,26 +62,35 @@ impl From<serde_json::error::Error> for Error {
     }
 }
 
+/// [Defines a method for retrieving data from within a `BufferView`]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#accessors)
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Accessor {
+    /// The identifier of the `BufferView` this accessor reads from.
     #[serde(rename = "bufferView")]
     pub buffer_view: String,
+    /// Where the data items begin from in the `BufferView`
     #[serde(rename = "byteOffset")]
     pub byte_offset: u32,
+    /// The size of each data item in the `BufferView`
     #[serde(rename = "byteStride")]
     pub byte_stride: u32,
+    /// e.g. "BYTE", "FLOAT", or "UNSIGNED_SHORT"
     #[serde(rename = "componentType")]
     pub component_type: u32,
+    /// The number of attributes within the `BufferView` (N.B. not number of bytes)
     pub count: u32,
+    /// e.g. "SCALAR", "VEC3", or "MAT4"
     #[serde(rename = "type")]
     pub data_type: String,
+    /// Optional data for official extensions
     pub extensions: Option<Map<String, Value>>,
+    /// Optional data for custom extensions
     pub extras: Option<Map<String, Value>>,
-    pub max: Option<[f32; 3]>,
-    pub min: Option<[f32; 3]>,
-    pub name: Option<String>,
 }
 
+/// [Describes the location, type, and size of a binary blob included with the asset]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#buffers-and-buffer-views)
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Buffer {
     #[serde(rename = "byteLength")]
@@ -85,17 +99,25 @@ pub struct Buffer {
     pub type_id: String,
     pub uri: String,
 }
-    
+
+/// [Describes a subset of a `Buffer`]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#buffers-and-buffer-views)  
 #[derive(Debug, Deserialize, Serialize)]
 pub struct BufferView {
+    /// The identifier of the parent `Buffer`
     pub buffer: String,
+    /// The number of bytes in the subset
     #[serde(rename = "byteLength")]
     pub byte_length: u32,
+    /// Where the subset starts from, measured in bytes
     #[serde(rename = "byteOffset")]
     pub byte_offset: u32,
+    /// e.g. `GL_ARRAY_BUFFER` or `GL_ELEMENT_ARRAY_BUFFER`
     pub target: u32,
 }
 
+/// [Optional arguments to OpenGL state functions]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#render-states)
 #[derive(Debug, Deserialize, Serialize)]
 pub struct StateFunctions {
     #[serde(rename = "blendColor")]
@@ -122,12 +144,16 @@ pub struct StateFunctions {
     pub scissor: Option<[u32; 4]>,
 }
 
+/// [Required OpenGL render states to be enabled]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#render-states)
 #[derive(Debug, Deserialize, Serialize)]
 pub struct States {
     pub enable: Vec<u32>,
     pub functions: StateFunctions, 
 }
 
+/// [Describes a shading technique with parameterized values]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#materials-and-shading)
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Material {
     pub name: String,
@@ -135,36 +161,53 @@ pub struct Material {
     pub values: Map<String, Value>,
 }
 
+/// [Describes one instance of renderable geometry]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#geometry-and-meshes)
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Mesh {
     pub name: String,
     pub primitives: Vec<Primitive>,
 }
 
+/// [A single member of the glTF scene hierarchy]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#scenes)
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Node {
     pub meshes: Vec<String>,
     pub name: String,
 }
 
+/// [Describes a shader input parameter]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#parameters)
+///
+/// If `semantic` is not `None` then this parameter describes a [built-in uniform value]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#semantics)
+/// (e.g. `"MODELVIEW"`).
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Parameter {
-    // "PROJECTION" etc.
+    /// `"MODELVIEW"`, `"PROJECTION"`, etc.
     pub semantic: Option<String>,
-    // gl::FLOAT_VEC4 etc.
+    /// `GL_FLOAT`, `GL_FLOAT_VEC4` etc.
     #[serde(rename = "type")]
     pub type_id: u32,
 }
 
+/// [Describes a GLSL shader program]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#programs)
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Program {
+    /// Vertex attribute bindings (e.g. `"u_ModelView"`) that will be passed to the shader
     pub attributes: Vec<String>,
+    /// ID of the fragment shader component
     #[serde(rename = "fragmentShader")]
     pub fragment_shader: String,
+    /// ID of the vertex shader component
     #[serde(rename = "vertexShader")]
     pub vertex_shader: String,
 }
 
+/// [Describes a renderable subset of a mesh]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#meshes)
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Primitive {
     pub attributes: Map<String, String>,
@@ -173,22 +216,33 @@ pub struct Primitive {
     pub mode: u32,
 }
 
+/// [Describes a GLSL shader component]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#shaders)
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Shader {
+    /// e.g. `GL_VERTEX_SHADER` or `GL_FRAGMENT_SHADER`
     #[serde(rename = "type")]
     pub type_id: u32,
+    /// Uniform resource identifier
     pub uri: String,
 }
 
+/// [Describes the shading used for a material]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#techniques)
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Technique {
+    /// Maps vertex attribute bindings to their definitions
+    /// (e.g. `("a_Position", "position")`)
     pub attributes: Map<String, String>,
+    /// Maps uniform bindings to their definitions
+    /// (e.g. `("u_ProjectionMatrix", "projectionMatrix")`)
     pub uniforms: Map<String, String>,
     pub parameters: Map<String, Parameter>,
+    /// ID of the GLSL shader program to render with
     pub program: String,
 }
 
-/// 'Raw' glTF data structure that closely matches the structure of a .gltf file.
+/// 'Raw' glTF data structure that closely matches the structure of a .gltf file
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Gltf {
     pub accessors: Map<String, Accessor>,
@@ -226,14 +280,14 @@ impl_find!(shaders, Shader);
 impl_find!(techniques, Technique);
 
 impl Gltf {
-    /// Loads a glTF asset from the host file system.
+    /// Loads a glTF asset from the file system.
     ///
     /// # Examples
     ///
     /// Basic usage:
     ///
     /// ```
-    /// let raw_gltf = gltf::raw::new("foo.gltf").expect("Parse error");
+    /// let gltf = Gltf::new("foo.gltf").expect("Error loading glTF asset");
     /// ```
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
         let mut file = try!(File::open(path));
