@@ -1,5 +1,7 @@
 # gltf
 
+[![Join the chat at https://gitter.im/alteous/gltf](https://badges.gitter.im/alteous/gltf.svg)](https://gitter.im/alteous/gltf?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 This library is intended to load [.gltf files](https://www.khronos.org/gltf), a file format designed for the efficient transmission of 3D models. It is in its early stages of development, hence it is not fully-featured and future releases are not guaranteed to be backward compatible.
 
 [![Build Status](https://travis-ci.org/Alteous/gltf.svg?branch=master)](https://travis-ci.org/Alteous/gltf)
