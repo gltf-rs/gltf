@@ -4,9 +4,7 @@ This library is intended to load [.gltf files](https://www.khronos.org/gltf), a 
 
 [![Build Status](https://travis-ci.org/Alteous/gltf.svg?branch=master)](https://travis-ci.org/Alteous/gltf)
 [![Crates.io](https://img.shields.io/crates/v/gltf.svg?maxAge=2592000)]()
-<a href="https://gitter.im/alteous/gltf">
-    <img src="https://img.shields.io/badge/GITTER-join%20chat-green.svg?style=flat-square" alt="Gitter Chat">
-</a>
+[![Join the chat at https://gitter.im/alteous/gltf](https://badges.gitter.im/alteous/gltf.svg)](https://gitter.im/alteous/gltf?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 [Documentation](https://docs.rs/gltf)
 
