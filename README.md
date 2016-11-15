@@ -16,7 +16,7 @@ Add `gltf` to the dependencies section of `Cargo.toml`:
 
 ```toml
 [dependencies]
-gltf = "0.1"
+gltf = "0.2"
 ```
 
 Import the crate in your library or executable:
@@ -38,6 +38,6 @@ fn main() {
 ### Future Goals
 
  * Ability to be compilied with the latest stable toolchain
- * Full conformance to the [specification](https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#techniques)
+ * Full conformance to the [specification](https://github.com/KhronosGroup/glTF/blob/master/specification/README.md)
  * Replace untyped `GLenum` identifiers with equivalent type-safe constants
 
