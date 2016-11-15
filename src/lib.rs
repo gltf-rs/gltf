@@ -39,7 +39,7 @@ pub use serde_json::value::{Map, Value};
 /// Untyped glTF object identifier
 pub type Id = String;
 
-/// Helper trait for looking up objects by their identifier in a glTF asset
+/// Helper trait for looking up top-level objects by their identifier
 pub trait Find<T> {
     /// Attempts to find the object with the given type and identifer
     fn find(&self, id: &str) -> Option<&T>;
@@ -120,6 +120,10 @@ pub struct Accessor {
 pub struct Asset {
     /// A copyright message suitable for display to credit the content creator
     pub copyright: Option<String>,
+    /// Optional data targeting official extensions
+    pub extensions: Option<Map<String, Value>>,
+    /// Optional application specific data
+    pub extras: Option<Map<String, Value>>,
     /// Tool that generated this glTF model
     pub generator: Option<String>,
     /// Specifies if shaders were generated with pre-multiplied alpha
@@ -130,10 +134,6 @@ pub struct Asset {
     pub profile: Option<AssetProfile>,
     /// glTF version
     pub version: String,
-    /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
-    /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
 }
 
 /// [Specifies the target rendering API and version]
@@ -144,13 +144,13 @@ pub struct AssetProfile {
     /// Specifies the target rendering API
     #[serde(default = "asset_profile_api_default")]
     pub api: String,
-    /// Specifies the target rendering API version
-    #[serde(default = "asset_profile_version_default")]
-    pub version: String,
     /// Optional data targeting official extensions
     pub extensions: Option<Map<String, Value>>,
     /// Optional application specific data
     pub extras: Option<Map<String, Value>>,
+    /// Specifies the target rendering API version
+    #[serde(default = "asset_profile_version_default")]
+    pub version: String,
 }
 
 fn asset_profile_api_default() -> String {
@@ -340,9 +340,6 @@ pub struct Technique {
     pub extras: Option<Map<String, Value>>,
     /// Optional user-defined name for this object
     pub name: Option<String>,
-    /// Maps uniform names to technqiue parameter IDs
-    #[serde(default)]
-    pub uniforms: Map<String, String>,
     #[serde(default)]
     pub parameters: Map<String, TechniqueParameter>,
     /// ID of the GLSL shader program to render with
@@ -350,6 +347,9 @@ pub struct Technique {
     /// Fixed-function rendering states
     #[serde(default)]
     pub states: TechniqueStates,
+    /// Maps uniform names to technqiue parameter IDs
+    #[serde(default)]
+    pub uniforms: Map<String, String>,
 }
 
 /// [Describes an attribute or uniform input to a `Technique`]
@@ -436,10 +436,8 @@ impl Gltf {
         let mut file = try!(File::open(path));
         let mut json = String::new();
         try!(file.read_to_string(&mut json));
-        match from_str(&json) {
-            Ok(gltf) => Ok(gltf),
-            Err(cause) => Err(Error::Parse(cause)),
-        }
+        from_str(&json)
+            .map_err(|cause| Error::Parse(cause))
     }
 
     /// Looks up a top-level object by its identifier
