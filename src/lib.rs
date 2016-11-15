@@ -23,6 +23,7 @@
 
 #![feature(proc_macro, custom_attribute)]
 
+extern crate gl;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -36,12 +37,12 @@ use serde_json::from_str;
 
 pub use serde_json::value::{Map, Value};
 
-/// Untyped glTF object identifier
+/// Untyped glTF top-level object identifier
 pub type Id = String;
 
 /// Helper trait for looking up top-level objects by their identifier
 pub trait Find<T> {
-    /// Attempts to find the object with the given type and identifer
+    /// Attempts to find the object of type `T` with identifer `id`
     fn find(&self, id: &str) -> Option<&T>;
 }
 
@@ -268,7 +269,7 @@ pub struct MeshPrimitive {
 }
 
 fn mesh_primitive_mode_default() -> u32 {
-    4 // == GL_TRIANGLES
+    gl::TRIANGLES
 }
 
 /// [A single member of the glTF scene hierarchy]
@@ -381,28 +382,93 @@ pub struct TechniqueParameter {
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct TechniqueStateFunctions {
+    /// Arguments `[red, green, blue, alpha]` for `glBlendColor()`
+    #[serde(default)]
     #[serde(rename = "blendColor")]
-    pub blend_color: Option<[f64; 4]>,
+    pub blend_color: [f64; 4],
+    /// Arguments `[mode_rgb, mode_alpha]` for `glBlendEquationSeparate()`
+    #[serde(default = "technique_state_functions_blend_equation_default")]
     #[serde(rename = "blendEquationSeparate")]
-    pub blend_equation: Option<[u32; 2]>,
+    pub blend_equation: [u32; 2],
+    /// Arguments `[src_rgb, dst_rgb, src_alpha, dst_alpha]` for `glBlendFuncSeparate()`
+    #[serde(default = "technique_state_functions_blend_function_default")]
     #[serde(rename = "blendFuncSeparate")]
-    pub blend_function: Option<[bool; 4]>,
+    pub blend_function: [u32; 4],
+    /// Arguments `[red, green, blue, alpha]` for `glColorMask()`
+    #[serde(default = "technique_state_functions_color_mask_default")]
     #[serde(rename = "colorMask")]
-    pub color_mask: Option<[bool; 4]>,
+    pub color_mask: [bool; 4],
+    /// Argument `[mode]` for `glCullFace()`
+    #[serde(default = "technique_state_functions_cull_face_default")]
     #[serde(rename = "cullFace")]
-    pub cull_face: Option<u32>,
+    pub cull_face: [u32; 1],
+    /// Argument `[func]` for `glDepthFunc()`
+    #[serde(default = "technique_state_functions_depth_func_default")]
     #[serde(rename = "depthFunc")]
-    pub depth_function: Option<u32>,
+    pub depth_function: [u32; 1],
+    /// Argument `[flag]` for `glDepthMask()`
+    #[serde(default = "technique_state_functions_depth_mask_default")]
+    #[serde(rename = "depthMask")]
+    pub depth_mask: [bool; 1],
+    /// Arguments `[z_near, z_far]` for `glDepthRange()`
+    #[serde(default = "technique_state_functions_depth_range_default")]
     #[serde(rename = "depthRange")]
-    pub depth_range: Option<[f32; 2]>,
+    pub depth_range: [f64; 2],
+    /// Optional data targeting official extensions
+    pub extensions: Option<Map<String, Value>>,
+    /// Optional application specific data
+    pub extras: Option<Map<String, Value>>,
+    /// Argument `[mode]` for `glFrontFace()`
+    #[serde(default = "technique_state_functions_front_face_default")]
     #[serde(rename = "frontFace")]
-    pub front_face: Option<u32>,
+    pub front_face: [u32; 1],
+    /// Argument `[width]` for `glLineWidth()`
+    #[serde(default = "technique_state_functions_line_width_default")]
     #[serde(rename = "lineWidth")]
-    pub line_width: Option<f32>,
+    pub line_width: [f32; 1],
+    /// Arguments `[factor, units]` for `glPolygonOffset()`
+    #[serde(default)]
     #[serde(rename = "polygonOffset")]
-    pub polygon_offset: Option<[f32; 2]>,
-    #[serde(rename = "scissor")]
-    pub scissor: Option<[u32; 4]>,
+    pub polygon_offset: [f32; 2],
+    /// Arguments `[x, y, width, height]` for `glScissor()`
+    #[serde(default)]
+    pub scissor: [i32; 4],
+}
+
+fn technique_state_functions_blend_equation_default() -> [u32; 2] {
+    [gl::FUNC_ADD, gl::FUNC_ADD]
+}
+
+fn technique_state_functions_blend_function_default() -> [u32; 4] {
+    [gl::ONE, gl::ZERO, gl::ONE, gl::ZERO]
+}
+
+fn technique_state_functions_color_mask_default() -> [bool; 4] {
+    [true, true, true, true]
+}
+
+fn technique_state_functions_cull_face_default() -> [u32; 1] {
+    [gl::BACK]
+}
+
+fn technique_state_functions_depth_func_default() -> [u32; 1] {
+    [gl::LESS]
+}
+
+fn technique_state_functions_depth_mask_default() -> [bool; 1] {
+    [true]
+}
+
+fn technique_state_functions_depth_range_default() -> [f64; 2] {
+    [0.0, 1.0]
+}
+
+fn technique_state_functions_front_face_default() -> [u32; 1] {
+    [gl::CCW]
+}
+
+fn technique_state_functions_line_width_default() -> [f32; 1] {
+    [1.0]
 }
 
 /// [Required OpenGL render states to be enabled]

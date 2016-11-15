@@ -10,6 +10,7 @@ keywords = ["glTF", "3D", "asset", "model", "scene"]
 license = "MIT"
  
 [dependencies]
+gl = "0.6"
 serde = "0.8"
 serde_derive = "0.8"
 serde_json = "0.8"
