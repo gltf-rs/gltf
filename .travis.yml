@@ -2,5 +2,6 @@ before_install:
   - sudo apt-get install libgl1-mesa-dev
 language: rust
 rust:
+  - stable
   - nightly
 sudo: required
