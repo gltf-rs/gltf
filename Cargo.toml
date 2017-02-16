@@ -1,8 +1,7 @@
 [package]
 name = "gltf"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["Alteous <alteous@outlook.com>"]
-build = "build.rs"
 description = "glTF asset loader"
 documentation = "https://docs.rs/gltf"
 repository = "https://github.com/Alteous/gltf"
@@ -10,20 +9,13 @@ readme = "README.md"
 keywords = ["glTF", "3D", "asset", "model", "scene"]
 license = "MIT"
  
-[build-dependencies]
-serde_codegen = { version = "0.8", optional = true }
-
 [dependencies]
 gl = "0.6"
 serde = "0.8"
-serde_derive = { version = "0.8", optional = true }
+serde_derive = "0.8"
 serde_json = "0.8"
 
 [[example]]
 name = "box"
 path = "examples/box/main.rs"
-
-[features]
-default = ["serde_codegen"]
-unstable = ["serde_derive"]
 
