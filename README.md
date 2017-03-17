@@ -2,7 +2,7 @@
 
 This library is intended to load [glTF assets](https://www.khronos.org/gltf), a file format designed for the efficient transmission of 3D models. It requires rustc version 1.15 or above to compile.
 
-[![Build Status](https://travis-ci.org/alteous/gltf.svg?branch=master)](https://travis-ci.org/Alteous/gltf)
+[![Build Status](https://travis-ci.org/alteous/gltf.svg?branch=master)](https://travis-ci.org/alteous/gltf)
 [![Crates.io](https://img.shields.io/crates/v/gltf.svg)](https://crates.io/crates/gltf)
 
 [Documentation](https://docs.rs/gltf)
