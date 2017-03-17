@@ -54,7 +54,7 @@ pub enum Error {
 }
 
 /// [The root object for a glTF asset]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#gltf)
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#gltf)
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Gltf {
     #[serde(default)]
@@ -80,7 +80,7 @@ pub struct Gltf {
 }
 
 /// [Defines a method for retrieving data from within a `BufferView`]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#accessors)
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#accessors)
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Accessor {
@@ -113,7 +113,7 @@ pub struct Accessor {
 }
 
 /// [Contains metadata about the glTF asset]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#asset)
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#asset)
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Asset {
@@ -136,7 +136,7 @@ pub struct Asset {
 }
 
 /// [Specifies the target rendering API and version]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#assetprofile-1)
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#assetprofile-1)
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct AssetProfile {
@@ -160,9 +160,9 @@ fn asset_profile_version_default() -> String {
     "1.0.3".to_string()
 }
 
-/// The identifier of the `BufferView` this accessor reads from.
-/// [Describes the location, type, and size of a binary blob included with the asset]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#buffer)
+/// [The identifier of the `BufferView` this accessor reads from.
+/// Describes the location, type, and size of a binary blob included with the asset]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#buffer)
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Buffer {
@@ -189,7 +189,7 @@ fn buffer_response_type_default() -> String {
 }
 
 /// [Represents a subset of a `Buffer`]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#buffers-and-buffer-views)  
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#buffers-and-buffer-views)  
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct BufferView {
@@ -213,7 +213,7 @@ pub struct BufferView {
     pub target: Option<u32>,
 }
 /// [Describes the material appearance of a primitive]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#material)
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#material)
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Material {
@@ -231,7 +231,7 @@ pub struct Material {
 }
 
 /// [A set of primitives to be rendered]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#mesh)
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#mesh)
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Mesh {
@@ -246,7 +246,7 @@ pub struct Mesh {
 }
 
 /// [Geometry to be rendered with the given material]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#meshprimitive)
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#meshprimitive)
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct MeshPrimitive {
@@ -271,7 +271,7 @@ fn mesh_primitive_mode_default() -> u32 {
 }
 
 /// [A single member of the glTF scene hierarchy]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#scenes)
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#scenes)
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Node {
     /// Optional data targeting official extensions
@@ -286,7 +286,7 @@ pub struct Node {
 }
 
 /// [Describes a GLSL shader program]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#programs)
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#programs)
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Program {
@@ -308,7 +308,7 @@ pub struct Program {
 }
 
 /// [Describes a GLSL shader component]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#shaders)
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#shaders)
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Shader {
@@ -326,7 +326,7 @@ pub struct Shader {
 }
 
 /// [Describes the shading technqiue used for a material]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#technique)
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#technique)
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Technique {
@@ -351,10 +351,9 @@ pub struct Technique {
     pub uniforms: Map<String, String>,
 }
 
-/// [Describes an attribute or uniform input to a `Technique`]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#techniqueparameters-1)
+/// Describes an [attribute or uniform input](https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#techniqueparameters-1) to a `Technique`.
 /// If `semantic` is not `None` then this parameter describes a [built-in uniform value]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#semantics)
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#semantics)
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct TechniqueParameter {
@@ -376,7 +375,7 @@ pub struct TechniqueParameter {
 }
 
 /// [Optional arguments to OpenGL state functions]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#render-states)
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#render-states)
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct TechniqueStateFunctions {
@@ -470,7 +469,7 @@ fn technique_state_functions_line_width_default() -> [f32; 1] {
 }
 
 /// [Required OpenGL render states to be enabled]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/README.md#render-states)
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#render-states)
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct TechniqueStates {
