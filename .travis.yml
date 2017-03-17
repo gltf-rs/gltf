@@ -1,7 +1,17 @@
-before_install:
-  - sudo apt-get install libgl1-mesa-dev
 language: rust
-rust:
-  - stable
-  - nightly
-sudo: required
+sudo: false
+addons:
+  apt:
+    packages:
+      - libgl1-mesa-dev
+
+matrix:
+  include:
+    - os: osx
+      rust: stable
+    - os: osx
+      rust: nightly
+    - os: linux
+      rust: stable
+    - os: linux
+      rust: nightly
