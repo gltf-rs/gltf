@@ -33,7 +33,8 @@ use std::path::Path;
 
 use serde_json::from_str;
 
-pub use serde_json::value::{Map, Value};
+pub use std::collections::HashMap;
+pub use serde_json::{Map, Value};
 
 /// Untyped glTF top-level object identifier
 pub type Id = String;
@@ -55,27 +56,27 @@ pub enum Error {
 
 /// [The root object for a glTF asset]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#gltf)
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Gltf {
     #[serde(default)]
-    pub accessors: Map<Id, Accessor>,
+    pub accessors: HashMap<Id, Accessor>,
     #[serde(default)]
     pub asset: Asset,
     #[serde(default)]
-    pub buffers: Map<Id, Buffer>,
+    pub buffers: HashMap<Id, Buffer>,
     #[serde(default)]
     #[serde(rename = "bufferViews")]
-    pub buffer_views: Map<Id, BufferView>,
+    pub buffer_views: HashMap<Id, BufferView>,
     #[serde(default)]
-    pub materials: Map<Id, Material>,
+    pub materials: HashMap<Id, Material>,
     #[serde(default)]
-    pub meshes: Map<Id, Mesh>,
+    pub meshes: HashMap<Id, Mesh>,
     #[serde(default)]
-    pub programs: Map<Id, Program>,
+    pub programs: HashMap<Id, Program>,
     #[serde(default)]
-    pub shaders: Map<Id, Shader>,
+    pub shaders: HashMap<Id, Shader>,
     #[serde(default)]
-    pub techniques: Map<Id, Technique>,
+    pub techniques: HashMap<Id, Technique>,
     // Incomplete
 }
 
@@ -103,9 +104,9 @@ pub struct Accessor {
     #[serde(rename = "type")]
     pub component_width: String,
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Option<HashMap<String, Value>>,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Option<HashMap<String, Value>>,
     /// Maximum value of each component in the attribute
     pub max: Option<Vec<f32>>,
     /// Minimum value of each component in the attribtue
@@ -120,9 +121,9 @@ pub struct Asset {
     /// A copyright message suitable for display to credit the content creator
     pub copyright: Option<String>,
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Option<HashMap<String, Value>>,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Option<HashMap<String, Value>>,
     /// Tool that generated this glTF model
     pub generator: Option<String>,
     /// Specifies if shaders were generated with pre-multiplied alpha
@@ -144,9 +145,9 @@ pub struct AssetProfile {
     #[serde(default = "asset_profile_api_default")]
     pub api: String,
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Option<HashMap<String, Value>>,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Option<HashMap<String, Value>>,
     /// Specifies the target rendering API version
     #[serde(default = "asset_profile_version_default")]
     pub version: String,
@@ -171,9 +172,9 @@ pub struct Buffer {
     #[serde(rename = "byteLength")]
     pub byte_length: u32,
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Option<HashMap<String, Value>>,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Option<HashMap<String, Value>>,
     /// Optional user-defined name for this object
     pub name: Option<String>,
     /// XMLHttpRequest `responseType`
@@ -189,7 +190,7 @@ fn buffer_response_type_default() -> String {
 }
 
 /// [Represents a subset of a `Buffer`]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#buffers-and-buffer-views)  
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#buffers-and-buffer-views)
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct BufferView {
@@ -203,9 +204,9 @@ pub struct BufferView {
     #[serde(rename = "byteOffset")]
     pub byte_offset: u32,
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Option<HashMap<String, Value>>,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Option<HashMap<String, Value>>,
     /// Optional user-defined name for this object
     pub name: Option<String>,
     /// Optional target the buffer should be bound to (for example
@@ -218,16 +219,16 @@ pub struct BufferView {
 #[serde(deny_unknown_fields)]
 pub struct Material {
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Option<HashMap<String, Value>>,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Option<HashMap<String, Value>>,
     /// Optional user-defined name for this object
     pub name: Option<String>,
     /// ID of the shading technique to be used
     pub technique: Option<Id>,
     /// Parameter values
     #[serde(default)]
-    pub values: Map<String, Value>,
+    pub values: HashMap<String, Value>,
 }
 
 /// [A set of primitives to be rendered]
@@ -236,9 +237,9 @@ pub struct Material {
 #[serde(deny_unknown_fields)]
 pub struct Mesh {
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Option<HashMap<String, Value>>,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Option<HashMap<String, Value>>,
     /// Optional user-defined name for this object
     pub name: Option<String>,
     #[serde(default)]
@@ -252,11 +253,11 @@ pub struct Mesh {
 pub struct MeshPrimitive {
     /// Mapping of attribute names to `Accessor` IDs
     #[serde(default)]
-    pub attributes: Map<String, Id>,
+    pub attributes: HashMap<String, Id>,
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Option<HashMap<String, Value>>,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Option<HashMap<String, Value>>,
     /// Optional ID of the `Accessor` containing index data
     pub indices: Option<Id>,
     /// ID of the material to apply to this primitive when rendering
@@ -275,9 +276,9 @@ fn mesh_primitive_mode_default() -> u32 {
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Node {
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Option<HashMap<String, Value>>,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Option<HashMap<String, Value>>,
     /// The IDs of the `Mesh` objects in this node
     pub meshes: Option<Vec<Id>>,
     /// Optional user-defined name for this object
@@ -294,9 +295,9 @@ pub struct Program {
     #[serde(default)]
     pub attributes: Vec<String>,
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Option<HashMap<String, Value>>,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Option<HashMap<String, Value>>,
     /// ID of the fragment shader component
     #[serde(rename = "fragmentShader")]
     pub fragment_shader: String,
@@ -313,9 +314,9 @@ pub struct Program {
 #[serde(deny_unknown_fields)]
 pub struct Shader {
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Option<HashMap<String, Value>>,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Option<HashMap<String, Value>>,
     /// Optional user-defined name for this object
     pub name: Option<String>,
     /// The shader stage (for example `GL_VERTEX_SHADER` or `GL_FRAGMENT_SHADER`)
@@ -332,15 +333,15 @@ pub struct Shader {
 pub struct Technique {
     /// Maps GLSL attribute names to technique parameter IDs
     #[serde(default)]
-    pub attributes: Map<String, String>,
+    pub attributes: HashMap<String, String>,
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Option<HashMap<String, Value>>,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Option<HashMap<String, Value>>,
     /// Optional user-defined name for this object
     pub name: Option<String>,
     #[serde(default)]
-    pub parameters: Map<String, TechniqueParameter>,
+    pub parameters: HashMap<String, TechniqueParameter>,
     /// ID of the GLSL shader program to render with
     pub program: Id,
     /// Fixed-function rendering states
@@ -348,7 +349,7 @@ pub struct Technique {
     pub states: TechniqueStates,
     /// Maps uniform names to technqiue parameter IDs
     #[serde(default)]
-    pub uniforms: Map<String, String>,
+    pub uniforms: HashMap<String, String>,
 }
 
 /// Describes an [attribute or uniform input](https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#techniqueparameters-1) to a `Technique`.
@@ -360,9 +361,9 @@ pub struct TechniqueParameter {
     /// Defines the number of elements if the parameter is an array
     pub count: Option<u32>,
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Option<HashMap<String, Value>>,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Option<HashMap<String, Value>>,
     /// ID of the `Node` whose transform is used as the parameter's value
     pub node: Option<Id>,
     /// `"MODELVIEW"`, `"PROJECTION"`, etc.
@@ -412,9 +413,9 @@ pub struct TechniqueStateFunctions {
     #[serde(rename = "depthRange")]
     pub depth_range: [f64; 2],
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Option<HashMap<String, Value>>,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Option<HashMap<String, Value>>,
     /// Argument `[mode]` for `glFrontFace()`
     #[serde(default = "technique_state_functions_front_face_default")]
     #[serde(rename = "frontFace")]
@@ -477,11 +478,11 @@ pub struct TechniqueStates {
     #[serde(default)]
     pub enable: Vec<u32>,
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Option<HashMap<String, Value>>,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Option<HashMap<String, Value>>,
     /// Arguments for fixed-function rendering state functions
-    pub functions: Option<TechniqueStateFunctions>, 
+    pub functions: Option<TechniqueStateFunctions>,
 }
 
 impl Gltf {
