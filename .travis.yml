@@ -1,17 +1,17 @@
 language: rust
-sudo: false
-addons:
-  apt:
-    packages:
-      - libgl1-mesa-dev
 
-matrix:
-  include:
-    - os: osx
-      rust: stable
-    - os: osx
-      rust: nightly
-    - os: linux
-      rust: stable
-    - os: linux
-      rust: nightly
+rust:
+    - stable
+    - beta
+    - nightly
+
+sudo: false
+
+addons:
+    apt:
+        packages:
+            - libgl1-mesa-dev
+
+os:
+    - linux
+    - osx
