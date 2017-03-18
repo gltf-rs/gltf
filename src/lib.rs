@@ -33,7 +33,8 @@ use std::path::Path;
 
 use serde_json::from_str;
 
-pub use serde_json::value::{Map, Value};
+pub use std::collections::HashMap as Map;
+pub use serde_json::Value;
 
 /// Untyped glTF top-level object identifier
 pub type Id = String;

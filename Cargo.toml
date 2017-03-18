@@ -1,19 +1,19 @@
 [package]
 name = "gltf"
-version = "0.3.0"
-authors = ["Alteous <alteous@outlook.com>"]
+version = "0.3.2"
+authors = ["alteous <alteous@outlook.com>"]
 description = "glTF asset loader"
 documentation = "https://docs.rs/gltf"
-repository = "https://github.com/Alteous/gltf"
+repository = "https://github.com/alteous/gltf"
 readme = "README.md"
 keywords = ["glTF", "3D", "asset", "model", "scene"]
 license = "MIT"
  
 [dependencies]
 gl = "0.6"
-serde = "0.8"
-serde_derive = "0.8"
-serde_json = "0.8"
+serde = "0.9"
+serde_derive = "0.9"
+serde_json = "0.9"
 
 [[example]]
 name = "box"
