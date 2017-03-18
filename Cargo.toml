@@ -1,13 +1,13 @@
 [package]
 name = "gltf"
-version = "0.3.2"
+version = "0.4.0"
 authors = ["alteous <alteous@outlook.com>"]
 description = "glTF asset loader"
 documentation = "https://docs.rs/gltf"
 repository = "https://github.com/alteous/gltf"
 readme = "README.md"
 keywords = ["glTF", "3D", "asset", "model", "scene"]
-license = "MIT"
+license = "MIT/Apache-2.0"
  
 [dependencies]
 gl = "0.6"
