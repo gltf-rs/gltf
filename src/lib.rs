@@ -120,7 +120,7 @@ pub struct Accessor {
     pub extras: Extras,
 }
 
-enum_number! {
+impl_enum! {
     AccessorComponentType {
         I8 = 5120,
         U8 = 5121,
@@ -261,7 +261,7 @@ pub struct BufferView {
     pub target: Option<BufferTarget>,
 }
 
-enum_number! {
+impl_enum! {
     BufferTarget {
         ArrayBuffer = 34962,
         ElementArrayBuffer = 34963,
@@ -494,7 +494,7 @@ pub struct MeshPrimitive {
     pub targets: Vec<MeshPrimitiveTarget>,
 }
 
-enum_number! {
+impl_enum! {
     MeshPrimitiveMode {
         Points = 0,
         Lines = 1,
@@ -589,14 +589,14 @@ pub struct Sampler {
     pub wrap_t: SamplerWrappingMode,
 }
 
-enum_number! {
+impl_enum! {
     SamplerMagFilter {
         Nearest = 9728,
         Linear = 9729,
     }
 }
 
-enum_number! {
+impl_enum! {
     SamplerMinFilter {
         Nearest = 9728,
         Linear = 9729,
@@ -607,7 +607,7 @@ enum_number! {
     }
 }
 
-enum_number! {
+impl_enum! {
     SamplerWrappingMode {
         ClampToEdge = 33071,
         MirroredRepeat = 33648,
@@ -676,7 +676,7 @@ pub struct Texture {
     pub target: TextureTarget,
 }
 
-enum_number! {
+impl_enum! {
     TextureDataType {
         U8 = 5121,
         U16_5_6_5 = 33635,
@@ -685,7 +685,7 @@ enum_number! {
     }
 }
 
-enum_number! {
+impl_enum! {
     TextureFormat {
         Alpha = 6406,
         Rgb = 6407,
@@ -695,7 +695,7 @@ enum_number! {
     }
 }
 
-enum_number! {
+impl_enum! {
     TextureTarget {
         Texture2d = 3553,
     }
