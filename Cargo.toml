@@ -1,6 +1,6 @@
 [package]
 name = "gltf"
-version = "0.1.0"
+version = "0.4.0"
 authors = ["alteous <alteous@outlook.com>"]
 description = "glTF asset loader"
 documentation = "https://docs.rs/gltf"
@@ -10,12 +10,7 @@ keywords = ["glTF", "3D", "asset", "model", "scene"]
 license = "MIT/Apache-2.0"
  
 [dependencies]
-gl = "0.6"
 serde = "0.9"
 serde_derive = "0.9"
 serde_json = "0.9"
-
-[[example]]
-name = "box"
-path = "examples/box/main.rs"
 

@@ -755,16 +755,6 @@ impl Default for TextureTarget {
 }
 
 impl Gltf {
-    /// Loads a glTF asset
-    ///
-    /// # Examples
-    ///
-    /// Basic usage:
-    ///
-    /// ```
-    /// let gltf = gltf::Gltf::new("./examples/box/Box.gltf")
-    ///     .expect("Error loading glTF asset");
-    /// ```
     pub fn from_file<P>(path: P) -> Result<Self, LoadError>
         where P: AsRef<std::path::Path>
     {
