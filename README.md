@@ -32,9 +32,3 @@ fn main() {
 }
 ```
 
-### Future Goals
-
- - [x] Ability to be compilied with the latest stable toolchain
- - [ ] Full conformance to the [1.0 specification](https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md)
- - [ ] Replace untyped `GLenum` identifiers with equivalent type-safe constants
-

@@ -7,73 +7,98 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-extern crate gl;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
 
-use std::fs::File;
-use std::io::Read;
-use std::path::Path;
+#[macro_use]
+mod macros;
 
-use serde_json::from_str;
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct AccessorIndex(u32);
 
-pub use std::collections::HashMap as Map;
-pub use serde_json::Value;
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct BufferIndex(u32);
 
-/// Untyped glTF top-level object identifier
-pub type Id = String;
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct BufferViewIndex(u32);
 
-/// Helper trait for looking up top-level objects by their identifier
-pub trait Find<T> {
-    /// Attempts to find the object of type `T` with identifer `id`
-    fn find(&self, id: &str) -> Option<&T>;
-}
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct CameraIndex(u32);
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct ImageIndex(u32);
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct MaterialIndex(u32);
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct MeshIndex(u32);
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct NodeIndex(u32);
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct SamplerIndex(u32);
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct SceneIndex(u32);
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct SkinIndex(u32);
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct TextureIndex(u32);
+
+pub type UntypedObject = std::collections::HashMap<String, serde_json::Value>;
+pub type Extensions = Option<UntypedObject>;
+pub type Extras = Option<UntypedObject>;
 
 /// Run time error encountered when loading a glTF asset
 #[derive(Debug)]
-pub enum Error {
+pub enum LoadError {
     /// Standard input / output error
     Io(std::io::Error),
-    /// Failure when parsing a .gltf metadata file
-    Parse(serde_json::error::Error),
+    /// Failure when deserializing the .gltf metadata file
+    De(serde_json::error::Error),
 }
 
 /// [The root object for a glTF asset]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#gltf)
-#[derive(Debug, Deserialize, Serialize)]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#gltf)
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct Gltf {
-    #[serde(default)]
-    pub accessors: Map<Id, Accessor>,
-    #[serde(default)]
-    pub asset: Asset,
-    #[serde(default)]
-    pub buffers: Map<Id, Buffer>,
-    #[serde(default)]
+    accessors: Vec<Accessor>,
+    animations: Vec<Animation>,
+    asset: Asset,
+    buffers: Vec<Buffer>,
     #[serde(rename = "bufferViews")]
-    pub buffer_views: Map<Id, BufferView>,
-    #[serde(default)]
-    pub materials: Map<Id, Material>,
-    #[serde(default)]
-    pub meshes: Map<Id, Mesh>,
-    #[serde(default)]
-    pub programs: Map<Id, Program>,
-    #[serde(default)]
-    pub shaders: Map<Id, Shader>,
-    #[serde(default)]
-    pub techniques: Map<Id, Technique>,
-    // Incomplete
+    buffer_views: Vec<BufferView>,
+    #[serde(rename = "extensionsUsed")]
+    extensions_used: Vec<String>,
+    #[serde(rename = "extensionsRequired")]
+    extensions_required: Vec<String>,
+    cameras: Vec<Camera>,
+    images: Vec<Image>,
+    materials: Vec<Material>,
+    meshes: Vec<Mesh>,
+    nodes: Vec<Node>,
+    samplers: Vec<Sampler>,
+    scene: SceneIndex,
+    scenes: Vec<Scene>,
+    skins: Vec<Skin>,
+    textures: Vec<Texture>,
 }
 
 /// [Defines a method for retrieving data from within a `BufferView`]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#accessors)
-#[derive(Debug, Default, Deserialize, Serialize)]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#accessors)
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Accessor {
     /// The identifier of the `BufferView` this accessor reads from.
     #[serde(rename = "bufferView")]
-    pub buffer_view: Id,
+    pub buffer_view: BufferViewIndex,
     /// Where the data items begin from in the `BufferView`
     #[serde(rename = "byteOffset")]
     pub byte_offset: u32,
@@ -81,76 +106,118 @@ pub struct Accessor {
     #[serde(rename = "byteStride")]
     #[serde(default)]
     pub byte_stride: u32,
-    /// Possible values: `GL_BYTE`, `GL_FLOAT`, `GL_SHORT`, `GL_UNSIGNED_BYTE`, or `GL_UNSIGNED_SHORT`
+    /// The data type of each element
     #[serde(rename = "componentType")]
-    pub component_type: u32,
-    /// The number of attributes within the `BufferView` (N.B. not number of bytes)
+    pub component_type: AccessorComponentType,
+    /// The number of elements within the `BufferView` (N.B. not number of bytes)
     pub count: u32,
-    /// Possible values: `"SCALAR"`, `"VEC2"`, `"VEC3"`, `"VEC4"`, `"MAT2"`, `"MAT3"`, or `"MAT4"`
+    /// The multiplicity of each element
     #[serde(rename = "type")]
-    pub component_width: String,
+    pub component_width: AccessorComponentWidth,
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Extensions,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
-    /// Maximum value of each component in the attribute
-    pub max: Option<Vec<f32>>,
-    /// Minimum value of each component in the attribtue
-    pub min: Option<Vec<f32>>,
+    pub extras: Extras,
+}
+
+enum_number! {
+    AccessorComponentType {
+        I8 = 5120,
+        U8 = 5121,
+        I16 = 5122,
+        U16 = 5123,
+        U32 = 5125,
+        F32 = 5126,
+    }
+}
+
+// TODO: Replace with statically typed constants
+pub type AccessorComponentWidth = String;
+
+/// [A keyframe animation]
+/// (https://github.com/KhronosGroup/glTF/blob/d63b796e6b7f6b084c710b97b048d59d749cb04a/specification/2.0/schema/animation.schema.json)
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct Animation {
+    /// Optional data targeting official extensions
+    pub extensions: Extensions,
+    /// Optional application specific data
+    pub extras: Extras,
+    /// Defines the channels of the animation
+    pub channels: Vec<AnimationChannel>,
+    /// Optional user-defined name for this object
+    pub name: Option<String>,
+    /// Defines samplers that combine input and output accessors
+    pub samplers: Vec<AnimationSampler>,
+}
+
+/// Targets an animation's sampler at a node's property
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct AnimationChannel {
+    /// The index of the sampler used to compute the value for the target
+    pub sampler: SamplerIndex,
+    /// The index of the node and TRS property to target
+    pub target: AnimationChannelTarget,
+}
+
+/// The index of the node and TRS property that an animation channel targets
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct AnimationChannelTarget {
+    /// Optional data targeting official extensions
+    pub extensions: Extensions,
+    /// Optional application specific data
+    pub extras: Extras,
+    /// The index of the node to target
+    pub node: NodeIndex,
+    /// The name of the node's TRS property to modify e.g. `"translation"`
+    pub path: String,
+}
+
+/// Defines a keyframe graph but not its target
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct AnimationSampler {
+    /// Optional data targeting official extensions
+    pub extensions: Extensions,
+    /// Optional application specific data
+    pub extras: Extras,
+    /// The index of the accessor containing keyframe input values (e.g. time)
+    pub input: AccessorIndex,
+    /// The interpolation algorithm (e.g. `"LINEAR"` or `"STEP"`)
+    // TODO: Replace with statically typed constant
+    pub interpolation: String,
+    /// The index of an accessor containing keyframe output values
+    pub output: AccessorIndex,
 }
 
 /// [Contains metadata about the glTF asset]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#asset)
-#[derive(Debug, Default, Deserialize, Serialize)]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#asset)
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Asset {
     /// A copyright message suitable for display to credit the content creator
     pub copyright: Option<String>,
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Extensions,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Extras,
     /// Tool that generated this glTF model
     pub generator: Option<String>,
-    /// Specifies if shaders were generated with pre-multiplied alpha
-    #[serde(default)]
-    #[serde(rename = "premultipliedAlpha")]
-    pub pre_multiplied_alpha: bool,
-    /// Specifies the target rendering API and version
-    pub profile: Option<AssetProfile>,
     /// glTF version
+    #[serde(default = "asset_version_default")]
     pub version: String,
 }
 
-/// [Specifies the target rendering API and version]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#assetprofile-1)
-#[derive(Debug, Default, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct AssetProfile {
-    /// Specifies the target rendering API
-    #[serde(default = "asset_profile_api_default")]
-    pub api: String,
-    /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
-    /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
-    /// Specifies the target rendering API version
-    #[serde(default = "asset_profile_version_default")]
-    pub version: String,
-}
-
-fn asset_profile_api_default() -> String {
-    "WebGL".to_string()
-}
-
-fn asset_profile_version_default() -> String {
-    "1.0.3".to_string()
+fn asset_version_default() -> String {
+    "2.0".to_string()
 }
 
 /// [The identifier of the `BufferView` this accessor reads from.
 /// Describes the location, type, and size of a binary blob included with the asset]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#buffer)
-#[derive(Debug, Default, Deserialize, Serialize)]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#buffer)
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Buffer {
     /// The length of the buffer in bytes
@@ -158,317 +225,533 @@ pub struct Buffer {
     #[serde(rename = "byteLength")]
     pub byte_length: u32,
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Extensions,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Extras,
     /// Optional user-defined name for this object
     pub name: Option<String>,
-    /// XMLHttpRequest `responseType`
-    #[serde(default = "buffer_response_type_default")]
-    #[serde(rename = "type")]
-    pub response_type: String,
-    /// Uniform resource locator for the buffer data
+    /// Uniform resource locator for the buffer data relative to the .gltf file
+    // N.B. the spec says this is not required but I think that is incorrect
     pub uri: String,
-}
-
-fn buffer_response_type_default() -> String {
-    "arraybuffer".to_string()
 }
 
 /// [Represents a subset of a `Buffer`]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#buffers-and-buffer-views)  
-#[derive(Debug, Default, Deserialize, Serialize)]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#buffers-and-buffer-views)  
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct BufferView {
-    /// The identifier of the parent `Buffer`
-    pub buffer: Id,
-    /// The length of the buffer view in bytes
-    #[serde(default)]
+    /// The id of the parent `Buffer`
+    pub buffer: BufferIndex,
+    /// The length of the buffer view data in bytes
     #[serde(rename = "byteLength")]
     pub byte_length: u32,
-    /// Offset into the buffer in bytes
+    /// Offset into the parent buffer in bytes
     #[serde(rename = "byteOffset")]
     pub byte_offset: u32,
+    /// The stride in bytes between vertex attributes in this buffer view
+    #[serde(default)]
+    pub byte_stride: u32,
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Extensions,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Extras,
     /// Optional user-defined name for this object
     pub name: Option<String>,
-    /// Optional target the buffer should be bound to (for example
-    /// `GL_ARRAY_BUFFER` or `GL_ELEMENT_ARRAY_BUFFER`)
-    pub target: Option<u32>,
+    /// Optional target the buffer should be bound to
+    pub target: Option<BufferTarget>,
 }
+
+enum_number! {
+    BufferTarget {
+        ArrayBuffer = 34962,
+        ElementArrayBuffer = 34963,
+    }
+}
+
+// TODO: This implementation is rubbish. Replace with enum instead
+// and derive (De)Serialize manually. It would be trivial to do so
+// if it were not for the `name`, `extension`, and `extra` fields.
+/// A camera's projection
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct Camera {
+    /// Optional data targeting official extensions
+    pub extensions: Extensions,
+    /// Optional application specific data
+    pub extras: Extras,
+    /// Optional user-defined name for this object
+    pub name: Option<String>,
+    /// Orthographic camera values
+    #[serde(rename = "orthographic")]
+    pub orthographic: Option<CameraOrthographic>,
+    /// Perspective camera values
+    #[serde(rename = "perspective")]
+    pub perspective: Option<CameraPerspective>,
+    /// `"perspective"` or `"orthographic"`
+    #[serde(rename = "type")]
+    pub ty: String, 
+}
+
+/// Values for an orthographic camera
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct CameraOrthographic {
+    /// Optional data targeting official extensions
+    pub extensions: Extensions,
+    /// Optional application specific data
+    pub extras: Extras,
+    /// The horizontal magnification of the view
+    #[serde(default, rename = "xmag")]
+    pub x_mag: f32,
+    /// The vertical magnification of the view
+    #[serde(default, rename = "ymag")]
+    pub y_mag: f32,
+    /// The distance to the far clipping plane
+    #[serde(default, rename = "zfar")]
+    pub z_far: f32,
+    /// The distance to the near clipping plane
+    #[serde(default, rename = "znear")]
+    pub z_near: f32,
+}
+
+/// Values for a perspective camera
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct CameraPerspective {
+    /// Aspect ratio of the field of view
+    #[serde(default, rename = "aspectRatio")]
+    pub aspect_ratio: f32,
+    /// Optional data targeting official extensions
+    pub extensions: Extensions,
+    /// Optional application specific data
+    pub extras: Extras,
+    /// The vertical field of view in radians
+    #[serde(default, rename = "yfov")]
+    pub y_fov: f32,
+    /// The distance to the far clipping plane
+    #[serde(default, rename = "zfar")]
+    pub z_far: f32,
+    /// The distance to the near clipping plane
+    #[serde(default, rename = "znear")]
+    pub z_near: f32,
+}
+
+/// Image data used to create a texture
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct Image {
+    /// The index of the `BufferView` that contains the image
+    #[serde(rename = "bufferView")]
+    pub buffer_view: Option<BufferViewIndex>,
+    /// Optional data targeting official extensions
+    pub extensions: Extensions,
+    /// Optional application specific data
+    pub extras: Extras,
+    /// The image's MIME type
+    #[serde(rename = "mimeType")]
+    pub mime_type: String,
+    /// Optional user-defined name for this object
+    pub name: Option<String>,
+    /// The uniform resource identifier of the image relative to the .gltf file
+    pub uri: Option<String>,
+}
+
 /// [Describes the material appearance of a primitive]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#material)
-#[derive(Debug, Default, Deserialize, Serialize)]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#material)
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Material {
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Extensions,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Extras,
     /// Optional user-defined name for this object
     pub name: Option<String>,
-    /// ID of the shading technique to be used
-    pub technique: Option<Id>,
-    /// Parameter values
+    /// Defines the metallic-roughness material model from Physically-Based Rendering (PBR) methodology
+    #[serde(rename = "pbrMetallicRoughness")]
+    pub pbr: MaterialPbr,
+    #[serde(rename = "normalTexture")]
+    pub normal_texture: MaterialNormalTexture,
+    #[serde(rename = "occlusionTexture")]
+    pub occlusion_texture: MaterialOcclusionTexture,
+    #[serde(rename = "emissiveTexture")]
+    pub emissive_texture: TextureInfo,
+    #[serde(rename = "emissiveFactor")]
     #[serde(default)]
-    pub values: Map<String, Value>,
+    pub emissive_factor: [f32; 3],
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct MaterialPbr {
+    /// The base color factor
+    #[serde(default = "material_pbr_base_color_factor_default")]
+    #[serde(rename = "baseColorFactor")]
+    pub base_color_factor: [f32; 4],
+    /// The base color texture
+    #[serde(rename = "baseColorTexture")]
+    pub base_color_texture: TextureInfo,
+    /// The metalness of the material
+    #[serde(default = "material_pbr_metallic_factor_default")]
+    #[serde(rename = "metallicFactor")]
+    pub metallic_factor: f32,
+    /// The roughness of the material
+    #[serde(default = "material_pbr_roughness_factor_default")]
+    #[serde(rename = "roughnessFactor")]
+    pub roughness_factor: f32,
+    /// The metallic-roughness texture
+    #[serde(rename = "metallicRoughnessTexture")]
+    pub metallic_roughness_texture: TextureInfo,
+}
+
+fn material_pbr_base_color_factor_default() -> [f32; 4] {
+    [1.0, 1.0, 1.0, 1.0]
+}
+
+fn material_pbr_metallic_factor_default() -> f32 {
+    1.0
+}
+
+fn material_pbr_roughness_factor_default() -> f32 {
+    1.0
+}
+
+/// Defines the normal texture of a material
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct MaterialNormalTexture {
+    /// The index of the texture
+    pub index: TextureIndex,
+    /// The scalar multiplier applied to each normal vector of the normal texture
+    #[serde(default = "material_normal_texture_scale_default")]
+    pub scale: f32,
+    /// The set index of the texture's `TEXCOORD` attribute
+    #[serde(default, rename = "texCoord")]
+    pub tex_coord: u32,
+}
+
+fn material_normal_texture_scale_default() -> f32 {
+    1.0
+}
+
+/// Defines the occlusion texture of a material
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct MaterialOcclusionTexture {
+    /// The index of the texture
+    pub index: TextureIndex,
+    /// The scalar multiplier controlling the amount of occlusion applied
+    #[serde(default = "material_occlusion_texture_strength_default")]
+    pub strength: f32,
+    /// The set index of the texture's `TEXCOORD` attribute
+    #[serde(default, rename = "texCoord")]
+    pub tex_coord: u32,
+}
+
+fn material_occlusion_texture_strength_default() -> f32 {
+    1.0
 }
 
 /// [A set of primitives to be rendered]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#mesh)
-#[derive(Debug, Default, Deserialize, Serialize)]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#mesh)
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Mesh {
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Extensions,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Extras,
     /// Optional user-defined name for this object
     pub name: Option<String>,
-    #[serde(default)]
+    /// Defines the geometry of this mesh to be renderered with a material
     pub primitives: Vec<MeshPrimitive>,
+    /// Defines the weights to be applied to the morph targets
+    #[serde(default)]
+    pub weights: Vec<f32>,
 }
 
 /// [Geometry to be rendered with the given material]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#meshprimitive)
-#[derive(Debug, Default, Deserialize, Serialize)]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#meshprimitive)
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct MeshPrimitive {
-    /// Mapping of attribute names to `Accessor` IDs
+    /// Maps attribute semantic names to the `Accessor`s containing their data
     #[serde(default)]
-    pub attributes: Map<String, Id>,
+    pub attributes: std::collections::HashMap<String, AccessorIndex>,
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Extensions,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
-    /// Optional ID of the `Accessor` containing index data
-    pub indices: Option<Id>,
-    /// ID of the material to apply to this primitive when rendering
-    pub material: Id,
-    /// The type of primitives to render (for example `GL_TRIANGLES`)
-    #[serde(default = "mesh_primitive_mode_default")]
-    pub mode: u32,
+    pub extras: Extras,
+    /// Index of the `Accessor` containing mesh indices
+    pub indices: Option<AccessorIndex>,
+    /// The index of the material to apply to this primitive when rendering
+    pub material: MaterialIndex,
+    /// The type of primitives to render
+    #[serde(default)]
+    pub mode: MeshPrimitiveMode,
+    #[serde(default)]
+    /// Morph targets
+    pub targets: Vec<MeshPrimitiveTarget>,
 }
 
-fn mesh_primitive_mode_default() -> u32 {
-    gl::TRIANGLES
+enum_number! {
+    MeshPrimitiveMode {
+        Points = 0,
+        Lines = 1,
+        LineLoop = 2,
+        LineStrip = 3,
+        Triangles = 4,
+        TriangleStrip = 5,
+        TriangleFan = 6,
+    }
 }
+
+/// *Unimplemented*
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct MeshPrimitiveTarget;
 
 /// [A single member of the glTF scene hierarchy]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#scenes)
-#[derive(Debug, Default, Deserialize, Serialize)]
+/// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#scenes)
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct Node {
+    /// The index of the camera referenced by this node
+    pub camera: CameraIndex,
+    /// The indices of this node's children
+    #[serde(default)]
+    pub children: Vec<NodeIndex>,
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Extensions,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
-    /// The IDs of the `Mesh` objects in this node
-    pub meshes: Option<Vec<Id>>,
+    pub extras: Extras,
+    /// 4x4 column-major transformation matrix
+    #[serde(default = "node_matrix_default")]
+    pub matrix: [[f32; 4]; 4],
+    /// The indices of the `Mesh` objects in this node
+    #[serde(default)]
+    pub meshes: Vec<MeshIndex>,
     /// Optional user-defined name for this object
     pub name: Option<String>,
-    // Incomplete
+    /// The node's unit quaternion rotation `[x, y, z, w]`
+    #[serde(default = "node_rotation_default")]
+    pub rotation: [f32; 4],
+    #[serde(default = "node_scale_default")]
+    /// The node's non-uniform scale
+    pub scale: [f32; 3],
+    #[serde(default)]
+    /// The node's translation
+    pub translation: [f32; 3],
+    /// The index of the skin referenced by this node
+    pub skin: SkinIndex,
+    /// The weights of the morph target
+    pub weights: Vec<f32>,
 }
 
-/// [Describes a GLSL shader program]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#programs)
-#[derive(Debug, Default, Deserialize, Serialize)]
+fn node_matrix_default() -> [[f32; 4]; 4] {
+    [
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0],
+    ]
+}
+
+fn node_rotation_default() -> [f32; 4] {
+    [0.0, 0.0, 0.0, 1.0]
+}
+
+fn node_scale_default() -> [f32; 3] {
+    [1.0, 1.0, 1.0]
+}
+
+/// [Defines texture sampler properties for filtering and wrapping modes]
+/// (https://github.com/KhronosGroup/glTF/blob/d63b796e6b7f6b084c710b97b048d59d749cb04a/specification/2.0/schema/sampler.schema.json)
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Program {
-    /// Vertex attribute bindings (e.g. `"u_ModelView"`) that will be passed to the shader
-    #[serde(default)]
-    pub attributes: Vec<String>,
+pub struct Sampler {
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Extensions,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
-    /// ID of the fragment shader component
-    #[serde(rename = "fragmentShader")]
-    pub fragment_shader: String,
+    pub extras: Extras,
+    /// Magnification filter
+    #[serde(default, rename = "magFilter")]
+    pub mag_filter: SamplerMagFilter,
+    /// Minification filter
+    #[serde(default, rename = "minFilter")]
+    pub min_filter: SamplerMinFilter,
     /// Optional user-defined name for this object
     pub name: Option<String>,
-    /// ID of the vertex shader component
-    #[serde(rename = "vertexShader")]
-    pub vertex_shader: String,
+    /// s wrapping mode
+    #[serde(default, rename = "wrapS")]
+    pub wrap_s: SamplerWrappingMode,
+    /// t wrapping mode
+    #[serde(default, rename = "wrapT")]
+    pub wrap_t: SamplerWrappingMode,
 }
 
-/// [Describes a GLSL shader component]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#shaders)
-#[derive(Debug, Default, Deserialize, Serialize)]
+enum_number! {
+    SamplerMagFilter {
+        Nearest = 9728,
+        Linear = 9729,
+    }
+}
+
+enum_number! {
+    SamplerMinFilter {
+        Nearest = 9728,
+        Linear = 9729,
+        NearestMipmapNearest = 9984,
+        LinearMipmapNearest = 9985,
+        NearestMipmapLinear = 9986,
+        LinearMipmapLinear = 9987,
+    }
+}
+
+enum_number! {
+    SamplerWrappingMode {
+        ClampToEdge = 33071,
+        MirroredRepeat = 33648,
+        Repeat = 10497,
+    }
+}
+
+/// [A set of visual objects to render](https://github.com/KhronosGroup/glTF/tree/2.0/specification/2.0#scenes)
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Shader {
+pub struct Scene {
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Extensions,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Extras,
     /// Optional user-defined name for this object
     pub name: Option<String>,
-    /// The shader stage (for example `GL_VERTEX_SHADER` or `GL_FRAGMENT_SHADER`)
-    #[serde(rename = "type")]
-    pub type_id: u32,
-    /// Uniform resource identifier of the GLSL source code
-    pub uri: String,
+    /// The indices of each root `Node` in this scene
+    #[serde(default)]
+    pub nodes: Vec<NodeIndex>,
 }
 
-/// [Describes the shading technqiue used for a material]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#technique)
-#[derive(Debug, Default, Deserialize, Serialize)]
+/// [Joints and matrices defining a skin](https://github.com/KhronosGroup/glTF/blob/d63b796e6b7f6b084c710b97b048d59d749cb04a/specification/2.0/schema/skin.schema.json)
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Technique {
-    /// Maps GLSL attribute names to technique parameter IDs
-    #[serde(default)]
-    pub attributes: Map<String, String>,
+pub struct Skin {
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Extensions,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
+    pub extras: Extras,
+    /// The index of the accessor containing the 4x4 inverse-bind matrices
+    #[serde(rename = "inverseBindMatrices")]
+    pub inverse_bind_matrices: Option<AccessorIndex>,
+    /// Indices of skeleton nodes used as joints in this skin
+    pub joints: Vec<NodeIndex>,
     /// Optional user-defined name for this object
     pub name: Option<String>,
-    #[serde(default)]
-    pub parameters: Map<String, TechniqueParameter>,
-    /// ID of the GLSL shader program to render with
-    pub program: Id,
-    /// Fixed-function rendering states
-    #[serde(default)]
-    pub states: TechniqueStates,
-    /// Maps uniform names to technqiue parameter IDs
-    #[serde(default)]
-    pub uniforms: Map<String, String>,
+    /// The index of the node used as a skeleton root
+    pub skeleton: Option<NodeIndex>,
 }
 
-/// Describes an [attribute or uniform input](https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#techniqueparameters-1) to a `Technique`.
-/// If `semantic` is not `None` then this parameter describes a [built-in uniform value]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#semantics)
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct TechniqueParameter {
-    /// Defines the number of elements if the parameter is an array
-    pub count: Option<u32>,
+pub struct Texture {
+    /// Texel data type
+    #[serde(default, rename = "type")]
+    pub data_type: TextureDataType,
     /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
+    pub extensions: Extensions,
     /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
-    /// ID of the `Node` whose transform is used as the parameter's value
-    pub node: Option<Id>,
-    /// `"MODELVIEW"`, `"PROJECTION"`, etc.
-    pub semantic: Option<String>,
-    /// The data type (for example `GL_FLOAT`, or `GL_FLOAT_VEC4`)
-    #[serde(rename = "type")]
-    pub type_id: u32,
-    /// The value of the parameter
-    pub value: Option<Value>,
+    pub extras: Extras,
+    /// Optional user-defined name for this object
+    pub name: Option<String>,
+    /// The texture format
+    #[serde(default)]
+    pub format: TextureFormat,
+    /// The texture internal format
+    #[serde(default, rename = "internalFormat")]
+    pub internal_format: TextureFormat,
+    /// The index of the sampler used by this texture
+    pub sampler: SamplerIndex,
+    /// The index of the image used by this texture
+    pub source: ImageIndex,
+    /// The target the texture should be bound to
+    #[serde(default)]
+    pub target: TextureTarget,
 }
 
-/// [Optional arguments to OpenGL state functions]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#render-states)
-#[derive(Debug, Default, Deserialize, Serialize)]
+enum_number! {
+    TextureDataType {
+        U8 = 5121,
+        U16_5_6_5 = 33635,
+        U16_4_4_4_4 = 32819,
+        U16_5_5_5_1 = 32820,
+    }
+}
+
+enum_number! {
+    TextureFormat {
+        Alpha = 6406,
+        Rgb = 6407,
+        Rgba = 6408,
+        Luminance = 6409,
+        LuminanceAlpha = 6410,
+    }
+}
+
+enum_number! {
+    TextureTarget {
+        Texture2d = 3553,
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct TechniqueStateFunctions {
-    /// Arguments `[red, green, blue, alpha]` for `glBlendColor()`
-    #[serde(default)]
-    #[serde(rename = "blendColor")]
-    pub blend_color: [f64; 4],
-    /// Arguments `[mode_rgb, mode_alpha]` for `glBlendEquationSeparate()`
-    #[serde(default = "technique_state_functions_blend_equation_default")]
-    #[serde(rename = "blendEquationSeparate")]
-    pub blend_equation: [u32; 2],
-    /// Arguments `[src_rgb, dst_rgb, src_alpha, dst_alpha]` for `glBlendFuncSeparate()`
-    #[serde(default = "technique_state_functions_blend_function_default")]
-    #[serde(rename = "blendFuncSeparate")]
-    pub blend_function: [u32; 4],
-    /// Arguments `[red, green, blue, alpha]` for `glColorMask()`
-    #[serde(default = "technique_state_functions_color_mask_default")]
-    #[serde(rename = "colorMask")]
-    pub color_mask: [bool; 4],
-    /// Argument `[mode]` for `glCullFace()`
-    #[serde(default = "technique_state_functions_cull_face_default")]
-    #[serde(rename = "cullFace")]
-    pub cull_face: [u32; 1],
-    /// Argument `[func]` for `glDepthFunc()`
-    #[serde(default = "technique_state_functions_depth_func_default")]
-    #[serde(rename = "depthFunc")]
-    pub depth_function: [u32; 1],
-    /// Argument `[flag]` for `glDepthMask()`
-    #[serde(default = "technique_state_functions_depth_mask_default")]
-    #[serde(rename = "depthMask")]
-    pub depth_mask: [bool; 1],
-    /// Arguments `[z_near, z_far]` for `glDepthRange()`
-    #[serde(default = "technique_state_functions_depth_range_default")]
-    #[serde(rename = "depthRange")]
-    pub depth_range: [f64; 2],
-    /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
-    /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
-    /// Argument `[mode]` for `glFrontFace()`
-    #[serde(default = "technique_state_functions_front_face_default")]
-    #[serde(rename = "frontFace")]
-    pub front_face: [u32; 1],
-    /// Argument `[width]` for `glLineWidth()`
-    #[serde(default = "technique_state_functions_line_width_default")]
-    #[serde(rename = "lineWidth")]
-    pub line_width: [f32; 1],
-    /// Arguments `[factor, units]` for `glPolygonOffset()`
-    #[serde(default)]
-    #[serde(rename = "polygonOffset")]
-    pub polygon_offset: [f32; 2],
-    /// Arguments `[x, y, width, height]` for `glScissor()`
-    #[serde(default)]
-    pub scissor: [i32; 4],
+/// Reference to a `Texture`
+pub struct TextureInfo {
+    /// The index of the texture
+    pub index: TextureIndex,
+    /// The set index of the texture's `TEXCOORD` attribute
+    #[serde(default, rename = "texCoord")]
+    pub tex_coord: u32,
 }
 
-fn technique_state_functions_blend_equation_default() -> [u32; 2] {
-    [gl::FUNC_ADD, gl::FUNC_ADD]
+impl Default for MeshPrimitiveMode {
+    fn default() -> Self {
+        MeshPrimitiveMode::Triangles
+    }
 }
 
-fn technique_state_functions_blend_function_default() -> [u32; 4] {
-    [gl::ONE, gl::ZERO, gl::ONE, gl::ZERO]
+impl Default for SamplerMagFilter {
+    fn default() -> Self {
+        SamplerMagFilter::Linear
+    }
 }
 
-fn technique_state_functions_color_mask_default() -> [bool; 4] {
-    [true, true, true, true]
+impl Default for SamplerMinFilter {
+    fn default() -> Self {
+        SamplerMinFilter::NearestMipmapLinear
+    }
 }
 
-fn technique_state_functions_cull_face_default() -> [u32; 1] {
-    [gl::BACK]
+impl Default for SamplerWrappingMode {
+    fn default() -> Self {
+        SamplerWrappingMode::Repeat
+    }
 }
 
-fn technique_state_functions_depth_func_default() -> [u32; 1] {
-    [gl::LESS]
+impl Default for TextureDataType {
+    fn default() -> Self {
+        TextureDataType::U8
+    }
 }
 
-fn technique_state_functions_depth_mask_default() -> [bool; 1] {
-    [true]
+impl Default for TextureFormat {
+    fn default() -> Self {
+        TextureFormat::Rgba
+    }
 }
 
-fn technique_state_functions_depth_range_default() -> [f64; 2] {
-    [0.0, 1.0]
-}
-
-fn technique_state_functions_front_face_default() -> [u32; 1] {
-    [gl::CCW]
-}
-
-fn technique_state_functions_line_width_default() -> [f32; 1] {
-    [1.0]
-}
-
-/// [Required OpenGL render states to be enabled]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#render-states)
-#[derive(Debug, Default, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct TechniqueStates {
-    /// OpenGL states to be enabled
-    #[serde(default)]
-    pub enable: Vec<u32>,
-    /// Optional data targeting official extensions
-    pub extensions: Option<Map<String, Value>>,
-    /// Optional application specific data
-    pub extras: Option<Map<String, Value>>,
-    /// Arguments for fixed-function rendering state functions
-    pub functions: Option<TechniqueStateFunctions>, 
+impl Default for TextureTarget {
+    fn default() -> Self {
+        TextureTarget::Texture2d
+    }
 }
 
 impl Gltf {
@@ -482,64 +765,73 @@ impl Gltf {
     /// let gltf = gltf::Gltf::new("./examples/box/Box.gltf")
     ///     .expect("Error loading glTF asset");
     /// ```
-    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
-        let mut file = try!(File::open(path));
-        let mut json = String::new();
-        try!(file.read_to_string(&mut json));
-        from_str(&json)
-            .map_err(|cause| Error::Parse(cause))
-    }
-
-    /// Looks up a top-level object by its identifier
-    ///
-    /// # Examples
-    ///
-    /// Finding a buffer view:
-    ///
-    /// ```
-    /// let gltf = gltf::Gltf::new("./examples/box/Box.gltf").unwrap();
-    /// let buffer_view = gltf
-    ///     .find::<gltf::BufferView>("bufferView_29")
-    ///     .expect("Buffer view not found");
-    /// ```
-    pub fn find<T>(&self, id: &str) -> Option<&T>
-        where Self: Find<T>
+    pub fn from_file<P>(path: P) -> Result<Self, LoadError>
+        where P: AsRef<std::path::Path>
     {
-        (self as &Find<T>).find(id)
+        use std::io::Read;
+        let mut file = std::fs::File::open(path).map_err(LoadError::Io)?;
+        let mut json = String::new();
+        let _ = file.read_to_string(&mut json).map_err(LoadError::Io)?;
+        serde_json::from_str(&json).map_err(|err| LoadError::De(err))
+    }
+
+    pub fn accessor(&self, index: AccessorIndex) -> Option<&Accessor> {
+        self.accessors.get(index.0 as usize)
+    }
+    
+    pub fn asset(&self) -> &Asset {
+        &self.asset
+    }
+    
+    pub fn buffer(&self, index: BufferIndex) -> Option<&Buffer> {
+        self.buffers.get(index.0 as usize)
+    }
+    
+    pub fn buffer_view(&self, index: BufferViewIndex) -> Option<&BufferView> {
+        self.buffer_views.get(index.0 as usize)
+    }
+
+    pub fn extensions_used(&self) -> &[String] {
+        &self.extensions_used[..]
+    }
+
+    pub fn extensions_required(&self) -> &[String] {
+        &self.extensions_required[..]
+    }
+    
+    pub fn camera(&self, index: CameraIndex) -> Option<&Camera> {
+        self.cameras.get(index.0 as usize)
+    }
+
+    pub fn image(&self, index: ImageIndex) -> Option<&Image> {
+        self.images.get(index.0 as usize)
+    }
+
+    pub fn material(&self, index: MaterialIndex) -> Option<&Material> {
+        self.materials.get(index.0 as usize)
+    }
+    
+    pub fn mesh(&self, index: MeshIndex) -> Option<&Mesh> {
+        self.meshes.get(index.0 as usize)
+    }
+    
+    pub fn node(&self, index: NodeIndex) -> Option<&Node> {
+        self.nodes.get(index.0 as usize)
+    }
+
+    pub fn sampler(&self, index: SamplerIndex) -> Option<&Sampler> {
+        self.samplers.get(index.0 as usize)
+    }
+    
+    pub fn scene(&self, index: SceneIndex) -> Option<&Scene> {
+        self.scenes.get(index.0 as usize)
+    }
+
+    pub fn skin(&self, index: SkinIndex) -> Option<&Skin> {
+        self.skins.get(index.0 as usize)
+    }
+
+    pub fn texture(&self, index: TextureIndex) -> Option<&Texture> {
+        self.textures.get(index.0 as usize)
     }
 }
-
-macro_rules! impl_find {
-    ($ident:ident, $ty:ty) => (
-        impl Find<$ty> for Gltf {
-            fn find(&self, id: &str) -> Option<&$ty> {
-                self.$ident
-                    .iter()
-                    .find(|&(entry_id, _)| entry_id == id)
-                    .map(|(_, entry)| entry)
-            }
-        }
-    )
-}
-
-impl_find!(accessors, Accessor);
-impl_find!(buffers, Buffer);
-impl_find!(buffer_views, BufferView);
-impl_find!(materials, Material);
-impl_find!(meshes, Mesh);
-impl_find!(programs, Program);
-impl_find!(shaders, Shader);
-impl_find!(techniques, Technique);
-
-impl From<std::io::Error> for Error {
-    fn from(err: std::io::Error) -> Error {
-        Error::Io(err)
-    }
-}
-
-impl From<serde_json::error::Error> for Error {
-    fn from(err: serde_json::error::Error) -> Error {
-        Error::Parse(err)
-    }
-}
-

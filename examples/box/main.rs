@@ -1,5 +1,5 @@
 
-// Copyright 2017 The gltf Library Developers
+// Copyright 2017 The gltf2 Library Developers
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -7,9 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-extern crate gltf;
+extern crate gltf2;
 
-use gltf::Gltf;
+use gltf2::Gltf;
 
 fn main() {
     let gltf = Gltf::new("./examples/box/Box.gltf").expect("Error loading glTF asset");
