@@ -1,5 +1,4 @@
 
-#[macro_export]
 macro_rules! impl_enum_string {
     (pub enum $name:ident {
         $($variant:ident = $value:expr,)*
@@ -54,10 +53,10 @@ macro_rules! impl_enum_string {
     }
 }
 
-/// Copy-paste from [serde.rs](https://serde.rs/enum-number.html)
-macro_rules! impl_enum {
-    ($name:ident { $($variant:ident = $value:expr, )* }) => {
+macro_rules! impl_enum_u32 {
+    (pub enum $name:ident { $($variant:ident = $value:expr, )* }) => {
         #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+        #[repr(u32)]
         #[allow(non_camel_case_types)]
         pub enum $name {
             $($variant = $value,)*
@@ -67,7 +66,6 @@ macro_rules! impl_enum {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
                 where S: ::serde::Serializer
             {
-                // Serialize the enum as a u64.
                 serializer.serialize_u64(*self as u64)
             }
         }
@@ -77,29 +75,27 @@ macro_rules! impl_enum {
                 where D: ::serde::Deserializer
             {
                 struct Visitor;
-
                 impl ::serde::de::Visitor for Visitor {
                     type Value = $name;
 
-                    fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-                        formatter.write_str("positive integer")
+                    fn expecting(&self, formatter: &mut ::std::fmt::Formatter)
+                                 -> ::std::fmt::Result
+                    {
+                        formatter.write_str("GLenum")
                     }
 
                     fn visit_u64<E>(self, value: u64) -> Result<$name, E>
                         where E: ::serde::de::Error
                     {
-                        // Rust does not come with a simple way of converting a
-                        // number to an enum, so use a big `match`.
                         match value {
                             $( $value => Ok($name::$variant), )*
-                                _ => Err(E::custom(
-                                    format!("unknown {} value: {}",
-                                            stringify!($name), value))),
+                                bad => {
+                                    let msg = format!("invalid value: {}", bad);
+                                    Err(E::custom(msg))
+                                },
                         }
                     }
                 }
-
-                // Deserialize the enum from a u64.
                 deserializer.deserialize_u64(Visitor)
             }
         }
