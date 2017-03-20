@@ -750,9 +750,9 @@ impl Root {
         &self.accessors[index.0 as usize]
     }
 
-    /// Returns an iterator over all accessors
-    pub fn accessor_iter(&self) -> std::slice::Iter<Accessor> {
-        self.accessors.iter()
+    /// Returns all accessors as a slice
+    pub fn accessors(&self) -> &[Accessor] {
+        &self.accessors
     }
     
     /// Returns the metadata included with this asset
@@ -792,12 +792,12 @@ impl Root {
 
     /// Returns the extensions referenced in this .gltf file
     pub fn extensions_used(&self) -> &[String] {
-        &self.extensions_used[..]
+        &self.extensions_used
     }
 
     /// Returns the extensions required to load and render this asset
     pub fn extensions_required(&self) -> &[String] {
-        &self.extensions_required[..]
+        &self.extensions_required
     }
 
     /// Returns the image at the given index
