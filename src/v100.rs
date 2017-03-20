@@ -9,7 +9,6 @@
 
 use gl;
 use serde_json;
-use std;
 use LoadError;
 
 pub use std::collections::HashMap as Map;
@@ -456,24 +455,11 @@ pub struct TechniqueStates {
 }
 
 impl Root {
-    /// Loads a glTF version 1.0 asset
-    ///
-    /// # Examples
-    ///
-    /// Basic usage:
-    ///
-    /// ```
-    /// let gltf = gltf::v100::Root::load("./examples/box/Box.gltf")
-    ///     .expect("Error loading glTF asset");
-    /// ```
-    pub fn load<P>(path: P) -> Result<Self, LoadError>
-        where P: AsRef<std::path::Path>
-    {
-        use std::io::Read;
-        let mut file = std::fs::File::open(path).map_err(LoadError::Io)?;
-        let mut json = String::new();
-        let _ = file.read_to_string(&mut json).map_err(LoadError::Io)?;
-        serde_json::from_str(&json).map_err(|err| LoadError::De(err))
+    /// Loads a glTF version 1.0 asset from raw JSON
+    pub fn load_from_str(json: &str) -> Result<Self, LoadError> {
+        let root: Root = serde_json::from_str(json)
+            .map_err(|err| LoadError::De(err))?;
+        Ok(root)
     }
 
     /// Looks up a top-level object by its identifier
@@ -483,7 +469,10 @@ impl Root {
     /// Finding a buffer view:
     ///
     /// ```
-    /// let gltf = gltf::v100::Root::load("./examples/box/Box.gltf").unwrap();
+    /// let gltf = gltf::load("glTF-Sample-Models/1.0/Box/glTF/Box.gltf")
+    ///                .unwrap()
+    ///                .to_version_100()
+    ///                .unwrap();
     /// let buffer_view = gltf
     ///     .find::<gltf::v100::BufferView>("bufferView_29")
     ///     .expect("Buffer view not found");

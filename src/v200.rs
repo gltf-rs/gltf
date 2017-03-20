@@ -7,12 +7,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use serde;
 use serde_json;
 use std;
 use LoadError;
 
 /// Index into an array owned by the root glTF object
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug)]
 pub struct Index<T>(u32, std::marker::PhantomData<T>);
 
 /// Generic untyped JSON object
@@ -733,15 +734,9 @@ impl Default for TextureTarget {
 }
 
 impl Root {
-    /// Loads a .gltf metadata file from the file system
-    pub fn load<P>(path: P) -> Result<Self, LoadError>
-        where P: AsRef<std::path::Path>
-    {
-        use std::io::Read;
-        let mut file = std::fs::File::open(path).map_err(LoadError::Io)?;
-        let mut json = String::new();
-        let _ = file.read_to_string(&mut json).map_err(LoadError::Io)?;
-        let root: Root = serde_json::from_str(&json)
+    /// Loads a glTF version 2.0 asset from raw JSON
+    pub fn load_from_str(json: &str) -> Result<Self, LoadError> {
+        let root: Root = serde_json::from_str(json)
             .map_err(|err| LoadError::De(err))?;
         if root.has_invalid_indices() {
             Err(LoadError::InvalidIndices)
@@ -996,5 +991,38 @@ impl Root {
           || ck_scenes
           || ck_skins
           || ck_textures)
+    }
+}
+
+impl<T> serde::Serialize for Index<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: ::serde::Serializer
+    {
+        let index: &Index<u64> = unsafe { std::mem::transmute(self) };
+        serializer.serialize_u64(index.0 as u64)
+    }
+}
+
+impl<T> serde::Deserialize for Index<T> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: serde::Deserializer
+    {
+        struct Visitor<T>(std::marker::PhantomData<T>);
+        impl<T> serde::de::Visitor for Visitor<T> {
+            type Value = Index<T>;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter)
+                         -> std::fmt::Result
+            {
+                formatter.write_str("GLenum")
+            }
+
+            fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
+                where E: serde::de::Error
+            {
+                Ok(Index(value as u32, std::marker::PhantomData))
+            }
+        }
+        deserializer.deserialize_u64(Visitor::<T>(std::marker::PhantomData))
     }
 }
