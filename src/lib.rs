@@ -22,6 +22,8 @@ pub mod v200;
 /// Error encountered when loading a glTF asset
 #[derive(Debug)]
 pub enum LoadError {
+    /// An index was found to be out of range
+    InvalidIndices,
     /// Standard input / output error
     Io(std::io::Error),
     /// Failure when deserializing a .gltf metadata file

@@ -350,7 +350,7 @@ pub struct Material {
     pub name: Option<String>,
     /// Defines the metallic-roughness material model from Physically-Based Rendering (PBR) methodology
     #[serde(rename = "pbrMetallicRoughness")]
-    pub pbr: MaterialPbr,
+    pub pbr: MaterialPbrMetallicRoughness,
     #[serde(rename = "normalTexture")]
     pub normal_texture: MaterialNormalTexture,
     #[serde(rename = "occlusionTexture")]
@@ -364,20 +364,20 @@ pub struct Material {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct MaterialPbr {
+pub struct MaterialPbrMetallicRoughness {
     /// The base color factor
-    #[serde(default = "material_pbr_base_color_factor_default")]
+    #[serde(default = "material_pbr_metallic_roughness_base_color_factor_default")]
     #[serde(rename = "baseColorFactor")]
     pub base_color_factor: [f32; 4],
     /// The base color texture
     #[serde(rename = "baseColorTexture")]
     pub base_color_texture: TextureInfo,
     /// The metalness of the material
-    #[serde(default = "material_pbr_metallic_factor_default")]
+    #[serde(default = "material_pbr_metallic_roughness_metallic_factor_default")]
     #[serde(rename = "metallicFactor")]
     pub metallic_factor: f32,
     /// The roughness of the material
-    #[serde(default = "material_pbr_roughness_factor_default")]
+    #[serde(default = "material_pbr_metallic_roughness_roughness_factor_default")]
     #[serde(rename = "roughnessFactor")]
     pub roughness_factor: f32,
     /// The metallic-roughness texture
@@ -385,15 +385,15 @@ pub struct MaterialPbr {
     pub metallic_roughness_texture: TextureInfo,
 }
 
-fn material_pbr_base_color_factor_default() -> [f32; 4] {
+fn material_pbr_metallic_roughness_base_color_factor_default() -> [f32; 4] {
     [1.0, 1.0, 1.0, 1.0]
 }
 
-fn material_pbr_metallic_factor_default() -> f32 {
+fn material_pbr_metallic_roughness_metallic_factor_default() -> f32 {
     1.0
 }
 
-fn material_pbr_roughness_factor_default() -> f32 {
+fn material_pbr_metallic_roughness_roughness_factor_default() -> f32 {
     1.0
 }
 
@@ -472,7 +472,8 @@ pub struct MeshPrimitive {
     pub mode: MeshPrimitiveMode,
     #[serde(default)]
     /// Morph targets
-    pub targets: Vec<MeshPrimitiveTarget>,
+    // TODO: Confirm that this the correct implementation
+    pub targets: Vec<std::collections::HashMap<String, Index<Accessor>>>,
 }
 
 impl_enum_u32! {
@@ -486,10 +487,6 @@ impl_enum_u32! {
         TriangleFan = 6,
     }
 }
-
-/// *Unimplemented*
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct MeshPrimitiveTarget;
 
 /// [A single member of the glTF scene hierarchy]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#scenes)
@@ -736,6 +733,7 @@ impl Default for TextureTarget {
 }
 
 impl Root {
+    /// Loads a .gltf metadata file from the file system
     pub fn load<P>(path: P) -> Result<Self, LoadError>
         where P: AsRef<std::path::Path>
     {
@@ -743,66 +741,200 @@ impl Root {
         let mut file = std::fs::File::open(path).map_err(LoadError::Io)?;
         let mut json = String::new();
         let _ = file.read_to_string(&mut json).map_err(LoadError::Io)?;
-        serde_json::from_str(&json).map_err(|err| LoadError::De(err))
+        let root: Root = serde_json::from_str(&json)
+            .map_err(|err| LoadError::De(err))?;
+        if root.has_invalid_indices() {
+            Err(LoadError::InvalidIndices)
+        } else {
+            Ok(root)
+        }
     }
 
+    /// Returns the accessor at the given index
     pub fn accessor(&self, index: Index<Accessor>) -> Option<&Accessor> {
         self.accessors.get(index.0 as usize)
     }
-    
+
+    /// Returns the metadata included with this asset
     pub fn asset(&self) -> &Asset {
         &self.asset
     }
-    
+
+    /// Returns the buffer at the given index
     pub fn buffer(&self, index: Index<Buffer>) -> Option<&Buffer> {
         self.buffers.get(index.0 as usize)
     }
-    
+
+    /// Returns the buffer view at the given index
     pub fn buffer_view(&self, index: Index<BufferView>) -> Option<&BufferView> {
         self.buffer_views.get(index.0 as usize)
     }
 
-    pub fn extensions_used(&self) -> &[String] {
-        &self.extensions_used[..]
-    }
-
-    pub fn extensions_required(&self) -> &[String] {
-        &self.extensions_required[..]
-    }
-    
+    /// Returns the camera at the given index
     pub fn camera(&self, index: Index<Camera>) -> Option<&Camera> {
         self.cameras.get(index.0 as usize)
     }
 
+    /// Returns the extensions referenced in this .gltf file
+    pub fn extensions_used(&self) -> &[String] {
+        &self.extensions_used[..]
+    }
+
+    /// Returns the extensions required to load and render this asset
+    pub fn extensions_required(&self) -> &[String] {
+        &self.extensions_required[..]
+    }
+
+    /// Returns the image at the given index
     pub fn image(&self, index: Index<Image>) -> Option<&Image> {
         self.images.get(index.0 as usize)
     }
-
+    
+    /// Returns the material at the given index
     pub fn material(&self, index: Index<Material>) -> Option<&Material> {
         self.materials.get(index.0 as usize)
     }
-    
+
+    /// Returns the mesh at the given index
     pub fn mesh(&self, index: Index<Mesh>) -> Option<&Mesh> {
         self.meshes.get(index.0 as usize)
     }
-    
+
+    /// Returns the node at the given index
     pub fn node(&self, index: Index<Node>) -> Option<&Node> {
         self.nodes.get(index.0 as usize)
     }
 
+    /// Returns the sampler at the given index
     pub fn sampler(&self, index: Index<Sampler>) -> Option<&Sampler> {
         self.samplers.get(index.0 as usize)
     }
-    
+
+    /// Returns the scene at the given index
     pub fn scene(&self, index: Index<Scene>) -> Option<&Scene> {
         self.scenes.get(index.0 as usize)
     }
 
+    /// Returns the skin at the given index
     pub fn skin(&self, index: Index<Skin>) -> Option<&Skin> {
         self.skins.get(index.0 as usize)
     }
 
+    /// Returns the texture at the given index
     pub fn texture(&self, index: Index<Texture>) -> Option<&Texture> {
         self.textures.get(index.0 as usize)
+    }
+
+    /// Performs a search for any indices that are out of range of the arrays,
+    /// returning true if all indices are within a valid range
+    fn has_invalid_indices(&self) -> bool {
+        /// Returns true if the index is *out* of range of the vector
+        fn range_check<T>(vector: &Vec<T>, index: &Index<T>) -> bool {
+            index.0 as usize >= vector.len()
+        }
+        let ck_accessors = self.accessors.iter().any(|accessor| {
+            range_check(&self.buffer_views, &accessor.buffer_view)
+        });
+        let ck_animations = self.animations.iter().any(|animation| {
+            let ck_channels = animation.channels.iter().any(|channel| {
+                let ck_sampler = range_check(&self.samplers, &channel.sampler);
+                let ck_target = range_check(&self.nodes, &channel.target.node);
+                ck_sampler || ck_target
+            });
+            let ck_samplers = animation.samplers.iter().any(|sampler| {
+                let ck_input = range_check(&self.accessors, &sampler.input);
+                let ck_output = range_check(&self.accessors, &sampler.output);
+                ck_input || ck_output
+            });
+            ck_channels || ck_samplers
+        });
+        let ck_buffer_views = self.buffer_views.iter().any(|view| {
+            range_check(&self.buffers, &view.buffer)
+        });
+        let ck_images = self.images.iter().any(|image| {
+            if let Some(ref index) = image.buffer_view {
+                range_check(&self.buffer_views, index)
+            } else {
+                false
+            }
+        });
+        let ck_materials = self.materials.iter().any(|material| {
+            let ck_pbr = {
+                let ck_base = range_check(&self.textures,
+                                          &material.pbr.base_color_texture.index);
+                let ck_mrt = range_check(&self.textures,
+                                         &material.pbr.metallic_roughness_texture.index);
+                ck_base || ck_mrt
+            };
+            let ck_normal = range_check(&self.textures,
+                                        &material.normal_texture.index);
+            let ck_occlusion = range_check(&self.textures,
+                                           &material.occlusion_texture.index);
+            let ck_emissive = range_check(&self.textures,
+                                          &material.emissive_texture.index);
+            ck_pbr || ck_normal || ck_occlusion || ck_emissive
+        });
+        let ck_meshes = self.meshes.iter().any(|mesh| {
+            mesh.primitives.iter().any(|primitive| {
+                let ck_attributes = primitive.attributes.iter().any(|(_, index)| {
+                    range_check(&self.accessors, index)
+                });
+                let ck_indices = if let Some(ref index) = primitive.indices {
+                    range_check(&self.accessors, index)
+                } else {
+                    false
+                };
+                let ck_material = range_check(&self.materials,
+                                              &primitive.material);
+                // TODO: Implement me!
+                let ck_targets = false;
+                ck_attributes || ck_indices || ck_material || ck_targets
+            })
+        });
+        let ck_nodes = self.nodes.iter().any(|node| {
+            let ck_camera = range_check(&self.cameras, &node.camera);
+            let ck_children = node.children.iter().any(|index| {
+                range_check(&self.nodes, index)
+            });
+            let ck_meshes = node.meshes.iter().any(|index| {
+                range_check(&self.meshes, index)
+            });
+            let ck_skin = range_check(&self.skins, &node.skin);
+            ck_children || ck_meshes || ck_camera || ck_skin
+        });
+        let ck_scenes = self.scenes.iter().any(|scene| {
+            scene.nodes.iter().any(|index| range_check(&self.nodes, index))
+        });
+        let ck_skins = self.skins.iter().any(|skin| {
+            let ck_ibm = if let Some(ref index) = skin.inverse_bind_matrices {
+                range_check(&self.accessors, index)
+            } else {
+                false
+            };
+            let ck_joints = skin.joints.iter().any(|index| {
+                range_check(&self.nodes, index)
+            });
+            let ck_skeleton = if let Some(ref index) = skin.skeleton {
+                range_check(&self.nodes, index)
+            } else {
+                false
+            };
+            ck_ibm || ck_joints || ck_skeleton
+        });
+        let ck_textures = self.textures.iter().any(|texture| {
+            let ck_sampler = range_check(&self.samplers, &texture.sampler);
+            let ck_source = range_check(&self.images, &texture.source);
+            ck_sampler || ck_source
+        });
+        !(ck_accessors
+          || ck_animations
+          || ck_buffer_views
+          || ck_images
+          || ck_materials
+          || ck_meshes
+          || ck_nodes
+          || ck_scenes
+          || ck_skins
+          || ck_textures)
     }
 }
