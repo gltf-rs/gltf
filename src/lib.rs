@@ -13,6 +13,9 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
+#[macro_use]
+mod macros;
+
 pub mod v100;
 pub mod v200;
 

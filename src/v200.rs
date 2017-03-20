@@ -7,53 +7,21 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![allow(dead_code)]
-
 use serde_json;
 use std;
 use LoadError;
 
-#[macro_use]
-mod macros;
-
+/// Index into an array owned by the root glTF object
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct AccessorIndex(u32);
+pub struct Index<T>(u32, std::marker::PhantomData<T>);
 
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct BufferIndex(u32);
-
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct BufferViewIndex(u32);
-
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct CameraIndex(u32);
-
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct ImageIndex(u32);
-
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct MaterialIndex(u32);
-
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct MeshIndex(u32);
-
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct NodeIndex(u32);
-
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct SamplerIndex(u32);
-
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct SceneIndex(u32);
-
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct SkinIndex(u32);
-
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct TextureIndex(u32);
-
+/// Generic untyped JSON object
 pub type UntypedObject = std::collections::HashMap<String, serde_json::Value>;
+
+/// `extensions` field type
 pub type Extensions = Option<UntypedObject>;
+
+/// `extras` field type
 pub type Extras = Option<UntypedObject>;
 
 /// [The root object for a glTF asset]
@@ -77,7 +45,7 @@ pub struct Root {
     meshes: Vec<Mesh>,
     nodes: Vec<Node>,
     samplers: Vec<Sampler>,
-    scene: SceneIndex,
+    scene: Index<Scene>,
     scenes: Vec<Scene>,
     skins: Vec<Skin>,
     textures: Vec<Texture>,
@@ -90,7 +58,7 @@ pub struct Root {
 pub struct Accessor {
     /// The identifier of the `BufferView` this accessor reads from.
     #[serde(rename = "bufferView")]
-    pub buffer_view: BufferViewIndex,
+    pub buffer_view: Index<BufferView>,
     /// Where the data items begin from in the `BufferView`
     #[serde(rename = "byteOffset")]
     pub byte_offset: u32,
@@ -123,8 +91,17 @@ impl_enum! {
     }
 }
 
-// TODO: Replace with statically typed constants
-pub type AccessorComponentWidth = String;
+impl_enum_string! {
+    pub enum AccessorComponentWidth {
+        Scalar = "SCALAR",
+        Vec2 = "VEC2",
+        Vec3 = "VEC3",
+        Vec4 = "VEC4",
+        Mat2 = "MAT2",
+        Mat3 = "MAT3",
+        Mat4 = "MAT4",
+    }
+}
 
 /// [A keyframe animation]
 /// (https://github.com/KhronosGroup/glTF/blob/d63b796e6b7f6b084c710b97b048d59d749cb04a/specification/2.0/schema/animation.schema.json)
@@ -148,7 +125,7 @@ pub struct Animation {
 #[serde(deny_unknown_fields)]
 pub struct AnimationChannel {
     /// The index of the sampler used to compute the value for the target
-    pub sampler: SamplerIndex,
+    pub sampler: Index<Sampler>,
     /// The index of the node and TRS property to target
     pub target: AnimationChannelTarget,
 }
@@ -162,7 +139,7 @@ pub struct AnimationChannelTarget {
     /// Optional application specific data
     pub extras: Extras,
     /// The index of the node to target
-    pub node: NodeIndex,
+    pub node: Index<Node>,
     /// The name of the node's TRS property to modify e.g. `"translation"`
     pub path: String,
 }
@@ -176,12 +153,18 @@ pub struct AnimationSampler {
     /// Optional application specific data
     pub extras: Extras,
     /// The index of the accessor containing keyframe input values (e.g. time)
-    pub input: AccessorIndex,
-    /// The interpolation algorithm (e.g. `"LINEAR"` or `"STEP"`)
-    // TODO: Replace with statically typed constant
-    pub interpolation: String,
+    pub input: Index<Accessor>,
+    /// The interpolation algorithm
+    pub interpolation: AnimationInterpolation,
     /// The index of an accessor containing keyframe output values
-    pub output: AccessorIndex,
+    pub output: Index<Accessor>,
+}
+
+impl_enum_string! {
+    pub enum AnimationInterpolation {
+        Linear = "LINEAR",
+        Step = "STEP",
+    }
 }
 
 /// [Contains metadata about the glTF asset]
@@ -233,7 +216,7 @@ pub struct Buffer {
 #[serde(deny_unknown_fields)]
 pub struct BufferView {
     /// The id of the parent `Buffer`
-    pub buffer: BufferIndex,
+    pub buffer: Index<Buffer>,
     /// The length of the buffer view data in bytes
     #[serde(rename = "byteLength")]
     pub byte_length: u32,
@@ -332,7 +315,7 @@ pub struct CameraPerspective {
 pub struct Image {
     /// The index of the `BufferView` that contains the image
     #[serde(rename = "bufferView")]
-    pub buffer_view: Option<BufferViewIndex>,
+    pub buffer_view: Option<Index<BufferView>>,
     /// Optional data targeting official extensions
     pub extensions: Extensions,
     /// Optional application specific data
@@ -411,7 +394,7 @@ fn material_pbr_roughness_factor_default() -> f32 {
 #[serde(deny_unknown_fields)]
 pub struct MaterialNormalTexture {
     /// The index of the texture
-    pub index: TextureIndex,
+    pub index: Index<Texture>,
     /// The scalar multiplier applied to each normal vector of the normal texture
     #[serde(default = "material_normal_texture_scale_default")]
     pub scale: f32,
@@ -429,7 +412,7 @@ fn material_normal_texture_scale_default() -> f32 {
 #[serde(deny_unknown_fields)]
 pub struct MaterialOcclusionTexture {
     /// The index of the texture
-    pub index: TextureIndex,
+    pub index: Index<Texture>,
     /// The scalar multiplier controlling the amount of occlusion applied
     #[serde(default = "material_occlusion_texture_strength_default")]
     pub strength: f32,
@@ -467,15 +450,15 @@ pub struct Mesh {
 pub struct MeshPrimitive {
     /// Maps attribute semantic names to the `Accessor`s containing their data
     #[serde(default)]
-    pub attributes: std::collections::HashMap<String, AccessorIndex>,
+    pub attributes: std::collections::HashMap<String, Index<Accessor>>,
     /// Optional data targeting official extensions
     pub extensions: Extensions,
     /// Optional application specific data
     pub extras: Extras,
     /// Index of the `Accessor` containing mesh indices
-    pub indices: Option<AccessorIndex>,
+    pub indices: Option<Index<Accessor>>,
     /// The index of the material to apply to this primitive when rendering
-    pub material: MaterialIndex,
+    pub material: Index<Material>,
     /// The type of primitives to render
     #[serde(default)]
     pub mode: MeshPrimitiveMode,
@@ -506,10 +489,10 @@ pub struct MeshPrimitiveTarget;
 #[serde(deny_unknown_fields)]
 pub struct Node {
     /// The index of the camera referenced by this node
-    pub camera: CameraIndex,
+    pub camera: Index<Camera>,
     /// The indices of this node's children
     #[serde(default)]
-    pub children: Vec<NodeIndex>,
+    pub children: Vec<Index<Node>>,
     /// Optional data targeting official extensions
     pub extensions: Extensions,
     /// Optional application specific data
@@ -519,7 +502,7 @@ pub struct Node {
     pub matrix: [[f32; 4]; 4],
     /// The indices of the `Mesh` objects in this node
     #[serde(default)]
-    pub meshes: Vec<MeshIndex>,
+    pub meshes: Vec<Index<Mesh>>,
     /// Optional user-defined name for this object
     pub name: Option<String>,
     /// The node's unit quaternion rotation `[x, y, z, w]`
@@ -532,7 +515,7 @@ pub struct Node {
     /// The node's translation
     pub translation: [f32; 3],
     /// The index of the skin referenced by this node
-    pub skin: SkinIndex,
+    pub skin: Index<Skin>,
     /// The weights of the morph target
     pub weights: Vec<f32>,
 }
@@ -617,7 +600,7 @@ pub struct Scene {
     pub name: Option<String>,
     /// The indices of each root `Node` in this scene
     #[serde(default)]
-    pub nodes: Vec<NodeIndex>,
+    pub nodes: Vec<Index<Node>>,
 }
 
 /// [Joints and matrices defining a skin](https://github.com/KhronosGroup/glTF/blob/d63b796e6b7f6b084c710b97b048d59d749cb04a/specification/2.0/schema/skin.schema.json)
@@ -630,13 +613,13 @@ pub struct Skin {
     pub extras: Extras,
     /// The index of the accessor containing the 4x4 inverse-bind matrices
     #[serde(rename = "inverseBindMatrices")]
-    pub inverse_bind_matrices: Option<AccessorIndex>,
+    pub inverse_bind_matrices: Option<Index<Accessor>>,
     /// Indices of skeleton nodes used as joints in this skin
-    pub joints: Vec<NodeIndex>,
+    pub joints: Vec<Index<Node>>,
     /// Optional user-defined name for this object
     pub name: Option<String>,
     /// The index of the node used as a skeleton root
-    pub skeleton: Option<NodeIndex>,
+    pub skeleton: Option<Index<Node>>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -658,9 +641,9 @@ pub struct Texture {
     #[serde(default, rename = "internalFormat")]
     pub internal_format: TextureFormat,
     /// The index of the sampler used by this texture
-    pub sampler: SamplerIndex,
+    pub sampler: Index<Sampler>,
     /// The index of the image used by this texture
-    pub source: ImageIndex,
+    pub source: Index<Image>,
     /// The target the texture should be bound to
     #[serde(default)]
     pub target: TextureTarget,
@@ -696,7 +679,7 @@ impl_enum! {
 /// Reference to a `Texture`
 pub struct TextureInfo {
     /// The index of the texture
-    pub index: TextureIndex,
+    pub index: Index<Texture>,
     /// The set index of the texture's `TEXCOORD` attribute
     #[serde(default, rename = "texCoord")]
     pub tex_coord: u32,
@@ -755,7 +738,7 @@ impl Root {
         serde_json::from_str(&json).map_err(|err| LoadError::De(err))
     }
 
-    pub fn accessor(&self, index: AccessorIndex) -> Option<&Accessor> {
+    pub fn accessor(&self, index: Index<Accessor>) -> Option<&Accessor> {
         self.accessors.get(index.0 as usize)
     }
     
@@ -763,11 +746,11 @@ impl Root {
         &self.asset
     }
     
-    pub fn buffer(&self, index: BufferIndex) -> Option<&Buffer> {
+    pub fn buffer(&self, index: Index<Buffer>) -> Option<&Buffer> {
         self.buffers.get(index.0 as usize)
     }
     
-    pub fn buffer_view(&self, index: BufferViewIndex) -> Option<&BufferView> {
+    pub fn buffer_view(&self, index: Index<BufferView>) -> Option<&BufferView> {
         self.buffer_views.get(index.0 as usize)
     }
 
@@ -779,39 +762,39 @@ impl Root {
         &self.extensions_required[..]
     }
     
-    pub fn camera(&self, index: CameraIndex) -> Option<&Camera> {
+    pub fn camera(&self, index: Index<Camera>) -> Option<&Camera> {
         self.cameras.get(index.0 as usize)
     }
 
-    pub fn image(&self, index: ImageIndex) -> Option<&Image> {
+    pub fn image(&self, index: Index<Image>) -> Option<&Image> {
         self.images.get(index.0 as usize)
     }
 
-    pub fn material(&self, index: MaterialIndex) -> Option<&Material> {
+    pub fn material(&self, index: Index<Material>) -> Option<&Material> {
         self.materials.get(index.0 as usize)
     }
     
-    pub fn mesh(&self, index: MeshIndex) -> Option<&Mesh> {
+    pub fn mesh(&self, index: Index<Mesh>) -> Option<&Mesh> {
         self.meshes.get(index.0 as usize)
     }
     
-    pub fn node(&self, index: NodeIndex) -> Option<&Node> {
+    pub fn node(&self, index: Index<Node>) -> Option<&Node> {
         self.nodes.get(index.0 as usize)
     }
 
-    pub fn sampler(&self, index: SamplerIndex) -> Option<&Sampler> {
+    pub fn sampler(&self, index: Index<Sampler>) -> Option<&Sampler> {
         self.samplers.get(index.0 as usize)
     }
     
-    pub fn scene(&self, index: SceneIndex) -> Option<&Scene> {
+    pub fn scene(&self, index: Index<Scene>) -> Option<&Scene> {
         self.scenes.get(index.0 as usize)
     }
 
-    pub fn skin(&self, index: SkinIndex) -> Option<&Skin> {
+    pub fn skin(&self, index: Index<Skin>) -> Option<&Skin> {
         self.skins.get(index.0 as usize)
     }
 
-    pub fn texture(&self, index: TextureIndex) -> Option<&Texture> {
+    pub fn texture(&self, index: Index<Texture>) -> Option<&Texture> {
         self.textures.get(index.0 as usize)
     }
 }
