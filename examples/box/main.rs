@@ -7,14 +7,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-extern crate gl;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
+extern crate gltf;
 
-mod v100;
-mod v200;
+use gltf::Gltf;
 
-pub use v100::*;
+fn main() {
+    let gltf = Gltf::new("./examples/box/Box.gltf").expect("Error loading glTF asset");
+    println!("{:?}", gltf);
+}
 
