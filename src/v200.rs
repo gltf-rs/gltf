@@ -751,8 +751,8 @@ impl Root {
     }
 
     /// Returns the accessor at the given index
-    pub fn accessor(&self, index: Index<Accessor>) -> Option<&Accessor> {
-        self.accessors.get(index.0 as usize)
+    pub fn accessor(&self, index: Index<Accessor>) -> &Accessor {
+        &self.accessors[index.0 as usize]
     }
 
     /// Returns the metadata included with this asset
@@ -761,18 +761,18 @@ impl Root {
     }
 
     /// Returns the buffer at the given index
-    pub fn buffer(&self, index: Index<Buffer>) -> Option<&Buffer> {
-        self.buffers.get(index.0 as usize)
+    pub fn buffer(&self, index: Index<Buffer>) -> &Buffer {
+        &self.buffers[index.0 as usize]
     }
 
     /// Returns the buffer view at the given index
-    pub fn buffer_view(&self, index: Index<BufferView>) -> Option<&BufferView> {
-        self.buffer_views.get(index.0 as usize)
+    pub fn buffer_view(&self, index: Index<BufferView>) -> &BufferView {
+        &self.buffer_views[index.0 as usize]
     }
 
     /// Returns the camera at the given index
-    pub fn camera(&self, index: Index<Camera>) -> Option<&Camera> {
-        self.cameras.get(index.0 as usize)
+    pub fn camera(&self, index: Index<Camera>) -> &Camera {
+        &self.cameras[index.0 as usize]
     }
 
     /// Returns the extensions referenced in this .gltf file
@@ -786,43 +786,43 @@ impl Root {
     }
 
     /// Returns the image at the given index
-    pub fn image(&self, index: Index<Image>) -> Option<&Image> {
-        self.images.get(index.0 as usize)
+    pub fn image(&self, index: Index<Image>) -> &Image {
+        &self.images[index.0 as usize]
     }
     
     /// Returns the material at the given index
-    pub fn material(&self, index: Index<Material>) -> Option<&Material> {
-        self.materials.get(index.0 as usize)
+    pub fn material(&self, index: Index<Material>) -> &Material {
+        &self.materials[index.0 as usize]
     }
 
     /// Returns the mesh at the given index
-    pub fn mesh(&self, index: Index<Mesh>) -> Option<&Mesh> {
-        self.meshes.get(index.0 as usize)
+    pub fn mesh(&self, index: Index<Mesh>) -> &Mesh {
+        &self.meshes[index.0 as usize]
     }
 
     /// Returns the node at the given index
-    pub fn node(&self, index: Index<Node>) -> Option<&Node> {
-        self.nodes.get(index.0 as usize)
+    pub fn node(&self, index: Index<Node>) -> &Node {
+        &self.nodes[index.0 as usize]
     }
 
     /// Returns the sampler at the given index
-    pub fn sampler(&self, index: Index<Sampler>) -> Option<&Sampler> {
-        self.samplers.get(index.0 as usize)
+    pub fn sampler(&self, index: Index<Sampler>) -> &Sampler {
+        &self.samplers[index.0 as usize]
     }
 
     /// Returns the scene at the given index
-    pub fn scene(&self, index: Index<Scene>) -> Option<&Scene> {
-        self.scenes.get(index.0 as usize)
+    pub fn scene(&self, index: Index<Scene>) -> &Scene {
+        &self.scenes[index.0 as usize]
     }
 
     /// Returns the skin at the given index
-    pub fn skin(&self, index: Index<Skin>) -> Option<&Skin> {
-        self.skins.get(index.0 as usize)
+    pub fn skin(&self, index: Index<Skin>) -> &Skin {
+        &self.skins[index.0 as usize]
     }
 
     /// Returns the texture at the given index
-    pub fn texture(&self, index: Index<Texture>) -> Option<&Texture> {
-        self.textures.get(index.0 as usize)
+    pub fn texture(&self, index: Index<Texture>) -> &Texture {
+        &self.textures[index.0 as usize]
     }
 
     /// Performs a search for any indices that are out of range of the arrays,
