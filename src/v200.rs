@@ -140,8 +140,16 @@ pub struct AnimationChannelTarget {
     pub extras: Extras,
     /// The index of the node to target
     pub node: Index<Node>,
-    /// The name of the node's TRS property to modify e.g. `"translation"`
-    pub path: String,
+    /// The name of the node's TRS property to modify
+    pub path: AnimationChannelTargetPath,
+}
+
+impl_enum_string! {
+    pub enum AnimationChannelTargetPath {
+        Rotation = "rotation",
+        Scale = "scale",
+        Translation = "translation",
+    }
 }
 
 /// Defines a keyframe graph but not its target
@@ -155,13 +163,13 @@ pub struct AnimationSampler {
     /// The index of the accessor containing keyframe input values (e.g. time)
     pub input: Index<Accessor>,
     /// The interpolation algorithm
-    pub interpolation: AnimationInterpolation,
+    pub interpolation: AnimationSamplerInterpolation,
     /// The index of an accessor containing keyframe output values
     pub output: Index<Accessor>,
 }
 
 impl_enum_string! {
-    pub enum AnimationInterpolation {
+    pub enum AnimationSamplerInterpolation {
         Linear = "LINEAR",
         Step = "STEP",
     }
