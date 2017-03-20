@@ -274,10 +274,8 @@ pub struct Camera {
     /// Optional user-defined name for this object
     pub name: Option<String>,
     /// Orthographic camera values
-    #[serde(rename = "orthographic")]
     pub orthographic: Option<CameraOrthographic>,
     /// Perspective camera values
-    #[serde(rename = "perspective")]
     pub perspective: Option<CameraPerspective>,
     /// `"perspective"` or `"orthographic"`
     #[serde(rename = "type")]
