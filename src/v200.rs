@@ -755,6 +755,11 @@ impl Root {
         &self.accessors[index.0 as usize]
     }
 
+    /// Returns an iterator over all accessors
+    pub fn accessor_iter(&self) -> std::slice::Iter<Accessor> {
+        self.accessors.iter()
+    }
+    
     /// Returns the metadata included with this asset
     pub fn asset(&self) -> &Asset {
         &self.asset
@@ -765,14 +770,29 @@ impl Root {
         &self.buffers[index.0 as usize]
     }
 
+    /// Returns all buffers as a slice
+    pub fn buffers(&self) -> &[Buffer] {
+        &self.buffers
+    }
+    
     /// Returns the buffer view at the given index
     pub fn buffer_view(&self, index: Index<BufferView>) -> &BufferView {
         &self.buffer_views[index.0 as usize]
     }
 
+    /// Returns all buffer views as a slice
+    pub fn buffer_views(&self) -> &[BufferView] {
+        &self.buffer_views
+    }
+
     /// Returns the camera at the given index
     pub fn camera(&self, index: Index<Camera>) -> &Camera {
         &self.cameras[index.0 as usize]
+    }
+
+    /// Returns all cameras as a slice
+    pub fn cameras(&self) -> &[Camera] {
+        &self.cameras
     }
 
     /// Returns the extensions referenced in this .gltf file
@@ -789,10 +809,20 @@ impl Root {
     pub fn image(&self, index: Index<Image>) -> &Image {
         &self.images[index.0 as usize]
     }
-    
+
+    /// Returns all images as a slice
+    pub fn images(&self) -> &[Image] {
+        &self.images
+    }
+
     /// Returns the material at the given index
     pub fn material(&self, index: Index<Material>) -> &Material {
         &self.materials[index.0 as usize]
+    }
+
+    /// Returns all materials as a slice
+    pub fn materials(&self) -> &[Material] {
+        &self.materials
     }
 
     /// Returns the mesh at the given index
@@ -800,9 +830,19 @@ impl Root {
         &self.meshes[index.0 as usize]
     }
 
+    /// Returns all meshes as a slice
+    pub fn meshes(&self) -> &[Mesh] {
+        &self.meshes
+    }
+    
     /// Returns the node at the given index
     pub fn node(&self, index: Index<Node>) -> &Node {
         &self.nodes[index.0 as usize]
+    }
+
+    /// Returns all nodes as a slice
+    pub fn nodes(&self) -> &[Node] {
+        &self.nodes
     }
 
     /// Returns the sampler at the given index
@@ -810,9 +850,19 @@ impl Root {
         &self.samplers[index.0 as usize]
     }
 
+    /// Returns all samplers as a slice
+    pub fn samplers(&self) -> &[Sampler] {
+        &self.samplers
+    }
+    
     /// Returns the scene at the given index
     pub fn scene(&self, index: Index<Scene>) -> &Scene {
         &self.scenes[index.0 as usize]
+    }
+
+    /// Returns all scenes as a slice
+    pub fn scenes(&self) -> &[Scene] {
+        &self.scenes
     }
 
     /// Returns the skin at the given index
@@ -820,9 +870,19 @@ impl Root {
         &self.skins[index.0 as usize]
     }
 
+    /// Returns all skins as a slice
+    pub fn skins(&self) -> &[Skin] {
+        &self.skins
+    }
+
     /// Returns the texture at the given index
     pub fn texture(&self, index: Index<Texture>) -> &Texture {
         &self.textures[index.0 as usize]
+    }
+
+    /// Returns all textures as a slice
+    pub fn textures(&self) -> &[Texture] {
+        &self.textures
     }
 
     /// Performs a search for any indices that are out of range of the arrays,
