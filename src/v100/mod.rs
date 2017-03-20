@@ -10,6 +10,7 @@
 use gl;
 use serde_json;
 use std;
+use LoadError;
 
 pub use std::collections::HashMap as Map;
 pub use serde_json::Value;
@@ -23,19 +24,10 @@ pub trait Find<T> {
     fn find(&self, id: &str) -> Option<&T>;
 }
 
-/// Run time error encountered when loading a glTF asset
-#[derive(Debug)]
-pub enum Error {
-    /// Standard input / output error
-    Io(std::io::Error),
-    /// Failure when parsing a .gltf metadata file
-    Parse(serde_json::error::Error),
-}
-
 /// [The root object for a glTF asset]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md#gltf)
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Gltf {
+pub struct Root {
     #[serde(default)]
     pub accessors: Map<Id, Accessor>,
     #[serde(default)]
@@ -463,25 +455,25 @@ pub struct TechniqueStates {
     pub functions: Option<TechniqueStateFunctions>, 
 }
 
-impl Gltf {
-    /// Loads a glTF asset
+impl Root {
+    /// Loads a glTF version 1.0 asset
     ///
     /// # Examples
     ///
     /// Basic usage:
     ///
     /// ```
-    /// let gltf = gltf::Gltf::new("./examples/box/Box.gltf")
+    /// let gltf = gltf::v100::Root::load("./examples/box/Box.gltf")
     ///     .expect("Error loading glTF asset");
     /// ```
-    pub fn new<P>(path: P) -> Result<Self, Error>
+    pub fn load<P>(path: P) -> Result<Self, LoadError>
         where P: AsRef<std::path::Path>
     {
         use std::io::Read;
-        let mut file = std::fs::File::open(path).map_err(Error::Io)?;
+        let mut file = std::fs::File::open(path).map_err(LoadError::Io)?;
         let mut json = String::new();
-        let _ = file.read_to_string(&mut json).map_err(Error::Io)?;
-        serde_json::from_str(&json).map_err(|err| Error::Parse(err))
+        let _ = file.read_to_string(&mut json).map_err(LoadError::Io)?;
+        serde_json::from_str(&json).map_err(|err| LoadError::De(err))
     }
 
     /// Looks up a top-level object by its identifier
@@ -491,9 +483,9 @@ impl Gltf {
     /// Finding a buffer view:
     ///
     /// ```
-    /// let gltf = gltf::Gltf::new("./examples/box/Box.gltf").unwrap();
+    /// let gltf = gltf::v100::Root::load("./examples/box/Box.gltf").unwrap();
     /// let buffer_view = gltf
-    ///     .find::<gltf::BufferView>("bufferView_29")
+    ///     .find::<gltf::v100::BufferView>("bufferView_29")
     ///     .expect("Buffer view not found");
     /// ```
     pub fn find<T>(&self, id: &str) -> Option<&T>
@@ -505,7 +497,7 @@ impl Gltf {
 
 macro_rules! impl_find {
     ($ident:ident, $ty:ty) => (
-        impl Find<$ty> for Gltf {
+        impl Find<$ty> for Root {
             fn find(&self, id: &str) -> Option<&$ty> {
                 self.$ident
                     .iter()

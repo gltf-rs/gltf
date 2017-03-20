@@ -11,6 +11,7 @@
 
 use serde_json;
 use std;
+use LoadError;
 
 #[macro_use]
 mod macros;
@@ -55,20 +56,11 @@ pub type UntypedObject = std::collections::HashMap<String, serde_json::Value>;
 pub type Extensions = Option<UntypedObject>;
 pub type Extras = Option<UntypedObject>;
 
-/// Run time error encountered when loading a glTF asset
-#[derive(Debug)]
-pub enum LoadError {
-    /// Standard input / output error
-    Io(std::io::Error),
-    /// Failure when deserializing the .gltf metadata file
-    De(serde_json::error::Error),
-}
-
 /// [The root object for a glTF asset]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#gltf)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Gltf {
+pub struct Root {
     accessors: Vec<Accessor>,
     animations: Vec<Animation>,
     asset: Asset,
@@ -754,8 +746,8 @@ impl Default for TextureTarget {
     }
 }
 
-impl Gltf {
-    pub fn from_file<P>(path: P) -> Result<Self, LoadError>
+impl Root {
+    pub fn load<P>(path: P) -> Result<Self, LoadError>
         where P: AsRef<std::path::Path>
     {
         use std::io::Read;
