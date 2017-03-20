@@ -16,13 +16,13 @@ use LoadError;
 pub struct Index<T>(u32, std::marker::PhantomData<T>);
 
 /// Generic untyped JSON object
-pub type UntypedObject = std::collections::HashMap<String, serde_json::Value>;
+pub type UntypedJsonObject = std::collections::HashMap<String, serde_json::Value>;
 
 /// `extensions` field type
-pub type Extensions = Option<UntypedObject>;
+pub type Extensions = Option<UntypedJsonObject>;
 
 /// `extras` field type
-pub type Extras = Option<UntypedObject>;
+pub type Extras = Option<UntypedJsonObject>;
 
 /// [The root object for a glTF asset]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#gltf)
