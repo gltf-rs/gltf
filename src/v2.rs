@@ -107,7 +107,6 @@ pub struct Accessor {
     pub normalized: bool,
     /// Sparse storage of attributes that deviate from their initialization value
     pub sparse: Option<AccessorSparseStorage>,
-
 }
 
 // TODO: Complete documentation
@@ -556,7 +555,7 @@ pub struct MeshPrimitive {
     #[serde(default)]
     /// Morph targets
     // TODO: Confirm that this the correct implementation and update
-    // `Root::has_invalid_indices()` as required
+    // `Root::indices_are_valid()` as required
     pub targets: Vec<std::collections::HashMap<String, Index<Accessor>>>,
 }
 
@@ -580,7 +579,7 @@ pub struct Node {
     /// The index of the camera referenced by this node
     // N.B. The spec says this is required but the sample models don't provide it
     // TODO: Remove `Option` as necessary and update
-    // `Root::has_invalid_indices()` as required
+    // `Root::indices_are_valid()` as required
     pub camera: Option<Index<Camera>>,
     /// The indices of this node's children
     #[serde(default)]
@@ -608,12 +607,12 @@ pub struct Node {
     /// The index of the skin referenced by this node
     // N.B. The spec says this is required but the sample models don't provide it
     // TODO: Remove `Option` as necessary and update
-    // `Root::has_invalid_indices()` as required
+    // `Root::indices_are_valid()` as required
     pub skin: Option<Index<Skin>>,
     /// The weights of the morph target
     // N.B. The spec says this is required but the sample models don't provide it
     // TODO: Remove `Option` as necessary and update
-    // `Root::has_invalid_indices()` as required
+    // `Root::indices_are_valid()` as required
     pub weights: Option<Vec<f32>>,
 }
 
@@ -829,10 +828,10 @@ impl Root {
     pub fn import_from_str(json: &str) -> Result<Self, ImportError> {
         let root: Root = serde_json::from_str(json)
             .map_err(|err| ImportError::Deserialize(err))?;
-        if root.has_invalid_indices() {
-            Err(ImportError::Invalid("index out of range".to_string()))
-        } else {
+        if root.indices_are_valid() {
             Ok(root)
+        } else {
+            Err(ImportError::Invalid("index out of range".to_string()))
         }
     }
 
@@ -971,11 +970,11 @@ impl Root {
         &self.textures
     }
 
-    /// Performs a search for any indices that are out of range of the arrays,
-    /// returning true if all indices are within a valid range
-    fn has_invalid_indices(&self) -> bool {
+    /// Performs a search for any indices that are out of range of the array
+    /// they reference. Returns true if all indices are within range.
+    fn indices_are_valid(&self) -> bool {
         // TODO: Implement me
-        false
+        true
     }
 }
 
