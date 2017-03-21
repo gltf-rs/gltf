@@ -39,24 +39,15 @@ pub enum ConversionError {
     Unimplemented,
 }
 
-/// Return value of `load()`
-#[allow(dead_code)]
-pub enum Data {
-    /// glTF version 1.0
+/// A imported glTF asset of generic version
+pub enum Generic {
+    /// A 1.x.x conforming asset
     V1(v1::Root),
-    /// glTF version 2.0
+    /// A 2.x.x conforming asset
     V2(v2::Root),
 }
 
-/// An imported glTF asset
-pub struct Gltf {
-    /// The version of the glTF specification this asset conforms to
-    pub version: Version,
-    /// The asset data
-    pub data: Data,
-}
-
-/// glTF version x.x.x
+/// glTF specification version x.x.x
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Version(u32, u32, u32);
 
@@ -91,7 +82,38 @@ fn detect_version(json: &str) -> Result<Version, String> {
     }
 }
 
-impl Data {
+/// Imports a glTF asset
+///
+/// # Examples
+///
+/// Basic usage:
+///
+/// ```
+/// let path = "glTF-Sample-Models/1.0/Box/glTF/Box.gltf";
+/// let gltf = gltf::import(path).expect("Error importing glTF asset");
+/// ```
+pub fn import<P>(path: P) -> Result<Generic, ImportError>
+    where P: AsRef<std::path::Path>
+{
+    use std::io::Read;
+    let mut file = std::fs::File::open(path).map_err(ImportError::Io)?;
+    let mut json = String::new();
+    let _ = file.read_to_string(&mut json).map_err(ImportError::Io)?;
+    match detect_version(&json) {
+        Ok(Version(1, 0, 0)) => {
+            let root = v1::Root::import_from_str(&json)?;
+            Ok(Generic::V1(root))
+        }
+        Ok(Version(2, 0, 0)) => {
+            let root = v2::Root::import_from_str(&json)?;
+            Ok(Generic::V2(root))
+        }
+        Ok(other) => Err(ImportError::Unsupported(other)),
+        Err(err) => Err(ImportError::Invalid(err)),
+    }
+}
+
+impl Generic {
     /// Converts an imported asset to a 1.0 conforming version
     ///
     /// # Examples
@@ -100,15 +122,14 @@ impl Data {
     ///
     /// ```
     /// let path = "glTF-Sample-Models/1.0/Box/glTF/Box.gltf";
-    /// let gltf = gltf::Gltf::import(path)
-    ///     .expect("Error importing glTF asset")
-    ///     .data.to_v1()
+    /// let gltf = gltf::import(path).expect("Error importing glTF asset")
+    ///     .to_v1()
     ///     .expect("Error converting asset to glTF version 1.0");
     /// ```
     pub fn to_v1(self) -> Result<v1::Root, ConversionError> {
         match self {
-            Data::V1(root) => Ok(root),
-            Data::V2(_) => unimplemented!(),
+            Generic::V1(root) => Ok(root),
+            Generic::V2(_) => unimplemented!(),
         }
     }
 
@@ -120,56 +141,14 @@ impl Data {
     ///
     /// ```
     /// let path = "glTF-Sample-Models/2.0/BoomBox/glTF/BoomBox.gltf";
-    /// let gltf = gltf::Gltf::import(path)
-    ///     .expect("Error loading glTF asset")
-    ///     .data.to_v2()
+    /// let gltf = gltf::import(path).expect("Error loading glTF asset")
+    ///     .to_v2()
     ///     .expect("Error converting asset to glTF version 2.0");
     /// ```
     pub fn to_v2(self) -> Result<v2::Root, ConversionError> {
         match self {
-            Data::V1(_) => unimplemented!(),
-            Data::V2(root) => Ok(root),
-        }
-    }
-}
-
-impl Gltf {
-    /// Imports a glTF asset
-    ///
-    /// # Examples
-    ///
-    /// Basic usage:
-    ///
-    /// ```
-    /// let path = "glTF-Sample-Models/1.0/Box/glTF/Box.gltf";
-    /// let gltf = gltf::Gltf::import(path).expect("Error importing glTF asset");
-    /// ```
-    pub fn import<P>(path: P) -> Result<Self, ImportError>
-        where P: AsRef<std::path::Path>
-    {
-        use std::io::Read;
-        let mut file = std::fs::File::open(path).map_err(ImportError::Io)?;
-        let mut json = String::new();
-        let _ = file.read_to_string(&mut json).map_err(ImportError::Io)?;
-        match detect_version(&json) {
-            Ok(Version(1, 0, 0)) => {
-                let root = v1::Root::import_from_str(&json)?;
-                let gltf = Gltf {
-                    version: Version(1, 0, 0),
-                    data: Data::V1(root),
-                };
-                Ok(gltf)
-            }
-            Ok(Version(2, 0, 0)) => {
-                let root = v2::Root::import_from_str(&json)?;
-                let gltf = Gltf {
-                    version: Version(2, 0, 0),
-                    data: Data::V2(root),
-                };
-                Ok(gltf)
-            }
-            Ok(other) => Err(ImportError::Unsupported(other)),
-            Err(err) => Err(ImportError::Invalid(err)),
+            Generic::V1(_) => unimplemented!(),
+            Generic::V2(root) => Ok(root),
         }
     }
 }

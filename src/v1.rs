@@ -470,7 +470,7 @@ impl Root {
     ///
     /// ```
     /// let path = "glTF-Sample-Models/1.0/Box/glTF/Box.gltf";
-    /// let gltf = gltf::Gltf::import(path).unwrap().data.to_v1().unwrap();
+    /// let gltf = gltf::import(path).unwrap().to_v1().unwrap();
     /// let buffer_view = gltf
     ///     .find::<gltf::v1::BufferView>("bufferView_29")
     ///     .expect("Buffer view not found");
