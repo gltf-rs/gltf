@@ -10,7 +10,7 @@
 use serde;
 use serde_json;
 use std;
-use LoadError;
+use ImportError;
 
 /// Index into an array owned by the root glTF object
 #[derive(Clone, Copy, Debug)]
@@ -735,11 +735,11 @@ impl Default for TextureTarget {
 
 impl Root {
     /// Loads a glTF version 2.0 asset from raw JSON
-    pub fn load_from_str(json: &str) -> Result<Self, LoadError> {
+    pub fn import_from_str(json: &str) -> Result<Self, ImportError> {
         let root: Root = serde_json::from_str(json)
-            .map_err(|err| LoadError::De(err))?;
+            .map_err(|err| ImportError::Deserialize(err))?;
         if root.has_invalid_indices() {
-            Err(LoadError::InvalidIndices)
+            Err(ImportError::Invalid("index out of range".to_string()))
         } else {
             Ok(root)
         }

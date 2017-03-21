@@ -9,7 +9,7 @@
 
 use gl;
 use serde_json;
-use LoadError;
+use ImportError;
 
 pub use std::collections::HashMap as Map;
 pub use serde_json::Value;
@@ -456,9 +456,9 @@ pub struct TechniqueStates {
 
 impl Root {
     /// Loads a glTF version 1.0 asset from raw JSON
-    pub fn load_from_str(json: &str) -> Result<Self, LoadError> {
+    pub fn import_from_str(json: &str) -> Result<Self, ImportError> {
         let root: Root = serde_json::from_str(json)
-            .map_err(|err| LoadError::De(err))?;
+            .map_err(|err| ImportError::Deserialize(err))?;
         Ok(root)
     }
 
@@ -469,12 +469,10 @@ impl Root {
     /// Finding a buffer view:
     ///
     /// ```
-    /// let gltf = gltf::load("glTF-Sample-Models/1.0/Box/glTF/Box.gltf")
-    ///                .unwrap()
-    ///                .to_version_100()
-    ///                .unwrap();
+    /// let path = "glTF-Sample-Models/1.0/Box/glTF/Box.gltf";
+    /// let gltf = gltf::Gltf::import(path).unwrap().data.to_v1().unwrap();
     /// let buffer_view = gltf
-    ///     .find::<gltf::v100::BufferView>("bufferView_29")
+    ///     .find::<gltf::v1::BufferView>("bufferView_29")
     ///     .expect("Buffer view not found");
     /// ```
     pub fn find<T>(&self, id: &str) -> Option<&T>

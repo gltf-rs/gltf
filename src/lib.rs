@@ -16,115 +16,99 @@ extern crate serde_json;
 #[macro_use]
 mod macros;
 
-pub mod v100;
-pub mod v200;
+pub mod v1;
+pub mod v2;
 
 /// Error encountered when loading a glTF asset
 #[derive(Debug)]
-pub enum LoadError {
+pub enum ImportError {
     /// Failure when deserializing a .gltf metadata file
-    De(serde_json::error::Error),
-    /// An index was found to be out of range
-    InvalidIndices,
+    Deserialize(serde_json::error::Error),
+    /// The .gltf data is invalid
+    Invalid(String),
     /// Standard input / output error
     Io(std::io::Error),
     /// glTF version is not supported by the library
-    VersionUnsupported(String),
+    Unsupported(Version),
 }
 
 /// Error encountered when converting a glTF asset from one version to another
 #[derive(Clone, Debug)]
 pub enum ConversionError {
     /// *Unimplemented*
-    Incomplete,
+    Unimplemented,
 }
 
 /// Return value of `load()`
 #[allow(dead_code)]
-pub enum Dynamic {
+pub enum Data {
     /// glTF version 1.0
-    Version100(v100::Root),
+    V1(v1::Root),
     /// glTF version 2.0
-    Version200(v200::Root),
+    V2(v2::Root),
 }
 
-/// Return value of `detect_version()`
-#[derive(Debug, Eq, PartialEq)]
-enum GltfVersion {
-    /// glTF version 1.0
-    V100,
-    /// glTF version 2.0
-    V200,
+/// An imported glTF asset
+pub struct Gltf {
+    /// The version of the glTF specification this asset conforms to
+    pub version: Version,
+    /// The asset data
+    pub data: Data,
 }
 
-/// Attempts to extract the `asset.version` field of the .gltf file
-fn detect_gltf_version(json: &str) -> Result<GltfVersion, String> {
+/// glTF version x.x.x
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Version(u32, u32, u32);
+
+/// Attempts to parse the `asset.version` field of a .gltf file
+fn detect_version(json: &str) -> Result<Version, String> {
     #[derive(Deserialize)]
     struct Asset {
         version: String,
     }
-    
+
     #[derive(Deserialize)]
     struct Root {
         asset: Asset,
     }
 
-    let root: Root = serde_json::from_str(&json)
-        .map_err(|_| "asset.version field missing".to_string())?;
-    match root.asset.version.as_str() {
-        "1.0" | "1.0.0" => Ok(GltfVersion::V100),
-        "2.0" | "2.0.0" => Ok(GltfVersion::V200),
-        unsupported_version => Err(unsupported_version.to_string()),
+    match serde_json::from_str::<Root>(&json) {
+        Ok(root) => {
+            let mut iter = root.asset
+                .version
+                .split(".")
+                .filter_map(|s| s.parse().ok());
+            let major = iter.next();
+            let minor = iter.next().unwrap_or(0);
+            let patch = iter.next().unwrap_or(0);
+            match major {
+                Some(n) => Ok(Version(n, minor, patch)),
+                None => Err(format!("asset.version \"{}\" invalid",
+                                    root.asset.version.to_owned())),
+            }
+        },
+        Err(_) => Err("asset.version field missing".to_string()),
     }
 }
 
-/// Loads a glTF asset
-///
-/// # Examples
-///
-/// Basic usage:
-///
-/// ```
-/// let gltf = gltf::load("glTF-Sample-Models/1.0/Box/glTF/Box.gltf")
-///     .expect("Error loading glTF asset");
-/// ```
-pub fn load<P>(path: P) -> Result<Dynamic, LoadError>
-    where P: AsRef<std::path::Path>
-{
-    use std::io::Read;
-    let mut file = std::fs::File::open(path).map_err(LoadError::Io)?;
-    let mut json = String::new();
-    let _ = file.read_to_string(&mut json).map_err(LoadError::Io)?;
-    match detect_gltf_version(&json) {
-        Ok(GltfVersion::V100) => {
-            let root = v100::Root::load_from_str(&json)?;
-            Ok(Dynamic::Version100(root))
-        },
-        Ok(GltfVersion::V200) => {
-            let root = v200::Root::load_from_str(&json)?;
-            Ok(Dynamic::Version200(root))
-        },
-        Err(version) => Err(LoadError::VersionUnsupported(version.clone())),
-    }
-}
-
-impl Dynamic {
-    /// Converts a loaded asset to a 1.0 conforming version
+impl Data {
+    /// Converts an imported asset to a 1.0 conforming version
     ///
     /// # Examples
     ///
     /// Basic usage:
     ///
     /// ```
-    /// let gltf = gltf::load("glTF-Sample-Models/1.0/Box/glTF/Box.gltf")
-    ///                .expect("Error loading glTF asset")
-    ///                .to_version_100()
-    ///                .expect("Error converting asset to glTF version 1.0");
+    /// let path = "glTF-Sample-Models/1.0/Box/glTF/Box.gltf";
+    /// let gltf = gltf::Gltf::import(path)
+    ///     .expect("Error importing glTF asset")
+    ///     .data.to_v1()
+    ///     .expect("Error converting asset to glTF version 1.0");
     /// ```
-    pub fn to_version_100(self) -> Result<v100::Root, ConversionError> {
+    pub fn to_v1(self) -> Result<v1::Root, ConversionError> {
         match self {
-            Dynamic::Version100(root) => Ok(root),
-            Dynamic::Version200(_) => unimplemented!(),
+            Data::V1(root) => Ok(root),
+            Data::V2(_) => unimplemented!(),
         }
     }
 
@@ -135,15 +119,57 @@ impl Dynamic {
     /// Basic usage:
     ///
     /// ```
-    /// let gltf = gltf::load("glTF-Sample-Models/2.0/BoomBox/glTF/BoomBox.gltf")
-    ///                .expect("Error loading glTF asset")
-    ///                .to_version_200()
-    ///                .expect("Error converting asset to glTF version 2.0");
+    /// let path = "glTF-Sample-Models/2.0/BoomBox/glTF/BoomBox.gltf";
+    /// let gltf = gltf::Gltf::import(path)
+    ///     .expect("Error loading glTF asset")
+    ///     .data.to_v2()
+    ///     .expect("Error converting asset to glTF version 2.0");
     /// ```
-    pub fn to_version_200(self) -> Result<v200::Root, ConversionError> {
+    pub fn to_v2(self) -> Result<v2::Root, ConversionError> {
         match self {
-            Dynamic::Version100(_) => unimplemented!(),
-            Dynamic::Version200(root) => Ok(root),
+            Data::V1(_) => unimplemented!(),
+            Data::V2(root) => Ok(root),
+        }
+    }
+}
+
+impl Gltf {
+    /// Imports a glTF asset
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// let path = "glTF-Sample-Models/1.0/Box/glTF/Box.gltf";
+    /// let gltf = gltf::Gltf::import(path).expect("Error importing glTF asset");
+    /// ```
+    pub fn import<P>(path: P) -> Result<Self, ImportError>
+        where P: AsRef<std::path::Path>
+    {
+        use std::io::Read;
+        let mut file = std::fs::File::open(path).map_err(ImportError::Io)?;
+        let mut json = String::new();
+        let _ = file.read_to_string(&mut json).map_err(ImportError::Io)?;
+        match detect_version(&json) {
+            Ok(Version(1, 0, 0)) => {
+                let root = v1::Root::import_from_str(&json)?;
+                let gltf = Gltf {
+                    version: Version(1, 0, 0),
+                    data: Data::V1(root),
+                };
+                Ok(gltf)
+            }
+            Ok(Version(2, 0, 0)) => {
+                let root = v2::Root::import_from_str(&json)?;
+                let gltf = Gltf {
+                    version: Version(2, 0, 0),
+                    data: Data::V2(root),
+                };
+                Ok(gltf)
+            }
+            Ok(other) => Err(ImportError::Unsupported(other)),
+            Err(err) => Err(ImportError::Invalid(err)),
         }
     }
 }
@@ -151,36 +177,29 @@ impl Dynamic {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn detect_version_100() {
         let json = "{\"asset\":{\"version\":\"1.0.0\"}}";
-        assert_eq!(detect_gltf_version(&json), Ok(GltfVersion::V100));
+        assert_eq!(detect_version(&json), Ok(Version(1, 0, 0)));
     }
 
     #[test]
     fn detect_version_200() {
         let json = "{\"asset\":{\"version\":\"2.0.0\"}}";
-        assert_eq!(detect_gltf_version(&json), Ok(GltfVersion::V200));
+        assert_eq!(detect_version(&json), Ok(Version(2, 0, 0)));
     }
 
     #[test]
-    fn detect_unsupported_version() {
-        let json = "{\"asset\":{\"version\":\"3.1.4\"}}";
-        assert_eq!(detect_gltf_version(&json), Err("3.1.4".to_string()));
-    }
-    
-    #[test]
     fn detect_missing_version() {
         let json = "{}";
-        assert_eq!(detect_gltf_version(&json),
+        assert_eq!(detect_version(&json),
                    Err("asset.version field missing".to_string()));
     }
 
     #[test]
     fn allow_extra_fields() {
         let json = "{\"asset\":{\"version\":\"1.0.0\",\"foo\":{}},\"bar\":{}}";
-        assert_eq!(detect_gltf_version(&json), Ok(GltfVersion::V100));
+        assert_eq!(detect_version(&json), Ok(Version(1, 0, 0)));
     }
 }
-
