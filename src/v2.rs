@@ -30,26 +30,43 @@ pub type Extras = Option<UntypedJsonObject>;
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Root {
+    #[serde(default)]
     accessors: Vec<Accessor>,
+    #[serde(default)]
     animations: Vec<Animation>,
     asset: Asset,
+    #[serde(default)]
     buffers: Vec<Buffer>,
-    #[serde(rename = "bufferViews")]
+    #[serde(default, rename = "bufferViews")]
     buffer_views: Vec<BufferView>,
-    #[serde(rename = "extensionsUsed")]
+    #[serde(default, rename = "extensionsUsed")]
     extensions_used: Vec<String>,
-    #[serde(rename = "extensionsRequired")]
+    #[serde(default, rename = "extensionsRequired")]
     extensions_required: Vec<String>,
+    #[serde(default)]
     cameras: Vec<Camera>,
+    #[serde(default)]
     images: Vec<Image>,
+    #[serde(default)]
     materials: Vec<Material>,
+    #[serde(default)]
     meshes: Vec<Mesh>,
+    #[serde(default)]
     nodes: Vec<Node>,
+    #[serde(default)]
     samplers: Vec<Sampler>,
+    #[serde(default = "root_scene_default")]
     scene: Index<Scene>,
+    #[serde(default)]
     scenes: Vec<Scene>,
+    #[serde(default)]
     skins: Vec<Skin>,
+    #[serde(default)]
     textures: Vec<Texture>,
+}
+
+fn root_scene_default() -> Index<Scene> {
+    Index(0, std::marker::PhantomData)
 }
 
 /// [Defines a method for retrieving data from within a `BufferView`]
@@ -57,24 +74,88 @@ pub struct Root {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Accessor {
-    /// The identifier of the `BufferView` this accessor reads from.
+    /// The index of the parent `BufferView` this accessor reads from.
     #[serde(rename = "bufferView")]
     pub buffer_view: Index<BufferView>,
-    /// Where the data items begin from in the `BufferView`
+    /// The offset relative to the start of the parent `BufferView` in bytes
     #[serde(rename = "byteOffset")]
     pub byte_offset: u32,
-    /// The size of each data item in the `BufferView`
-    #[serde(rename = "byteStride")]
-    #[serde(default)]
-    pub byte_stride: u32,
-    /// The data type of each element
-    #[serde(rename = "componentType")]
-    pub component_type: AccessorComponentType,
     /// The number of elements within the `BufferView` (N.B. not number of bytes)
     pub count: u32,
+    /// The data type of each element (renamed from `componentType`)
+    #[serde(rename = "componentType")]
+    pub data_type: AccessorDataType,
+    /// Optional data targeting official extensions
+    pub extensions: Extensions,
+    /// Optional application specific data
+    pub extras: Extras,
     /// The multiplicity of each element
     #[serde(rename = "type")]
-    pub component_width: AccessorComponentWidth,
+    pub kind: AccessorKind,
+    /// Minimum value of each element in this attribute
+    // TODO: Implement me properly
+    #[serde(default)]
+    pub min: serde_json::Value,
+    /// Maximum value of each element in this attribute
+    // TODO: Implement me properly
+    #[serde(default)]
+    pub max: serde_json::Value,
+    /// Optional user-defined name for this object
+    pub name: Option<String>,
+    /// Specifies whether integer data values should be normalized
+    #[serde(default)]
+    pub normalized: bool,
+    /// Sparse storage of attributes that deviate from their initialization value
+    pub sparse: Option<AccessorSparseStorage>,
+
+}
+
+// TODO: Complete documentation
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct AccessorSparseIndices {
+    /// The index of the parent `BufferView` containing the sparse indices
+    #[serde(rename = "byteOffset")]
+    pub buffer_view: Index<BufferView>,
+    /// The offset relative to the start of the parent `BufferView` in bytes
+    #[serde(default, rename = "byteOffset")]
+    pub byte_offset: u32,
+    /// The indices data type (renamed from `componentType`)
+    // N.B. Not all values are valid but it would be pedantic to have more than
+    // one `DataType` enum and would also create inconsistency with the regular
+    // `Accessor` struct.
+    pub data_type: AccessorDataType,
+    /// Optional data targeting official extensions
+    pub extensions: Extensions,
+    /// Optional application specific data
+    pub extras: Extras,
+}
+
+/// Sparse storage of attributes that deviate from their initialization value
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct AccessorSparseStorage {
+    /// Number of entries stored in the sparse array
+    pub count: u32,
+    /// Optional data targeting official extensions
+    pub extensions: Extensions,
+    /// Optional application specific data
+    pub extras: Extras,
+    // TODO: Complete documentation
+    pub indices: AccessorSparseIndices,
+    // TODO: Complete documentation
+    pub values: AccessorSparseValues,
+}
+
+// TODO: Complete documentation
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct AccessorSparseValues {
+    /// The index of the parent `BufferView` containing the sparse values
+    #[serde(rename = "byteOffset")]
+    pub buffer_view: Index<BufferView>,
+    /// The offset relative to the start of the parent `BufferView` in bytes
+    #[serde(default, rename = "byteOffset")]
+    pub byte_offset: u32,
     /// Optional data targeting official extensions
     pub extensions: Extensions,
     /// Optional application specific data
@@ -82,7 +163,7 @@ pub struct Accessor {
 }
 
 impl_enum_u32! {
-    pub enum AccessorComponentType {
+    pub enum AccessorDataType {
         I8 = 5120,
         U8 = 5121,
         I16 = 5122,
@@ -93,7 +174,7 @@ impl_enum_u32! {
 }
 
 impl_enum_string! {
-    pub enum AccessorComponentWidth {
+    pub enum AccessorKind {
         Scalar = "SCALAR",
         Vec2 = "VEC2",
         Vec3 = "VEC3",
@@ -205,8 +286,7 @@ fn asset_version_default() -> String {
 #[serde(deny_unknown_fields)]
 pub struct Buffer {
     /// The length of the buffer in bytes
-    #[serde(default)]
-    #[serde(rename = "byteLength")]
+    #[serde(default, rename = "byteLength")]
     pub byte_length: u32,
     /// Optional data targeting official extensions
     pub extensions: Extensions,
@@ -224,7 +304,7 @@ pub struct Buffer {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct BufferView {
-    /// The id of the parent `Buffer`
+    /// The index of the parent `Buffer`
     pub buffer: Index<Buffer>,
     /// The length of the buffer view data in bytes
     #[serde(rename = "byteLength")]
@@ -330,8 +410,10 @@ pub struct Image {
     /// Optional application specific data
     pub extras: Extras,
     /// The image's MIME type
+    // N.B. The spec says this is required but the sample models don't provide it
+    // TODO: Remove `Option` as necessary
     #[serde(rename = "mimeType")]
-    pub mime_type: String,
+    pub mime_type: Option<String>,
     /// Optional user-defined name for this object
     pub name: Option<String>,
     /// The uniform resource identifier of the image relative to the .gltf file
@@ -473,7 +555,8 @@ pub struct MeshPrimitive {
     pub mode: MeshPrimitiveMode,
     #[serde(default)]
     /// Morph targets
-    // TODO: Confirm that this the correct implementation
+    // TODO: Confirm that this the correct implementation and update
+    // `Root::has_invalid_indices()` as required
     pub targets: Vec<std::collections::HashMap<String, Index<Accessor>>>,
 }
 
@@ -495,7 +578,10 @@ impl_enum_u32! {
 #[serde(deny_unknown_fields)]
 pub struct Node {
     /// The index of the camera referenced by this node
-    pub camera: Index<Camera>,
+    // N.B. The spec says this is required but the sample models don't provide it
+    // TODO: Remove `Option` as necessary and update
+    // `Root::has_invalid_indices()` as required
+    pub camera: Option<Index<Camera>>,
     /// The indices of this node's children
     #[serde(default)]
     pub children: Vec<Index<Node>>,
@@ -506,9 +592,8 @@ pub struct Node {
     /// 4x4 column-major transformation matrix
     #[serde(default = "node_matrix_default")]
     pub matrix: [[f32; 4]; 4],
-    /// The indices of the `Mesh` objects in this node
-    #[serde(default)]
-    pub meshes: Vec<Index<Mesh>>,
+    /// The index of the `Mesh` in this node
+    pub mesh: Index<Mesh>,
     /// Optional user-defined name for this object
     pub name: Option<String>,
     /// The node's unit quaternion rotation `[x, y, z, w]`
@@ -521,9 +606,15 @@ pub struct Node {
     /// The node's translation
     pub translation: [f32; 3],
     /// The index of the skin referenced by this node
-    pub skin: Index<Skin>,
+    // N.B. The spec says this is required but the sample models don't provide it
+    // TODO: Remove `Option` as necessary and update
+    // `Root::has_invalid_indices()` as required
+    pub skin: Option<Index<Skin>>,
     /// The weights of the morph target
-    pub weights: Vec<f32>,
+    // N.B. The spec says this is required but the sample models don't provide it
+    // TODO: Remove `Option` as necessary and update
+    // `Root::has_invalid_indices()` as required
+    pub weights: Option<Vec<f32>>,
 }
 
 fn node_matrix_default() -> [[f32; 4]; 4] {
@@ -658,9 +749,9 @@ pub struct Texture {
 impl_enum_u32! {
     pub enum TextureDataType {
         U8 = 5121,
-        U16_5_6_5 = 33635,
-        U16_4_4_4_4 = 32819,
-        U16_5_5_5_1 = 32820,
+        U16_R5_G6_B5 = 33635,
+        U16_R4_G4_B4_A4 = 32819,
+        U16_R5_G5_B5_A1 = 32820,
     }
 }
 
@@ -883,114 +974,8 @@ impl Root {
     /// Performs a search for any indices that are out of range of the arrays,
     /// returning true if all indices are within a valid range
     fn has_invalid_indices(&self) -> bool {
-        /// Returns true if the index is *out* of range of the vector
-        fn range_check<T>(vector: &Vec<T>, index: &Index<T>) -> bool {
-            index.0 as usize >= vector.len()
-        }
-        let ck_accessors = self.accessors.iter().any(|accessor| {
-            range_check(&self.buffer_views, &accessor.buffer_view)
-        });
-        let ck_animations = self.animations.iter().any(|animation| {
-            let ck_channels = animation.channels.iter().any(|channel| {
-                let ck_sampler = range_check(&self.samplers, &channel.sampler);
-                let ck_target = range_check(&self.nodes, &channel.target.node);
-                ck_sampler || ck_target
-            });
-            let ck_samplers = animation.samplers.iter().any(|sampler| {
-                let ck_input = range_check(&self.accessors, &sampler.input);
-                let ck_output = range_check(&self.accessors, &sampler.output);
-                ck_input || ck_output
-            });
-            ck_channels || ck_samplers
-        });
-        let ck_buffer_views = self.buffer_views.iter().any(|view| {
-            range_check(&self.buffers, &view.buffer)
-        });
-        let ck_images = self.images.iter().any(|image| {
-            if let Some(ref index) = image.buffer_view {
-                range_check(&self.buffer_views, index)
-            } else {
-                false
-            }
-        });
-        let ck_materials = self.materials.iter().any(|material| {
-            let ck_pbr = {
-                let ck_base = range_check(&self.textures,
-                                          &material.pbr.base_color_texture.index);
-                let ck_mrt = range_check(&self.textures,
-                                         &material.pbr.metallic_roughness_texture.index);
-                ck_base || ck_mrt
-            };
-            let ck_normal = range_check(&self.textures,
-                                        &material.normal_texture.index);
-            let ck_occlusion = range_check(&self.textures,
-                                           &material.occlusion_texture.index);
-            let ck_emissive = range_check(&self.textures,
-                                          &material.emissive_texture.index);
-            ck_pbr || ck_normal || ck_occlusion || ck_emissive
-        });
-        let ck_meshes = self.meshes.iter().any(|mesh| {
-            mesh.primitives.iter().any(|primitive| {
-                let ck_attributes = primitive.attributes.iter().any(|(_, index)| {
-                    range_check(&self.accessors, index)
-                });
-                let ck_indices = if let Some(ref index) = primitive.indices {
-                    range_check(&self.accessors, index)
-                } else {
-                    false
-                };
-                let ck_material = range_check(&self.materials,
-                                              &primitive.material);
-                // TODO: Implement me!
-                let ck_targets = false;
-                ck_attributes || ck_indices || ck_material || ck_targets
-            })
-        });
-        let ck_nodes = self.nodes.iter().any(|node| {
-            let ck_camera = range_check(&self.cameras, &node.camera);
-            let ck_children = node.children.iter().any(|index| {
-                range_check(&self.nodes, index)
-            });
-            let ck_meshes = node.meshes.iter().any(|index| {
-                range_check(&self.meshes, index)
-            });
-            let ck_skin = range_check(&self.skins, &node.skin);
-            ck_children || ck_meshes || ck_camera || ck_skin
-        });
-        let ck_scenes = self.scenes.iter().any(|scene| {
-            scene.nodes.iter().any(|index| range_check(&self.nodes, index))
-        });
-        let ck_skins = self.skins.iter().any(|skin| {
-            let ck_ibm = if let Some(ref index) = skin.inverse_bind_matrices {
-                range_check(&self.accessors, index)
-            } else {
-                false
-            };
-            let ck_joints = skin.joints.iter().any(|index| {
-                range_check(&self.nodes, index)
-            });
-            let ck_skeleton = if let Some(ref index) = skin.skeleton {
-                range_check(&self.nodes, index)
-            } else {
-                false
-            };
-            ck_ibm || ck_joints || ck_skeleton
-        });
-        let ck_textures = self.textures.iter().any(|texture| {
-            let ck_sampler = range_check(&self.samplers, &texture.sampler);
-            let ck_source = range_check(&self.images, &texture.source);
-            ck_sampler || ck_source
-        });
-        !(ck_accessors
-          || ck_animations
-          || ck_buffer_views
-          || ck_images
-          || ck_materials
-          || ck_meshes
-          || ck_nodes
-          || ck_scenes
-          || ck_skins
-          || ck_textures)
+        // TODO: Implement me
+        false
     }
 }
 
