@@ -29,7 +29,7 @@ pub enum ImportError {
     /// Standard input / output error
     Io(std::io::Error),
     /// glTF version is not supported by the library
-    Unsupported(Version),
+    Unsupported(String),
 }
 
 /// Error encountered when converting a glTF asset from one version to another
@@ -49,7 +49,7 @@ pub enum Generic {
 
 /// glTF specification version x.x.x
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Version(u32, u32, u32);
+struct Version(u32, u32, u32);
 
 /// Attempts to parse the `asset.version` field of a .gltf file
 fn detect_version(json: &str) -> Result<Version, String> {
@@ -108,7 +108,10 @@ pub fn import<P>(path: P) -> Result<Generic, ImportError>
             let root = v2::Root::import_from_str(&json)?;
             Ok(Generic::V2(root))
         }
-        Ok(other) => Err(ImportError::Unsupported(other)),
+        Ok(Version(major, minor, patch)) => {
+            let trio = format!("{}.{}.{}", major, minor, patch);
+            Err(ImportError::Unsupported(trio))
+        }
         Err(err) => Err(ImportError::Invalid(err)),
     }
 }
