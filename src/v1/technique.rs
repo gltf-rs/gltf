@@ -31,7 +31,7 @@ enum_number!(
         FloatMat2       = 35674,
         FloatMat3       = 35675,
         FloatMat4       = 35676,
-        Sampler2D       = 35678,
+        Sampler2d       = 35678,
     }
 );
 

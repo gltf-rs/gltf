@@ -55,13 +55,13 @@ impl Default for Format {
 
 enum_number!(
     Target {
-        Texture2D = 3553,
+        Texture2d = 3553,
     }
 );
 
 impl Default for Target {
     fn default() -> Target {
-        Target::Texture2D
+        Target::Texture2d
     }
 }
 
