@@ -85,29 +85,10 @@ impl Default for TexelType {
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Texture {
     /// The texture's format.
-    ///
-    /// Valid values correspond to WebGL enums:
-    ///
-    /// 6406 (ALPHA)
-    /// 6407 (RGB)
-    /// 6408 (RGBA)
-    /// 6409 (LUMINANCE)
-    /// 6410 (LUMINANCE_ALPHA)
-    ///
     #[serde(default)]
     pub format: Format,
 
     /// The texture's internal format.
-    ///
-    /// Valid values correspond to WebGL enums:
-    ///
-    /// 6406 (ALPHA)
-    /// 6407 (RGB)
-    /// 6408 (RGBA)
-    /// 6409 (LUMINANCE)
-    /// 6410 (LUMINANCE_ALPHA)
-    ///
-    /// Defaults to same value as format.
     #[serde(rename = "internalFormat")]
     #[serde(default)]
     pub internal_format: Format,
@@ -119,21 +100,10 @@ pub struct Texture {
     pub source: String,
 
     /// The target that the WebGL texture should be bound to.
-    ///
-    /// Valid values correspond to WebGL enums:
-    ///
-    /// 3553 (TEXTURE_2D)
     #[serde(default)]
     pub target: Target,
 
     /// Texel datatype.
-    ///
-    /// Valid values correspond to WebGL enums:
-    ///
-    /// 5121 (UNSIGNED_BYTE)
-    /// 33635 (UNSIGNED_SHORT_5_6_5)
-    /// 32819 (UNSIGNED_SHORT_4_4_4_4)
-    /// 32820 (UNSIGNED_SHORT_5_5_5_1)
     #[serde(rename = "type")]
     #[serde(default)]
     pub kind: TexelType,

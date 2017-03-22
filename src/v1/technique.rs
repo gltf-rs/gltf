@@ -307,6 +307,7 @@ pub struct Technique {
     #[serde(default)]
     uniforms: HashMap<String, String>,
 
+    /// Fixed-function rendering states.
     #[serde(default)]
     states: Option<State>,
 
