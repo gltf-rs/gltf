@@ -9,7 +9,7 @@
 use std::collections::HashMap;
 
 enum_number!(
-    ParamterType {
+    ParameterType {
         Byte            = 5120,
         UnsignedByte    = 5121,
         Short           = 5122,
@@ -35,11 +35,11 @@ enum_number!(
     }
 );
 
-impl Default for ParamterType {
+impl Default for ParameterType {
     fn default()
-        -> ParamterType
+        -> ParameterType
     {
-        ParamterType::Byte
+        ParameterType::Byte
     }
 }
 
@@ -59,7 +59,7 @@ pub struct Parameter {
     /// The datatype.
     #[serde(rename = "type")]
     #[serde(default)]
-    pub kind: ParamterType,
+    pub kind: ParameterType,
 
     /// Identifies a parameter with a well-known meaning.
     ///
