@@ -6,13 +6,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-extern crate gl;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
+extern crate gltf;
 
-#[macro_use]
-pub mod macros;
+use std::env;
 
-pub mod v1;
+use gltf::v1::Gltf;
+
+fn main() {
+    let file = env::args().nth(1).unwrap();
+
+    let gltf = Gltf::open(file).expect("Error loading glTF asset");
+    println!("{:#?}", gltf);
+}

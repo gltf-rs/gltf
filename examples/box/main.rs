@@ -1,4 +1,3 @@
-
 // Copyright 2017 The gltf Library Developers
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -9,10 +8,10 @@
 
 extern crate gltf;
 
-use gltf::Gltf;
+use gltf::v1::Gltf;
 
 fn main() {
-    let gltf = Gltf::new("./examples/box/Box.gltf").expect("Error loading glTF asset");
+    let gltf = Gltf::open("./examples/box/Box.gltf").expect("Error loading glTF asset");
     println!("{:?}", gltf);
 }
 
