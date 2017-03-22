@@ -6,8 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-extern crate serde_json;
-
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Image {
     /// The uri of the image.

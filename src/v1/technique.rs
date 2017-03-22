@@ -6,9 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-extern crate serde;
-extern crate serde_json;
-
 use std::collections::HashMap;
 
 enum_number!(

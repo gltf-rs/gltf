@@ -6,8 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-extern crate serde_json;
-
 enum_number!(
     ViewType {
         ArrayBuffer = 34962,

@@ -13,6 +13,6 @@ extern crate serde_derive;
 extern crate serde_json;
 
 #[macro_use]
-pub mod macros;
+mod macros;
 
 pub mod v1;

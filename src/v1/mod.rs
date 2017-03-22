@@ -6,9 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-extern crate serde;
-extern crate serde_json;
-
+use serde_json;
 use std::fs::File;
 use std::io;
 use std::io::Read;
