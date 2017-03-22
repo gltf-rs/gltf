@@ -1,8 +1,15 @@
+// Copyright 2017 The gltf Library Developers
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
 
-macro_rules! impl_enum_string {
-    (pub enum $name:ident {
+macro_rules! enum_string {
+    ($name:ident {
         $($variant:ident = $value:expr,)*
-    }) => {      
+    }) => {
         #[derive(Clone, Copy, Debug, Eq, PartialEq)]
         pub enum $name {
             $($variant,)*
@@ -40,7 +47,7 @@ macro_rules! impl_enum_string {
             }
 
         }
-        
+
         impl ::serde::ser::Serialize for $name {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
                 where S: ::serde::ser::Serializer
@@ -53,11 +60,9 @@ macro_rules! impl_enum_string {
     }
 }
 
-macro_rules! impl_enum_u32 {
-    (pub enum $name:ident { $($variant:ident = $value:expr, )* }) => {
-        #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-        #[repr(u32)]
-        #[allow(non_camel_case_types)]
+macro_rules! enum_number {
+    ($name:ident { $($variant:ident = $value:expr, )* }) => {
+        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
         pub enum $name {
             $($variant = $value,)*
         }
@@ -89,10 +94,9 @@ macro_rules! impl_enum_u32 {
                     {
                         match value {
                             $( $value => Ok($name::$variant), )*
-                                bad => {
-                                    let msg = format!("invalid value: {}", bad);
-                                    Err(E::custom(msg))
-                                },
+                            _ => Err(E::custom(
+                                format!("unknown {} value: {}",
+                                stringify!($name), value))),
                         }
                     }
                 }

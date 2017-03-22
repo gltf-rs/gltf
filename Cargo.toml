@@ -8,10 +8,16 @@ repository = "https://github.com/alteous/gltf"
 readme = "README.md"
 keywords = ["glTF", "3D", "asset", "model", "scene"]
 license = "MIT/Apache-2.0"
- 
+
 [dependencies]
-gl = "0.6"
 serde = "0.9"
 serde_derive = "0.9"
 serde_json = "0.9"
 
+[[example]]
+name = "box"
+path = "examples/box/main.rs"
+
+[[example]]
+name = "gltf_display"
+path = "examples/display/main.rs"

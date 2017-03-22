@@ -7,7 +7,7 @@ This library is intended to load [glTF assets](https://www.khronos.org/gltf), a 
 
 [Documentation](https://docs.rs/gltf)
 
-### Usage
+## Usage
 
 Add `gltf` to the dependencies section of `Cargo.toml`:
 
@@ -28,7 +28,24 @@ Load a glTF file:
 
 ```rust
 fn main() {
-    let gltf = Gltf::new("Foo.gltf").unwrap();
+    let gltf = Gltf::open("Foo.gltf").unwrap();
 }
 ```
+
+## Examples
+
+## gltf_display
+
+If you want to see how the structure of the glTF file is deserialized, you can
+use the example here to poke at it.
+
+```sh
+cargo run --example gltf_display path/to/gltf_file
+```
+
+## Future Goals
+
+ - [x] Ability to be compilied with the latest stable toolchain
+ - [x] Replace untyped `GLenum` identifiers with equivalent type-safe constants
+ - [ ] Full conformance to the [1.0 specification](https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md)
 

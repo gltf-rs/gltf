@@ -161,8 +161,8 @@ pub struct AccessorSparseValues {
     pub extras: Extras,
 }
 
-impl_enum_u32! {
-    pub enum AccessorDataType {
+enum_number! {
+    AccessorDataType {
         I8 = 5120,
         U8 = 5121,
         I16 = 5122,
@@ -172,8 +172,8 @@ impl_enum_u32! {
     }
 }
 
-impl_enum_string! {
-    pub enum AccessorKind {
+enum_string! {
+    AccessorKind {
         Scalar = "SCALAR",
         Vec2 = "VEC2",
         Vec3 = "VEC3",
@@ -225,8 +225,8 @@ pub struct AnimationChannelTarget {
     pub path: AnimationChannelTargetPath,
 }
 
-impl_enum_string! {
-    pub enum AnimationChannelTargetPath {
+enum_string! {
+    AnimationChannelTargetPath {
         Rotation = "rotation",
         Scale = "scale",
         Translation = "translation",
@@ -249,8 +249,8 @@ pub struct AnimationSampler {
     pub output: Index<Accessor>,
 }
 
-impl_enum_string! {
-    pub enum AnimationSamplerInterpolation {
+enum_string! {
+    AnimationSamplerInterpolation {
         Linear = "LINEAR",
         Step = "STEP",
     }
@@ -324,8 +324,8 @@ pub struct BufferView {
     pub target: Option<BufferTarget>,
 }
 
-impl_enum_u32! {
-    pub enum BufferTarget {
+enum_number! {
+    BufferTarget {
         ArrayBuffer = 34962,
         ElementArrayBuffer = 34963,
     }
@@ -559,8 +559,8 @@ pub struct MeshPrimitive {
     pub targets: Vec<std::collections::HashMap<String, Index<Accessor>>>,
 }
 
-impl_enum_u32! {
-    pub enum MeshPrimitiveMode {
+enum_number! {
+    MeshPrimitiveMode {
         Points = 0,
         Lines = 1,
         LineLoop = 2,
@@ -658,15 +658,15 @@ pub struct Sampler {
     pub wrap_t: SamplerWrappingMode,
 }
 
-impl_enum_u32! {
-    pub enum SamplerMagFilter {
+enum_number! {
+    SamplerMagFilter {
         Nearest = 9728,
         Linear = 9729,
     }
 }
 
-impl_enum_u32! {
-    pub enum SamplerMinFilter {
+enum_number! {
+    SamplerMinFilter {
         Nearest = 9728,
         Linear = 9729,
         NearestMipmapNearest = 9984,
@@ -676,8 +676,8 @@ impl_enum_u32! {
     }
 }
 
-impl_enum_u32! {
-    pub enum SamplerWrappingMode {
+enum_number! {
+    SamplerWrappingMode {
         ClampToEdge = 33071,
         MirroredRepeat = 33648,
         Repeat = 10497,
@@ -745,8 +745,8 @@ pub struct Texture {
     pub target: TextureTarget,
 }
 
-impl_enum_u32! {
-    pub enum TextureDataType {
+enum_number! {
+    TextureDataType {
         U8 = 5121,
         U16_R5_G6_B5 = 33635,
         U16_R4_G4_B4_A4 = 32819,
@@ -754,8 +754,8 @@ impl_enum_u32! {
     }
 }
 
-impl_enum_u32! {
-    pub enum TextureFormat {
+enum_number! {
+    TextureFormat {
         Alpha = 6406,
         Rgb = 6407,
         Rgba = 6408,
@@ -764,8 +764,8 @@ impl_enum_u32! {
     }
 }
 
-impl_enum_u32! {
-    pub enum TextureTarget {
+enum_number! {
+    TextureTarget {
         Texture2d = 3553,
     }
 }
@@ -837,12 +837,12 @@ impl Root {
 
     /// Returns the accessor at the given index
     pub fn accessor(&self, index: Index<Accessor>) -> &Accessor {
-        &self.accessors[index.0 as usize]
-    }
+    &self.accessors[index.0 as usize]
+}
 
-    /// Returns all accessors as a slice
-    pub fn accessors(&self) -> &[Accessor] {
-        &self.accessors
+/// Returns all accessors as a slice
+pub fn accessors(&self) -> &[Accessor] {
+&self.accessors
     }
     
     /// Returns the metadata included with this asset

@@ -8,10 +8,13 @@
 
 extern crate gltf;
 
+use std::env;
+
 use gltf::v1::Root;
 
 fn main() {
-    let gltf = Root::open("./examples/box/Box.gltf")
-        .expect("Error loading glTF asset");
-    println!("{:?}", gltf);
+    let file = env::args().nth(1).unwrap();
+
+    let gltf = Root::open(file).expect("Error loading glTF asset");
+    println!("{:#?}", gltf);
 }

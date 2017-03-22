@@ -1,4 +1,3 @@
-
 // Copyright 2017 The gltf Library Developers
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -7,7 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-extern crate gl;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -74,10 +72,12 @@ fn detect_version(json: &str) -> Result<Version, String> {
             let patch = iter.next().unwrap_or(0);
             match major {
                 Some(n) => Ok(Version(n, minor, patch)),
-                None => Err(format!("asset.version \"{}\" invalid",
-                                    root.asset.version.to_owned())),
+                None => {
+                    Err(format!("asset.version \"{}\" invalid",
+                                    root.asset.version.to_owned()))
+                }
             }
-        },
+        }
         Err(_) => Err("asset.version field missing".to_string()),
     }
 }
