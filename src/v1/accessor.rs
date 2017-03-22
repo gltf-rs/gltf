@@ -90,3 +90,50 @@ pub struct Accessor
 fn accessor_kind_default() -> String {
     "SCALAR".to_string()
 }
+
+#[cfg(test)]
+mod test {
+    extern crate serde_json;
+    use super::*;
+
+    #[test]
+    fn it_deserializes_an_accessor() {
+        let data = r#"{
+    "bufferView": "bufferViewWithVertices_id",
+    "byteOffset": 0,
+    "byteStride": 3,
+    "componentType": 5126,
+    "count": 1024,
+    "type": "SCALAR",
+    "name": "user-defined accessor name",
+    "max": [
+        -1.0,
+        -1.0,
+        -1.0
+    ],
+    "min": [
+        1.0,
+        1.0,
+        1.0
+    ],
+    "extensions": {
+        "extension_name": {
+            "extension specific": "value"
+        }
+    },
+    "extras": {
+        "Application specific": "The extra object can contain any properties."
+    }
+}"#;
+
+        let accessor: Accessor = serde_json::from_str(data).unwrap();
+
+        assert_eq!("bufferViewWithVertices_id", accessor.buffer_view);
+        assert_eq!(0, accessor.byte_offset);
+        assert_eq!(3, accessor.byte_stride);
+        assert_eq!(ComponentType::Float, accessor.component_type);
+        assert_eq!(1024, accessor.count);
+        assert_eq!("SCALAR", accessor.kind);
+        assert_eq!(3, accessor.max.unwrap().len());
+    }
+}
