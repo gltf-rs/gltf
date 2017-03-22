@@ -7,7 +7,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use serde_json;
 use v2::{buffer, Extensions, Extras, Index};
 
 /// [Defines a method for retrieving data from within a `BufferView`]
@@ -34,13 +33,11 @@ pub struct Accessor {
     #[serde(rename = "type")]
     pub kind: Kind,
     /// Minimum value of each element in this attribute
-    // TODO: Implement me properly
     #[serde(default)]
-    pub min: serde_json::Value,
+    pub min: Vec<f32>,
     /// Maximum value of each element in this attribute
-    // TODO: Implement me properly
     #[serde(default)]
-    pub max: serde_json::Value,
+    pub max: Vec<f32>,
     /// Optional user-defined name for this object
     pub name: Option<String>,
     /// Specifies whether integer data values should be normalized
@@ -62,8 +59,8 @@ pub struct SparseIndices {
     pub byte_offset: u32,
     /// The indices data type
     // N.B. Not all values are valid but it would be pedantic to have more than
-    // one `DataType` enum and would also create inconsistency with the regular
-    // `Accessor` struct.
+    // one `Component` enum and would also create inconsistency with the regular
+    // `accessor::Accessor` struct.
     pub component_type: ComponentType,
     /// Optional data targeting official extensions
     pub extensions: Extensions,

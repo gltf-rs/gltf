@@ -24,11 +24,11 @@ pub struct Material {
     #[serde(rename = "pbrMetallicRoughness")]
     pub pbr: PbrMetallicRoughness,
     #[serde(rename = "normalTexture")]
-    pub normal_texture: NormalTexture,
+    pub normal_texture: Option<NormalTexture>,
     #[serde(rename = "occlusionTexture")]
-    pub occlusion_texture: OcclusionTexture,
+    pub occlusion_texture: Option<OcclusionTexture>,
     #[serde(rename = "emissiveTexture")]
-    pub emissive_texture: texture::Info,
+    pub emissive_texture: Option<texture::Info>,
     #[serde(rename = "emissiveFactor")]
     #[serde(default)]
     pub emissive_factor: [f32; 3],

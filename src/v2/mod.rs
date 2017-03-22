@@ -95,6 +95,63 @@ pub struct Root {
     skins: Vec<skin::Skin>,
     #[serde(default)]
     textures: Vec<texture::Texture>,
+
+    //#[serde(deserialize_with = "deserialize_max_buffer_index")]
+   // max_buffer_index: Index<buffer::Buffer>,
+}
+
+fn deserialize_max_buffer_index<D>(deserializer: D)
+                                   -> Result<Index<buffer::Buffer>, D::Error>
+    where D: serde::Deserializer
+{
+    struct Visitor(Index<buffer::Buffer>);
+
+    impl serde::de::Visitor for Visitor {
+        /// Return type of this visitor. This visitor computes the max of a
+        /// sequence of values of type T, so the type of the maximum is T.
+        type Value = Index<buffer::Buffer>;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter)
+                     -> std::fmt::Result
+        {
+            formatter.write_str("a nonempty sequence of numbers")
+        }
+
+        fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
+            where E: serde::de::Error
+        {
+            let new_max = Index::new(std::cmp::max(self.0.value(), value as u32));
+            Ok(new_max)
+        }
+    }
+/*
+        fn visit_seq<V>(self, mut visitor: V) -> Result<T, V::Error>
+            where V: de::SeqVisitor
+        {
+            // Start with max equal to the first value in the seq.
+            let mut max = match visitor.visit()? {
+                Some(value) => value,
+                None => {
+                    // Cannot take the maximum of an empty seq.
+                    let msg = "no values in seq when looking for maximum";
+                    return Err(de::Error::custom(msg));
+                }
+            };
+
+            // Update the max while there are additional values.
+            while let Some(value) = visitor.visit()? {
+                max = cmp::max(max, value);
+            }
+
+            Ok(max)
+        }
+*/
+
+    // Create the visitor and ask the deserializer to drive it. The
+    // deserializer will call visitor.visit_seq if a seq is present in
+    // the input data.
+    let visitor = Visitor(Index::new(0));
+    deserializer.deserialize_u64(visitor)
 }
 
 fn root_scene_default() -> Index<scene::Scene> {

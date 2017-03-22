@@ -11,6 +11,7 @@ macro_rules! enum_string {
         $($variant:ident = $value:expr,)*
     }) => {
         #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+        #[repr(u32)]
         pub enum $name {
             $($variant,)*
         }
@@ -63,6 +64,8 @@ macro_rules! enum_string {
 macro_rules! enum_number {
     ($name:ident { $($variant:ident = $value:expr, )* }) => {
         #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        #[allow(non_camel_case_types)]
+        #[repr(u32)]
         pub enum $name {
             $($variant = $value,)*
         }

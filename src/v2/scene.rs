@@ -16,8 +16,7 @@ use v2::{camera, mesh, scene, skin, Extensions, Extras, Index};
 pub struct Node {
     /// The index of the camera referenced by this node
     // N.B. The spec says this is required but the sample models don't provide it
-    // TODO: Remove `Option` as necessary and update
-    // `Root::indices_are_valid()` as required
+    // TODO: Remove `Option` as necessary
     pub camera: Option<Index<camera::Camera>>,
     /// The indices of this node's children
     #[serde(default)]
@@ -30,7 +29,9 @@ pub struct Node {
     #[serde(default = "node_matrix_default")]
     pub matrix: [[f32; 4]; 4],
     /// The index of the `Mesh` in this node
-    pub mesh: Index<mesh::Mesh>,
+    // N.B. The spec says this is required but the sample models don't provide it
+    // TODO: Remove `Option` as necessary
+    pub mesh: Option<Index<mesh::Mesh>>,
     /// Optional user-defined name for this object
     pub name: Option<String>,
     /// The node's unit quaternion rotation `[x, y, z, w]`
@@ -44,13 +45,11 @@ pub struct Node {
     pub translation: [f32; 3],
     /// The index of the skin referenced by this node
     // N.B. The spec says this is required but the sample models don't provide it
-    // TODO: Remove `Option` as necessary and update
-    // `Root::indices_are_valid()` as required
+    // TODO: Remove `Option` as necessary
     pub skin: Option<Index<skin::Skin>>,
     /// The weights of the morph target
     // N.B. The spec says this is required but the sample models don't provide it
-    // TODO: Remove `Option` as necessary and update
-    // `Root::indices_are_valid()` as required
+    // TODO: Remove `Option` as necessary
     pub weights: Option<Vec<f32>>,
 }
 
