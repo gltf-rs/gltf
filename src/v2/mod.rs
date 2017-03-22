@@ -21,6 +21,7 @@ pub mod mesh;
 pub mod scene;
 pub mod skin;
 pub mod texture;
+pub mod traits;
 
 /// Index into an array owned by the root glTF object
 #[derive(Clone, Copy, Debug)]
@@ -95,63 +96,6 @@ pub struct Root {
     skins: Vec<skin::Skin>,
     #[serde(default)]
     textures: Vec<texture::Texture>,
-
-    //#[serde(deserialize_with = "deserialize_max_buffer_index")]
-   // max_buffer_index: Index<buffer::Buffer>,
-}
-
-fn deserialize_max_buffer_index<D>(deserializer: D)
-                                   -> Result<Index<buffer::Buffer>, D::Error>
-    where D: serde::Deserializer
-{
-    struct Visitor(Index<buffer::Buffer>);
-
-    impl serde::de::Visitor for Visitor {
-        /// Return type of this visitor. This visitor computes the max of a
-        /// sequence of values of type T, so the type of the maximum is T.
-        type Value = Index<buffer::Buffer>;
-
-        fn expecting(&self, formatter: &mut std::fmt::Formatter)
-                     -> std::fmt::Result
-        {
-            formatter.write_str("a nonempty sequence of numbers")
-        }
-
-        fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
-            where E: serde::de::Error
-        {
-            let new_max = Index::new(std::cmp::max(self.0.value(), value as u32));
-            Ok(new_max)
-        }
-    }
-/*
-        fn visit_seq<V>(self, mut visitor: V) -> Result<T, V::Error>
-            where V: de::SeqVisitor
-        {
-            // Start with max equal to the first value in the seq.
-            let mut max = match visitor.visit()? {
-                Some(value) => value,
-                None => {
-                    // Cannot take the maximum of an empty seq.
-                    let msg = "no values in seq when looking for maximum";
-                    return Err(de::Error::custom(msg));
-                }
-            };
-
-            // Update the max while there are additional values.
-            while let Some(value) = visitor.visit()? {
-                max = cmp::max(max, value);
-            }
-
-            Ok(max)
-        }
-*/
-
-    // Create the visitor and ask the deserializer to drive it. The
-    // deserializer will call visitor.visit_seq if a seq is present in
-    // the input data.
-    let visitor = Visitor(Index::new(0));
-    deserializer.deserialize_u64(visitor)
 }
 
 fn root_scene_default() -> Index<scene::Scene> {
@@ -179,7 +123,17 @@ impl Root {
     pub fn accessors(&self) -> &[accessor::Accessor] {
         &self.accessors
     }
-    
+
+    /// Returns the animation at the given index
+    pub fn animation(&self, index: Index<animation::Animation>) -> &animation::Animation {
+        &self.animations[index.0 as usize]
+    }
+
+    /// Returns all animations as a slice
+    pub fn animations(&self) -> &[animation::Animation] {
+        &self.animations
+    }
+
     /// Returns the metadata included with this asset
     pub fn asset(&self) -> &Asset {
         &self.asset
@@ -223,6 +177,13 @@ impl Root {
     /// Returns the extensions required to load and render this asset
     pub fn extensions_required(&self) -> &[String] {
         &self.extensions_required
+    }
+
+    /// Returns a single item from the root object
+    pub fn get<T>(&self, index: Index<T>) -> &T
+        where Self: traits::Get<T>
+    {
+        (self as &traits::Get<T>).get(index)
     }
 
     /// Returns the image at the given index
@@ -354,3 +315,27 @@ impl<T> serde::Deserialize for Index<T> {
         deserializer.deserialize_u64(Visitor::<T>(std::marker::PhantomData))
     }
 }
+
+macro_rules! impl_get {
+    ($ty:ty, $field:ident) => {
+        impl<'a> traits::Get<$ty> for Root {
+            fn get(&self, index: Index<$ty>) -> &$ty {
+                &self.$field[index.value() as usize]
+            }
+        }
+    }
+}
+
+impl_get!(accessor::Accessor, accessors);
+impl_get!(animation::Animation, animations);
+impl_get!(buffer::Buffer, buffers);
+impl_get!(buffer::View, buffer_views);
+impl_get!(camera::Camera, cameras);
+impl_get!(texture::Image, images);
+impl_get!(material::Material, materials);
+impl_get!(mesh::Mesh, meshes);
+impl_get!(scene::Node, nodes);
+impl_get!(scene::Scene, scenes);
+impl_get!(skin::Skin, skins);
+impl_get!(texture::Texture, textures);
+
