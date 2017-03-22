@@ -11,7 +11,7 @@ extern crate gltf;
 use gltf::v1::Gltf;
 
 fn main() {
-    let gltf = Gltf::new("./examples/box/Box.gltf").expect("Error loading glTF asset");
+    let gltf = Gltf::open("./examples/box/Box.gltf").expect("Error loading glTF asset");
     println!("{:?}", gltf);
 }
 

@@ -28,7 +28,7 @@ Load a glTF file:
 
 ```rust
 fn main() {
-    let gltf = Gltf::new("Foo.gltf").unwrap();
+    let gltf = Gltf::open("Foo.gltf").unwrap();
 }
 ```
 
