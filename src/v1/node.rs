@@ -55,22 +55,18 @@ pub struct Node {
     pub name: Option<String>,
 }
 
-fn node_matrix_default() -> [f32; 16]
-{
+fn node_matrix_default() -> [f32; 16] {
     [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
 }
 
-fn node_rotation_default() -> [f32; 4]
-{
+fn node_rotation_default() -> [f32; 4] {
     [0.0, 0.0, 0.0, 1.0]
 }
 
-fn node_scale_default() -> [f32; 3]
-{
+fn node_scale_default() -> [f32; 3] {
     [1.0, 1.0, 1.0]
 }
 
-fn node_translation_default() -> [f32; 3]
-{
+fn node_translation_default() -> [f32; 3] {
     [0.0, 0.0, 0.0]
 }

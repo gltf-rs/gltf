@@ -8,14 +8,14 @@
 
 enum_number!(
     ComponentType {
-        Byte            = 5120,
-        UnsignedByte    = 5121,
-        Short           = 5122,
-        UnsignedShort   = 5123,
-        Integer         = 5124,
+        Byte = 5120,
+        UnsignedByte = 5121,
+        Short = 5122,
+        UnsignedShort = 5123,
+        Integer = 5124,
         UnsignedInteger = 5125,
-        Float           = 5126,
-        Double          = 5127,
+        Float = 5126,
+        Double = 5127,
     }
 );
 
@@ -26,8 +26,7 @@ impl Default for ComponentType {
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Accessor
-{
+pub struct Accessor {
     /// The ID of the bufferView
     #[serde(rename = "bufferView")]
     pub buffer_view: String,
@@ -79,7 +78,7 @@ pub struct Accessor
     ///
     /// This is not necessarily unique, e.g., an accessor and a buffer could
     /// have the same name, or two accessors could even have the same name.
-    pub name: Option<String>,
+    pub name: Option<String>, 
 
     // TODO: extension
     // TODO: extras

@@ -34,7 +34,7 @@ pub struct Buffer {
     ///
     /// This is not necessarily unique, e.g., a buffer and a bufferView could
     /// have the same name, or two buffers could even have the same name.
-    pub name: Option<String>,
+    pub name: Option<String>, 
 
     // TODO: extension
     // TODO: extras
@@ -70,7 +70,7 @@ pub struct BufferView {
     ///
     /// This is not necessarily unique, e.g., a bufferView and a buffer could
     /// have the same name, or two bufferViews could even have the same name.
-    pub name: Option<String>,
+    pub name: Option<String>, 
 
     // TODO: extension
     // TODO: extras

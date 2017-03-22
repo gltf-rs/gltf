@@ -8,12 +8,12 @@
 
 enum_number!(
     Filter {
-        Nearest              = 9728,
-        Linear               = 9729,
+        Nearest = 9728,
+        Linear = 9729,
         NearestMipmapNearest = 9984,
-        LinearMipmapNearest  = 9985,
-        NearestMipmapLinear  = 9986,
-        LinearMipmapLinear   = 9987,
+        LinearMipmapNearest = 9985,
+        NearestMipmapLinear = 9986,
+        LinearMipmapLinear = 9987,
     }
 );
 
@@ -25,8 +25,8 @@ impl Default for Filter {
 
 enum_number!(
     Wrap {
-        Repeat         = 10497,
-        ClampToEdge    = 33071,
+        Repeat = 10497,
+        ClampToEdge = 33071,
         MirroredRepeat = 33648,
     }
 );
@@ -39,10 +39,10 @@ impl Default for Wrap {
 
 enum_number!(
     Format {
-        Alpha          = 6406,
-        Rgb            = 6407,
-        Rgba           = 6408,
-        Luminance      = 6409,
+        Alpha = 6406,
+        Rgb = 6407,
+        Rgba = 6408,
+        Luminance = 6409,
         LuminanceAlpha = 6410,
     }
 );
@@ -67,8 +67,8 @@ impl Default for Target {
 
 enum_number!(
     TexelType {
-        UnsignedByte      = 5121,
-        UnsignedShort565  = 33635,
+        UnsignedByte = 5121,
+        UnsignedShort565 = 33635,
         UnsignedShort4444 = 32819,
         UnsignedShort5551 = 32820,
     }

@@ -14,4 +14,3 @@ fn main() {
     let gltf = Gltf::open("./examples/box/Box.gltf").expect("Error loading glTF asset");
     println!("{:?}", gltf);
 }
-

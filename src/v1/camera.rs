@@ -24,7 +24,7 @@ pub struct Perspective {
     /// The floating-point distance to the near clipping plane.
     ///
     /// `zfar` must be greater than `znear`.
-    pub znear: f32,
+    pub znear: f32, 
 
     // TODO: extension
     // TODO: extras
@@ -42,7 +42,7 @@ pub struct Orthographic {
     pub zfar: f32,
 
     /// The floating-point distance to the near clipping plane.
-    pub znear: f32,
+    pub znear: f32, 
 
     // TODO: extension
     // TODO: extras
@@ -69,7 +69,7 @@ pub struct Camera {
     ///
     /// This is not necessarily unique, e.g., a camera and a buffer could have
     /// the same name, or two cameras could even have the same name.
-    pub name: Option<String>,
+    pub name: Option<String>, 
 
     // TODO: extension
     // TODO: extras

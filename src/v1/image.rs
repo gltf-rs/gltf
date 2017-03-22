@@ -19,7 +19,7 @@ pub struct Image {
     ///
     /// This is not necessarily unique, e.g., an image and a buffer could have
     /// the same name, or two images could even have the same name.
-    pub name: Option<String>,
+    pub name: Option<String>, 
 
     // TODO: extension
     // TODO: extras

@@ -9,7 +9,7 @@
 enum_number!(
     ShaderType {
         Fragment = 35632,
-        Vertex   = 35633,
+        Vertex = 35633,
     }
 );
 

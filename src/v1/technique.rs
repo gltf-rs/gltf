@@ -10,35 +10,33 @@ use std::collections::HashMap;
 
 enum_number!(
     ParameterType {
-        Byte            = 5120,
-        UnsignedByte    = 5121,
-        Short           = 5122,
-        UnsignedShort   = 5123,
-        Integer         = 5124,
+        Byte = 5120,
+        UnsignedByte = 5121,
+        Short = 5122,
+        UnsignedShort = 5123,
+        Integer = 5124,
         UnsignedInteger = 5125,
-        Float           = 5126,
-        Double          = 5127,
-        FloatVec2       = 35664,
-        FloatVec3       = 35665,
-        FloatVec4       = 35666,
-        IntVec2         = 35667,
-        IntVec3         = 35668,
-        IntVec4         = 35669,
-        Bool            = 35670,
-        BoolVec2        = 35671,
-        BoolVec3        = 35672,
-        BoolVec4        = 35673,
-        FloatMat2       = 35674,
-        FloatMat3       = 35675,
-        FloatMat4       = 35676,
-        Sampler2d       = 35678,
+        Float = 5126,
+        Double = 5127,
+        FloatVec2 = 35664,
+        FloatVec3 = 35665,
+        FloatVec4 = 35666,
+        IntVec2 = 35667,
+        IntVec3 = 35668,
+        IntVec4 = 35669,
+        Bool = 35670,
+        BoolVec2 = 35671,
+        BoolVec3 = 35672,
+        BoolVec4 = 35673,
+        FloatMat2 = 35674,
+        FloatMat3 = 35675,
+        FloatMat4 = 35676,
+        Sampler2d = 35678,
     }
 );
 
 impl Default for ParameterType {
-    fn default()
-        -> ParameterType
-    {
+    fn default() -> ParameterType {
         ParameterType::Byte
     }
 }
@@ -201,63 +199,51 @@ pub struct Function {
     pub scissor: [f32; 4],
 }
 
-fn function_blend_color_default() -> [f32; 4]
-{
+fn function_blend_color_default() -> [f32; 4] {
     [0.0, 0.0, 0.0, 0.0]
 }
 
-fn function_blend_equation_separate_default() -> [u32; 2]
-{
+fn function_blend_equation_separate_default() -> [u32; 2] {
     [32774, 32774]
 }
 
-fn function_blend_func_separate_default() -> [u32; 4]
-{
+fn function_blend_func_separate_default() -> [u32; 4] {
     [1, 0, 1, 0]
 }
 
-fn function_color_mask_default() -> [bool; 4]
-{
+fn function_color_mask_default() -> [bool; 4] {
     [true, true, true, true]
 }
 
-fn function_cull_face_default() -> [u32; 1]
-{
+fn function_cull_face_default() -> [u32; 1] {
     [1029]
 }
 
-fn function_depth_func_default() -> [u32; 1]
-{
+fn function_depth_func_default() -> [u32; 1] {
     [513]
 }
 
-fn function_depth_mask_default() -> [bool; 1]
-{
+fn function_depth_mask_default() -> [bool; 1] {
     [true]
 }
 
-fn function_depth_range_default() -> [f32; 2]
-{
+fn function_depth_range_default() -> [f32; 2] {
     [0.0, 1.0]
 }
 
-fn function_front_face_default() -> [u32; 1]
-{
+fn function_front_face_default() -> [u32; 1] {
     [2305]
 }
 
-fn function_line_width_default() -> [u32; 1]
-{
+fn function_line_width_default() -> [u32; 1] {
     [1]
 }
 
-fn function_polygon_offset_default() -> [u32; 2]
-{
+fn function_polygon_offset_default() -> [u32; 2] {
     [0, 0]
 }
 
-fn function_scissor_default() -> [f32; 4]
-{
+fn function_scissor_default() -> [f32; 4] {
     [0.0, 0.0, 0.0, 0.0]
 }
 

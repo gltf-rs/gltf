@@ -16,7 +16,6 @@ pub struct Material {
     pub technique: Option<String>,
 
     // TODO: implement values
-
     /// The user-defined name of this object.
     ///
     /// This is not necessarily unique, e.g., a material and a buffer could have

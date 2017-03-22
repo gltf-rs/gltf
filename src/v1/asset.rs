@@ -14,7 +14,7 @@ pub struct AssetProfile {
 
     /// The API version.
     #[serde(default = "asset_profile_version_default")]
-    pub version: String,
+    pub version: String, 
 
     // TODO: extension
     // TODO: extras
@@ -45,7 +45,7 @@ pub struct Asset {
     pub profile: AssetProfile,
 
     /// The glTF version.
-    pub version: String,
+    pub version: String, 
 
     // TODO: extension
     // TODO: extras

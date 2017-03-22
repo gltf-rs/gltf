@@ -177,7 +177,7 @@ pub struct Gltf {
     /// The name of each texture is an ID in the global glTF namespace that is
     /// used to reference the texture.
     #[serde(default)]
-    pub textures: HashMap<String, texture::Texture>,
+    pub textures: HashMap<String, texture::Texture>, 
 
     // TODO: extension
     // TODO: extras

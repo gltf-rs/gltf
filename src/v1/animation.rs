@@ -14,7 +14,7 @@ pub struct Target {
     pub id: String,
 
     /// The name of the node's TRS property to modify.
-    pub path: String,
+    pub path: String, 
 
     // TODO: extension
     // TODO: extras
@@ -27,7 +27,7 @@ pub struct Channel {
     pub sampler: String,
 
     /// The ID of the node and TRS property to target.
-    pub target: Target,
+    pub target: Target, 
 
     // TODO: extension
     // TODO: extras
@@ -51,7 +51,7 @@ pub struct Sampler {
     pub interpolation: String,
 
     /// The ID of a parameter in this animation to use as keyframe output.
-    pub output: String,
+    pub output: String, 
 
     // TODO: extension
     // TODO: extras
@@ -83,7 +83,7 @@ pub struct Animation {
     ///
     /// This is not necessarily unique, e.g., an animation and a buffer could
     /// have the same name, or two animations could even have the same name.
-    pub name: Option<String>,
+    pub name: Option<String>, 
 
     // TODO: extension
     // TODO: extras

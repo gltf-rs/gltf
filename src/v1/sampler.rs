@@ -56,26 +56,18 @@ pub struct Sampler {
     pub name: Option<String>,
 }
 
-fn sample_mag_filter_default()
-    -> Filter
-{
+fn sample_mag_filter_default() -> Filter {
     Filter::Linear
 }
 
-fn sample_min_filter_default()
-    -> Filter
-{
+fn sample_min_filter_default() -> Filter {
     Filter::NearestMipmapLinear
 }
 
-fn sample_wrap_s_default()
-    -> Wrap
-{
+fn sample_wrap_s_default() -> Wrap {
     Wrap::Repeat
 }
 
-fn sample_wrap_t_default()
-    -> Wrap
-{
+fn sample_wrap_t_default() -> Wrap {
     Wrap::Repeat
 }
