@@ -16,6 +16,16 @@ use ImportError;
 #[derive(Clone, Copy, Debug)]
 pub struct Index<T>(u32, std::marker::PhantomData<T>);
 
+impl<T> Index<T> {
+    fn new(value: u32) -> Self {
+        Index(value, std::marker::PhantomData)
+    }
+
+    pub fn value(&self) -> u32 {
+        self.0
+    }
+}
+
 /// Generic untyped JSON object
 pub type UntypedJsonObject = std::collections::HashMap<String, serde_json::Value>;
 
@@ -982,8 +992,7 @@ impl<T> serde::Serialize for Index<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: ::serde::Serializer
     {
-        let index: &Index<u64> = unsafe { std::mem::transmute(self) };
-        serializer.serialize_u64(index.0 as u64)
+        serializer.serialize_u64(self.value() as u64)
     }
 }
 
@@ -1004,7 +1013,7 @@ impl<T> serde::Deserialize for Index<T> {
             fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
                 where E: serde::de::Error
             {
-                Ok(Index(value as u32, std::marker::PhantomData))
+                Ok(Index::new(value as u32))
             }
         }
         deserializer.deserialize_u64(Visitor::<T>(std::marker::PhantomData))
