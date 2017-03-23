@@ -15,9 +15,5 @@ serde_derive = "0.9"
 serde_json = "0.9"
 
 [[example]]
-name = "box"
-path = "examples/box/main.rs"
-
-[[example]]
 name = "gltf_display"
 path = "examples/display/main.rs"

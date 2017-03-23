@@ -100,7 +100,7 @@ pub fn import<P>(path: P) -> Result<Generic, ImportError>
     let mut json = String::new();
     let _ = file.read_to_string(&mut json).map_err(ImportError::Io)?;
     match detect_version(&json) {
-        Ok(Version(1, 0, 0)) => {
+        Ok(Version(1, 0, 0)) | Ok(Version(1, 0, 1)) => {
             let root = v1::Root::import_from_str(&json)?;
             Ok(Generic::V1(root))
         }
