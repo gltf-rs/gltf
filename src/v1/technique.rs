@@ -8,7 +8,7 @@
 
 use std::collections::HashMap;
 
-enum_number!(
+enum_number! {
     ParameterType {
         Byte = 5120,
         UnsignedByte = 5121,
@@ -33,7 +33,7 @@ enum_number!(
         FloatMat4 = 35676,
         Sampler2d = 35678,
     }
-);
+}
 
 impl Default for ParameterType {
     fn default() -> ParameterType {
