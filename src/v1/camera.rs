@@ -6,6 +6,19 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+enum_string! {
+    CameraType {
+        Orthographic = "orthographic",
+        Perspective = "perspective",
+    }
+}
+
+impl Default for CameraType {
+    fn default() -> CameraType {
+        CameraType::Perspective
+    }
+}
+
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Perspective {
     /// The floating-point aspect ratio of the field of view.
@@ -63,7 +76,8 @@ pub struct Camera {
     /// Based on this, either the camera's perspective or orthographic property
     /// will be defined.
     #[serde(rename = "type")]
-    pub kind: String,
+    #[serde(default)]
+    pub kind: CameraType,
 
     /// The user-defined name of this object.
     ///

@@ -8,26 +8,47 @@
 
 use std::collections::HashMap;
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+enum_string! {
+    TargetPath {
+        Translation = "translation",
+        Rotation = "rotation",
+        Scale = "scale",
+    }
+}
+
+enum_string! {
+    Interpolation {
+        Linear = "LINEAR",
+        Step = "STEP",
+    }
+}
+
+impl Default for Interpolation {
+    fn default() -> Interpolation {
+        Interpolation::Linear
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Target {
     /// The ID of the node to target.
     pub id: String,
 
     /// The name of the node's TRS property to modify.
-    pub path: String, 
+    pub path: TargetPath,
 
     // TODO: extension
     // TODO: extras
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Channel {
     /// The ID of a sampler in this animation used to compute the value for the
     /// target, e.g., a node's translation, rotation, or scale (TRS).
     pub sampler: String,
 
     /// The ID of the node and TRS property to target.
-    pub target: Target, 
+    pub target: Target,
 
     // TODO: extension
     // TODO: extras
@@ -47,18 +68,14 @@ pub struct Sampler {
     /// When an animation targets a node's rotation, and the animation's
     /// interpolation is "LINEAR", spherical linear interpolation (slerp) should
     /// be used to interpolate quaternions.
-    #[serde(default = "sampler_interpolation_default")]
-    pub interpolation: String,
+    #[serde(default)]
+    pub interpolation: Interpolation,
 
     /// The ID of a parameter in this animation to use as keyframe output.
-    pub output: String, 
+    pub output: String,
 
     // TODO: extension
     // TODO: extras
-}
-
-fn sampler_interpolation_default() -> String {
-    "LINEAR".to_string()
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
@@ -83,7 +100,7 @@ pub struct Animation {
     ///
     /// This is not necessarily unique, e.g., an animation and a buffer could
     /// have the same name, or two animations could even have the same name.
-    pub name: Option<String>, 
+    pub name: Option<String>,
 
     // TODO: extension
     // TODO: extras

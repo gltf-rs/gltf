@@ -57,11 +57,6 @@ pub struct BufferView {
 
     /// The target that the WebGL buffer should be bound to.
     ///
-    /// Valid values correspond to WebGL enums:
-    ///
-    /// 34962 (ARRAY_BUFFER)
-    /// 34963 (ELEMENT_ARRAY_BUFFER)
-    ///
     /// When this is not provided, the bufferView contains animation or skin
     /// data.
     pub target: Option<ViewType>,
