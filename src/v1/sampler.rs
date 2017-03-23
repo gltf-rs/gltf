@@ -12,43 +12,21 @@ use v1::texture::Wrap;
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Sampler {
     /// Magnification filter.
-    ///
-    /// Valid values correspond to WebGL enums:
-    ///     - 9728 (NEAREST)
-    ///     - 9729 (LINEAR)
     #[serde(rename = "magFilter")]
     #[serde(default = "sample_mag_filter_default")]
     pub mag_filter: Filter,
 
     /// Minification filter.
-    ///
-    /// Valid values correspond to WebGL enums:
-    ///     - 9728 (NEAREST)
-    ///     - 9729 (LINEAR)
-    ///     - 9984 (NEAREST_MIPMAP_NEAREST)
-    ///     - 9985 (LINEAR_MIPMAP_NEAREST)
-    ///     - 9986 (NEAREST_MIPMAP_LINEAR)
-    ///     - 9987 (LINEAR_MIPMAP_LINEAR)
     #[serde(rename = "minFilter")]
     #[serde(default = "sample_min_filter_default")]
     pub min_filter: Filter,
 
     /// s wrapping mode.
-    ///
-    /// Valid values correspond to WebGL enums:
-    ///     - 33071 (CLAMP_TO_EDGE)
-    ///     - 33648 (MIRRORED_REPEAT)
-    ///     - 10497 (REPEAT)
     #[serde(rename = "wrapS")]
     #[serde(default = "sample_wrap_s_default")]
     pub wrap_s: Wrap,
 
     /// t wrapping mode.
-    ///
-    /// Valid values correspond to WebGL enums:
-    ///     - 33071 (CLAMP_TO_EDGE)
-    ///     - 33648 (MIRRORED_REPEAT)
-    ///     - 10497 (REPEAT)
     #[serde(rename = "wrapT")]
     #[serde(default = "sample_wrap_t_default")]
     pub wrap_t: Wrap,
