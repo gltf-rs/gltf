@@ -159,7 +159,7 @@ mod test {
         assert_eq!(3, accessor.byte_stride);
         assert_eq!(ComponentType::Float, accessor.component_type);
         assert_eq!(1024, accessor.count);
-        assert_eq!("SCALAR", accessor.kind);
+        assert_eq!(Kind::Scalar, accessor.kind);
         assert_eq!(3, accessor.max.unwrap().len());
     }
 }
