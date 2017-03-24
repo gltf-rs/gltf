@@ -21,3 +21,6 @@ serde_json = "0.9"
 [[example]]
 name = "gltf_display"
 path = "examples/display/main.rs"
+
+[[bin]]
+name = "app"

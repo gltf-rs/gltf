@@ -16,6 +16,7 @@ pub mod accessor;
 pub mod animation;
 pub mod buffer;
 pub mod camera;
+pub mod extensions;
 pub mod material;
 pub mod mesh;
 pub mod scene;
@@ -35,6 +36,20 @@ pub type Extensions = Option<UntypedJsonObject>;
 
 /// `extras` field type
 pub type Extras = Option<UntypedJsonObject>;
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct NoExtensions;
+
+impl traits::Extensions for NoExtensions {
+    type Accessor = ();
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct NoExtras;
+
+impl traits::Extras for NoExtras {
+    type Accessor = ();
+}
 
 /// [Contains metadata about the glTF asset]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#asset)
@@ -62,11 +77,11 @@ fn asset_version_default() -> String {
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#gltf)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Root {
+pub struct Root<E: traits::Extensions, X: traits::Extras> {
     #[serde(default)]
-    accessors: Vec<accessor::Accessor>,
+    accessors: Vec<accessor::Accessor<E, X>>,
     #[serde(default)]
-    animations: Vec<animation::Animation>,
+    animations: Vec<animation::Animation<E, X>>,
     asset: Asset,
     #[serde(default)]
     buffers: Vec<buffer::Buffer>,
@@ -83,29 +98,31 @@ pub struct Root {
     #[serde(default)]
     materials: Vec<material::Material>,
     #[serde(default)]
-    meshes: Vec<mesh::Mesh>,
+    meshes: Vec<mesh::Mesh<E, X>>,
     #[serde(default)]
-    nodes: Vec<scene::Node>,
+    nodes: Vec<scene::Node<E, X>>,
     #[serde(default)]
     samplers: Vec<texture::Sampler>,
     #[serde(default = "root_scene_default")]
-    scene: Index<scene::Scene>,
+    scene: Index<scene::Scene<E, X>>,
     #[serde(default)]
-    scenes: Vec<scene::Scene>,
+    scenes: Vec<scene::Scene<E, X>>,
     #[serde(default)]
-    skins: Vec<skin::Skin>,
+    skins: Vec<skin::Skin<E, X>>,
     #[serde(default)]
     textures: Vec<texture::Texture>,
 }
 
-fn root_scene_default() -> Index<scene::Scene> {
+fn root_scene_default<E, X>() -> Index<scene::Scene<E, X>>
+    where E: traits::Extensions, X: traits::Extras
+{
     Index(0, std::marker::PhantomData)
 }
 
-impl Root {
+impl<E: traits::Extensions, X: traits::Extras> Root<E, X> {
     /// Loads a glTF version 2.0 asset from raw JSON
     pub fn import_from_str(json: &str) -> Result<Self, ImportError> {
-        let root: Root = serde_json::from_str(json)
+        let root: Root<E, X> = serde_json::from_str(json)
             .map_err(|err| ImportError::Deserialize(err))?;
         if root.indices_are_valid() {
             Ok(root)
@@ -115,22 +132,22 @@ impl Root {
     }
 
     /// Returns the accessor at the given index
-    pub fn accessor(&self, index: Index<accessor::Accessor>) -> &accessor::Accessor {
+    pub fn accessor(&self, index: Index<accessor::Accessor<E, X>>) -> &accessor::Accessor<E, X> {
         &self.accessors[index.0 as usize]
     }
 
     /// Returns all accessors as a slice
-    pub fn accessors(&self) -> &[accessor::Accessor] {
+    pub fn accessors(&self) -> &[accessor::Accessor<E, X>] {
         &self.accessors
     }
 
     /// Returns the animation at the given index
-    pub fn animation(&self, index: Index<animation::Animation>) -> &animation::Animation {
+    pub fn animation(&self, index: Index<animation::Animation<E, X>>) -> &animation::Animation<E, X> {
         &self.animations[index.0 as usize]
     }
 
     /// Returns all animations as a slice
-    pub fn animations(&self) -> &[animation::Animation] {
+    pub fn animations(&self) -> &[animation::Animation<E, X>] {
         &self.animations
     }
 
@@ -207,22 +224,22 @@ impl Root {
     }
 
     /// Returns the mesh at the given index
-    pub fn mesh(&self, index: Index<mesh::Mesh>) -> &mesh::Mesh {
+    pub fn mesh(&self, index: Index<mesh::Mesh<E, X>>) -> &mesh::Mesh<E, X> {
         &self.meshes[index.0 as usize]
     }
 
     /// Returns all meshes as a slice
-    pub fn meshes(&self) -> &[mesh::Mesh] {
+    pub fn meshes(&self) -> &[mesh::Mesh<E, X>] {
         &self.meshes
     }
     
     /// Returns the node at the given index
-    pub fn node(&self, index: Index<scene::Node>) -> &scene::Node {
+    pub fn node(&self, index: Index<scene::Node<E, X>>) -> &scene::Node<E, X> {
         &self.nodes[index.0 as usize]
     }
 
     /// Returns all nodes as a slice
-    pub fn nodes(&self) -> &[scene::Node] {
+    pub fn nodes(&self) -> &[scene::Node<E, X>] {
         &self.nodes
     }
 
@@ -237,22 +254,22 @@ impl Root {
     }
     
     /// Returns the scene at the given index
-    pub fn scene(&self, index: Index<scene::Scene>) -> &scene::Scene {
+    pub fn scene(&self, index: Index<scene::Scene<E, X>>) -> &scene::Scene<E, X> {
         &self.scenes[index.0 as usize]
     }
 
     /// Returns all scenes as a slice
-    pub fn scenes(&self) -> &[scene::Scene] {
+    pub fn scenes(&self) -> &[scene::Scene<E, X>] {
         &self.scenes
     }
 
     /// Returns the skin at the given index
-    pub fn skin(&self, index: Index<skin::Skin>) -> &skin::Skin {
+    pub fn skin(&self, index: Index<skin::Skin<E, X>>) -> &skin::Skin<E, X> {
         &self.skins[index.0 as usize]
     }
 
     /// Returns all skins as a slice
-    pub fn skins(&self) -> &[skin::Skin] {
+    pub fn skins(&self) -> &[skin::Skin<E, X>] {
         &self.skins
     }
 
@@ -318,7 +335,9 @@ impl<T> serde::Deserialize for Index<T> {
 
 macro_rules! impl_get {
     ($ty:ty, $field:ident) => {
-        impl<'a> traits::Get<$ty> for Root {
+        impl<'a, E, X> traits::Get<$ty> for Root<E, X>
+            where E: traits::Extensions, X: traits::Extras
+        {
             fn get(&self, index: Index<$ty>) -> &$ty {
                 &self.$field[index.value() as usize]
             }
@@ -326,16 +345,16 @@ macro_rules! impl_get {
     }
 }
 
-impl_get!(accessor::Accessor, accessors);
-impl_get!(animation::Animation, animations);
+impl_get!(accessor::Accessor<E, X>, accessors);
+impl_get!(animation::Animation<E, X>, animations);
 impl_get!(buffer::Buffer, buffers);
 impl_get!(buffer::View, buffer_views);
 impl_get!(camera::Camera, cameras);
 impl_get!(texture::Image, images);
 impl_get!(material::Material, materials);
-impl_get!(mesh::Mesh, meshes);
-impl_get!(scene::Node, nodes);
-impl_get!(scene::Scene, scenes);
-impl_get!(skin::Skin, skins);
+impl_get!(mesh::Mesh<E, X>, meshes);
+impl_get!(scene::Node<E, X>, nodes);
+impl_get!(scene::Scene<E, X>, scenes);
+impl_get!(skin::Skin<E, X>, skins);
 impl_get!(texture::Texture, textures);
 

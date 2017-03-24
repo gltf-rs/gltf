@@ -38,11 +38,11 @@ pub enum ConversionError {
 }
 
 /// A imported glTF asset of generic version
-pub enum Generic {
+pub enum Generic<E: v2::traits::Extensions, X: v2::traits::Extras> {
     /// A 1.x.x conforming asset
     V1(v1::Root),
     /// A 2.x.x conforming asset
-    V2(v2::Root),
+    V2(v2::Root<E, X>),
 }
 
 /// glTF specification version x.x.x
@@ -92,8 +92,10 @@ fn detect_version(json: &str) -> Result<Version, String> {
 /// let path = "glTF-Sample-Models/1.0/Box/glTF/Box.gltf";
 /// let gltf = gltf::import(path).expect("Error importing glTF asset");
 /// ```
-pub fn import<P>(path: P) -> Result<Generic, ImportError>
-    where P: AsRef<std::path::Path>
+pub fn import<E, P, X>(path: P) -> Result<Generic<E, X>, ImportError>
+    where E: v2::traits::Extensions,
+          X: v2::traits::Extras,
+          P: AsRef<std::path::Path>,
 {
     use std::io::Read;
     let mut file = std::fs::File::open(path).map_err(ImportError::Io)?;
@@ -116,7 +118,7 @@ pub fn import<P>(path: P) -> Result<Generic, ImportError>
     }
 }
 
-impl Generic {
+impl<E: v2::traits::Extensions, X: v2::traits::Extras> Generic<E, X> {
     /// Converts an imported asset to a 1.0 conforming version
     ///
     /// # Examples
@@ -148,7 +150,7 @@ impl Generic {
     ///     .to_v2()
     ///     .expect("Error converting asset to glTF version 2.0");
     /// ```
-    pub fn to_v2(self) -> Result<v2::Root, ConversionError> {
+    pub fn to_v2(self) -> Result<v2::Root<E, X>, ConversionError> {
         match self {
             Generic::V1(_) => unimplemented!(),
             Generic::V2(root) => Ok(root),

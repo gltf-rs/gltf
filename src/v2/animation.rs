@@ -7,45 +7,45 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::{accessor, scene, Extensions, Extras, Index};
+use v2::{accessor, scene, traits, Extensions, Extras, Index};
 
 /// [A keyframe animation]
 /// (https://github.com/KhronosGroup/glTF/blob/d63b796e6b7f6b084c710b97b048d59d749cb04a/specification/2.0/schema/animation.schema.json)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Animation {
+pub struct Animation<E: traits::Extensions, X: traits::Extras> {
     /// Optional data targeting official extensions
     pub extensions: Extensions,
     /// Optional application specific data
     pub extras: Extras,
     /// Defines the channels of the animation
-    pub channels: Vec<Channel>,
+    pub channels: Vec<Channel<E, X>>,
     /// Optional user-defined name for this object
     pub name: Option<String>,
     /// Defines samplers that combine input and output accessors
-    pub samplers: Vec<Sampler>,
+    pub samplers: Vec<Sampler<E, X>>,
 }
 
 /// Targets an animation's sampler at a node's property
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Channel {
+pub struct Channel<E: traits::Extensions, X: traits::Extras> {
     /// The index of the sampler used to compute the value for the target
-    pub sampler: Index<Sampler>,
+    pub sampler: Index<Sampler<E, X>>,
     /// The index of the node and TRS property to target
-    pub target: Target,
+    pub target: Target<E, X>,
 }
 
 /// The index of the node and TRS property that an animation channel targets
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Target {
+pub struct Target<E: traits::Extensions, X: traits::Extras> {
     /// Optional data targeting official extensions
     pub extensions: Extensions,
     /// Optional application specific data
     pub extras: Extras,
     /// The index of the node to target
-    pub node: Index<scene::Node>,
+    pub node: Index<scene::Node<E, X>>,
     /// The name of the node's TRS property to modify
     pub path: Path,
 }
@@ -61,17 +61,17 @@ enum_string! {
 /// Defines a keyframe graph but not its target
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Sampler {
+pub struct Sampler<E: traits::Extensions, X: traits::Extras> {
     /// Optional data targeting official extensions
     pub extensions: Extensions,
     /// Optional application specific data
     pub extras: Extras,
     /// The index of the accessor containing keyframe input values (e.g. time)
-    pub input: Index<accessor::Accessor>,
+    pub input: Index<accessor::Accessor<E, X>>,
     /// The interpolation algorithm
     pub interpolation: Interpolation,
     /// The index of an accessor containing keyframe output values
-    pub output: Index<accessor::Accessor>,
+    pub output: Index<accessor::Accessor<E, X>>,
 }
 
 enum_string! {

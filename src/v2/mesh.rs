@@ -8,13 +8,13 @@
 // except according to those terms.
 
 use std;
-use v2::{accessor, material, Extensions, Extras, Index};
+use v2::{accessor, material, traits, Extensions, Extras, Index};
 
 /// [A set of primitives to be rendered]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#mesh)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Mesh {
+pub struct Mesh<E: traits::Extensions, X: traits::Extras> {
     /// Optional data targeting official extensions
     pub extensions: Extensions,
     /// Optional application specific data
@@ -22,7 +22,7 @@ pub struct Mesh {
     /// Optional user-defined name for this object
     pub name: Option<String>,
     /// Defines the geometry of this mesh to be renderered with a material
-    pub primitives: Vec<Primitive>,
+    pub primitives: Vec<Primitive<E, X>>,
     /// Defines the weights to be applied to the morph targets
     #[serde(default)]
     pub weights: Vec<f32>,
@@ -32,16 +32,16 @@ pub struct Mesh {
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#meshprimitive)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Primitive {
+pub struct Primitive<E: traits::Extensions, X: traits::Extras> {
     /// Maps attribute semantic names to the `Accessor`s containing their data
     #[serde(default)]
-    pub attributes: std::collections::HashMap<String, Index<accessor::Accessor>>,
+    pub attributes: std::collections::HashMap<String, Index<accessor::Accessor<E, X>>>,
     /// Optional data targeting official extensions
     pub extensions: Extensions,
     /// Optional application specific data
     pub extras: Extras,
     /// Index of the `Accessor` containing mesh indices
-    pub indices: Option<Index<accessor::Accessor>>,
+    pub indices: Option<Index<accessor::Accessor<E, X>>>,
     /// The index of the material to apply to this primitive when rendering
     pub material: Index<material::Material>,
     /// The type of primitives to render
@@ -51,7 +51,7 @@ pub struct Primitive {
     /// Morph targets
     // TODO: Confirm that this the correct implementation and update
     // `Root::indices_are_valid()` as required
-    pub targets: Vec<std::collections::HashMap<String, Index<accessor::Accessor>>>,
+    pub targets: Vec<std::collections::HashMap<String, Index<accessor::Accessor<E, X>>>>,
 }
 
 enum_number! {

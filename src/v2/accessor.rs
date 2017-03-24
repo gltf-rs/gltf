@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::{buffer, Extensions, Extras, Index};
+use v2::{buffer, traits, Extensions, Extras, Index};
 
 pub mod sparse {
     use super::*;
@@ -74,7 +74,7 @@ pub mod sparse {
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#accessors)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Accessor {
+pub struct Accessor<E: traits::Extensions, X: traits::Extras> {
     /// The index of the parent `BufferView` this accessor reads from.
     #[serde(rename = "bufferView")]
     pub buffer_view: Index<buffer::View>,
@@ -87,9 +87,11 @@ pub struct Accessor {
     #[serde(rename = "componentType")]
     pub component_type: ComponentType,
     /// Optional data targeting official extensions
-    pub extensions: Extensions,
+    #[serde(default)]
+    pub extensions: <E as traits::Extensions>::Accessor,
     /// Optional application specific data
-    pub extras: Extras,
+    #[serde(default)]
+    pub extras: <X as traits::Extras>::Accessor,
     /// The multiplicity of each element
     #[serde(rename = "type")]
     pub kind: Kind,

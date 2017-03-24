@@ -7,20 +7,20 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::{camera, mesh, scene, skin, Extensions, Extras, Index};
+use v2::{camera, mesh, scene, skin, traits, Extensions, Extras, Index};
 
 /// [A single member of the glTF scene hierarchy]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#scenes)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Node {
+pub struct Node<E: traits::Extensions, X: traits::Extras> {
     /// The index of the camera referenced by this node
     // N.B. The spec says this is required but the sample models don't provide it
     // TODO: Remove `Option` as necessary
     pub camera: Option<Index<camera::Camera>>,
     /// The indices of this node's children
     #[serde(default)]
-    pub children: Vec<Index<scene::Node>>,
+    pub children: Vec<Index<scene::Node<E, X>>>,
     /// Optional data targeting official extensions
     pub extensions: Extensions,
     /// Optional application specific data
@@ -31,7 +31,7 @@ pub struct Node {
     /// The index of the `Mesh` in this node
     // N.B. The spec says this is required but the sample models don't provide it
     // TODO: Remove `Option` as necessary
-    pub mesh: Option<Index<mesh::Mesh>>,
+    pub mesh: Option<Index<mesh::Mesh<E, X>>>,
     /// Optional user-defined name for this object
     pub name: Option<String>,
     /// The node's unit quaternion rotation `[x, y, z, w]`
@@ -46,7 +46,7 @@ pub struct Node {
     /// The index of the skin referenced by this node
     // N.B. The spec says this is required but the sample models don't provide it
     // TODO: Remove `Option` as necessary
-    pub skin: Option<Index<skin::Skin>>,
+    pub skin: Option<Index<skin::Skin<E, X>>>,
     /// The weights of the morph target
     // N.B. The spec says this is required but the sample models don't provide it
     // TODO: Remove `Option` as necessary
@@ -74,7 +74,7 @@ fn node_scale_default() -> [f32; 3] {
 /// [A set of visual objects to render](https://github.com/KhronosGroup/glTF/tree/2.0/specification/2.0#scenes)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Scene {
+pub struct Scene<E: traits::Extensions, X: traits::Extras> {
     /// Optional data targeting official extensions
     pub extensions: Extensions,
     /// Optional application specific data
@@ -83,5 +83,5 @@ pub struct Scene {
     pub name: Option<String>,
     /// The indices of each root `Node` in this scene
     #[serde(default)]
-    pub nodes: Vec<Index<Node>>,
+    pub nodes: Vec<Index<Node<E, X>>>,
 }
