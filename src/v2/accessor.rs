@@ -52,7 +52,7 @@ pub struct Accessor {
 #[serde(deny_unknown_fields)]
 pub struct SparseIndices {
     /// The index of the parent `BufferView` containing the sparse indices
-    #[serde(rename = "byteOffset")]
+    #[serde(rename = "bufferView")]
     pub buffer_view: Index<buffer::Buffer>,
     /// The offset relative to the start of the parent `BufferView` in bytes
     #[serde(default, rename = "byteOffset")]
@@ -88,7 +88,7 @@ pub struct SparseStorage {
 #[serde(deny_unknown_fields)]
 pub struct SparseValues {
     /// The index of the parent `BufferView` containing the sparse values
-    #[serde(rename = "byteOffset")]
+    #[serde(rename = "bufferView")]
     pub buffer_view: Index<buffer::View>,
     /// The offset relative to the start of the parent `BufferView` in bytes
     #[serde(default, rename = "byteOffset")]
