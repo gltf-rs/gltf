@@ -10,10 +10,11 @@ extern crate serde;
 extern crate serde_json;
 
 macro_rules! enum_string {
-    (pub enum $name:ident {
+    ($name:ident {
         $($variant:ident = $value:expr,)*
     }) => {
         #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+        #[repr(u32)]
         pub enum $name {
             $($variant,)*
         }

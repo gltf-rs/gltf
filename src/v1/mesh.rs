@@ -8,7 +8,7 @@
 
 use std::collections::HashMap;
 
-enum_number!(
+enum_number! {
     Mode {
         Points = 0,
         Line = 1,
@@ -17,7 +17,7 @@ enum_number!(
         TriangleStrip = 5,
         TriangleFan = 6,
     }
-);
+}
 
 impl Default for Mode {
     fn default() -> Mode {

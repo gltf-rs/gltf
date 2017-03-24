@@ -6,12 +6,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-enum_number!(
-    ViewType {
+enum_number! {
+    Target {
         ArrayBuffer = 34962,
         ElementArrayBuffer = 34963,
     }
-);
+}
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Buffer {
@@ -34,7 +34,7 @@ pub struct Buffer {
     ///
     /// This is not necessarily unique, e.g., a buffer and a bufferView could
     /// have the same name, or two buffers could even have the same name.
-    pub name: Option<String>, 
+    pub name: Option<String>,
 
     // TODO: extension
     // TODO: extras
@@ -57,20 +57,15 @@ pub struct BufferView {
 
     /// The target that the WebGL buffer should be bound to.
     ///
-    /// Valid values correspond to WebGL enums:
-    ///
-    /// 34962 (ARRAY_BUFFER)
-    /// 34963 (ELEMENT_ARRAY_BUFFER)
-    ///
     /// When this is not provided, the bufferView contains animation or skin
     /// data.
-    pub target: Option<ViewType>,
+    pub target: Option<Target>,
 
     /// The user-defined name of this object.
     ///
     /// This is not necessarily unique, e.g., a bufferView and a buffer could
     /// have the same name, or two bufferViews could even have the same name.
-    pub name: Option<String>, 
+    pub name: Option<String>,
 
     // TODO: extension
     // TODO: extras

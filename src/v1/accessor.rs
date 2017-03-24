@@ -6,22 +6,40 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-enum_number!(
+enum_number! {
     ComponentType {
-        Byte = 5120,
-        UnsignedByte = 5121,
-        Short = 5122,
-        UnsignedShort = 5123,
-        Integer = 5124,
-        UnsignedInteger = 5125,
-        Float = 5126,
-        Double = 5127,
+        I8 = 5120,
+        U8 = 5121,
+        I16 = 5122,
+        U16 = 5123,
+        I32 = 5124,
+        U32 = 5125,
+        F32 = 5126,
+        F64 = 5127,
     }
-);
+}
 
 impl Default for ComponentType {
     fn default() -> ComponentType {
-        ComponentType::Byte
+        ComponentType::I8
+    }
+}
+
+enum_string! {
+    Kind {
+        Scalar = "SCALAR",
+        Vec2 = "VEC2",
+        Vec3 = "VEC3",
+        Vec4 = "VEC4",
+        Mat2 = "MAT2",
+        Mat3 = "MAT3",
+        Mat4 = "MAT4",
+    }
+}
+
+impl Default for Kind {
+    fn default() -> Kind {
+        Kind::Scalar
     }
 }
 
@@ -57,8 +75,8 @@ pub struct Accessor {
     ///
     /// TODO: Coerce string into enum and back
     #[serde(rename = "type")]
-    #[serde(default = "accessor_kind_default")]
-    pub kind: String,
+    #[serde(default)]
+    pub kind: Kind,
 
     /// Maximum value of each component in this attribute.
     ///
@@ -78,20 +96,31 @@ pub struct Accessor {
     ///
     /// This is not necessarily unique, e.g., an accessor and a buffer could
     /// have the same name, or two accessors could even have the same name.
-    pub name: Option<String>, 
+    pub name: Option<String>,
 
     // TODO: extension
     // TODO: extras
-}
-
-fn accessor_kind_default() -> String {
-    "SCALAR".to_string()
 }
 
 #[cfg(test)]
 mod test {
     extern crate serde_json;
     use super::*;
+
+    #[test]
+    fn invalid_component_type() {
+        let data = r#"{
+    "bufferView": "bufferViewWithVertices_id",
+    "byteOffset": 0,
+    "byteStride": 3,
+    "componentType": 5128,
+    "count": 1024,
+    "type": "SCALAR"
+}"#;
+
+        let accessor = serde_json::from_str::<Accessor>(data);
+        assert!(accessor.is_err());
+    }
 
     #[test]
     fn it_deserializes_an_accessor() {
@@ -128,9 +157,9 @@ mod test {
         assert_eq!("bufferViewWithVertices_id", accessor.buffer_view);
         assert_eq!(0, accessor.byte_offset);
         assert_eq!(3, accessor.byte_stride);
-        assert_eq!(ComponentType::Float, accessor.component_type);
+        assert_eq!(ComponentType::F32, accessor.component_type);
         assert_eq!(1024, accessor.count);
-        assert_eq!("SCALAR", accessor.kind);
+        assert_eq!(Kind::Scalar, accessor.kind);
         assert_eq!(3, accessor.max.unwrap().len());
     }
 }

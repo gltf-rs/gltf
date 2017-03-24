@@ -6,12 +6,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-enum_number!(
+enum_number! {
     ShaderType {
         Fragment = 35632,
         Vertex = 35633,
     }
-);
+}
 
 impl Default for ShaderType {
     fn default() -> ShaderType {
