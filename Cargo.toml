@@ -8,6 +8,10 @@ repository = "https://github.com/alteous/gltf"
 readme = "README.md"
 keywords = ["glTF", "3D", "asset", "model", "scene"]
 license = "MIT/Apache-2.0"
+include = [
+    "**/*.rs",
+    "Cargo.toml",
+]
 
 [dependencies]
 serde = "0.9"
