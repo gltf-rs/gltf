@@ -6,7 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-extern crate gl;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
