@@ -26,7 +26,7 @@ Load a glTF asset:
 
 ```rust
 fn main() {
-    let gltf = gltf::v1::Gltf::open("Foo.gltf").unwrap();
+    let gltf = gltf::import("Foo.gltf").unwrap();
 }
 ```
 

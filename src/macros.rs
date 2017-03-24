@@ -6,9 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-extern crate serde;
-extern crate serde_json;
-
 macro_rules! enum_string {
     ($name:ident {
         $($variant:ident = $value:expr,)*
@@ -23,7 +20,7 @@ macro_rules! enum_string {
             fn deserialize<D>(deserializer: D) -> Result<$name, D::Error>
                 where D: ::serde::de::Deserializer
             {
-                struct Visitor;
+                struct Visitor;              
                 impl ::serde::de::Visitor for Visitor {
                     type Value = $name;
                     fn expecting(&self, formatter: &mut ::std::fmt::Formatter)
@@ -67,6 +64,8 @@ macro_rules! enum_string {
 macro_rules! enum_number {
     ($name:ident { $($variant:ident = $value:expr, )* }) => {
         #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        #[allow(non_camel_case_types)]
+        #[repr(u32)]
         pub enum $name {
             $($variant = $value,)*
         }
@@ -75,7 +74,6 @@ macro_rules! enum_number {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
                 where S: ::serde::Serializer
             {
-                // Serialize the enum as a u64.
                 serializer.serialize_u64(*self as u64)
             }
         }
@@ -84,22 +82,19 @@ macro_rules! enum_number {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
                 where D: ::serde::Deserializer
             {
-                use std::fmt;
-
                 struct Visitor;
-
                 impl ::serde::de::Visitor for Visitor {
                     type Value = $name;
 
-                    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                        formatter.write_str("positive integer")
+                    fn expecting(&self, formatter: &mut ::std::fmt::Formatter)
+                                 -> ::std::fmt::Result
+                    {
+                        formatter.write_str("GLenum")
                     }
 
                     fn visit_u64<E>(self, value: u64) -> Result<$name, E>
                         where E: ::serde::de::Error
                     {
-                        // Rust does not come with a simple way of converting a
-                        // number to an enum, so use a big `match`.
                         match value {
                             $( $value => Ok($name::$variant), )*
                             _ => Err(E::custom(
@@ -108,8 +103,6 @@ macro_rules! enum_number {
                         }
                     }
                 }
-
-                // Deserialize the enum from a u64.
                 deserializer.deserialize_u64(Visitor)
             }
         }

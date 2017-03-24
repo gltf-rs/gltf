@@ -8,13 +8,19 @@
 
 extern crate gltf;
 
-use std::env;
-
-use gltf::v1::Gltf;
+use gltf::Generic::{V1, V2};
 
 fn main() {
-    let file = env::args().nth(1).unwrap();
-
-    let gltf = Gltf::open(file).expect("Error loading glTF asset");
-    println!("{:#?}", gltf);
+    let path = std::env::args().nth(1).unwrap();
+    match gltf::import(path) {
+        Ok(V1(root)) => {
+            println!("glTF version 1.0");
+            println!("{:#?}", root);
+        },
+        Ok(V2(root)) => {
+            println!("glTF version 2.0");
+            println!("{:#?}", root);
+        },
+        Err(err) => println!("Error: {:?}", err),
+    }
 }

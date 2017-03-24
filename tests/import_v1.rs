@@ -28,7 +28,7 @@ fn import_v1() {
         "glTF-Sample-Models/1.0/RiggedSimple/glTF/RiggedSimple.gltf",
     ];
     for asset in &assets {
-        match gltf::v1::Gltf::open(asset) {
+        match gltf::import(asset) {
             Ok(_) => {},
             Err(err) => { println!("{:?}", err); panic!() },
         }

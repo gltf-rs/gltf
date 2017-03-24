@@ -6,9 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use ImportError;
 use serde_json;
 use std::fs::File;
-use std::io;
 use std::io::Read;
 use std::path::Path;
 use std::collections::HashMap;
@@ -30,28 +30,8 @@ pub mod skin;
 pub mod technique;
 pub mod texture;
 
-#[derive(Debug)]
-pub enum Error {
-    /// Standard input / output error
-    Io(io::Error),
-    /// Failure when parsing a .gltf metadata file
-    Parse(serde_json::error::Error),
-}
-
-impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error {
-        Error::Io(err)
-    }
-}
-
-impl From<serde_json::error::Error> for Error {
-    fn from(err: serde_json::error::Error) -> Error {
-        Error::Parse(err)
-    }
-}
-
 #[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Gltf {
+pub struct Root {
     /// A dictionary object of accessor objects.
     ///
     /// The name of each accessor is an ID in the global glTF namespace that is
@@ -183,12 +163,16 @@ pub struct Gltf {
     // TODO: extras
 }
 
-impl Gltf {
-    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
-        let mut file = File::open(path)?;
+impl Root {
+    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self, ImportError> {
+        let mut file = File::open(path).map_err(ImportError::Io)?;
         let mut json = String::new();
-        file.read_to_string(&mut json)?;
+        file.read_to_string(&mut json).map_err(ImportError::Io)?;
 
-        serde_json::from_str(&json).map_err(|cause| Error::Parse(cause))
+        serde_json::from_str(&json).map_err(|cause| ImportError::Deserialize(cause))
+    }
+
+    pub fn import_from_str(json: &str) -> Result<Self, ImportError> {
+        serde_json::from_str(&json).map_err(|cause| ImportError::Deserialize(cause))
     }
 }
