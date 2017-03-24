@@ -112,9 +112,9 @@ pub struct Texture {
 enum_number! {
     DataType {
         U8 = 5121,
-        U16_R5_G6_B5 = 33635,
-        U16_R4_G4_B4_A4 = 32819,
-        U16_R5_G5_B5_A1 = 32820,
+        U16R5G6B5 = 33635,
+        U16R4G4B4A4 = 32819,
+        U16R5G5B5A1 = 32820,
     }
 }
 
