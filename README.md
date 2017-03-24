@@ -20,15 +20,13 @@ Import the crate in your library or executable:
 
 ```rust
 extern crate gltf;
-
-use gltf::Gltf;
 ```
 
-Load a glTF file:
+Load a glTF asset:
 
 ```rust
 fn main() {
-    let gltf = Gltf::open("Foo.gltf").unwrap();
+    let gltf = gltf::v1::Gltf::open("Foo.gltf").unwrap();
 }
 ```
 
@@ -42,10 +40,4 @@ use the example here to poke at it.
 ```sh
 cargo run --example gltf_display path/to/gltf_file
 ```
-
-## Future Goals
-
- - [x] Ability to be compilied with the latest stable toolchain
- - [ ] Full conformance to the [1.0 specification](https://github.com/KhronosGroup/glTF/blob/master/specification/1.0/README.md)
- - [ ] Replace untyped `GLenum` identifiers with equivalent type-safe constants
 
