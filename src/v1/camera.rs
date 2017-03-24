@@ -28,16 +28,19 @@ pub struct Perspective {
     pub aspect_ratio: f32,
 
     /// The floating-point vertical field of view in radians.
-    pub yfov: f32,
+    #[serde(rename = "yfov")]
+    pub y_fov: f32,
 
     /// The floating-point distance to the far clipping plane.
     ///
-    /// `zfar` must be greater than `znear`.
-    pub zfar: f32,
+    /// `z_far` must be greater than `z_near`.
+    #[serde(rename = "zfar")]
+    pub z_far: f32,
     /// The floating-point distance to the near clipping plane.
     ///
-    /// `zfar` must be greater than `znear`.
-    pub znear: f32,
+    /// `z_far` must be greater than `z_near`.
+    #[serde(rename = "znear")]
+    pub z_near: f32,
 
     // TODO: extension
     // TODO: extras
@@ -46,16 +49,20 @@ pub struct Perspective {
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Orthographic {
     /// The floating-point horizontal magnification of the view.
-    pub xmag: f32,
+    #[serde(rename = "xmag")]
+    pub x_mag: f32,
 
     /// The floating-point vertical magnification of the view.
-    pub ymag: f32,
+    #[serde(rename = "ymag")]
+    pub y_mag: f32,
 
     /// The floating-point distance to the far clipping plane.
-    pub zfar: f32,
+    #[serde(rename = "zfar")]
+    pub z_far: f32,
 
     /// The floating-point distance to the near clipping plane.
-    pub znear: f32,
+    #[serde(rename = "znear")]
+    pub z_near: f32,
 
     // TODO: extension
     // TODO: extras
