@@ -13,7 +13,7 @@ Add `gltf` to the dependencies section of `Cargo.toml`:
 
 ```toml
 [dependencies]
-gltf = "0.4"
+gltf = "0.5"
 ```
 
 Import the crate in your library or executable:
