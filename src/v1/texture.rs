@@ -67,16 +67,16 @@ impl Default for Target {
 
 enum_number! {
     TexelType {
-        UnsignedByte = 5121,
-        UnsignedShort565 = 33635,
-        UnsignedShort4444 = 32819,
-        UnsignedShort5551 = 32820,
+        U8 = 5121,
+        U16R5G6B5 = 33635,
+        U16R4G4B4A4 = 32819,
+        U16R5G5B5A1 = 32820,
     }
 }
 
 impl Default for TexelType {
     fn default() -> TexelType {
-        TexelType::UnsignedByte
+        TexelType::U8
     }
 }
 
