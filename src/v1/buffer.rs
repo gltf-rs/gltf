@@ -7,7 +7,7 @@
 // except according to those terms.
 
 enum_number! {
-    ViewType {
+    Target {
         ArrayBuffer = 34962,
         ElementArrayBuffer = 34963,
     }
@@ -59,7 +59,7 @@ pub struct BufferView {
     ///
     /// When this is not provided, the bufferView contains animation or skin
     /// data.
-    pub target: Option<ViewType>,
+    pub target: Option<Target>,
 
     /// The user-defined name of this object.
     ///
