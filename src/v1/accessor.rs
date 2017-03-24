@@ -8,20 +8,20 @@
 
 enum_number! {
     ComponentType {
-        Byte = 5120,
-        UnsignedByte = 5121,
-        Short = 5122,
-        UnsignedShort = 5123,
-        Integer = 5124,
-        UnsignedInteger = 5125,
-        Float = 5126,
-        Double = 5127,
+        I8 = 5120,
+        U8 = 5121,
+        I16 = 5122,
+        U16 = 5123,
+        I32 = 5124,
+        U32 = 5125,
+        F32 = 5126,
+        F64 = 5127,
     }
 }
 
 impl Default for ComponentType {
     fn default() -> ComponentType {
-        ComponentType::Byte
+        ComponentType::I8
     }
 }
 
@@ -157,7 +157,7 @@ mod test {
         assert_eq!("bufferViewWithVertices_id", accessor.buffer_view);
         assert_eq!(0, accessor.byte_offset);
         assert_eq!(3, accessor.byte_stride);
-        assert_eq!(ComponentType::Float, accessor.component_type);
+        assert_eq!(ComponentType::F32, accessor.component_type);
         assert_eq!(1024, accessor.count);
         assert_eq!(Kind::Scalar, accessor.kind);
         assert_eq!(3, accessor.max.unwrap().len());
