@@ -25,7 +25,7 @@ pub struct Perspective {
     ///
     /// When this is undefined, the aspect ratio of the canvas is used.
     #[serde(rename = "aspectRatio")]
-    pub aspect_ratio: f32,
+    pub aspect_ratio: Option<f32>,
 
     /// The floating-point vertical field of view in radians.
     #[serde(rename = "yfov")]
