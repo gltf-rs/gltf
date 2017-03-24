@@ -16,6 +16,12 @@ macro_rules! enum_string {
             $($variant,)*
         }
 
+        impl Into<u32> for $name {
+            fn into(self) -> u32 {
+                self as u32
+            }
+        }
+
         impl ::serde::de::Deserialize for $name {
             fn deserialize<D>(deserializer: D) -> Result<$name, D::Error>
                 where D: ::serde::de::Deserializer
@@ -63,11 +69,16 @@ macro_rules! enum_string {
 
 macro_rules! enum_number {
     ($name:ident { $($variant:ident = $value:expr, )* }) => {
-        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-        #[allow(non_camel_case_types)]
+        #[derive(Clone, Copy, Debug, Eq, PartialEq)]
         #[repr(u32)]
         pub enum $name {
             $($variant = $value,)*
+        }
+
+        impl Into<u32> for $name {
+            fn into(self) -> u32 {
+                self as u32
+            }
         }
 
         impl ::serde::Serialize for $name {
