@@ -6,7 +6,12 @@
             "byteStride": 0,
             "componentType": 5123,
             "count": 36,
-            "type": "SCALAR"
+            "type": "SCALAR",
+	    "extras": {
+	        "normalizedInteger": {
+		    "normalized": true
+		}
+            }
         },
         "accessor_23": {
             "bufferView": "bufferView_30",
