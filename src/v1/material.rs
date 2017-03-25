@@ -6,10 +6,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use traits::{Extensions, Extras};
+use v1::Extensions;
+use traits::Extras;
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Material<E: Extensions, X: Extras> {
+pub struct Material<E: Extras> {
     /// The ID of the technique.
     ///
     /// If this is not supplied, and no extension is present that defines
@@ -27,9 +28,9 @@ pub struct Material<E: Extensions, X: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: <E as Extensions>::Material,
+    pub extensions: Extensions,
 
     /// Application-specific data.
     #[serde(default)]
-    pub extras: <X as Extras>::Material,
+    pub extras: <E as Extras>::Material,
 }

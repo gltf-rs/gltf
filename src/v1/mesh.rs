@@ -7,7 +7,8 @@
 // except according to those terms.
 
 use std::collections::HashMap;
-use traits::{Extensions, Extras};
+use v1::Extensions;
+use traits::Extras;
 
 enum_number! {
     Mode {
@@ -27,7 +28,7 @@ impl Default for Mode {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Primitive<E: Extensions, X: Extras> {
+pub struct Primitive<E: Extras> {
     /// A dictionary object of strings, where each string is the ID of the
     /// accessor containing an attribute.
     #[serde(default)]
@@ -54,19 +55,19 @@ pub struct Primitive<E: Extensions, X: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: <E as Extensions>::MeshPrimitive,
+    pub extensions: Extensions,
 
     /// Application-specific data.
     #[serde(default)]
-    pub extras: <X as Extras>::MeshPrimitive,
+    pub extras: <E as Extras>::MeshPrimitive,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Mesh<E: Extensions, X: Extras> {
+pub struct Mesh<E: Extras> {
     /// An array of primitives, each defining geometry to be rendered with a
     /// material.
     #[serde(default)]
-    pub primitives: Vec<Primitive<E, X>>,
+    pub primitives: Vec<Primitive<E>>,
 
     /// The user-defined name of this object.
     ///
@@ -76,9 +77,9 @@ pub struct Mesh<E: Extensions, X: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: <E as Extensions>::Mesh,
+    pub extensions: Extensions,
 
     /// Application-specific data.
     #[serde(default)]
-    pub extras: <X as Extras>::Mesh,
+    pub extras: <E as Extras>::Mesh,
 }

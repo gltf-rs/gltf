@@ -6,7 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use traits::{Extensions, Extras};
+use v1::Extensions;
+use traits::Extras;
 
 enum_string! {
     CameraType {
@@ -22,7 +23,7 @@ impl Default for CameraType {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Perspective<E: Extensions, X: Extras> {
+pub struct Perspective<E: Extras> {
     /// The floating-point aspect ratio of the field of view.
     ///
     /// When this is undefined, the aspect ratio of the canvas is used.
@@ -46,15 +47,15 @@ pub struct Perspective<E: Extensions, X: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: <E as Extensions>::CameraPerspective,
+    pub extensions: Extensions,
 
     /// Application-specific data.
     #[serde(default)]
-    pub extras: <X as Extras>::CameraPerspective,
+    pub extras: <E as Extras>::CameraPerspective,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Orthographic<E: Extensions, X: Extras> {
+pub struct Orthographic<E: Extras> {
     /// The floating-point horizontal magnification of the view.
     #[serde(rename = "xmag")]
     pub x_mag: f32,
@@ -73,22 +74,22 @@ pub struct Orthographic<E: Extensions, X: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: <E as Extensions>::CameraOrthographic,
+    pub extensions: Extensions,
 
     /// Application-specific data.
     #[serde(default)]
-    pub extras: <X as Extras>::CameraOrthographic,
+    pub extras: <E as Extras>::CameraOrthographic,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Camera<E: Extensions, X: Extras> {
+pub struct Camera<E: Extras> {
     /// An orthographic camera containing properties to create an orthographic
     /// projection matrix.
-    pub orthographic: Option<Orthographic<E, X>>,
+    pub orthographic: Option<Orthographic<E>>,
 
     /// A perspective camera containing properties to create a perspective
     /// projection matrix.
-    pub perspective: Option<Perspective<E, X>>,
+    pub perspective: Option<Perspective<E>>,
 
     /// Specifies if the camera uses a perspective or orthographic projection.
     ///
@@ -106,9 +107,9 @@ pub struct Camera<E: Extensions, X: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: <E as Extensions>::Camera,
+    pub extensions: Extensions,
 
     /// Application-specific data.
     #[serde(default)]
-    pub extras: <X as Extras>::Camera,
+    pub extras: <E as Extras>::Camera,
 }

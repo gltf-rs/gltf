@@ -15,15 +15,15 @@ use v2::{Extensions, Extras};
 /// A camera's projection
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Camera<E: Extensions, X: Extras> {
+pub struct Camera<E: Extras> {
     /// Optional user-defined name for this object
     pub name: Option<String>,
     
     /// Orthographic camera values
-    pub orthographic: Option<Orthographic<E, X>>,
+    pub orthographic: Option<Orthographic<E>>,
     
     /// Perspective camera values
-    pub perspective: Option<Perspective<E, X>>,
+    pub perspective: Option<Perspective<E>>,
     
     /// `"perspective"` or `"orthographic"`
     #[serde(rename = "type")]
@@ -31,17 +31,17 @@ pub struct Camera<E: Extensions, X: Extras> {
     
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: <E as Extensions>::Camera,
+    pub extensions: Extensions,
     
     /// Optional application specific data
     #[serde(default)]
-    pub extras: <X as Extras>::Camera,
+    pub extras: <E as Extras>::Camera,
 }
 
 /// Values for an orthographic camera
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Orthographic<E: Extensions, X: Extras> {
+pub struct Orthographic<E: Extras> {
     /// The horizontal magnification of the view
     #[serde(default, rename = "xmag")]
     pub x_mag: f32,
@@ -60,17 +60,17 @@ pub struct Orthographic<E: Extensions, X: Extras> {
     
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: <E as Extensions>::CameraOrthographic,
+    pub extensions: Extensions,
     
     /// Optional application specific data
     #[serde(default)]
-    pub extras: <X as Extras>::CameraOrthographic,
+    pub extras: <E as Extras>::CameraOrthographic,
 }
 
 /// Values for a perspective camera
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Perspective<E: Extensions, X: Extras> {
+pub struct Perspective<E: Extras> {
     /// Aspect ratio of the field of view
     #[serde(default, rename = "aspectRatio")]
     pub aspect_ratio: f32,
@@ -89,9 +89,9 @@ pub struct Perspective<E: Extensions, X: Extras> {
     
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: <E as Extensions>::CameraPerspective,
+    pub extensions: Extensions,
     
     /// Optional application specific data
     #[serde(default)]
-    pub extras: <X as Extras>::CameraPerspective,
+    pub extras: <E as Extras>::CameraPerspective,
 }

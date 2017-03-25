@@ -18,8 +18,6 @@ pub mod extras {
     }
 }
 
-pub type Extensions = gltf::extensions::None;
-
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Extras;
 
@@ -54,20 +52,52 @@ impl gltf::traits::Extras for Extras {
 }
 
 fn main() {
-    let v1 = gltf::import::<_, Extensions, Extras>("tests/Box-1.0.gltf")
+    let gltf = gltf::import::<_, Extras>("tests/Box-1.0.gltf")
         .unwrap()
         .to_v1()
         .unwrap();
-    println!("Box (1.0)");
+    println!("Box (1.0) with custom Extras");
     println!("=========");
-    println!("{:#?}", v1.accessors);
+    println!("{:#?}", gltf.accessors);
+    
+    let gltf = gltf::import::<_, gltf::extras::Any>("tests/Box-1.0.gltf")
+        .unwrap()
+        .to_v1()
+        .unwrap();
+    println!("Box (1.0) with Any");
+    println!("=========");
+    println!("{:#?}", gltf.accessors);
 
-    let v2 = gltf::import::<_, Extensions, Extras>("tests/Lantern-2.0.gltf")
+    let gltf = gltf::import::<_, gltf::extras::None>("tests/Box-1.0.gltf")
+        .unwrap()
+        .to_v1()
+        .unwrap();
+    println!("Box (1.0) with None");
+    println!("=========");
+    println!("{:#?}", gltf.accessors);
+
+    let gltf = gltf::import::<_, Extras>("tests/Lantern-2.0.gltf")
         .unwrap()
         .to_v2()
         .unwrap();
-    println!("Lantern (2.0)");
+    println!("Lantern (2.0) with custom Extras");
     println!("=========");
-    println!("{:#?}", v2.accessors());
+    println!("{:#?}", gltf.accessors());
+
+    let gltf = gltf::import::<_, gltf::extras::Any>("tests/Lantern-2.0.gltf")
+        .unwrap()
+        .to_v2()
+        .unwrap();
+    println!("Lantern (2.0) with Any");
+    println!("=========");
+    println!("{:#?}", gltf.accessors());
+    
+    let gltf = gltf::import::<_, gltf::extras::None>("tests/Lantern-2.0.gltf")
+        .unwrap()
+        .to_v2()
+        .unwrap();
+    println!("Lantern (2.0) with None");
+    println!("=========");
+    println!("{:#?}", gltf.accessors());
 }
 

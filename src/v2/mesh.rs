@@ -8,24 +8,25 @@
 // except according to those terms.
 
 use std::collections::HashMap;
-use traits::{Extensions, Extras};
+use v2::Extensions;
+use traits::Extras;
 use v2::{accessor, material, Index};
 
 /// [A set of primitives to be rendered]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#mesh)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Mesh<E: Extensions, X: Extras> {
+pub struct Mesh<E: Extras> {
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: <E as Extensions>::Mesh,
+    pub extensions: Extensions,
     /// Optional application specific data
     #[serde(default)]
-    pub extras: <X as Extras>::Mesh,
+    pub extras: <E as Extras>::Mesh,
     /// Optional user-defined name for this object
     pub name: Option<String>,
     /// Defines the geometry of this mesh to be renderered with a material
-    pub primitives: Vec<Primitive<E, X>>,
+    pub primitives: Vec<Primitive<E>>,
     /// Defines the weights to be applied to the morph targets
     #[serde(default)]
     pub weights: Vec<f32>,
@@ -35,27 +36,27 @@ pub struct Mesh<E: Extensions, X: Extras> {
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#meshprimitive)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Primitive<E: Extensions, X: Extras> {
+pub struct Primitive<E: Extras> {
     /// Maps attribute semantic names to the `Accessor`s containing their data
     #[serde(default)]
-    pub attributes: HashMap<String, Index<accessor::Accessor<E, X>>>,
+    pub attributes: HashMap<String, Index<accessor::Accessor<E>>>,
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: <E as Extensions>::MeshPrimitive,
+    pub extensions: Extensions,
     /// Optional application specific data
     #[serde(default)]
-    pub extras: <X as Extras>::MeshPrimitive,
+    pub extras: <E as Extras>::MeshPrimitive,
     /// Index of the `Accessor` containing mesh indices
-    pub indices: Option<Index<accessor::Accessor<E, X>>>,
+    pub indices: Option<Index<accessor::Accessor<E>>>,
     /// The index of the material to apply to this primitive when rendering
-    pub material: Index<material::Material<E, X>>,
+    pub material: Index<material::Material<E>>,
     /// The type of primitives to render
     #[serde(default)]
     pub mode: Mode,
     /// Morph targets
     // TODO: Confirm that this the correct implementation
     #[serde(default)]
-    pub targets: Vec<HashMap<String, Index<accessor::Accessor<E, X>>>>,
+    pub targets: Vec<HashMap<String, Index<accessor::Accessor<E>>>>,
 }
 
 enum_number! {

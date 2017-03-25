@@ -6,10 +6,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use traits::{Extensions, Extras};
+use v1::Extensions;
+use traits::Extras;
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Scene<E: Extensions, X: Extras> {
+pub struct Scene<E: Extras> {
     /// The IDs of each root node.
     #[serde(default)]
     pub nodes: Vec<String>,
@@ -22,9 +23,9 @@ pub struct Scene<E: Extensions, X: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: <E as Extensions>::Scene,
+    pub extensions: Extensions,
 
     /// Application-specific data.
     #[serde(default)]
-    pub extras: <X as Extras>::Scene,
+    pub extras: <E as Extras>::Scene,
 }

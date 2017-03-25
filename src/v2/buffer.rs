@@ -7,7 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use traits::{Extensions, Extras};
+use v2::Extensions;
+use traits::Extras;
 use v2::Index;
 
 /// [The identifier of the `BufferView` this accessor reads from.
@@ -15,7 +16,7 @@ use v2::Index;
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#buffer)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Buffer<E: Extensions, X: Extras> {
+pub struct Buffer<E: Extras> {
     /// The length of the buffer in bytes
     #[serde(default, rename = "byteLength")]
     pub byte_length: u32,
@@ -29,20 +30,20 @@ pub struct Buffer<E: Extensions, X: Extras> {
     
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: <E as Extensions>::Buffer,
+    pub extensions: Extensions,
     
     /// Optional application specific data
     #[serde(default)]
-    pub extras: <X as Extras>::Buffer,
+    pub extras: <E as Extras>::Buffer,
 }
 
 /// [Represents a subset of a `Buffer`]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#buffers-and-buffer-views)  
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct BufferView<E: Extensions, X: Extras> {
+pub struct BufferView<E: Extras> {
     /// The index of the parent `Buffer`
-    pub buffer: Index<Buffer<E, X>>,
+    pub buffer: Index<Buffer<E>>,
     
     /// The length of the buffer view data in bytes
     #[serde(rename = "byteLength")]
@@ -64,11 +65,11 @@ pub struct BufferView<E: Extensions, X: Extras> {
 
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: <E as Extensions>::BufferView,
+    pub extensions: Extensions,
     
     /// Optional application specific data
     #[serde(default)]
-    pub extras: <X as Extras>::BufferView,
+    pub extras: <E as Extras>::BufferView,
 }
 
 enum_number! {

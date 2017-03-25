@@ -6,7 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use traits::{Extensions, Extras};
+use v1::Extensions;
+use traits::Extras;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct AssetProfile {
@@ -31,7 +32,7 @@ fn asset_profile_version_default() -> String {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Asset<E: Extensions, X: Extras> {
+pub struct Asset<E: Extras> {
     /// A copyright message suitable for display to credit the content creator.
     pub copyright: Option<String>,
 
@@ -51,9 +52,9 @@ pub struct Asset<E: Extensions, X: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: <E as Extensions>::Asset,
+    pub extensions: Extensions,
 
     /// Application-specific data.
     #[serde(default)]
-    pub extras: <X as Extras>::Asset,
+    pub extras: <E as Extras>::Asset,
 }

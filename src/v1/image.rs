@@ -6,10 +6,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use traits::{Extensions, Extras};
+use v1::Extensions;
+use traits::Extras;
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Image<E: Extensions, X: Extras> {
+pub struct Image<E: Extras> {
     /// The uri of the image.
     ///
     /// Relative paths are relative to the .gltf file. Instead of referencing an
@@ -25,9 +26,9 @@ pub struct Image<E: Extensions, X: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: <E as Extensions>::Image,
+    pub extensions: Extensions,
 
     /// Application-specific data.
     #[serde(default)]
-    pub extras: <X as Extras>::Image,
+    pub extras: <E as Extras>::Image,
 }

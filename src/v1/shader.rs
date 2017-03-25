@@ -6,7 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use traits::{Extensions, Extras};
+use v1::Extensions;
+use traits::Extras;
 
 enum_number! {
     ShaderType {
@@ -22,7 +23,7 @@ impl Default for ShaderType {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Shader<E: Extensions, X: Extras> {
+pub struct Shader<E: Extras> {
     /// The uri of the GLSL source.
     ///
     /// Relative paths are relative to the .gltf file. Instead of referencing an
@@ -44,9 +45,9 @@ pub struct Shader<E: Extensions, X: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: <E as Extensions>::Shader,
+    pub extensions: Extensions,
 
     /// Application-specific data.
     #[serde(default)]
-    pub extras: <X as Extras>::Shader,
+    pub extras: <E as Extras>::Shader,
 }

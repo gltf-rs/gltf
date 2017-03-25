@@ -20,7 +20,7 @@ pub mod traits;
 pub mod v1;
 pub mod v2;
 
-pub use traits::{Extensions, Extras};
+pub use traits::Extras;
 
 /// Error encountered when loading a glTF asset
 #[derive(Debug)]
@@ -45,11 +45,11 @@ pub enum ConversionError {
 }
 
 /// A imported glTF asset of generic version
-pub enum Generic<E: Extensions = extensions::None, X: Extras = extras::None> {
+pub enum Generic<E: Extras = extras::None> {
     /// A 1.x.x conforming asset
-    V1(v1::Root<E, X>),
+    V1(v1::Root<E>),
     /// A 2.x.x conforming asset
-    V2(v2::Root<E, X>),
+    V2(v2::Root<E>),
 }
 
 /// glTF specification version x.x.x
@@ -99,8 +99,8 @@ fn detect_version(json: &str) -> Result<Version, String> {
 /// let path = "glTF-Sample-Models/1.0/Box/glTF/Box.gltf";
 /// let gltf = gltf::import(path).expect("Error importing glTF asset");
 /// ```
-pub fn import<P, E, X>(path: P) -> Result<Generic<E, X>, ImportError>
-    where P: AsRef<std::path::Path>, E: Extensions, X: Extras
+pub fn import<P, E>(path: P) -> Result<Generic<E>, ImportError>
+    where P: AsRef<std::path::Path>, E: Extras
 {
     use std::io::Read;
     let mut file = std::fs::File::open(path).map_err(ImportError::Io)?;
@@ -123,7 +123,7 @@ pub fn import<P, E, X>(path: P) -> Result<Generic<E, X>, ImportError>
     }
 }
 
-impl<E: Extensions, X: Extras> Generic<E, X> {
+impl<E: Extras> Generic<E> {
     /// Converts an imported asset to a 1.0 conforming version
     ///
     /// # Examples
@@ -136,7 +136,7 @@ impl<E: Extensions, X: Extras> Generic<E, X> {
     ///     .to_v1()
     ///     .expect("Error converting asset to glTF version 1.0");
     /// ```
-    pub fn to_v1(self) -> Result<v1::Root<E, X>, ConversionError> {
+    pub fn to_v1(self) -> Result<v1::Root<E>, ConversionError> {
         match self {
             Generic::V1(root) => Ok(root),
             Generic::V2(_) => unimplemented!(),
@@ -155,7 +155,7 @@ impl<E: Extensions, X: Extras> Generic<E, X> {
     ///     .to_v2()
     ///     .expect("Error converting asset to glTF version 2.0");
     /// ```
-    pub fn to_v2(self) -> Result<v2::Root<E, X>, ConversionError> {
+    pub fn to_v2(self) -> Result<v2::Root<E>, ConversionError> {
         match self {
             Generic::V1(_) => unimplemented!(),
             Generic::V2(root) => Ok(root),

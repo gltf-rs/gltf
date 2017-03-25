@@ -7,16 +7,17 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use traits::{Extensions, Extras};
+use v2::Extensions;
+use traits::Extras;
 use v2::{buffer, Index};
 
 /// Image data used to create a texture
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Image<E: Extensions, X: Extras> {
+pub struct Image<E: Extras> {
     /// The index of the `BufferView` that contains the image
     #[serde(rename = "bufferView")]
-    pub buffer_view: Option<Index<buffer::BufferView<E, X>>>,
+    pub buffer_view: Option<Index<buffer::BufferView<E>>>,
     
     /// The image's MIME type
     // N.B. The spec says this is required but the sample models don't provide it
@@ -32,18 +33,18 @@ pub struct Image<E: Extensions, X: Extras> {
     
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: <E as Extensions>::Image,
+    pub extensions: Extensions,
     
     /// Optional application specific data
     #[serde(default)]
-    pub extras: <X as Extras>::Image,
+    pub extras: <E as Extras>::Image,
 }
 
 /// [Defines texture sampler properties for filtering and wrapping modes]
 /// (https://github.com/KhronosGroup/glTF/blob/d63b796e6b7f6b084c710b97b048d59d749cb04a/specification/2.0/schema/sampler.schema.json)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Sampler<E: Extensions, X: Extras> {
+pub struct Sampler<E: Extras> {
     /// Magnification filter
     #[serde(default, rename = "magFilter")]
     pub mag_filter: MagFilter,
@@ -65,11 +66,11 @@ pub struct Sampler<E: Extensions, X: Extras> {
     
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: <E as Extensions>::Sampler,
+    pub extensions: Extensions,
     
     /// Optional application specific data
     #[serde(default)]
-    pub extras: <X as Extras>::Sampler,
+    pub extras: <E as Extras>::Sampler,
 }
 
 enum_number! {
@@ -100,7 +101,7 @@ enum_number! {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Texture<E: Extensions, X: Extras> {
+pub struct Texture<E: Extras> {
     /// Texel data type
     #[serde(default, rename = "type")]
     pub data_type: DataType,
@@ -117,10 +118,10 @@ pub struct Texture<E: Extensions, X: Extras> {
     pub internal_format: Format,
     
     /// The index of the sampler used by this texture
-    pub sampler: Index<Sampler<E, X>>,
+    pub sampler: Index<Sampler<E>>,
     
     /// The index of the image used by this texture
-    pub source: Index<Image<E, X>>,
+    pub source: Index<Image<E>>,
     
     /// The target the texture should be bound to
     #[serde(default)]
@@ -128,11 +129,11 @@ pub struct Texture<E: Extensions, X: Extras> {
     
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: <E as Extensions>::Texture,
+    pub extensions: Extensions,
     
     /// Optional application specific data
     #[serde(default)]
-    pub extras: <X as Extras>::Texture,
+    pub extras: <E as Extras>::Texture,
 }
 
 enum_number! {
@@ -163,9 +164,9 @@ enum_number! {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 /// Reference to a `Texture`
-pub struct TextureInfo<E: Extensions, X: Extras> {
+pub struct TextureInfo<E: Extras> {
     /// The index of the texture
-    pub index: Index<Texture<E, X>>,
+    pub index: Index<Texture<E>>,
     /// The set index of the texture's `TEXCOORD` attribute
     #[serde(default, rename = "texCoord")]
     pub tex_coord: u32,

@@ -6,7 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use traits::{Extensions, Extras};
+use v1::Extensions;
+use traits::Extras;
 
 enum_number! {
     Target {
@@ -16,7 +17,7 @@ enum_number! {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Buffer<E: Extensions, X: Extras> {
+pub struct Buffer<E: Extras> {
     /// The uri of the buffer.
     ///
     /// Relative paths are relative to the .gltf file. Instead of referencing an
@@ -40,15 +41,15 @@ pub struct Buffer<E: Extensions, X: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: <E as Extensions>::Buffer,
+    pub extensions: Extensions,
 
     /// Application-specific data.
     #[serde(default)]
-    pub extras: <X as Extras>::Buffer,
+    pub extras: <E as Extras>::Buffer,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct BufferView<E: Extensions, X: Extras> {
+pub struct BufferView<E: Extras> {
     /// The ID of the buffer.
     pub buffer: String,
 
@@ -76,9 +77,9 @@ pub struct BufferView<E: Extensions, X: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: <E as Extensions>::BufferView,
+    pub extensions: Extensions,
 
     /// Application-specific data.
     #[serde(default)]
-    pub extras: <X as Extras>::BufferView,
+    pub extras: <E as Extras>::BufferView,
 }
