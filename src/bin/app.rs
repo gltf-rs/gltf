@@ -52,6 +52,11 @@ impl gltf::traits::Extras for Extras {
 }
 
 fn main() {
+    println!("Supported 1.0 extensions: {:?}",
+             gltf::v1::extensions::SUPPORTED_EXTENSION_NAMES);
+    println!("Supported 2.0 extensions: {:?}",
+             gltf::v2::extensions::SUPPORTED_EXTENSION_NAMES);
+    
     let gltf = gltf::import::<_, Extras>("tests/Box-1.0.gltf")
         .unwrap()
         .to_v1()

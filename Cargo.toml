@@ -18,9 +18,14 @@ serde = "0.9"
 serde_derive = "0.9"
 serde_json = "0.9"
 
+[features]
+default = []
+KHR_materials_common = []
+
 [[example]]
 name = "gltf_display"
 path = "examples/display/main.rs"
 
 [[bin]]
 name = "app"
+

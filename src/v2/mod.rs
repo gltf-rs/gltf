@@ -17,6 +17,7 @@ use ImportError;
 pub mod accessor;
 pub mod animation;
 pub mod buffer;
+pub mod extensions;
 pub mod camera;
 pub mod material;
 pub mod mesh;
@@ -24,15 +25,11 @@ pub mod scene;
 pub mod skin;
 pub mod texture;
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct Extensions;
+pub use self::extensions::Extensions;
 
 /// Index into an array owned by the root glTF object
 #[derive(Clone, Copy, Debug)]
 pub struct Index<T>(u32, std::marker::PhantomData<T>);
-
-/// Generic untyped JSON object
-pub type UntypedJsonObject = std::collections::HashMap<String, serde_json::Value>;
 
 /// [Contains metadata about the glTF asset]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#asset)

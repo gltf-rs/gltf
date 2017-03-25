@@ -15,14 +15,12 @@ use std::collections::HashMap;
 use traits::Extras;
 use ImportError;
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct Extensions;
-
 pub mod accessor;
 pub mod animation;
 pub mod asset;
 pub mod buffer;
 pub mod camera;
+pub mod extensions;
 pub mod image;
 pub mod material;
 pub mod mesh;
@@ -34,6 +32,8 @@ pub mod shader;
 pub mod skin;
 pub mod technique;
 pub mod texture;
+
+pub use self::extensions::Extensions;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Root<E: Extras> {
