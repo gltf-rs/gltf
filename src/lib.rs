@@ -26,14 +26,16 @@ pub use traits::Extras;
 pub enum ImportError {
     /// Failure when deserializing a .gltf metadata file
     Deserialize(serde_json::error::Error),
+    /// A glTF extension required by the asset has not been enabled by the user
+    ExtensionDisabled(String),
+    /// A glTF extension required by the asset is not supported by the library
+    ExtensionUnsupported(String),
     /// The .gltf data is invalid
     Invalid(String),
     /// Standard input / output error
     Io(std::io::Error),
-    /// glTF version is not supported by the library
-    UnsupportedVersion(String),
-    /// glTF extension is not supported by the library
-    UnsupportedExtension(String),
+    /// The asset glTF version is not supported by the library
+    VersionUnsupported(String),
 }
 
 /// Error encountered when converting a glTF asset from one version to another
@@ -44,7 +46,7 @@ pub enum ConversionError {
 }
 
 /// A imported glTF asset of generic version
-pub enum Generic<E: Extras = extras::None> {
+pub enum Generic<E: Extras> {
     /// A 1.x.x conforming asset
     V1(v1::Root<E>),
     /// A 2.x.x conforming asset
@@ -55,39 +57,6 @@ pub enum Generic<E: Extras = extras::None> {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 struct Version(u32, u32, u32);
 
-/// Attempts to parse the `asset.version` field of a .gltf file
-fn detect_version(json: &str) -> Result<Version, String> {
-    #[derive(Deserialize)]
-    struct Asset {
-        version: String,
-    }
-
-    #[derive(Deserialize)]
-    struct Root {
-        asset: Asset,
-    }
-
-    match serde_json::from_str::<Root>(&json) {
-        Ok(root) => {
-            let mut iter = root.asset
-                .version
-                .split(".")
-                .filter_map(|s| s.parse().ok());
-            let major = iter.next();
-            let minor = iter.next().unwrap_or(0);
-            let patch = iter.next().unwrap_or(0);
-            match major {
-                Some(n) => Ok(Version(n, minor, patch)),
-                None => {
-                    Err(format!("asset.version \"{}\" invalid",
-                                    root.asset.version.to_owned()))
-                }
-            }
-        }
-        Err(_) => Err("asset.version field missing".to_string()),
-    }
-}
-
 /// Imports a glTF asset
 ///
 /// # Examples
@@ -96,7 +65,8 @@ fn detect_version(json: &str) -> Result<Version, String> {
 ///
 /// ```
 /// let path = "glTF-Sample-Models/1.0/Box/glTF/Box.gltf";
-/// let gltf = gltf::import(path).expect("Error importing glTF asset");
+/// let gltf = gltf::import::<_, gltf::extras::None>(path)
+///     .expect("Error importing glTF asset");
 /// ```
 pub fn import<P, E>(path: P) -> Result<Generic<E>, ImportError>
     where P: AsRef<std::path::Path>, E: Extras
@@ -105,20 +75,60 @@ pub fn import<P, E>(path: P) -> Result<Generic<E>, ImportError>
     let mut file = std::fs::File::open(path).map_err(ImportError::Io)?;
     let mut json = String::new();
     let _ = file.read_to_string(&mut json).map_err(ImportError::Io)?;
-    match detect_version(&json) {
-        Ok(Version(1, 0, 0)) | Ok(Version(1, 0, 1)) => {
+
+    #[derive(Deserialize)]
+    struct Asset {
+        version: String,
+    }
+
+    #[derive(Deserialize)]
+    struct Meta {
+        asset: Asset,
+        #[serde(default, rename = "extensionsRequired")]
+        extensions_required: Vec<String>,
+    }
+
+    let meta = serde_json::from_str::<Meta>(&json)
+        .map_err(ImportError::Deserialize)?; 
+    let version =  {
+        let mut iter = meta.asset.version
+            .split(".")
+            .filter_map(|s| s.parse().ok());
+        if let Some(major) = iter.next() {
+            let minor = iter.next().unwrap_or(0);
+            let patch = iter.next().unwrap_or(0);
+            Version(major, minor, patch)
+        } else {
+            return Err(ImportError::Invalid(format!("asset.version invalid")));
+        }
+    };
+    match version {
+        Version(1, 0, 0) | Version(1, 0, 1) => {
+            for extension_name in &meta.extensions_required {
+                if !v1::extensions::SUPPORTED_EXTENSION_NAMES.contains(&extension_name.as_str()) {
+                    return Err(ImportError::ExtensionUnsupported(extension_name.clone()));
+                } else if !v1::extensions::ENABLED_EXTENSION_NAMES.contains(&extension_name.as_str()) {
+                    return Err(ImportError::ExtensionDisabled(extension_name.clone()));
+                }
+            }
             let root = v1::Root::import_from_str(&json)?;
             Ok(Generic::V1(root))
         }
-        Ok(Version(2, 0, 0)) => {
+        Version(2, 0, 0) => {
+            for extension_name in &meta.extensions_required {
+                if !v2::extensions::SUPPORTED_EXTENSION_NAMES.contains(&extension_name.as_str()) {
+                    return Err(ImportError::ExtensionUnsupported(extension_name.clone()));
+                } else if !v2::extensions::ENABLED_EXTENSION_NAMES.contains(&extension_name.as_str()) {
+                    return Err(ImportError::ExtensionDisabled(extension_name.clone()));
+                }
+            }
             let root = v2::Root::import_from_str(&json)?;
             Ok(Generic::V2(root))
         }
-        Ok(Version(major, minor, patch)) => {
+        Version(major, minor, patch) => {
             let trio = format!("{}.{}.{}", major, minor, patch);
-            Err(ImportError::UnsupportedVersion(trio))
+            Err(ImportError::VersionUnsupported(trio))
         }
-        Err(err) => Err(ImportError::Invalid(err)),
     }
 }
 
@@ -131,7 +141,8 @@ impl<E: Extras> Generic<E> {
     ///
     /// ```
     /// let path = "glTF-Sample-Models/1.0/Box/glTF/Box.gltf";
-    /// let gltf = gltf::import(path).expect("Error importing glTF asset")
+    /// let gltf = gltf::import::<_, gltf::extras::None>(path)
+    ///     .expect("Error importing glTF asset")
     ///     .to_v1()
     ///     .expect("Error converting asset to glTF version 1.0");
     /// ```
@@ -150,7 +161,8 @@ impl<E: Extras> Generic<E> {
     ///
     /// ```
     /// let path = "glTF-Sample-Models/2.0/BoomBox/glTF/BoomBox.gltf";
-    /// let gltf = gltf::import(path).expect("Error loading glTF asset")
+    /// let gltf = gltf::import::<_, gltf::extras::None>(path)
+    ///     .expect("Error loading glTF asset")
     ///     .to_v2()
     ///     .expect("Error converting asset to glTF version 2.0");
     /// ```
@@ -162,32 +174,3 @@ impl<E: Extras> Generic<E> {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn detect_version_100() {
-        let json = "{\"asset\":{\"version\":\"1.0.0\"}}";
-        assert_eq!(detect_version(&json), Ok(Version(1, 0, 0)));
-    }
-
-    #[test]
-    fn detect_version_200() {
-        let json = "{\"asset\":{\"version\":\"2.0.0\"}}";
-        assert_eq!(detect_version(&json), Ok(Version(2, 0, 0)));
-    }
-
-    #[test]
-    fn detect_missing_version() {
-        let json = "{}";
-        assert_eq!(detect_version(&json),
-                   Err("asset.version field missing".to_string()));
-    }
-
-    #[test]
-    fn allow_extra_fields() {
-        let json = "{\"asset\":{\"version\":\"1.0.0\",\"foo\":{}},\"bar\":{}}";
-        assert_eq!(detect_version(&json), Ok(Version(1, 0, 0)));
-    }
-}

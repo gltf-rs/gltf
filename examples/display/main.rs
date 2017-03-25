@@ -12,7 +12,7 @@ use gltf::Generic::{V1, V2};
 
 fn main() {
     let path = std::env::args().nth(1).unwrap();
-    match gltf::import(path) {
+    match gltf::import::<_, gltf::extras::Any>(path) {
         Ok(V1(root)) => {
             println!("glTF version 1.0");
             println!("{:#?}", root);

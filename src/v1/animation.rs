@@ -131,6 +131,7 @@ pub struct Animation<E: Extras> {
 #[cfg(test)]
 mod test {
     extern crate serde_json;
+    use extras;
     use super::*;
 
     #[test]
@@ -190,7 +191,7 @@ mod test {
         "Application specific": "The extra object can contain any properties."
     }
 }"#;
-        let animation: Animation = serde_json::from_str(data).unwrap();
+        let animation: Animation<extras::Any> = serde_json::from_str(data).unwrap();
 
         assert_eq!("user-defined animation name", animation.name.unwrap());
         assert_eq!(2, animation.parameters.len());

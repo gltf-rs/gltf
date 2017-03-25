@@ -113,6 +113,7 @@ pub struct Accessor<E: Extras> {
 #[cfg(test)]
 mod test {
     extern crate serde_json;
+    use extras;
     use super::*;
 
     #[test]
@@ -126,7 +127,7 @@ mod test {
     "type": "SCALAR"
 }"#;
 
-        let accessor = serde_json::from_str::<Accessor>(data);
+        let accessor = serde_json::from_str::<Accessor<extras::Any>>(data);
         assert!(accessor.is_err());
     }
 
@@ -160,7 +161,7 @@ mod test {
     }
 }"#;
 
-        let accessor: Accessor = serde_json::from_str(data).unwrap();
+        let accessor: Accessor<extras::Any> = serde_json::from_str(data).unwrap();
 
         assert_eq!("bufferViewWithVertices_id", accessor.buffer_view);
         assert_eq!(0, accessor.byte_offset);

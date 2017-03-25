@@ -12,7 +12,7 @@ fn import_v2() {
         "glTF-Sample-Models/2.0/Lantern/glTF/Lantern.gltf",
     ];
     for asset in &assets {
-        match gltf::import(asset) {
+        match gltf::import::<_, gltf::extras::None>(asset) {
             Ok(V2(_)) => {},
             Ok(_) => { println!("import() detected wrong version"); panic!() },
             Err(err) => { println!("{:?}", err); panic!() },
