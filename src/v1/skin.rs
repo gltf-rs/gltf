@@ -6,8 +6,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Skin {
+use traits::{Extensions, Extras};
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Skin<E: Extensions, X: Extras> {
     #[serde(default = "skin_bind_shape_matrix")]
     #[serde(rename = "bindShapeMatrix")]
     pub bind_shape_matrix: [f32; 16],
@@ -33,6 +35,14 @@ pub struct Skin {
     /// This is not necessarily unique, e.g., a skin and a buffer could have the
     /// same name, or two skins could even have the same name.
     pub name: Option<String>,
+
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Skin,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::Skin,
 }
 
 fn skin_bind_shape_matrix() -> [f32; 16] {

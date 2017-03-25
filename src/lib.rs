@@ -14,8 +14,13 @@ extern crate serde_json;
 #[macro_use]
 mod macros;
 
+pub mod extensions;
+pub mod extras;
+pub mod traits;
 pub mod v1;
 pub mod v2;
+
+pub use traits::{Extensions, Extras};
 
 /// Error encountered when loading a glTF asset
 #[derive(Debug)]
@@ -27,7 +32,9 @@ pub enum ImportError {
     /// Standard input / output error
     Io(std::io::Error),
     /// glTF version is not supported by the library
-    Unsupported(String),
+    UnsupportedVersion(String),
+    /// glTF extension is not supported by the library
+    UnsupportedExtension(String),
 }
 
 /// Error encountered when converting a glTF asset from one version to another
@@ -38,9 +45,9 @@ pub enum ConversionError {
 }
 
 /// A imported glTF asset of generic version
-pub enum Generic<E: v2::traits::Extensions, X: v2::traits::Extras> {
+pub enum Generic<E: Extensions = extensions::None, X: Extras = extras::None> {
     /// A 1.x.x conforming asset
-    V1(v1::Root),
+    V1(v1::Root<E, X>),
     /// A 2.x.x conforming asset
     V2(v2::Root<E, X>),
 }
@@ -92,10 +99,8 @@ fn detect_version(json: &str) -> Result<Version, String> {
 /// let path = "glTF-Sample-Models/1.0/Box/glTF/Box.gltf";
 /// let gltf = gltf::import(path).expect("Error importing glTF asset");
 /// ```
-pub fn import<E, P, X>(path: P) -> Result<Generic<E, X>, ImportError>
-    where E: v2::traits::Extensions,
-          X: v2::traits::Extras,
-          P: AsRef<std::path::Path>,
+pub fn import<P, E, X>(path: P) -> Result<Generic<E, X>, ImportError>
+    where P: AsRef<std::path::Path>, E: Extensions, X: Extras
 {
     use std::io::Read;
     let mut file = std::fs::File::open(path).map_err(ImportError::Io)?;
@@ -112,13 +117,13 @@ pub fn import<E, P, X>(path: P) -> Result<Generic<E, X>, ImportError>
         }
         Ok(Version(major, minor, patch)) => {
             let trio = format!("{}.{}.{}", major, minor, patch);
-            Err(ImportError::Unsupported(trio))
+            Err(ImportError::UnsupportedVersion(trio))
         }
         Err(err) => Err(ImportError::Invalid(err)),
     }
 }
 
-impl<E: v2::traits::Extensions, X: v2::traits::Extras> Generic<E, X> {
+impl<E: Extensions, X: Extras> Generic<E, X> {
     /// Converts an imported asset to a 1.0 conforming version
     ///
     /// # Examples
@@ -131,7 +136,7 @@ impl<E: v2::traits::Extensions, X: v2::traits::Extras> Generic<E, X> {
     ///     .to_v1()
     ///     .expect("Error converting asset to glTF version 1.0");
     /// ```
-    pub fn to_v1(self) -> Result<v1::Root, ConversionError> {
+    pub fn to_v1(self) -> Result<v1::Root<E, X>, ConversionError> {
         match self {
             Generic::V1(root) => Ok(root),
             Generic::V2(_) => unimplemented!(),

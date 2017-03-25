@@ -6,6 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use traits::{Extensions, Extras};
+
 enum_number! {
     Target {
         ArrayBuffer = 34962,
@@ -13,8 +15,8 @@ enum_number! {
     }
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Buffer {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Buffer<E: Extensions, X: Extras> {
     /// The uri of the buffer.
     ///
     /// Relative paths are relative to the .gltf file. Instead of referencing an
@@ -36,12 +38,17 @@ pub struct Buffer {
     /// have the same name, or two buffers could even have the same name.
     pub name: Option<String>,
 
-    // TODO: extension
-    // TODO: extras
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Buffer,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::Buffer,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct BufferView {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct BufferView<E: Extensions, X: Extras> {
     /// The ID of the buffer.
     pub buffer: String,
 
@@ -67,6 +74,11 @@ pub struct BufferView {
     /// have the same name, or two bufferViews could even have the same name.
     pub name: Option<String>,
 
-    // TODO: extension
-    // TODO: extras
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::BufferView,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::BufferView,
 }

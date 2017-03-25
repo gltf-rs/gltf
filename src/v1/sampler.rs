@@ -8,9 +8,10 @@
 
 use v1::texture::Filter;
 use v1::texture::Wrap;
+use traits::{Extensions, Extras};
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Sampler {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Sampler<E: Extensions, X: Extras> {
     /// Magnification filter.
     #[serde(rename = "magFilter")]
     #[serde(default = "sample_mag_filter_default")]
@@ -31,7 +32,16 @@ pub struct Sampler {
     #[serde(default = "sample_wrap_t_default")]
     pub wrap_t: Wrap,
 
+    /// The user-defined name of this object.
     pub name: Option<String>,
+    
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Sampler,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::Sampler,
 }
 
 fn sample_mag_filter_default() -> Filter {

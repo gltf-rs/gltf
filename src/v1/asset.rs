@@ -6,7 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+use traits::{Extensions, Extras};
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct AssetProfile {
     /// Specifies the target rendering API.
     #[serde(default = "asset_profile_api_default")]
@@ -28,8 +30,8 @@ fn asset_profile_version_default() -> String {
     "1.0.3".to_string()
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Asset {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Asset<E: Extensions, X: Extras> {
     /// A copyright message suitable for display to credit the content creator.
     pub copyright: Option<String>,
 
@@ -47,6 +49,11 @@ pub struct Asset {
     /// The glTF version.
     pub version: String, 
 
-    // TODO: extension
-    // TODO: extras
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Asset,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::Asset,
 }

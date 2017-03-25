@@ -7,9 +7,10 @@
 // except according to those terms.
 
 use std::collections::HashMap;
+use traits::{Extensions, Extras};
 
 enum_string! {
-    TargetPath {
+    Path {
         Translation = "translation",
         Rotation = "rotation",
         Scale = "scale",
@@ -30,32 +31,42 @@ impl Default for Interpolation {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Target {
+pub struct Target<E: Extensions, X: Extras> {
     /// The ID of the node to target.
     pub id: String,
 
     /// The name of the node's TRS property to modify.
-    pub path: TargetPath,
+    pub path: Path,
 
-    // TODO: extension
-    // TODO: extras
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::AnimationTarget,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::AnimationTarget,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Channel {
+pub struct Channel<E: Extensions, X: Extras> {
     /// The ID of a sampler in this animation used to compute the value for the
     /// target, e.g., a node's translation, rotation, or scale (TRS).
     pub sampler: String,
 
     /// The ID of the node and TRS property to target.
-    pub target: Target,
+    pub target: Target<E, X>,
 
-    // TODO: extension
-    // TODO: extras
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::AnimationChannel,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::AnimationChannel
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Sampler {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Sampler<E: Extensions, X: Extras> {
     /// The ID of a parameter in this animation to use as keyframe input.
     ///
     /// This parameter must have type FLOAT. The values represent time in
@@ -74,16 +85,21 @@ pub struct Sampler {
     /// The ID of a parameter in this animation to use as keyframe output.
     pub output: String,
 
-    // TODO: extension
-    // TODO: extras
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::AnimationSampler,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::AnimationSampler,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Animation {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Animation<E: Extensions, X: Extras> {
     /// An array of channels, each of which targets an animation's sampler at a
     /// node's property.
     #[serde(default)]
-    pub channels: Vec<Channel>,
+    pub channels: Vec<Channel<E, X>>,
 
     /// A dictionary object of strings whose values are IDs of accessors with
     /// keyframe data, e.g., time, translation, rotation, etc.
@@ -94,7 +110,7 @@ pub struct Animation {
     /// output parameters with an interpolation algorithm to define a keyframe
     /// graph (but not its target).
     #[serde(default)]
-    pub samplers: HashMap<String, Sampler>,
+    pub samplers: HashMap<String, Sampler<E, X>>,
 
     /// The user-defined name of this object.
     ///
@@ -102,8 +118,13 @@ pub struct Animation {
     /// have the same name, or two animations could even have the same name.
     pub name: Option<String>,
 
-    // TODO: extension
-    // TODO: extras
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Animation,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::Animation,
 }
 
 #[cfg(test)]

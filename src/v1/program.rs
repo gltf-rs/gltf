@@ -6,8 +6,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Program {
+use traits::{Extensions, Extras};
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Program<E: Extensions, X: Extras> {
     /// Names of GLSL vertex shader attributes.
     #[serde(default)]
     pub attributes: Vec<String>,
@@ -25,4 +27,12 @@ pub struct Program {
     /// This is not necessarily unique, e.g., a program and a buffer could have
     /// the same name, or two programs could even have the same name.
     pub name: Option<String>,
+
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Program,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::Program,
 }

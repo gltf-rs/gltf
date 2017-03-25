@@ -6,8 +6,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Node {
+use traits::{Extensions, Extras};
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Node<E: Extensions, X: Extras> {
     /// The ID of the camera referenced by this node.
     pub camera: Option<String>,
 
@@ -53,6 +55,14 @@ pub struct Node {
     pub translation: [f32; 3],
 
     pub name: Option<String>,
+    
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Node,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::Node,
 }
 
 fn node_matrix_default() -> [f32; 16] {

@@ -7,53 +7,69 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::{buffer, Extensions, Extras, Index};
+use traits::{Extensions, Extras};
+use v2::{buffer, Index};
 
 /// Image data used to create a texture
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Image {
+pub struct Image<E: Extensions, X: Extras> {
     /// The index of the `BufferView` that contains the image
     #[serde(rename = "bufferView")]
-    pub buffer_view: Option<Index<buffer::View>>,
-    /// Optional data targeting official extensions
-    pub extensions: Extensions,
-    /// Optional application specific data
-    pub extras: Extras,
+    pub buffer_view: Option<Index<buffer::BufferView<E, X>>>,
+    
     /// The image's MIME type
     // N.B. The spec says this is required but the sample models don't provide it
     // TODO: Remove `Option` as necessary
     #[serde(rename = "mimeType")]
     pub mime_type: Option<String>,
+    
     /// Optional user-defined name for this object
     pub name: Option<String>,
+    
     /// The uniform resource identifier of the image relative to the .gltf file
     pub uri: Option<String>,
+    
+    /// Optional data targeting official extensions
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Image,
+    
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <X as Extras>::Image,
 }
 
 /// [Defines texture sampler properties for filtering and wrapping modes]
 /// (https://github.com/KhronosGroup/glTF/blob/d63b796e6b7f6b084c710b97b048d59d749cb04a/specification/2.0/schema/sampler.schema.json)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Sampler {
-    /// Optional data targeting official extensions
-    pub extensions: Extensions,
-    /// Optional application specific data
-    pub extras: Extras,
+pub struct Sampler<E: Extensions, X: Extras> {
     /// Magnification filter
     #[serde(default, rename = "magFilter")]
     pub mag_filter: MagFilter,
+    
     /// Minification filter
     #[serde(default, rename = "minFilter")]
     pub min_filter: MinFilter,
+    
     /// Optional user-defined name for this object
     pub name: Option<String>,
+    
     /// s wrapping mode
     #[serde(default, rename = "wrapS")]
     pub wrap_s: WrappingMode,
+    
     /// t wrapping mode
     #[serde(default, rename = "wrapT")]
     pub wrap_t: WrappingMode,
+    
+    /// Optional data targeting official extensions
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Sampler,
+    
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <X as Extras>::Sampler,
 }
 
 enum_number! {
@@ -84,29 +100,39 @@ enum_number! {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Texture {
+pub struct Texture<E: Extensions, X: Extras> {
     /// Texel data type
     #[serde(default, rename = "type")]
     pub data_type: DataType,
-    /// Optional data targeting official extensions
-    pub extensions: Extensions,
-    /// Optional application specific data
-    pub extras: Extras,
+    
     /// Optional user-defined name for this object
     pub name: Option<String>,
+    
     /// The texture format
     #[serde(default)]
     pub format: Format,
+    
     /// The texture internal format
     #[serde(default, rename = "internalFormat")]
     pub internal_format: Format,
+    
     /// The index of the sampler used by this texture
-    pub sampler: Index<Sampler>,
+    pub sampler: Index<Sampler<E, X>>,
+    
     /// The index of the image used by this texture
-    pub source: Index<Image>,
+    pub source: Index<Image<E, X>>,
+    
     /// The target the texture should be bound to
     #[serde(default)]
     pub target: Target,
+    
+    /// Optional data targeting official extensions
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Texture,
+    
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <X as Extras>::Texture,
 }
 
 enum_number! {
@@ -137,12 +163,14 @@ enum_number! {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 /// Reference to a `Texture`
-pub struct Info {
+pub struct TextureInfo<E: Extensions, X: Extras> {
     /// The index of the texture
-    pub index: Index<Texture>,
+    pub index: Index<Texture<E, X>>,
     /// The set index of the texture's `TEXCOORD` attribute
     #[serde(default, rename = "texCoord")]
     pub tex_coord: u32,
+    
+    // TODO: Add extensions and extras
 }
 
 impl Default for MagFilter {

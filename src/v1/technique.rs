@@ -7,6 +7,7 @@
 // except according to those terms.
 
 use std::collections::HashMap;
+use traits::{Extensions, Extras};
 
 enum_number! {
     ParameterType {
@@ -41,8 +42,8 @@ impl Default for ParameterType {
     }
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Parameter {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Parameter<E: Extensions, X: Extras> {
     /// When defined, the parameter is an array of count elements of the
     /// specified type
     pub count: Option<u32>,
@@ -89,10 +90,18 @@ pub struct Parameter {
     /// Attribute semantics can be of the form [semantic]_[set_index] for
     /// example "TEXCOORD_0".
     pub semantic: Option<String>,
+
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::TechniqueParameter,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::TechniqueParameter,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Function {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Function<E: Extensions, X: Extras> {
     /// Floating-point values passed to blendColor(). [red, green, blue, alpha]
     #[serde(rename = "blendColor")]
     #[serde(default = "function_blend_color_default")]
@@ -197,6 +206,14 @@ pub struct Function {
     /// created. width and height must be greater than zero.
     #[serde(default = "function_scissor_default")]
     pub scissor: [f32; 4],
+
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::TechniqueFunction,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::TechniqueFunction,
 }
 
 fn function_blend_color_default() -> [f32; 4] {
@@ -247,8 +264,8 @@ fn function_scissor_default() -> [f32; 4] {
     [0.0, 0.0, 0.0, 0.0]
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct State {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct State<E: Extensions, X: Extras> {
     /// WebGL states to enable.
     ///
     /// States not in the array are disabled.
@@ -265,17 +282,25 @@ pub struct State {
 
     /// Arguments for fixed-function rendering state functions other than
     /// enable() / disable().
-    functions: Option<Function>,
+    functions: Option<Function<E, X>>,
+
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::TechniqueState,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::TechniqueState,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Technique {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Technique<E: Extensions, X: Extras> {
     /// A dictionary object of technique.parameters objects.
     ///
     /// Each parameter defines an attribute or uniform input, and an optional
     /// semantic and value.
     #[serde(default)]
-    parameters: HashMap<String, Parameter>,
+    parameters: HashMap<String, Parameter<E, X>>,
 
     /// A dictionary object of strings that maps GLSL attribute names to
     /// technique parameter IDs.
@@ -292,11 +317,19 @@ pub struct Technique {
 
     /// Fixed-function rendering states.
     #[serde(default)]
-    states: Option<State>,
+    states: Option<State<E, X>>,
 
     /// The user-defined name of this object.
     ///
     /// This is not necessarily unique, e.g., a technique and a buffer could
     /// have the same name, or two techniques could even have the same name.
     name: Option<String>,
+
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Technique,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::Technique,
 }

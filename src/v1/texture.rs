@@ -6,6 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use traits::{Extensions, Extras};
+
 enum_number! {
     Filter {
         Nearest = 9728,
@@ -80,8 +82,8 @@ impl Default for TexelType {
     }
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Texture {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Texture<E: Extensions, X: Extras> {
     /// The texture's format.
     #[serde(default)]
     pub format: Format,
@@ -111,4 +113,12 @@ pub struct Texture {
     /// This is not necessarily unique, e.g., a texture and a buffer could have
     /// the same name, or two textures could even have the same name.
     pub name: Option<String>,
+    
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Texture,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::Texture,
 }

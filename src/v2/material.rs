@@ -7,43 +7,53 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::{texture, Extensions, Extras, Index};
+use traits::{Extensions, Extras};
+use v2::{texture, Index};
 
 /// [Describes the material appearance of a primitive]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#material)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Material {
-    /// Optional data targeting official extensions
-    pub extensions: Extensions,
-    /// Optional application specific data
-    pub extras: Extras,
+pub struct Material<E: Extensions, X: Extras> {
     /// Optional user-defined name for this object
     pub name: Option<String>,
+    
     /// Defines the metallic-roughness material model from Physically-Based Rendering (PBR) methodology
     #[serde(rename = "pbrMetallicRoughness")]
-    pub pbr: PbrMetallicRoughness,
+    pub pbr: PbrMetallicRoughness<E, X>,
+    
     #[serde(rename = "normalTexture")]
-    pub normal_texture: Option<NormalTexture>,
+    pub normal_texture: Option<NormalTexture<E, X>>,
+    
     #[serde(rename = "occlusionTexture")]
-    pub occlusion_texture: Option<OcclusionTexture>,
+    pub occlusion_texture: Option<OcclusionTexture<E, X>>,
+    
     #[serde(rename = "emissiveTexture")]
-    pub emissive_texture: Option<texture::Info>,
+    pub emissive_texture: Option<texture::TextureInfo<E, X>>,
+    
     #[serde(rename = "emissiveFactor")]
     #[serde(default)]
     pub emissive_factor: [f32; 3],
+    
+    /// Optional data targeting official extensions
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Material,
+    
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <X as Extras>::Material,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct PbrMetallicRoughness {
+pub struct PbrMetallicRoughness<E: Extensions, X: Extras> {
     /// The base color factor
     #[serde(default = "material_pbr_metallic_roughness_base_color_factor_default")]
     #[serde(rename = "baseColorFactor")]
     pub base_color_factor: [f32; 4],
     /// The base color texture
     #[serde(rename = "baseColorTexture")]
-    pub base_color_texture: texture::Info,
+    pub base_color_texture: texture::TextureInfo<E, X>,
     /// The metalness of the material
     #[serde(default = "material_pbr_metallic_roughness_metallic_factor_default")]
     #[serde(rename = "metallicFactor")]
@@ -54,7 +64,9 @@ pub struct PbrMetallicRoughness {
     pub roughness_factor: f32,
     /// The metallic-roughness texture
     #[serde(rename = "metallicRoughnessTexture")]
-    pub metallic_roughness_texture: texture::Info,
+    pub metallic_roughness_texture: texture::TextureInfo<E, X>,
+    
+    // TODO: Add extensions and extras
 }
 
 fn material_pbr_metallic_roughness_base_color_factor_default() -> [f32; 4] {
@@ -72,15 +84,19 @@ fn material_pbr_metallic_roughness_roughness_factor_default() -> f32 {
 /// Defines the normal texture of a material
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct NormalTexture {
+pub struct NormalTexture<E: Extensions, X: Extras> {
     /// The index of the texture
-    pub index: Index<texture::Texture>,
+    pub index: Index<texture::Texture<E, X>>,
+    
     /// The scalar multiplier applied to each normal vector of the normal texture
     #[serde(default = "material_normal_texture_scale_default")]
     pub scale: f32,
+    
     /// The set index of the texture's `TEXCOORD` attribute
     #[serde(default, rename = "texCoord")]
     pub tex_coord: u32,
+    
+    // TODO: Add extensions and extras
 }
 
 fn material_normal_texture_scale_default() -> f32 {
@@ -90,15 +106,19 @@ fn material_normal_texture_scale_default() -> f32 {
 /// Defines the occlusion texture of a material
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct OcclusionTexture {
+pub struct OcclusionTexture<E: Extensions, X: Extras> {
     /// The index of the texture
-    pub index: Index<texture::Texture>,
+    pub index: Index<texture::Texture<E, X>>,
+    
     /// The scalar multiplier controlling the amount of occlusion applied
     #[serde(default = "material_occlusion_texture_strength_default")]
     pub strength: f32,
+    
     /// The set index of the texture's `TEXCOORD` attribute
     #[serde(default, rename = "texCoord")]
     pub tex_coord: u32,
+    
+    // TODO: Add extensions and extras
 }
 
 fn material_occlusion_texture_strength_default() -> f32 {

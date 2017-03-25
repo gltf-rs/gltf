@@ -10,19 +10,19 @@
 use serde;
 use serde_json;
 use std;
+
+use traits::{Extensions, Extras, Get};
 use ImportError;
 
 pub mod accessor;
 pub mod animation;
 pub mod buffer;
 pub mod camera;
-pub mod extensions;
 pub mod material;
 pub mod mesh;
 pub mod scene;
 pub mod skin;
 pub mod texture;
-pub mod traits;
 
 /// Index into an array owned by the root glTF object
 #[derive(Clone, Copy, Debug)]
@@ -31,37 +31,19 @@ pub struct Index<T>(u32, std::marker::PhantomData<T>);
 /// Generic untyped JSON object
 pub type UntypedJsonObject = std::collections::HashMap<String, serde_json::Value>;
 
-/// `extensions` field type
-pub type Extensions = Option<UntypedJsonObject>;
-
-/// `extras` field type
-pub type Extras = Option<UntypedJsonObject>;
-
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct NoExtensions;
-
-impl traits::Extensions for NoExtensions {
-    type Accessor = ();
-}
-
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct NoExtras;
-
-impl traits::Extras for NoExtras {
-    type Accessor = ();
-}
-
 /// [Contains metadata about the glTF asset]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#asset)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Asset {
+pub struct Asset<E: Extensions, X: Extras> {
     /// A copyright message suitable for display to credit the content creator
     pub copyright: Option<String>,
     /// Optional data targeting official extensions
-    pub extensions: Extensions,
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Asset,
     /// Optional application specific data
-    pub extras: Extras,
+    #[serde(default)]
+    pub extras: <X as Extras>::Asset,
     /// Tool that generated this glTF model
     pub generator: Option<String>,
     /// glTF version
@@ -77,32 +59,32 @@ fn asset_version_default() -> String {
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#gltf)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Root<E: traits::Extensions, X: traits::Extras> {
+pub struct Root<E: Extensions, X: Extras> {
     #[serde(default)]
     accessors: Vec<accessor::Accessor<E, X>>,
     #[serde(default)]
     animations: Vec<animation::Animation<E, X>>,
-    asset: Asset,
+    asset: Asset<E, X>,
     #[serde(default)]
-    buffers: Vec<buffer::Buffer>,
+    buffers: Vec<buffer::Buffer<E, X>>,
     #[serde(default, rename = "bufferViews")]
-    buffer_views: Vec<buffer::View>,
+    buffer_views: Vec<buffer::BufferView<E, X>>,
     #[serde(default, rename = "extensionsUsed")]
     extensions_used: Vec<String>,
     #[serde(default, rename = "extensionsRequired")]
     extensions_required: Vec<String>,
     #[serde(default)]
-    cameras: Vec<camera::Camera>,
+    cameras: Vec<camera::Camera<E, X>>,
     #[serde(default)]
-    images: Vec<texture::Image>,
+    images: Vec<texture::Image<E, X>>,
     #[serde(default)]
-    materials: Vec<material::Material>,
+    materials: Vec<material::Material<E, X>>,
     #[serde(default)]
     meshes: Vec<mesh::Mesh<E, X>>,
     #[serde(default)]
     nodes: Vec<scene::Node<E, X>>,
     #[serde(default)]
-    samplers: Vec<texture::Sampler>,
+    samplers: Vec<texture::Sampler<E, X>>,
     #[serde(default = "root_scene_default")]
     scene: Index<scene::Scene<E, X>>,
     #[serde(default)]
@@ -110,16 +92,16 @@ pub struct Root<E: traits::Extensions, X: traits::Extras> {
     #[serde(default)]
     skins: Vec<skin::Skin<E, X>>,
     #[serde(default)]
-    textures: Vec<texture::Texture>,
+    textures: Vec<texture::Texture<E, X>>,
 }
 
 fn root_scene_default<E, X>() -> Index<scene::Scene<E, X>>
-    where E: traits::Extensions, X: traits::Extras
+    where E: Extensions, X: Extras
 {
     Index(0, std::marker::PhantomData)
 }
 
-impl<E: traits::Extensions, X: traits::Extras> Root<E, X> {
+impl<E: Extensions, X: Extras> Root<E, X> {
     /// Loads a glTF version 2.0 asset from raw JSON
     pub fn import_from_str(json: &str) -> Result<Self, ImportError> {
         let root: Root<E, X> = serde_json::from_str(json)
@@ -152,37 +134,37 @@ impl<E: traits::Extensions, X: traits::Extras> Root<E, X> {
     }
 
     /// Returns the metadata included with this asset
-    pub fn asset(&self) -> &Asset {
+    pub fn asset(&self) -> &Asset<E, X> {
         &self.asset
     }
 
     /// Returns the buffer at the given index
-    pub fn buffer(&self, index: Index<buffer::Buffer>) -> &buffer::Buffer {
+    pub fn buffer(&self, index: Index<buffer::Buffer<E, X>>) -> &buffer::Buffer<E, X> {
         &self.buffers[index.0 as usize]
     }
 
     /// Returns all buffers as a slice
-    pub fn buffers(&self) -> &[buffer::Buffer] {
+    pub fn buffers(&self) -> &[buffer::Buffer<E, X>] {
         &self.buffers
     }
     
     /// Returns the buffer view at the given index
-    pub fn buffer_view(&self, index: Index<buffer::View>) -> &buffer::View {
+    pub fn buffer_view(&self, index: Index<buffer::BufferView<E, X>>) -> &buffer::BufferView<E, X> {
         &self.buffer_views[index.0 as usize]
     }
 
     /// Returns all buffer views as a slice
-    pub fn buffer_views(&self) -> &[buffer::View] {
+    pub fn buffer_views(&self) -> &[buffer::BufferView<E, X>] {
         &self.buffer_views
     }
 
     /// Returns the camera at the given index
-    pub fn camera(&self, index: Index<camera::Camera>) -> &camera::Camera {
+    pub fn camera(&self, index: Index<camera::Camera<E, X>>) -> &camera::Camera<E, X> {
         &self.cameras[index.0 as usize]
     }
 
     /// Returns all cameras as a slice
-    pub fn cameras(&self) -> &[camera::Camera] {
+    pub fn cameras(&self) -> &[camera::Camera<E, X>] {
         &self.cameras
     }
 
@@ -198,28 +180,28 @@ impl<E: traits::Extensions, X: traits::Extras> Root<E, X> {
 
     /// Returns a single item from the root object
     pub fn get<T>(&self, index: Index<T>) -> &T
-        where Self: traits::Get<T>
+        where Self: Get<T, Id=Index<T>>
     {
-        (self as &traits::Get<T>).get(index)
+        (self as &Get<T, Id=Index<T>>).get(index)
     }
 
     /// Returns the image at the given index
-    pub fn image(&self, index: Index<texture::Image>) -> &texture::Image {
+    pub fn image(&self, index: Index<texture::Image<E, X>>) -> &texture::Image<E, X> {
         &self.images[index.0 as usize]
     }
 
     /// Returns all images as a slice
-    pub fn images(&self) -> &[texture::Image] {
+    pub fn images(&self) -> &[texture::Image<E, X>] {
         &self.images
     }
 
     /// Returns the material at the given index
-    pub fn material(&self, index: Index<material::Material>) -> &material::Material {
+    pub fn material(&self, index: Index<material::Material<E, X>>) -> &material::Material<E, X> {
         &self.materials[index.0 as usize]
     }
 
     /// Returns all materials as a slice
-    pub fn materials(&self) -> &[material::Material] {
+    pub fn materials(&self) -> &[material::Material<E, X>] {
         &self.materials
     }
 
@@ -244,12 +226,12 @@ impl<E: traits::Extensions, X: traits::Extras> Root<E, X> {
     }
 
     /// Returns the sampler at the given index
-    pub fn sampler(&self, index: Index<texture::Sampler>) -> &texture::Sampler {
+    pub fn sampler(&self, index: Index<texture::Sampler<E, X>>) -> &texture::Sampler<E, X> {
         &self.samplers[index.0 as usize]
     }
 
     /// Returns all samplers as a slice
-    pub fn samplers(&self) -> &[texture::Sampler] {
+    pub fn samplers(&self) -> &[texture::Sampler<E, X>] {
         &self.samplers
     }
     
@@ -274,12 +256,12 @@ impl<E: traits::Extensions, X: traits::Extras> Root<E, X> {
     }
 
     /// Returns the texture at the given index
-    pub fn texture(&self, index: Index<texture::Texture>) -> &texture::Texture {
+    pub fn texture(&self, index: Index<texture::Texture<E, X>>) -> &texture::Texture<E, X> {
         &self.textures[index.0 as usize]
     }
 
     /// Returns all textures as a slice
-    pub fn textures(&self) -> &[texture::Texture] {
+    pub fn textures(&self) -> &[texture::Texture<E, X>] {
         &self.textures
     }
 
@@ -335,11 +317,12 @@ impl<T> serde::Deserialize for Index<T> {
 
 macro_rules! impl_get {
     ($ty:ty, $field:ident) => {
-        impl<'a, E, X> traits::Get<$ty> for Root<E, X>
-            where E: traits::Extensions, X: traits::Extras
+        impl<'a, E, X> Get<$ty> for Root<E, X>
+            where E: Extensions, X: Extras
         {
-            fn get(&self, index: Index<$ty>) -> &$ty {
-                &self.$field[index.value() as usize]
+            type Id = Index<$ty>;
+            fn get(&self, id: Self::Id) -> &$ty {
+                &self.$field[id.value() as usize]
             }
         }
     }
@@ -347,14 +330,14 @@ macro_rules! impl_get {
 
 impl_get!(accessor::Accessor<E, X>, accessors);
 impl_get!(animation::Animation<E, X>, animations);
-impl_get!(buffer::Buffer, buffers);
-impl_get!(buffer::View, buffer_views);
-impl_get!(camera::Camera, cameras);
-impl_get!(texture::Image, images);
-impl_get!(material::Material, materials);
+impl_get!(buffer::Buffer<E, X>, buffers);
+impl_get!(buffer::BufferView<E, X>, buffer_views);
+impl_get!(camera::Camera<E, X>, cameras);
+impl_get!(texture::Image<E, X>, images);
+impl_get!(material::Material<E, X>, materials);
 impl_get!(mesh::Mesh<E, X>, meshes);
 impl_get!(scene::Node<E, X>, nodes);
 impl_get!(scene::Scene<E, X>, scenes);
 impl_get!(skin::Skin<E, X>, skins);
-impl_get!(texture::Texture, textures);
+impl_get!(texture::Texture<E, X>, textures);
 

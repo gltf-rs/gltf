@@ -6,6 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use traits::{Extensions, Extras};
+
 enum_string! {
     CameraType {
         Orthographic = "orthographic",
@@ -19,8 +21,8 @@ impl Default for CameraType {
     }
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Perspective {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Perspective<E: Extensions, X: Extras> {
     /// The floating-point aspect ratio of the field of view.
     ///
     /// When this is undefined, the aspect ratio of the canvas is used.
@@ -42,12 +44,17 @@ pub struct Perspective {
     #[serde(rename = "znear")]
     pub z_near: f32,
 
-    // TODO: extension
-    // TODO: extras
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::CameraPerspective,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::CameraPerspective,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Orthographic {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Orthographic<E: Extensions, X: Extras> {
     /// The floating-point horizontal magnification of the view.
     #[serde(rename = "xmag")]
     pub x_mag: f32,
@@ -64,19 +71,24 @@ pub struct Orthographic {
     #[serde(rename = "znear")]
     pub z_near: f32,
 
-    // TODO: extension
-    // TODO: extras
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::CameraOrthographic,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::CameraOrthographic,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Camera {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Camera<E: Extensions, X: Extras> {
     /// An orthographic camera containing properties to create an orthographic
     /// projection matrix.
-    pub orthographic: Option<Orthographic>,
+    pub orthographic: Option<Orthographic<E, X>>,
 
     /// A perspective camera containing properties to create a perspective
     /// projection matrix.
-    pub perspective: Option<Perspective>,
+    pub perspective: Option<Perspective<E, X>>,
 
     /// Specifies if the camera uses a perspective or orthographic projection.
     ///
@@ -92,6 +104,11 @@ pub struct Camera {
     /// the same name, or two cameras could even have the same name.
     pub name: Option<String>,
 
-    // TODO: extension
-    // TODO: extras
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Camera,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::Camera,
 }

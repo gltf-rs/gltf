@@ -7,24 +7,27 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::{camera, mesh, scene, skin, traits, Extensions, Extras, Index};
+use traits::{Extensions, Extras};
+use v2::{camera, mesh, scene, skin, Index};
 
 /// [A single member of the glTF scene hierarchy]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#scenes)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Node<E: traits::Extensions, X: traits::Extras> {
+pub struct Node<E: Extensions, X: Extras> {
     /// The index of the camera referenced by this node
     // N.B. The spec says this is required but the sample models don't provide it
     // TODO: Remove `Option` as necessary
-    pub camera: Option<Index<camera::Camera>>,
+    pub camera: Option<Index<camera::Camera<E, X>>>,
     /// The indices of this node's children
     #[serde(default)]
     pub children: Vec<Index<scene::Node<E, X>>>,
     /// Optional data targeting official extensions
-    pub extensions: Extensions,
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Node,
     /// Optional application specific data
-    pub extras: Extras,
+    #[serde(default)]
+    pub extras: <X as Extras>::Node,
     /// 4x4 column-major transformation matrix
     #[serde(default = "node_matrix_default")]
     pub matrix: [[f32; 4]; 4],
@@ -74,11 +77,13 @@ fn node_scale_default() -> [f32; 3] {
 /// [A set of visual objects to render](https://github.com/KhronosGroup/glTF/tree/2.0/specification/2.0#scenes)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Scene<E: traits::Extensions, X: traits::Extras> {
+pub struct Scene<E: Extensions, X: Extras> {
     /// Optional data targeting official extensions
-    pub extensions: Extensions,
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Scene,
     /// Optional application specific data
-    pub extras: Extras,
+    #[serde(default)]
+    pub extras: <X as Extras>::Scene,
     /// Optional user-defined name for this object
     pub name: Option<String>,
     /// The indices of each root `Node` in this scene

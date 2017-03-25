@@ -15,62 +15,83 @@ use v2::{Extensions, Extras};
 /// A camera's projection
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Camera {
-    /// Optional data targeting official extensions
-    pub extensions: Extensions,
-    /// Optional application specific data
-    pub extras: Extras,
+pub struct Camera<E: Extensions, X: Extras> {
     /// Optional user-defined name for this object
     pub name: Option<String>,
+    
     /// Orthographic camera values
-    pub orthographic: Option<Orthographic>,
+    pub orthographic: Option<Orthographic<E, X>>,
+    
     /// Perspective camera values
-    pub perspective: Option<Perspective>,
+    pub perspective: Option<Perspective<E, X>>,
+    
     /// `"perspective"` or `"orthographic"`
     #[serde(rename = "type")]
-    pub ty: String, 
+    pub ty: String,
+    
+    /// Optional data targeting official extensions
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Camera,
+    
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <X as Extras>::Camera,
 }
 
 /// Values for an orthographic camera
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Orthographic {
-    /// Optional data targeting official extensions
-    pub extensions: Extensions,
-    /// Optional application specific data
-    pub extras: Extras,
+pub struct Orthographic<E: Extensions, X: Extras> {
     /// The horizontal magnification of the view
     #[serde(default, rename = "xmag")]
     pub x_mag: f32,
+    
     /// The vertical magnification of the view
     #[serde(default, rename = "ymag")]
     pub y_mag: f32,
+    
     /// The distance to the far clipping plane
     #[serde(default, rename = "zfar")]
     pub z_far: f32,
+    
     /// The distance to the near clipping plane
     #[serde(default, rename = "znear")]
     pub z_near: f32,
+    
+    /// Optional data targeting official extensions
+    #[serde(default)]
+    pub extensions: <E as Extensions>::CameraOrthographic,
+    
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <X as Extras>::CameraOrthographic,
 }
 
 /// Values for a perspective camera
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Perspective {
+pub struct Perspective<E: Extensions, X: Extras> {
     /// Aspect ratio of the field of view
     #[serde(default, rename = "aspectRatio")]
     pub aspect_ratio: f32,
-    /// Optional data targeting official extensions
-    pub extensions: Extensions,
-    /// Optional application specific data
-    pub extras: Extras,
+    
     /// The vertical field of view in radians
     #[serde(default, rename = "yfov")]
     pub y_fov: f32,
+    
     /// The distance to the far clipping plane
     #[serde(default, rename = "zfar")]
     pub z_far: f32,
+    
     /// The distance to the near clipping plane
     #[serde(default, rename = "znear")]
     pub z_near: f32,
+    
+    /// Optional data targeting official extensions
+    #[serde(default)]
+    pub extensions: <E as Extensions>::CameraPerspective,
+    
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <X as Extras>::CameraPerspective,
 }

@@ -6,8 +6,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Image {
+use traits::{Extensions, Extras};
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Image<E: Extensions, X: Extras> {
     /// The uri of the image.
     ///
     /// Relative paths are relative to the .gltf file. Instead of referencing an
@@ -21,6 +23,11 @@ pub struct Image {
     /// the same name, or two images could even have the same name.
     pub name: Option<String>, 
 
-    // TODO: extension
-    // TODO: extras
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Image,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::Image,
 }

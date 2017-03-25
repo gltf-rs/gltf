@@ -6,6 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use traits::{Extensions, Extras};
+
 enum_number! {
     ShaderType {
         Fragment = 35632,
@@ -19,8 +21,8 @@ impl Default for ShaderType {
     }
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Shader {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Shader<E: Extensions, X: Extras> {
     /// The uri of the GLSL source.
     ///
     /// Relative paths are relative to the .gltf file. Instead of referencing an
@@ -39,4 +41,12 @@ pub struct Shader {
     /// This is not necessarily unique, e.g., a shader and a buffer could have
     /// the same name, or two shaders could even have the same name.
     pub name: Option<String>,
+
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Shader,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::Shader,
 }

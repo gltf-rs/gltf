@@ -6,6 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use traits::{Extensions, Extras};
+
 enum_number! {
     ComponentType {
         I8 = 5120,
@@ -43,8 +45,8 @@ impl Default for Kind {
     }
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Accessor {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Accessor<E: Extensions, X: Extras> {
     /// The ID of the bufferView
     #[serde(rename = "bufferView")]
     pub buffer_view: String,
@@ -98,8 +100,13 @@ pub struct Accessor {
     /// have the same name, or two accessors could even have the same name.
     pub name: Option<String>,
 
-    // TODO: extension
-    // TODO: extras
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Accessor,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::Accessor,
 }
 
 #[cfg(test)]

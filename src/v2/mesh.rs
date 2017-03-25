@@ -7,18 +7,21 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std;
-use v2::{accessor, material, traits, Extensions, Extras, Index};
+use std::collections::HashMap;
+use traits::{Extensions, Extras};
+use v2::{accessor, material, Index};
 
 /// [A set of primitives to be rendered]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#mesh)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Mesh<E: traits::Extensions, X: traits::Extras> {
+pub struct Mesh<E: Extensions, X: Extras> {
     /// Optional data targeting official extensions
-    pub extensions: Extensions,
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Mesh,
     /// Optional application specific data
-    pub extras: Extras,
+    #[serde(default)]
+    pub extras: <X as Extras>::Mesh,
     /// Optional user-defined name for this object
     pub name: Option<String>,
     /// Defines the geometry of this mesh to be renderered with a material
@@ -32,26 +35,27 @@ pub struct Mesh<E: traits::Extensions, X: traits::Extras> {
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#meshprimitive)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Primitive<E: traits::Extensions, X: traits::Extras> {
+pub struct Primitive<E: Extensions, X: Extras> {
     /// Maps attribute semantic names to the `Accessor`s containing their data
     #[serde(default)]
-    pub attributes: std::collections::HashMap<String, Index<accessor::Accessor<E, X>>>,
+    pub attributes: HashMap<String, Index<accessor::Accessor<E, X>>>,
     /// Optional data targeting official extensions
-    pub extensions: Extensions,
+    #[serde(default)]
+    pub extensions: <E as Extensions>::MeshPrimitive,
     /// Optional application specific data
-    pub extras: Extras,
+    #[serde(default)]
+    pub extras: <X as Extras>::MeshPrimitive,
     /// Index of the `Accessor` containing mesh indices
     pub indices: Option<Index<accessor::Accessor<E, X>>>,
     /// The index of the material to apply to this primitive when rendering
-    pub material: Index<material::Material>,
+    pub material: Index<material::Material<E, X>>,
     /// The type of primitives to render
     #[serde(default)]
     pub mode: Mode,
-    #[serde(default)]
     /// Morph targets
-    // TODO: Confirm that this the correct implementation and update
-    // `Root::indices_are_valid()` as required
-    pub targets: Vec<std::collections::HashMap<String, Index<accessor::Accessor<E, X>>>>,
+    // TODO: Confirm that this the correct implementation
+    #[serde(default)]
+    pub targets: Vec<HashMap<String, Index<accessor::Accessor<E, X>>>>,
 }
 
 enum_number! {

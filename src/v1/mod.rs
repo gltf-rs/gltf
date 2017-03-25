@@ -6,12 +6,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use ImportError;
 use serde_json;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 use std::collections::HashMap;
+
+use traits::{Extensions, Extras};
+use ImportError;
 
 pub mod accessor;
 pub mod animation;
@@ -30,26 +32,25 @@ pub mod skin;
 pub mod technique;
 pub mod texture;
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Root {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Root<E: Extensions, X: Extras> {
     /// A dictionary object of accessor objects.
     ///
     /// The name of each accessor is an ID in the global glTF namespace that is
     /// used to reference the accessor. An accessor is a typed view into a
     /// bufferView.
     #[serde(default)]
-    pub accessors: HashMap<String, accessor::Accessor>,
+    pub accessors: HashMap<String, accessor::Accessor<E, X>>,
 
     /// A dictionary object of keyframe animation objects.
     ///
     /// The name of each animation is an ID in the global glTF namespace that is
     /// used to reference the animation.
     #[serde(default)]
-    pub animation: HashMap<String, animation::Animation>,
+    pub animation: HashMap<String, animation::Animation<E, X>>,
 
     /// Metadata about the glTF asset.
-    #[serde(default)]
-    pub asset: asset::Asset,
+    pub asset: asset::Asset<E, X>,
 
     /// A dictionary object of buffer objects.
     ///
@@ -57,7 +58,7 @@ pub struct Root {
     /// used to reference the buffer. A buffer points to binary geometry,
     /// animation, or skins.
     #[serde(default)]
-    pub buffers: HashMap<String, buffer::Buffer>,
+    pub buffers: HashMap<String, buffer::Buffer<E, X>>,
 
     /// A dictionary object of bufferView objects.
     ///
@@ -66,22 +67,32 @@ pub struct Root {
     /// buffer generally representing a subset of the buffer.
     #[serde(rename = "bufferViews")]
     #[serde(default)]
-    pub buffer_views: HashMap<String, buffer::BufferView>,
+    pub buffer_views: HashMap<String, buffer::BufferView<E, X>>,
 
     /// A dictionary object of camera objects.
     ///
     /// The name of each camera is an ID in the global glTF namespace that is
     /// used to reference the camera. A camera defines a projection matrix.
     #[serde(default)]
-    pub cameras: HashMap<String, camera::Camera>,
+    pub cameras: HashMap<String, camera::Camera<E, X>>,
 
+    /// Names of glTF extensions used somewhere in this asset.
+    #[serde(rename = "extensionsUsed")]
+    #[serde(default)]
+    pub extensions_used: Vec<String>,
+
+    /// Names of glTF extensions required to properly load this asset.
+    #[serde(rename = "extensionsRequired")]
+    #[serde(default)]
+    pub extensions_required: Vec<String>,
+    
     /// A dictionary object of image objects.
     ///
     /// The name of each image is an ID in the global glTF namespace that is
     /// used to reference the image. An image defines data used to create a
     /// texture.
     #[serde(default)]
-    pub images: HashMap<String, image::Image>,
+    pub images: HashMap<String, image::Image<E, X>>,
 
     /// A dictionary object of material objects.
     ///
@@ -89,28 +100,28 @@ pub struct Root {
     /// used to reference the material. A material defines the appearance of a
     /// primitive.
     #[serde(default)]
-    pub materials: HashMap<String, material::Material>,
+    pub materials: HashMap<String, material::Material<E, X>>,
 
     /// A dictionary object of mesh objects.
     ///
     /// The name of each mesh is an ID in the global glTF namespace that is used
     /// to reference the mesh. A mesh is a set of primitives to be rendered.
     #[serde(default)]
-    pub meshes: HashMap<String, mesh::Mesh>,
+    pub meshes: HashMap<String, mesh::Mesh<E, X>>,
 
     /// A dictionary object of node objects in the node hierarchy.
     ///
     /// The name of each node is an ID in the global glTF namespace that is used
     /// to reference the node.
     #[serde(default)]
-    pub nodes: HashMap<String, node::Node>,
+    pub nodes: HashMap<String, node::Node<E, X>>,
 
     /// A dictionary object of shader program objects.
     ///
     /// The name of each program is an ID in the global glTF namespace that is
     /// used to reference the program.
     #[serde(default)]
-    pub programs: HashMap<String, program::Program>,
+    pub programs: HashMap<String, program::Program<E, X>>,
 
     /// A dictionary object of sampler objects.
     ///
@@ -118,7 +129,7 @@ pub struct Root {
     /// used to reference the sampler. A sampler contains properties for texture
     /// filtering and wrapping modes.
     #[serde(default)]
-    pub samplers: HashMap<String, sampler::Sampler>,
+    pub samplers: HashMap<String, sampler::Sampler<E, X>>,
 
     /// The ID of the default scene.
     pub scene: Option<String>,
@@ -128,21 +139,21 @@ pub struct Root {
     /// The name of each scene is an ID in the global glTF namespace that is
     /// used to reference the scene.
     #[serde(default)]
-    pub scenes: HashMap<String, scene::Scene>,
+    pub scenes: HashMap<String, scene::Scene<E, X>>,
 
     /// A dictionary object of shader objects.
     ///
     /// The name of each shader is an ID in the global glTF namespace that is
     /// used to reference the shader.
     #[serde(default)]
-    pub shaders: HashMap<String, shader::Shader>,
+    pub shaders: HashMap<String, shader::Shader<E, X>>,
 
     /// A dictionary object of skin objects.
     ///
     /// The name of each skin is an ID in the global glTF namespace that is used
     /// to reference the skin. A skin is defined by joints and matrices.
     #[serde(default)]
-    pub skins: HashMap<String, skin::Skin>,
+    pub skins: HashMap<String, skin::Skin<E, X>>,
 
     /// A dictionary object of technique objects.
     ///
@@ -150,20 +161,25 @@ pub struct Root {
     /// used to reference the technique. A technique is a template for a
     /// material appearance.
     #[serde(default)]
-    pub techniques: HashMap<String, technique::Technique>,
+    pub techniques: HashMap<String, technique::Technique<E, X>>,
 
     /// A dictionary object of texture objects.
     ///
     /// The name of each texture is an ID in the global glTF namespace that is
     /// used to reference the texture.
     #[serde(default)]
-    pub textures: HashMap<String, texture::Texture>, 
+    pub textures: HashMap<String, texture::Texture<E, X>>, 
 
-    // TODO: extension
-    // TODO: extras
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Root,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::Root,
 }
 
-impl Root {
+impl<E: Extensions, X: Extras> Root<E, X> {
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self, ImportError> {
         let mut file = File::open(path).map_err(ImportError::Io)?;
         let mut json = String::new();

@@ -6,8 +6,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Material {
+use traits::{Extensions, Extras};
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Material<E: Extensions, X: Extras> {
     /// The ID of the technique.
     ///
     /// If this is not supplied, and no extension is present that defines
@@ -16,9 +18,18 @@ pub struct Material {
     pub technique: Option<String>,
 
     // TODO: implement values
+    
     /// The user-defined name of this object.
     ///
     /// This is not necessarily unique, e.g., a material and a buffer could have
     /// the same name, or two materials could even have the same name.
     pub name: Option<String>,
+
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Material,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <X as Extras>::Material,
 }

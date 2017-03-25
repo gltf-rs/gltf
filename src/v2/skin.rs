@@ -7,16 +7,19 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::{accessor, scene, traits, Extensions, Extras, Index};
+use traits::{Extensions, Extras};
+use v2::{accessor, scene, Index};
 
 /// [Joints and matrices defining a skin](https://github.com/KhronosGroup/glTF/blob/d63b796e6b7f6b084c710b97b048d59d749cb04a/specification/2.0/schema/skin.schema.json)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Skin<E: traits::Extensions, X: traits::Extras> {
+pub struct Skin<E: Extensions, X: Extras> {
     /// Optional data targeting official extensions
-    pub extensions: Extensions,
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Skin,
     /// Optional application specific data
-    pub extras: Extras,
+    #[serde(default)]
+    pub extras: <X as Extras>::Skin,
     /// The index of the accessor containing the 4x4 inverse-bind matrices
     #[serde(rename = "inverseBindMatrices")]
     pub inverse_bind_matrices: Option<Index<accessor::Accessor<E, X>>>,

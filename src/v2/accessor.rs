@@ -7,7 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::{buffer, traits, Extensions, Extras, Index};
+use traits::{Extensions, Extras};
+use v2::{buffer, Index};
 
 pub mod sparse {
     use super::*;
@@ -23,50 +24,40 @@ pub mod sparse {
     // TODO: Complete documentation
     #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(deny_unknown_fields)]
-    pub struct Indices {
+    pub struct Indices<E: Extensions, X: Extras> {
         /// The index of the parent `BufferView` containing the sparse indices
         #[serde(rename = "bufferView")]
-        pub buffer_view: Index<buffer::View>,
+        pub buffer_view: Index<buffer::BufferView<E, X>>,
         /// The offset relative to the start of the parent `BufferView` in bytes
         #[serde(default, rename = "byteOffset")]
         pub byte_offset: u32,
         /// The indices data type
         pub component_type: ComponentType,
-        /// Optional data targeting official extensions
-        pub extensions: Extensions,
-        /// Optional application specific data
-        pub extras: Extras,
+        // TODO: Add extensions and extras
     }
 
     /// Sparse storage of attributes that deviate from their initialization value
     #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct Storage {
+    pub struct Storage<E: Extensions, X: Extras> {
         /// Number of entries stored in the sparse array
         pub count: u32,
-        /// Optional data targeting official extensions
-        pub extensions: Extensions,
-        /// Optional application specific data
-        pub extras: Extras,
         // TODO: Complete documentation
-        pub indices: Indices,
+        pub indices: Indices<E, X>,
         // TODO: Complete documentation
-        pub values: Values,
+        pub values: Values<E, X>,
+        // TODO: Add extensions and extras
     }
 
     // TODO: Complete documentation
     #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(deny_unknown_fields)]
-    pub struct Values {
+    pub struct Values<E: Extensions, X: Extras> {
         /// The index of the parent `BufferView` containing the sparse values
         #[serde(rename = "bufferView")]
-        pub buffer_view: Index<buffer::View>,
+        pub buffer_view: Index<buffer::BufferView<E, X>>,
         /// The offset relative to the start of the parent `BufferView` in bytes
         #[serde(default, rename = "byteOffset")]
         pub byte_offset: u32,
-        /// Optional data targeting official extensions
-        pub extensions: Extensions,
-        /// Optional application specific data
-        pub extras: Extras,
     }
 }
 
@@ -74,10 +65,10 @@ pub mod sparse {
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#accessors)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Accessor<E: traits::Extensions, X: traits::Extras> {
+pub struct Accessor<E: Extensions, X: Extras> {
     /// The index of the parent `BufferView` this accessor reads from.
     #[serde(rename = "bufferView")]
-    pub buffer_view: Index<buffer::View>,
+    pub buffer_view: Index<buffer::BufferView<E, X>>,
     /// The offset relative to the start of the parent `BufferView` in bytes
     #[serde(rename = "byteOffset")]
     pub byte_offset: u32,
@@ -88,10 +79,10 @@ pub struct Accessor<E: traits::Extensions, X: traits::Extras> {
     pub component_type: ComponentType,
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: <E as traits::Extensions>::Accessor,
+    pub extensions: <E as Extensions>::Accessor,
     /// Optional application specific data
     #[serde(default)]
-    pub extras: <X as traits::Extras>::Accessor,
+    pub extras: <X as Extras>::Accessor,
     /// The multiplicity of each element
     #[serde(rename = "type")]
     pub kind: Kind,
@@ -107,7 +98,7 @@ pub struct Accessor<E: traits::Extensions, X: traits::Extras> {
     #[serde(default)]
     pub normalized: bool,
     /// Sparse storage of attributes that deviate from their initialization value
-    pub sparse: Option<sparse::Storage>,
+    pub sparse: Option<sparse::Storage<E, X>>,
 }
 
 enum_number! {

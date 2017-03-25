@@ -7,52 +7,68 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::{Extensions, Extras, Index};
+use traits::{Extensions, Extras};
+use v2::Index;
 
 /// [The identifier of the `BufferView` this accessor reads from.
 /// Describes the location, type, and size of a binary blob included with the asset]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#buffer)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Buffer {
+pub struct Buffer<E: Extensions, X: Extras> {
     /// The length of the buffer in bytes
     #[serde(default, rename = "byteLength")]
     pub byte_length: u32,
-    /// Optional data targeting official extensions
-    pub extensions: Extensions,
-    /// Optional application specific data
-    pub extras: Extras,
+    
     /// Optional user-defined name for this object
     pub name: Option<String>,
+    
     /// Uniform resource locator for the buffer data relative to the .gltf file
     // N.B. the spec says this is not required but I think that is incorrect
     pub uri: String,
+    
+    /// Optional data targeting official extensions
+    #[serde(default)]
+    pub extensions: <E as Extensions>::Buffer,
+    
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <X as Extras>::Buffer,
 }
 
 /// [Represents a subset of a `Buffer`]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#buffers-and-buffer-views)  
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct View {
+pub struct BufferView<E: Extensions, X: Extras> {
     /// The index of the parent `Buffer`
-    pub buffer: Index<Buffer>,
+    pub buffer: Index<Buffer<E, X>>,
+    
     /// The length of the buffer view data in bytes
     #[serde(rename = "byteLength")]
     pub byte_length: u32,
+    
     /// Offset into the parent buffer in bytes
     #[serde(rename = "byteOffset")]
     pub byte_offset: u32,
+    
     /// The stride in bytes between vertex attributes in this buffer view
     #[serde(default)]
     pub byte_stride: u32,
-    /// Optional data targeting official extensions
-    pub extensions: Extensions,
-    /// Optional application specific data
-    pub extras: Extras,
+
     /// Optional user-defined name for this object
     pub name: Option<String>,
+    
     /// Optional target the buffer should be bound to
     pub target: Option<Target>,
+
+    /// Optional data targeting official extensions
+    #[serde(default)]
+    pub extensions: <E as Extensions>::BufferView,
+    
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <X as Extras>::BufferView,
 }
 
 enum_number! {
