@@ -7,8 +7,31 @@
 // except according to those terms.
 
 use std::collections::HashMap;
-use v1::Extensions;
 use v1::Extras;
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct FunctionExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ParameterExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct StateExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct TechniqueExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
 
 enum_number! {
     ParameterType {
@@ -94,7 +117,7 @@ pub struct Parameter<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: ParameterExtensions,
 
     /// Application-specific data.
     #[serde(default)]
@@ -210,7 +233,7 @@ pub struct Function<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: FunctionExtensions,
 
     /// Application-specific data.
     #[serde(default)]
@@ -287,7 +310,7 @@ pub struct State<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: StateExtensions,
 
     /// Application-specific data.
     #[serde(default)]
@@ -328,7 +351,7 @@ pub struct Technique<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: TechniqueExtensions,
 
     /// Application-specific data.
     #[serde(default)]

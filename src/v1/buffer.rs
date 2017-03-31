@@ -6,8 +6,19 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v1::Extensions;
 use v1::Extras;
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct BufferExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct BufferViewExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
 
 enum_number! {
     Target {
@@ -41,7 +52,7 @@ pub struct Buffer<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: BufferExtensions,
 
     /// Application-specific data.
     #[serde(default)]
@@ -77,7 +88,7 @@ pub struct BufferView<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: BufferViewExtensions,
 
     /// Application-specific data.
     #[serde(default)]

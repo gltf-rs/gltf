@@ -6,8 +6,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v1::Extensions;
 use v1::Extras;
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct SkinExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Skin<E: Extras> {
@@ -39,7 +44,7 @@ pub struct Skin<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: SkinExtensions,
 
     /// Application-specific data.
     #[serde(default)]

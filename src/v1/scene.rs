@@ -6,7 +6,19 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v1::{Extensions, Extras};
+use v1::Extras;
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct NodeExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct SceneExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Node<E: Extras> {
@@ -58,7 +70,7 @@ pub struct Node<E: Extras> {
     
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: NodeExtensions,
 
     /// Application-specific data.
     #[serde(default)]
@@ -100,7 +112,7 @@ pub struct Scene<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: SceneExtensions,
 
     /// Application-specific data.
     #[serde(default)]

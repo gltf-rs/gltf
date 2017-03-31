@@ -6,8 +6,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v1::Extensions;
 use v1::Extras;
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ShaderExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
 
 enum_number! {
     ShaderType {
@@ -45,7 +50,7 @@ pub struct Shader<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: ShaderExtensions,
 
     /// Application-specific data.
     #[serde(default)]

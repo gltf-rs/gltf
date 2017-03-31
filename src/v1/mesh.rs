@@ -7,8 +7,19 @@
 // except according to those terms.
 
 use std::collections::HashMap;
-use v1::Extensions;
 use v1::Extras;
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct MeshExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct PrimitiveExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
 
 enum_number! {
     Mode {
@@ -55,7 +66,7 @@ pub struct Primitive<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: PrimitiveExtensions,
 
     /// Application-specific data.
     #[serde(default)]
@@ -77,7 +88,7 @@ pub struct Mesh<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: MeshExtensions,
 
     /// Application-specific data.
     #[serde(default)]

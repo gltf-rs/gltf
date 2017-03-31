@@ -6,8 +6,26 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v1::Extensions;
 use v1::Extras;
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct CameraExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct OrthographicExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct PerspectiveExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
 
 enum_string! {
     CameraType {
@@ -47,7 +65,7 @@ pub struct Perspective<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: PerspectiveExtensions,
 
     /// Application-specific data.
     #[serde(default)]
@@ -74,7 +92,7 @@ pub struct Orthographic<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: OrthographicExtensions,
 
     /// Application-specific data.
     #[serde(default)]
@@ -107,7 +125,7 @@ pub struct Camera<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: CameraExtensions,
 
     /// Application-specific data.
     #[serde(default)]

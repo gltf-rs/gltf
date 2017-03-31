@@ -7,7 +7,31 @@
 // except according to those terms.
 
 use std::collections::HashMap;
-use v1::{Extensions, Extras};
+use v1::Extras;
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct AnimationExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ChannelExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct SamplerExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct TargetExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
 
 enum_string! {
     Path {
@@ -40,7 +64,7 @@ pub struct Target<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: TargetExtensions,
 
     /// Application-specific data.
     #[serde(default)]
@@ -58,7 +82,7 @@ pub struct Channel<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: ChannelExtensions,
 
     /// Application-specific data.
     #[serde(default)]
@@ -87,7 +111,7 @@ pub struct Sampler<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: SamplerExtensions,
 
     /// Application-specific data.
     #[serde(default)]
@@ -120,7 +144,7 @@ pub struct Animation<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: AnimationExtensions,
 
     /// Application-specific data.
     #[serde(default)]

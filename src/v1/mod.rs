@@ -17,6 +17,7 @@ pub mod buffer;
 pub mod camera;
 pub mod extensions;
 pub mod extras;
+pub mod image;
 pub mod material;
 pub mod mesh;
 pub mod program;
@@ -26,7 +27,6 @@ pub mod skin;
 pub mod technique;
 pub mod texture;
 
-pub use self::extensions::Extensions;
 pub use self::extras::Extras;
 
 /// Error encountered when loading a glTF asset
@@ -44,6 +44,12 @@ pub enum ImportError {
     Io(std::io::Error),
     /// The asset glTF version is not supported by the library
     VersionUnsupported(String),
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct RootExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -106,7 +112,7 @@ pub struct Root<E: Extras> {
     /// used to reference the image. An image defines data used to create a
     /// texture.
     #[serde(default)]
-    pub images: HashMap<String, texture::Image<E>>,
+    pub images: HashMap<String, image::Image<E>>,
 
     /// A dictionary object of material objects.
     ///
@@ -186,7 +192,7 @@ pub struct Root<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: RootExtensions,
 
     /// Application-specific data.
     #[serde(default)]

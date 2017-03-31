@@ -6,8 +6,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v1::{Extensions, Extras};
+use v1::Extras;
 
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct AccessorExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+ 
 enum_number! {
     ComponentType {
         I8 = 5120,
@@ -102,7 +108,7 @@ pub struct Accessor<E: Extras> {
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: AccessorExtensions,
 
     /// Application-specific data.
     #[serde(default)]
