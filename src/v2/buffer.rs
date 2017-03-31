@@ -7,9 +7,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::Extensions;
-use v2::Extras;
-use v2::{Index, Root};
+use v2::{Extras, Index, Root};
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct BufferExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
 
 /// [The identifier of the `BufferView` this accessor reads from.
 /// Describes the location, type, and size of a binary blob included with the asset]
@@ -30,11 +34,17 @@ pub struct Buffer<E: Extras> {
     
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: BufferExtensions,
     
     /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::Buffer,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct BufferViewExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
 }
 
 /// [Represents a subset of a `Buffer`]
@@ -65,7 +75,7 @@ pub struct BufferView<E: Extras> {
 
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: BufferViewExtensions,
     
     /// Optional application specific data
     #[serde(default)]

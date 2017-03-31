@@ -17,13 +17,13 @@ pub mod buffer;
 pub mod extensions;
 pub mod extras;
 pub mod camera;
+pub mod image;
 pub mod material;
 pub mod mesh;
 pub mod scene;
 pub mod skin;
 pub mod texture;
 
-pub use self::extensions::Extensions;
 pub use self::extras::Extras;
 
 /// Helper trait for retrieving top-level objects by a universal identifier
@@ -59,6 +59,12 @@ pub enum ImportError {
 #[derive(Clone, Copy, Debug)]
 pub struct Index<T>(u32, std::marker::PhantomData<T>);
 
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct AssetExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
 /// [Contains metadata about the glTF asset]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#asset)
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -68,7 +74,7 @@ pub struct Asset<E: Extras> {
     pub copyright: Option<String>,
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: AssetExtensions,
     /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::Asset,
@@ -104,7 +110,7 @@ pub struct Root<E: Extras> {
     #[serde(default)]
     cameras: Vec<camera::Camera<E>>,
     #[serde(default)]
-    images: Vec<texture::Image<E>>,
+    images: Vec<image::Image<E>>,
     #[serde(default)]
     materials: Vec<material::Material<E>>,
     #[serde(default)]
@@ -226,12 +232,12 @@ impl<E: Extras> Root<E> {
     }
 
     /// Returns the image at the given index
-    pub fn image(&self, index: Index<texture::Image<E>>) -> &texture::Image<E> {
+    pub fn image(&self, index: Index<image::Image<E>>) -> &image::Image<E> {
         &self.images[index.0 as usize]
     }
 
     /// Returns all images as a slice
-    pub fn images(&self) -> &[texture::Image<E>] {
+    pub fn images(&self) -> &[image::Image<E>] {
         &self.images
     }
 
@@ -400,7 +406,7 @@ impl_get!(animation::Animation<E>, animations);
 impl_get!(buffer::Buffer<E>, buffers);
 impl_get!(buffer::BufferView<E>, buffer_views);
 impl_get!(camera::Camera<E>, cameras);
-impl_get!(texture::Image<E>, images);
+impl_get!(image::Image<E>, images);
 impl_get!(material::Material<E>, materials);
 impl_get!(mesh::Mesh<E>, meshes);
 impl_get!(scene::Node<E>, nodes);
@@ -414,7 +420,7 @@ impl_try_get!(animation::Animation<E>, animations);
 impl_try_get!(buffer::Buffer<E>, buffers);
 impl_try_get!(buffer::BufferView<E>, buffer_views);
 impl_try_get!(camera::Camera<E>, cameras);
-impl_try_get!(texture::Image<E>, images);
+impl_try_get!(image::Image<E>, images);
 impl_try_get!(material::Material<E>, materials);
 impl_try_get!(mesh::Mesh<E>, meshes);
 impl_try_get!(scene::Node<E>, nodes);

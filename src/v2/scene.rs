@@ -7,9 +7,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::Extensions;
-use v2::Extras;
-use v2::{camera, mesh, scene, skin, Index, Root};
+use v2::{camera, mesh, scene, skin, Extras, Index, Root};
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct NodeExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
 
 /// [A single member of the glTF scene hierarchy]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#scenes)
@@ -25,7 +29,7 @@ pub struct Node<E: Extras> {
     pub children: Vec<Index<scene::Node<E>>>,
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: NodeExtensions,
     /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::Node,
@@ -74,6 +78,11 @@ fn node_scale_default() -> [f32; 3] {
     [1.0, 1.0, 1.0]
 }
 
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct SceneExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
 
 /// [A set of visual objects to render](https://github.com/KhronosGroup/glTF/tree/2.0/specification/2.0#scenes)
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -81,7 +90,7 @@ fn node_scale_default() -> [f32; 3] {
 pub struct Scene<E: Extras> {
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: SceneExtensions,
     /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::Scene,

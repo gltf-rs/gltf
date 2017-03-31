@@ -8,9 +8,13 @@
 // except according to those terms.
 
 use std::collections::HashMap;
-use v2::Extensions;
-use v2::Extras;
-use v2::{accessor, material, Index, Root};
+use v2::{accessor, material, Extras, Index, Root};
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct MeshExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
 
 /// [A set of primitives to be rendered]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#mesh)
@@ -19,7 +23,7 @@ use v2::{accessor, material, Index, Root};
 pub struct Mesh<E: Extras> {
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: MeshExtensions,
     /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::Mesh,
@@ -32,6 +36,12 @@ pub struct Mesh<E: Extras> {
     pub weights: Vec<f32>,
 }
 
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct PrimitiveExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
 /// [Geometry to be rendered with the given material]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#meshprimitive)
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -42,7 +52,7 @@ pub struct Primitive<E: Extras> {
     pub attributes: HashMap<String, Index<accessor::Accessor<E>>>,
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: PrimitiveExtensions,
     /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::MeshPrimitive,

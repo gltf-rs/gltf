@@ -7,37 +7,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::Extensions;
-use v2::Extras;
-use v2::{buffer, Index, Root};
+use v2::{image, Extras, Index, Root};
 
-/// Image data used to create a texture
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct Image<E: Extras> {
-    /// The index of the `BufferView` that contains the image
-    #[serde(rename = "bufferView")]
-    pub buffer_view: Option<Index<buffer::BufferView<E>>>,
-    
-    /// The image's MIME type
-    // N.B. The spec says this is required but the sample models don't provide it
-    // TODO: Remove `Option` as necessary
-    #[serde(rename = "mimeType")]
-    pub mime_type: Option<String>,
-    
-    /// Optional user-defined name for this object
-    pub name: Option<String>,
-    
-    /// The uniform resource identifier of the image relative to the .gltf file
-    pub uri: Option<String>,
-    
-    /// Optional data targeting official extensions
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct SamplerExtensions {
     #[serde(default)]
-    pub extensions: Extensions,
-    
-    /// Optional application specific data
-    #[serde(default)]
-    pub extras: <E as Extras>::Image,
+    _allow_extra_fields: (),
 }
 
 /// [Defines texture sampler properties for filtering and wrapping modes]
@@ -66,7 +41,7 @@ pub struct Sampler<E: Extras> {
     
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: SamplerExtensions,
     
     /// Optional application specific data
     #[serde(default)]
@@ -99,6 +74,12 @@ enum_number! {
     }
 }
 
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct TextureExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Texture<E: Extras> {
@@ -121,7 +102,7 @@ pub struct Texture<E: Extras> {
     pub sampler: Index<Sampler<E>>,
     
     /// The index of the image used by this texture
-    pub source: Index<Image<E>>,
+    pub source: Index<image::Image<E>>,
     
     /// The target the texture should be bound to
     #[serde(default)]
@@ -129,7 +110,7 @@ pub struct Texture<E: Extras> {
     
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: TextureExtensions,
     
     /// Optional application specific data
     #[serde(default)]
@@ -161,17 +142,30 @@ enum_number! {
     }
 }
 
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct TextureInfoExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 /// Reference to a `Texture`
 pub struct TextureInfo<E: Extras> {
     /// The index of the texture
     pub index: Index<Texture<E>>,
+    
     /// The set index of the texture's `TEXCOORD` attribute
     #[serde(default, rename = "texCoord")]
     pub tex_coord: u32,
     
-    // TODO: Add extensions and extras
+    /// Optional data targeting official extensions
+    #[serde(default)]
+    pub extensions: TextureInfoExtensions,
+    
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <E as Extras>::TextureInfo,
 }
 
 impl Default for MagFilter {
@@ -207,15 +201,6 @@ impl Default for Format {
 impl Default for Target {
     fn default() -> Self {
         Target::Texture2d
-    }
-}
-
-impl<E: Extras> Image<E> {
-    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
-        if let Some(ref buffer_view) = self.buffer_view {
-            let _ = root.try_get(buffer_view)?;
-        }
-        Ok(())
     }
 }
 

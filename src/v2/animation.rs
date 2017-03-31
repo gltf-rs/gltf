@@ -7,10 +7,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::Extensions;
-use v2::Extras;
-use v2::{accessor, scene, Index, Root};
+use v2::{accessor, scene, Extras, Index, Root};
 
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct AnimationExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+    
 /// [A keyframe animation]
 /// (https://github.com/KhronosGroup/glTF/blob/d63b796e6b7f6b084c710b97b048d59d749cb04a/specification/2.0/schema/animation.schema.json)
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -18,7 +22,7 @@ use v2::{accessor, scene, Index, Root};
 pub struct Animation<E: Extras> {
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: AnimationExtensions,
     /// Optional applcation specific data
     #[serde(default)]
     pub extras: <E as Extras>::Animation,
@@ -28,6 +32,12 @@ pub struct Animation<E: Extras> {
     pub name: Option<String>,
     /// Defines samplers that combine input and output accessors
     pub samplers: Vec<Sampler<E>>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ChannelExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
 }
 
 /// Targets an animation's sampler at a node's property
@@ -40,10 +50,16 @@ pub struct Channel<E: Extras> {
     pub target: Target<E>,
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: ChannelExtensions,
     /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::AnimationChannel,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct TargetExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
 }
 
 /// The index of the node and TRS property that an animation channel targets
@@ -52,7 +68,7 @@ pub struct Channel<E: Extras> {
 pub struct Target<E: Extras> {
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: TargetExtensions,
     /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::AnimationTarget,
@@ -70,13 +86,19 @@ enum_string! {
     }
 }
 
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct SamplerExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
 /// Defines a keyframe graph but not its target
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Sampler<E: Extras> {
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: SamplerExtensions,
     /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::AnimationSampler,

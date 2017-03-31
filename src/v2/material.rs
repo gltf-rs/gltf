@@ -7,9 +7,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::Extensions;
-use v2::Extras;
-use v2::{texture, Index, Root};
+use v2::{texture, Extras, Index, Root};
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct MaterialExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
 
 /// [Describes the material appearance of a primitive]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#material)
@@ -21,7 +25,7 @@ pub struct Material<E: Extras> {
     
     /// Defines the metallic-roughness material model from Physically-Based Rendering (PBR) methodology
     #[serde(rename = "pbrMetallicRoughness")]
-    pub pbr: PbrMetallicRoughness<E>,
+    pub pbr_metallic_roughness: PbrMetallicRoughness<E>,
     
     #[serde(rename = "normalTexture")]
     pub normal_texture: Option<NormalTexture<E>>,
@@ -38,11 +42,17 @@ pub struct Material<E: Extras> {
     
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: MaterialExtensions,
     
     /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::Material,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct PbrMetallicRoughnessExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -50,24 +60,35 @@ pub struct Material<E: Extras> {
 pub struct PbrMetallicRoughness<E: Extras> {
     /// The base color factor
     #[serde(default = "material_pbr_metallic_roughness_base_color_factor_default")]
+
     #[serde(rename = "baseColorFactor")]
     pub base_color_factor: [f32; 4],
+
     /// The base color texture
     #[serde(rename = "baseColorTexture")]
     pub base_color_texture: texture::TextureInfo<E>,
+
     /// The metalness of the material
     #[serde(default = "material_pbr_metallic_roughness_metallic_factor_default")]
     #[serde(rename = "metallicFactor")]
     pub metallic_factor: f32,
+
     /// The roughness of the material
     #[serde(default = "material_pbr_metallic_roughness_roughness_factor_default")]
     #[serde(rename = "roughnessFactor")]
     pub roughness_factor: f32,
+
     /// The metallic-roughness texture
     #[serde(rename = "metallicRoughnessTexture")]
     pub metallic_roughness_texture: texture::TextureInfo<E>,
-    
-    // TODO: Add extensions and extras
+
+    /// Optional data targeting official extensions
+    #[serde(default)]
+    pub extensions: PbrMetallicRoughnessExtensions,
+
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <E as Extras>::MaterialPbrMetallicRoughness,
 }
 
 fn material_pbr_metallic_roughness_base_color_factor_default() -> [f32; 4] {
@@ -80,6 +101,12 @@ fn material_pbr_metallic_roughness_metallic_factor_default() -> f32 {
 
 fn material_pbr_metallic_roughness_roughness_factor_default() -> f32 {
     1.0
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct NormalTextureExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
 }
 
 /// Defines the normal texture of a material
@@ -97,11 +124,23 @@ pub struct NormalTexture<E: Extras> {
     #[serde(default, rename = "texCoord")]
     pub tex_coord: u32,
     
-    // TODO: Add extensions and extras
+    /// Optional data targeting official extensions
+    #[serde(default)]
+    pub extensions: NormalTextureExtensions,
+    
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <E as Extras>::MaterialNormalTexture,
 }
 
 fn material_normal_texture_scale_default() -> f32 {
     1.0
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct OcclusionTextureExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
 }
 
 /// Defines the occlusion texture of a material
@@ -119,7 +158,13 @@ pub struct OcclusionTexture<E: Extras> {
     #[serde(default, rename = "texCoord")]
     pub tex_coord: u32,
     
-    // TODO: Add extensions and extras
+    /// Optional data targeting official extensions
+    #[serde(default)]
+    pub extensions: OcclusionTextureExtensions,
+    
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <E as Extras>::MaterialOcclusionTexture,
 }
 
 fn material_occlusion_texture_strength_default() -> f32 {
@@ -137,8 +182,8 @@ impl<E: Extras> Material<E> {
         if let Some(ref texture) = self.emissive_texture {
             let _ = root.try_get(&texture.index)?;
         }
-        let _ = root.try_get(&self.pbr.base_color_texture.index)?;
-        let _ = root.try_get(&self.pbr.metallic_roughness_texture.index)?;
+        let _ = root.try_get(&self.pbr_metallic_roughness.base_color_texture.index)?;
+        let _ = root.try_get(&self.pbr_metallic_roughness.metallic_roughness_texture.index)?;
         Ok(())
     }
 }

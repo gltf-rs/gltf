@@ -7,7 +7,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::{Extensions, Extras, Root};
+use v2::{Extras, Root};
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct CameraExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
 
 // TODO: This implementation is rubbish. Replace with enum instead
 // and derive (De)Serialize manually. It would be trivial to do so
@@ -31,11 +37,17 @@ pub struct Camera<E: Extras> {
     
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: CameraExtensions,
     
     /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::Camera,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct OrthographicExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
 }
 
 /// Values for an orthographic camera
@@ -60,11 +72,17 @@ pub struct Orthographic<E: Extras> {
     
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: OrthographicExtensions,
     
     /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::CameraOrthographic,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct PerspectiveExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
 }
 
 /// Values for a perspective camera
@@ -89,7 +107,7 @@ pub struct Perspective<E: Extras> {
     
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: PerspectiveExtensions,
     
     /// Optional application specific data
     #[serde(default)]

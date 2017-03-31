@@ -7,9 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::Extensions;
-use v2::Extras;
-use v2::{buffer, Index, Root};
+use v2::{buffer, Extras, Index, Root};
 
 pub mod sparse {
     use super::*;
@@ -22,6 +20,12 @@ pub mod sparse {
         }
     }
     
+    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+    pub struct IndicesExtensions {
+        #[serde(default)]
+        _allow_extra_fields: (),
+    }
+
     // TODO: Complete documentation
     #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(deny_unknown_fields)]
@@ -34,9 +38,17 @@ pub mod sparse {
         pub byte_offset: u32,
         /// The indices data type
         pub component_type: ComponentType,
-        // TODO: Add extensions and extras
-    }
 
+        pub extensions: IndicesExtensions,
+        pub extras: <E as Extras>::AccessorSparseIndices,
+    }
+    
+    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+    pub struct StorageExtensions {
+        #[serde(default)]
+        _allow_extra_fields: (),
+    }
+    
     /// Sparse storage of attributes that deviate from their initialization value
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Storage<E: Extras> {
@@ -46,9 +58,17 @@ pub mod sparse {
         pub indices: Indices<E>,
         // TODO: Complete documentation
         pub values: Values<E>,
-        // TODO: Add extensions and extras
+
+        pub extensions: StorageExtensions,
+        pub extras: <E as Extras>::AccessorSparseStorage,
     }
 
+    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+    pub struct ValuesExtensions {
+        #[serde(default)]
+        _allow_extra_fields: (),
+    }
+    
     // TODO: Complete documentation
     #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(deny_unknown_fields)]
@@ -59,7 +79,16 @@ pub mod sparse {
         /// The offset relative to the start of the parent `BufferView` in bytes
         #[serde(default, rename = "byteOffset")]
         pub byte_offset: u32,
+
+        pub extensions: ValuesExtensions,
+        pub extras: <E as Extras>::AccessorSparseValues,
     }
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct AccessorExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
 }
 
 /// [Defines a method for retrieving data from within a `BufferView`]
@@ -80,7 +109,7 @@ pub struct Accessor<E: Extras> {
     pub component_type: ComponentType,
     /// Optional data targeting official extensions
     #[serde(default)]
-    pub extensions: Extensions,
+    pub extensions: AccessorExtensions,
     /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::Accessor,
