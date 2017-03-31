@@ -16,6 +16,8 @@ pub trait Get<T> {
     type Id;
     /// Retrieves a single value at the given index
     fn get(&self, id: Self::Id) -> &T;
+    /// Attempts to retrieve a single value at the given index
+    fn try_get(&self, id: &Self::Id) -> Result<&T, ()>;
 }
 
 /// Defines a family of user-defined data structures to be (de)serialized

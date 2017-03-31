@@ -26,6 +26,3 @@ KHR_materials_common = []
 name = "gltf_display"
 path = "examples/display/main.rs"
 
-[[bin]]
-name = "app"
-

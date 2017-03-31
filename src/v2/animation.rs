@@ -9,7 +9,7 @@
 
 use v2::Extensions;
 use traits::Extras;
-use v2::{accessor, scene, Index};
+use v2::{accessor, scene, Index, Root};
 
 /// [A keyframe animation]
 /// (https://github.com/KhronosGroup/glTF/blob/d63b796e6b7f6b084c710b97b048d59d749cb04a/specification/2.0/schema/animation.schema.json)
@@ -92,5 +92,21 @@ enum_string! {
     Interpolation {
         Linear = "LINEAR",
         Step = "STEP",
+    }
+}
+
+impl<E: Extras> Animation<E> {
+    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+        for sampler in &self.samplers {
+            let _ = root.try_get(&sampler.input)?;
+            let _ = root.try_get(&sampler.output)?;
+        }
+        for channel in &self.channels {
+            let _ = root.try_get(&channel.target.node)?;
+            if channel.sampler.value() as usize >= self.samplers.len() {
+                return Err(());
+            }
+        }
+        Ok(())
     }
 }

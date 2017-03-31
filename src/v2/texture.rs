@@ -9,7 +9,7 @@
 
 use v2::Extensions;
 use traits::Extras;
-use v2::{buffer, Index};
+use v2::{buffer, Index, Root};
 
 /// Image data used to create a texture
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -209,3 +209,27 @@ impl Default for Target {
         Target::Texture2d
     }
 }
+
+impl<E: Extras> Image<E> {
+    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+        if let Some(ref buffer_view) = self.buffer_view {
+            let _ = root.try_get(buffer_view)?;
+        }
+        Ok(())
+    }
+}
+
+impl<E: Extras> Sampler<E> {
+    pub fn range_check(&self, _root: &Root<E>) -> Result<(), ()> {
+        Ok(())
+    }
+}
+
+impl<E: Extras> Texture<E> {
+    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+        let _ = root.try_get(&self.sampler)?;
+        let _ = root.try_get(&self.source)?;
+        Ok(())
+    }
+}
+

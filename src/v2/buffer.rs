@@ -9,7 +9,7 @@
 
 use v2::Extensions;
 use traits::Extras;
-use v2::Index;
+use v2::{Index, Root};
 
 /// [The identifier of the `BufferView` this accessor reads from.
 /// Describes the location, type, and size of a binary blob included with the asset]
@@ -78,3 +78,17 @@ enum_number! {
         ElementArrayBuffer = 34963,
     }
 }
+
+impl<E: Extras> Buffer<E> {
+    pub fn range_check(&self, _root: &Root<E>) -> Result<(), ()> {
+        Ok(())
+    }
+}
+
+impl<E: Extras> BufferView<E> {
+    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+        let _ = root.try_get(&self.buffer)?;
+        Ok(())
+    }
+}
+

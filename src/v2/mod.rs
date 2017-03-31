@@ -106,7 +106,7 @@ impl<E: Extras> Root<E> {
     pub fn import_from_str(json: &str) -> Result<Self, ImportError> {
         let root: Root<E> = serde_json::from_str(json)
             .map_err(|err| ImportError::Deserialize(err))?;
-        if root.indices_are_valid() {
+        if root.range_check().is_ok() {
             Ok(root)
         } else {
             Err(ImportError::Invalid("index out of range".to_string()))
@@ -183,6 +183,13 @@ impl<E: Extras> Root<E> {
         where Self: Get<T, Id=Index<T>>
     {
         (self as &Get<T, Id=Index<T>>).get(index)
+    }
+
+    /// Returns a single item from the root object if the index is in range
+    pub fn try_get<T>(&self, index: &Index<T>) -> Result<&T, ()>
+        where Self: Get<T, Id=Index<T>>
+    {
+        (self as &Get<T, Id=Index<T>>).try_get(index)
     }
 
     /// Returns the image at the given index
@@ -264,12 +271,48 @@ impl<E: Extras> Root<E> {
     pub fn textures(&self) -> &[texture::Texture<E>] {
         &self.textures
     }
-
+    
     /// Performs a search for any indices that are out of range of the array
     /// they reference. Returns true if all indices are within range.
-    fn indices_are_valid(&self) -> bool {
-        // TODO: Implement me
-        true
+    fn range_check(&self) -> Result<(), ()> {
+        macro_rules! range_check {
+            ($field:ident) => {
+                for item in self.$field.iter() {
+                    let _ = item.range_check(self)?; 
+                }
+            }
+        }
+        range_check!(accessors);
+        range_check!(animations);
+        range_check!(buffers);
+        range_check!(buffer_views);
+        range_check!(cameras);
+        range_check!(images);
+        range_check!(materials);
+        range_check!(meshes);
+        range_check!(nodes);
+        range_check!(samplers);
+        range_check!(scenes);
+        range_check!(skins);
+        range_check!(textures);
+        /*
+        let _ = self.accessors.range_check(self)?;
+        let _ = self.animations.range_check(self)?; 
+        let _ = self.buffers.range_check(self)?;
+        let _ = self.buffer_views.range_check(self)?;
+        let _ = self.cameras.range_check(self)?;
+        let _ = self.images.range_check(self)?;
+        let _ = self.materials.range_check(self)?;
+        let _ = self.meshes.range_check(self)?;
+        let _ = self.nodes.range_check(self)?;
+        let _ = self.samplers.range_check(self)?;
+        let _ = self.scenes.range_check(self)?;
+        let _ = self.skins.range_check(self)?;
+        let _ = self.textures.range_check(self)?;
+*/
+        let _ = self.try_get(&self.scene)?;
+
+        Ok(())
     }
 }
 
@@ -321,8 +364,13 @@ macro_rules! impl_get {
             where E: Extras
         {
             type Id = Index<$ty>;
+            
             fn get(&self, id: Self::Id) -> &$ty {
                 &self.$field[id.value() as usize]
+            }
+
+            fn try_get(&self, id: &Self::Id) -> Result<&$ty, ()> {
+                self.$field.get(id.value() as usize).ok_or(())
             }
         }
     }
@@ -337,6 +385,7 @@ impl_get!(texture::Image<E>, images);
 impl_get!(material::Material<E>, materials);
 impl_get!(mesh::Mesh<E>, meshes);
 impl_get!(scene::Node<E>, nodes);
+impl_get!(texture::Sampler<E>, samplers);
 impl_get!(scene::Scene<E>, scenes);
 impl_get!(skin::Skin<E>, skins);
 impl_get!(texture::Texture<E>, textures);

@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::{Extensions, Extras};
+use v2::{Extensions, Extras, Root};
 
 // TODO: This implementation is rubbish. Replace with enum instead
 // and derive (De)Serialize manually. It would be trivial to do so
@@ -95,3 +95,10 @@ pub struct Perspective<E: Extras> {
     #[serde(default)]
     pub extras: <E as Extras>::CameraPerspective,
 }
+
+impl<E: Extras> Camera<E> {
+    pub fn range_check(&self, _root: &Root<E>) -> Result<(), ()> {
+        Ok(())
+    }
+}
+

@@ -9,7 +9,7 @@
 
 use v2::Extensions;
 use traits::Extras;
-use v2::{texture, Index};
+use v2::{texture, Index, Root};
 
 /// [Describes the material appearance of a primitive]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#material)
@@ -125,3 +125,21 @@ pub struct OcclusionTexture<E: Extras> {
 fn material_occlusion_texture_strength_default() -> f32 {
     1.0
 }
+
+impl<E: Extras> Material<E> {
+    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+        if let Some(ref texture) = self.normal_texture {
+            let _ = root.try_get(&texture.index)?;
+        }
+        if let Some(ref texture) = self.occlusion_texture {
+            let _ = root.try_get(&texture.index)?;
+        }
+        if let Some(ref texture) = self.emissive_texture {
+            let _ = root.try_get(&texture.index)?;
+        }
+        let _ = root.try_get(&self.pbr.base_color_texture.index)?;
+        let _ = root.try_get(&self.pbr.metallic_roughness_texture.index)?;
+        Ok(())
+    }
+}
+

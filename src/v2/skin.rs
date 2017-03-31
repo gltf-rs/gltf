@@ -9,7 +9,7 @@
 
 use v2::Extensions;
 use traits::Extras;
-use v2::{accessor, scene, Index};
+use v2::{accessor, scene, Index, Root};
 
 /// [Joints and matrices defining a skin](https://github.com/KhronosGroup/glTF/blob/d63b796e6b7f6b084c710b97b048d59d749cb04a/specification/2.0/schema/skin.schema.json)
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -31,3 +31,19 @@ pub struct Skin<E: Extras> {
     /// The index of the node used as a skeleton root
     pub skeleton: Option<Index<scene::Node<E>>>,
 }
+
+impl<E: Extras> Skin<E> {
+    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+        if let Some(ref accessor) = self.inverse_bind_matrices {
+            let _ = root.try_get(accessor)?;
+        }
+        for joint in &self.joints {
+            let _ = root.try_get(joint)?;
+        }
+        if let Some(ref node) = self.skeleton {
+            let _ = root.try_get(node)?;
+        }
+        Ok(())
+    }
+}
+

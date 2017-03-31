@@ -10,7 +10,7 @@
 use std::collections::HashMap;
 use v2::Extensions;
 use traits::Extras;
-use v2::{accessor, material, Index};
+use v2::{accessor, material, Index, Root};
 
 /// [A set of primitives to be rendered]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#mesh)
@@ -76,3 +76,24 @@ impl Default for Mode {
         Mode::Triangles
     }
 }
+
+impl<E: Extras> Mesh<E> {
+    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+        for primitive in &self.primitives {
+            for accessor in primitive.attributes.values() {
+                let _ = root.try_get(accessor)?;
+            }
+            if let Some(ref indices) = primitive.indices {
+                let _ = root.try_get(indices)?;
+            }
+            let _ = root.try_get(&primitive.material)?;
+            for map in &primitive.targets {
+                for accessor in map.values() {
+                    let _ = root.try_get(accessor)?;
+                }
+            }
+        }
+        Ok(())
+    }
+}
+

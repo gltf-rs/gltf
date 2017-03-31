@@ -9,7 +9,7 @@
 
 use v2::Extensions;
 use traits::Extras;
-use v2::{buffer, Index};
+use v2::{buffer, Index, Root};
 
 pub mod sparse {
     use super::*;
@@ -100,6 +100,18 @@ pub struct Accessor<E: Extras> {
     pub normalized: bool,
     /// Sparse storage of attributes that deviate from their initialization value
     pub sparse: Option<sparse::Storage<E>>,
+}
+
+impl<E: Extras> Accessor<E> {
+    /// Returns `Ok(())` if all indices are in range of the maximums
+    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+        if let Some(ref sparse) = self.sparse {
+            let _ = root.try_get(&sparse.indices.buffer_view)?;
+            let _ = root.try_get(&sparse.values.buffer_view)?;
+        }
+        let _ = root.try_get(&self.buffer_view)?;
+        Ok(())
+    }
 }
 
 enum_number! {

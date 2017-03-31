@@ -9,7 +9,7 @@
 
 use v2::Extensions;
 use traits::Extras;
-use v2::{camera, mesh, scene, skin, Index};
+use v2::{camera, mesh, scene, skin, Index, Root};
 
 /// [A single member of the glTF scene hierarchy]
 /// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#scenes)
@@ -90,4 +90,31 @@ pub struct Scene<E: Extras> {
     /// The indices of each root `Node` in this scene
     #[serde(default)]
     pub nodes: Vec<Index<Node<E>>>,
+}
+
+impl<E: Extras> Node<E> {
+    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+        if let Some(ref camera) = self.camera {
+            let _ = root.try_get(&camera)?;
+            for node in &self.children {
+                let _ = root.try_get(node)?;
+            }
+        }
+        if let Some(ref mesh) = self.mesh {
+            let _ = root.try_get(mesh)?;
+        }
+        if let Some(ref skin) = self.skin {
+            let _ = root.try_get(skin)?;
+        }
+        Ok(())
+    }
+}
+
+impl<E: Extras> Scene<E> {
+    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+        for node in &self.nodes {
+            let _ = root.try_get(node)?;
+        }
+        Ok(())
+    }
 }
