@@ -1,6 +1,39 @@
 
+use serde::{Deserialize, Serialize};
+use serde::export::fmt::Debug;
 use serde_json;
 use std;
+
+/// Defines a family of user-defined data structures to be (de)serialized
+pub trait Extras: Clone + Debug + Default + Deserialize + Serialize {
+    type Root: Clone + Debug + Default + Deserialize + Serialize;
+    type Accessor: Clone + Debug + Default + Deserialize + Serialize;
+    type Asset: Clone + Debug + Default + Deserialize + Serialize;
+    type Animation: Clone + Debug + Default + Deserialize + Serialize;
+    type AnimationChannel: Clone + Debug + Default + Deserialize + Serialize;
+    type AnimationSampler: Clone + Debug + Default + Deserialize + Serialize;
+    type AnimationTarget: Clone + Debug + Default + Deserialize + Serialize;
+    type Buffer: Clone + Debug + Default + Deserialize + Serialize;
+    type BufferView: Clone + Debug + Default + Deserialize + Serialize;
+    type Camera: Clone + Debug + Default + Deserialize + Serialize;
+    type CameraOrthographic: Clone + Debug + Default + Deserialize + Serialize;
+    type CameraPerspective: Clone + Debug + Default + Deserialize + Serialize;
+    type Image: Clone + Debug + Default + Deserialize + Serialize;
+    type Material: Clone + Debug + Default + Deserialize + Serialize;
+    type Mesh: Clone + Debug + Default + Deserialize + Serialize;
+    type MeshPrimitive: Clone + Debug + Default + Deserialize + Serialize;
+    type Node: Clone + Debug + Default + Deserialize + Serialize;
+    type Program: Clone + Debug + Default + Deserialize + Serialize;
+    type Sampler: Clone + Debug + Default + Deserialize + Serialize;
+    type Scene: Clone + Debug + Default + Deserialize + Serialize;
+    type Shader: Clone + Debug + Default + Deserialize + Serialize;
+    type Skin: Clone + Debug + Default + Deserialize + Serialize;
+    type Technique: Clone + Debug + Default + Deserialize + Serialize;
+    type TechniqueState: Clone + Debug + Default + Deserialize + Serialize;
+    type TechniqueFunction: Clone + Debug + Default + Deserialize + Serialize;
+    type TechniqueParameter: Clone + Debug + Default + Deserialize + Serialize;
+    type Texture: Clone + Debug + Default + Deserialize + Serialize;
+}
 
 /// Untyped JSON object
 pub type UntypedJsonObject = std::collections::HashMap<String, serde_json::Value>;

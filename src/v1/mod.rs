@@ -7,13 +7,8 @@
 // except according to those terms.
 
 use serde_json;
-use std::fs::File;
-use std::io::Read;
-use std::path::Path;
+use std;
 use std::collections::HashMap;
-
-use traits::Extras;
-use ImportError;
 
 pub mod accessor;
 pub mod animation;
@@ -21,12 +16,10 @@ pub mod asset;
 pub mod buffer;
 pub mod camera;
 pub mod extensions;
-pub mod image;
+pub mod extras;
 pub mod material;
 pub mod mesh;
-pub mod node;
 pub mod program;
-pub mod sampler;
 pub mod scene;
 pub mod shader;
 pub mod skin;
@@ -34,6 +27,24 @@ pub mod technique;
 pub mod texture;
 
 pub use self::extensions::Extensions;
+pub use self::extras::Extras;
+
+/// Error encountered when loading a glTF asset
+#[derive(Debug)]
+pub enum ImportError {
+    /// Failure when deserializing a .gltf metadata file
+    Deserialize(serde_json::error::Error),
+    /// A glTF extension required by the asset has not been enabled by the user
+    ExtensionDisabled(String),
+    /// A glTF extension required by the asset is not supported by the library
+    ExtensionUnsupported(String),
+    /// The .gltf data is invalid
+    Invalid(String),
+    /// Standard input / output error
+    Io(std::io::Error),
+    /// The asset glTF version is not supported by the library
+    VersionUnsupported(String),
+}
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Root<E: Extras> {
@@ -95,7 +106,7 @@ pub struct Root<E: Extras> {
     /// used to reference the image. An image defines data used to create a
     /// texture.
     #[serde(default)]
-    pub images: HashMap<String, image::Image<E>>,
+    pub images: HashMap<String, texture::Image<E>>,
 
     /// A dictionary object of material objects.
     ///
@@ -117,7 +128,7 @@ pub struct Root<E: Extras> {
     /// The name of each node is an ID in the global glTF namespace that is used
     /// to reference the node.
     #[serde(default)]
-    pub nodes: HashMap<String, node::Node<E>>,
+    pub nodes: HashMap<String, scene::Node<E>>,
 
     /// A dictionary object of shader program objects.
     ///
@@ -132,7 +143,7 @@ pub struct Root<E: Extras> {
     /// used to reference the sampler. A sampler contains properties for texture
     /// filtering and wrapping modes.
     #[serde(default)]
-    pub samplers: HashMap<String, sampler::Sampler<E>>,
+    pub samplers: HashMap<String, texture::Sampler<E>>,
 
     /// The ID of the default scene.
     pub scene: Option<String>,
@@ -182,16 +193,13 @@ pub struct Root<E: Extras> {
     pub extras: <E as Extras>::Root,
 }
 
-impl<E: Extras> Root<E> {
-    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self, ImportError> {
-        let mut file = File::open(path).map_err(ImportError::Io)?;
-        let mut json = String::new();
-        file.read_to_string(&mut json).map_err(ImportError::Io)?;
-
-        serde_json::from_str(&json).map_err(|cause| ImportError::Deserialize(cause))
-    }
-
-    pub fn import_from_str(json: &str) -> Result<Self, ImportError> {
-        serde_json::from_str(&json).map_err(|cause| ImportError::Deserialize(cause))
-    }
+pub fn import<P, E>(path: P) -> Result<Root<E>, ImportError>
+    where P: AsRef<std::path::Path>, E: Extras
+{
+    use self::ImportError::*;
+    use std::io::Read;
+    let mut file = std::fs::File::open(path).map_err(Io)?;
+    let mut json = String::new();
+    file.read_to_string(&mut json).map_err(Io)?;
+    serde_json::from_str(&json).map_err(Deserialize)
 }

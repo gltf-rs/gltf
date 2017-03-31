@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use v2::Extensions;
-use traits::Extras;
+use v2::Extras;
 use v2::{buffer, Index, Root};
 
 pub mod sparse {

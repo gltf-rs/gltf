@@ -1,5 +1,7 @@
 
-extern crate gltf;
+extern crate gltf as gltf_crate;
+
+use gltf_crate::v1 as gltf;
 
 #[test]
 fn import_v1() {

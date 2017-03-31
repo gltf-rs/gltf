@@ -7,8 +7,7 @@
 // except according to those terms.
 
 use std::collections::HashMap;
-use v1::Extensions;
-use traits::Extras;
+use v1::{Extensions, Extras};
 
 enum_string! {
     Path {
@@ -131,8 +130,8 @@ pub struct Animation<E: Extras> {
 #[cfg(test)]
 mod test {
     extern crate serde_json;
-    use extras;
     use super::*;
+    use ::v1;
 
     #[test]
     fn it_deserializes_an_animation() {
@@ -191,7 +190,8 @@ mod test {
         "Application specific": "The extra object can contain any properties."
     }
 }"#;
-        let animation: Animation<extras::Any> = serde_json::from_str(data).unwrap();
+        let animation: Animation<v1::extras::Any> = serde_json::from_str(data)
+            .unwrap();
 
         assert_eq!("user-defined animation name", animation.name.unwrap());
         assert_eq!(2, animation.parameters.len());

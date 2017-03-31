@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use v2::Extensions;
-use traits::Extras;
+use v2::Extras;
 use v2::{Index, Root};
 
 /// [The identifier of the `BufferView` this accessor reads from.

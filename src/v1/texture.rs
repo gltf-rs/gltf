@@ -6,8 +6,81 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v1::Extensions;
-use traits::Extras;
+use v1::{Extensions, Extras};
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Image<E: Extras> {
+    /// The uri of the image.
+    ///
+    /// Relative paths are relative to the .gltf file. Instead of referencing an
+    /// external file, the uri can also be a data-uri. The image format must be
+    /// jpg, png, bmp, or gif.
+    pub uri: String,
+
+    /// The user-defined name of this object.
+    ///
+    /// This is not necessarily unique, e.g., an image and a buffer could have
+    /// the same name, or two images could even have the same name.
+    pub name: Option<String>, 
+
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: Extensions,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <E as Extras>::Image,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Sampler<E: Extras> {
+    /// Magnification filter.
+    #[serde(rename = "magFilter")]
+    #[serde(default = "sample_mag_filter_default")]
+    pub mag_filter: Filter,
+
+    /// Minification filter.
+    #[serde(rename = "minFilter")]
+    #[serde(default = "sample_min_filter_default")]
+    pub min_filter: Filter,
+
+    /// s wrapping mode.
+    #[serde(rename = "wrapS")]
+    #[serde(default = "sample_wrap_s_default")]
+    pub wrap_s: Wrap,
+
+    /// t wrapping mode.
+    #[serde(rename = "wrapT")]
+    #[serde(default = "sample_wrap_t_default")]
+    pub wrap_t: Wrap,
+
+    /// The user-defined name of this object.
+    pub name: Option<String>,
+    
+    /// A dictionary object containing extension-specific data.
+    #[serde(default)]
+    pub extensions: Extensions,
+
+    /// Application-specific data.
+    #[serde(default)]
+    pub extras: <E as Extras>::Sampler,
+}
+
+fn sample_mag_filter_default() -> Filter {
+    Filter::Linear
+}
+
+fn sample_min_filter_default() -> Filter {
+    Filter::NearestMipmapLinear
+}
+
+fn sample_wrap_s_default() -> Wrap {
+    Wrap::Repeat
+}
+
+fn sample_wrap_t_default() -> Wrap {
+    Wrap::Repeat
+}
 
 enum_number! {
     Filter {

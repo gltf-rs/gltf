@@ -1,7 +1,7 @@
 
-extern crate gltf;
+extern crate gltf as gltf_crate;
 
-use gltf::Generic::V2;
+use gltf_crate::v2 as gltf;
 
 #[test]
 fn import_v2() {
@@ -13,8 +13,7 @@ fn import_v2() {
     ];
     for asset in &assets {
         match gltf::import::<_, gltf::extras::None>(asset) {
-            Ok(V2(_)) => {},
-            Ok(_) => { println!("import() detected wrong version"); panic!() },
+            Ok(_) => {},
             Err(err) => { println!("{:?}", err); panic!() },
         }
     }

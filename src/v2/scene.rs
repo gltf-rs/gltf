@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use v2::Extensions;
-use traits::Extras;
+use v2::Extras;
 use v2::{camera, mesh, scene, skin, Index, Root};
 
 /// [A single member of the glTF scene hierarchy]

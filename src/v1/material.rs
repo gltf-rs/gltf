@@ -7,7 +7,7 @@
 // except according to those terms.
 
 use v1::Extensions;
-use traits::Extras;
+use v1::Extras;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Material<E: Extras> {

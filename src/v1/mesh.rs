@@ -8,7 +8,7 @@
 
 use std::collections::HashMap;
 use v1::Extensions;
-use traits::Extras;
+use v1::Extras;
 
 enum_number! {
     Mode {

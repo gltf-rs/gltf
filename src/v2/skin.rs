@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use v2::Extensions;
-use traits::Extras;
+use v2::Extras;
 use v2::{accessor, scene, Index, Root};
 
 /// [Joints and matrices defining a skin](https://github.com/KhronosGroup/glTF/blob/d63b796e6b7f6b084c710b97b048d59d749cb04a/specification/2.0/schema/skin.schema.json)

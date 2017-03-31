@@ -11,13 +11,11 @@ use serde;
 use serde_json;
 use std;
 
-use traits::{Extras, Get};
-use ImportError;
-
 pub mod accessor;
 pub mod animation;
 pub mod buffer;
 pub mod extensions;
+pub mod extras;
 pub mod camera;
 pub mod material;
 pub mod mesh;
@@ -26,6 +24,36 @@ pub mod skin;
 pub mod texture;
 
 pub use self::extensions::Extensions;
+pub use self::extras::Extras;
+
+/// Helper trait for retrieving top-level objects by a universal identifier
+pub trait Get<T> {
+    /// Retrieves a single value at the given index
+    fn get(&self, id: &Index<T>) -> &T;
+}
+
+/// Helper trait for retrieving top-level objects by a universal identifier
+pub trait TryGet<T> {
+    /// Attempts to retrieve a single value at the given index
+    fn try_get(&self, id: &Index<T>) -> Result<&T, ()>;
+}
+
+/// Error encountered when loading a glTF asset
+#[derive(Debug)]
+pub enum ImportError {
+    /// Failure when deserializing a .gltf metadata file
+    Deserialize(serde_json::error::Error),
+    /// A glTF extension required by the asset has not been enabled by the user
+    ExtensionDisabled(String),
+    /// A glTF extension required by the asset is not supported by the library
+    ExtensionUnsupported(String),
+    /// The .gltf data is invalid
+    Invalid(String),
+    /// Standard input / output error
+    Io(std::io::Error),
+    /// The asset glTF version is not supported by the library
+    VersionUnsupported(String),
+}
 
 /// Index into an array owned by the root glTF object
 #[derive(Clone, Copy, Debug)]
@@ -101,18 +129,23 @@ fn root_scene_default<E>() -> Index<scene::Scene<E>>
     Index(0, std::marker::PhantomData)
 }
 
-impl<E: Extras> Root<E> {
-    /// Loads a glTF version 2.0 asset from raw JSON
-    pub fn import_from_str(json: &str) -> Result<Self, ImportError> {
-        let root: Root<E> = serde_json::from_str(json)
-            .map_err(|err| ImportError::Deserialize(err))?;
-        if root.range_check().is_ok() {
-            Ok(root)
-        } else {
-            Err(ImportError::Invalid("index out of range".to_string()))
-        }
+pub fn import<P, E>(path: P) -> Result<Root<E>, ImportError>
+    where P: AsRef<std::path::Path>, E: Extras
+{
+    use self::ImportError::*;
+    use std::io::Read;
+    let mut file = std::fs::File::open(path).map_err(Io)?;
+    let mut json = String::new();
+    file.read_to_string(&mut json).map_err(Io)?;
+    let root: Root<E> = serde_json::from_str(&json).map_err(Deserialize)?;
+    if root.range_check().is_ok() {
+        Ok(root)
+    } else {
+        Err(Invalid("index out of range".to_string()))
     }
+}
 
+impl<E: Extras> Root<E> {
     /// Returns the accessor at the given index
     pub fn accessor(&self, index: Index<accessor::Accessor<E>>) -> &accessor::Accessor<E> {
         &self.accessors[index.0 as usize]
@@ -179,17 +212,17 @@ impl<E: Extras> Root<E> {
     }
 
     /// Returns a single item from the root object
-    pub fn get<T>(&self, index: Index<T>) -> &T
-        where Self: Get<T, Id=Index<T>>
+    pub fn get<T>(&self, index: &Index<T>) -> &T
+        where Self: Get<T>
     {
-        (self as &Get<T, Id=Index<T>>).get(index)
+        (self as &Get<T>).get(index)
     }
 
     /// Returns a single item from the root object if the index is in range
     pub fn try_get<T>(&self, index: &Index<T>) -> Result<&T, ()>
-        where Self: Get<T, Id=Index<T>>
+        where Self: TryGet<T>
     {
-        (self as &Get<T, Id=Index<T>>).try_get(index)
+        (self as &TryGet<T>).try_get(index)
     }
 
     /// Returns the image at the given index
@@ -295,23 +328,7 @@ impl<E: Extras> Root<E> {
         range_check!(scenes);
         range_check!(skins);
         range_check!(textures);
-        /*
-        let _ = self.accessors.range_check(self)?;
-        let _ = self.animations.range_check(self)?; 
-        let _ = self.buffers.range_check(self)?;
-        let _ = self.buffer_views.range_check(self)?;
-        let _ = self.cameras.range_check(self)?;
-        let _ = self.images.range_check(self)?;
-        let _ = self.materials.range_check(self)?;
-        let _ = self.meshes.range_check(self)?;
-        let _ = self.nodes.range_check(self)?;
-        let _ = self.samplers.range_check(self)?;
-        let _ = self.scenes.range_check(self)?;
-        let _ = self.skins.range_check(self)?;
-        let _ = self.textures.range_check(self)?;
-*/
         let _ = self.try_get(&self.scene)?;
-
         Ok(())
     }
 }
@@ -360,17 +377,19 @@ impl<T> serde::Deserialize for Index<T> {
 
 macro_rules! impl_get {
     ($ty:ty, $field:ident) => {
-        impl<'a, E> Get<$ty> for Root<E>
-            where E: Extras
-        {
-            type Id = Index<$ty>;
-            
-            fn get(&self, id: Self::Id) -> &$ty {
-                &self.$field[id.value() as usize]
+        impl<'a, E: Extras> Get<$ty> for Root<E> {
+            fn get(&self, index: &Index<$ty>) -> &$ty {
+                &self.$field[index.value() as usize]
             }
+        }
+    }
+}
 
-            fn try_get(&self, id: &Self::Id) -> Result<&$ty, ()> {
-                self.$field.get(id.value() as usize).ok_or(())
+macro_rules! impl_try_get {
+    ($ty:ty, $field:ident) => {
+        impl<'a, E: Extras> TryGet<$ty> for Root<E> {
+            fn try_get(&self, index: &Index<$ty>) -> Result<&$ty, ()> {
+                self.$field.get(index.value() as usize).ok_or(())
             }
         }
     }
@@ -389,4 +408,18 @@ impl_get!(texture::Sampler<E>, samplers);
 impl_get!(scene::Scene<E>, scenes);
 impl_get!(skin::Skin<E>, skins);
 impl_get!(texture::Texture<E>, textures);
+
+impl_try_get!(accessor::Accessor<E>, accessors);
+impl_try_get!(animation::Animation<E>, animations);
+impl_try_get!(buffer::Buffer<E>, buffers);
+impl_try_get!(buffer::BufferView<E>, buffer_views);
+impl_try_get!(camera::Camera<E>, cameras);
+impl_try_get!(texture::Image<E>, images);
+impl_try_get!(material::Material<E>, materials);
+impl_try_get!(mesh::Mesh<E>, meshes);
+impl_try_get!(scene::Node<E>, nodes);
+impl_try_get!(texture::Sampler<E>, samplers);
+impl_try_get!(scene::Scene<E>, scenes);
+impl_try_get!(skin::Skin<E>, skins);
+impl_try_get!(texture::Texture<E>, textures);
 

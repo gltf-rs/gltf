@@ -9,7 +9,7 @@
 
 use std::collections::HashMap;
 use v2::Extensions;
-use traits::Extras;
+use v2::Extras;
 use v2::{accessor, material, Index, Root};
 
 /// [A set of primitives to be rendered]
