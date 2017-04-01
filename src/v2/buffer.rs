@@ -9,79 +9,6 @@
 
 use v2::{Extras, Index, Root};
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct BufferExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
-}
-
-/// [The identifier of the `BufferView` this accessor reads from.
-/// Describes the location, type, and size of a binary blob included with the asset]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#buffer)
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct Buffer<E: Extras> {
-    /// The length of the buffer in bytes
-    #[serde(default, rename = "byteLength")]
-    pub byte_length: u32,
-    
-    /// Optional user-defined name for this object
-    pub name: Option<String>,
-    
-    /// Uniform resource locator for the buffer data relative to the .gltf file
-    // N.B. the spec says this is not required but I think that is incorrect
-    pub uri: String,
-    
-    /// Optional data targeting official extensions
-    #[serde(default)]
-    pub extensions: BufferExtensions,
-    
-    /// Optional application specific data
-    #[serde(default)]
-    pub extras: <E as Extras>::Buffer,
-}
-
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct BufferViewExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
-}
-
-/// [Represents a subset of a `Buffer`]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#buffers-and-buffer-views)  
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct BufferView<E: Extras> {
-    /// The index of the parent `Buffer`
-    pub buffer: Index<Buffer<E>>,
-    
-    /// The length of the buffer view data in bytes
-    #[serde(rename = "byteLength")]
-    pub byte_length: u32,
-    
-    /// Offset into the parent buffer in bytes
-    #[serde(rename = "byteOffset")]
-    pub byte_offset: u32,
-    
-    /// The stride in bytes between vertex attributes in this buffer view
-    #[serde(default)]
-    pub byte_stride: u32,
-
-    /// Optional user-defined name for this object
-    pub name: Option<String>,
-    
-    /// Optional target the buffer should be bound to
-    pub target: Option<Target>,
-
-    /// Optional data targeting official extensions
-    #[serde(default)]
-    pub extensions: BufferViewExtensions,
-    
-    /// Optional application specific data
-    #[serde(default)]
-    pub extras: <E as Extras>::BufferView,
-}
-
 enum_number! {
     Target {
         ArrayBuffer = 34962,
@@ -89,16 +16,92 @@ enum_number! {
     }
 }
 
+/// A buffer points to binary data representing geometry, animations, or skins
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct Buffer<E: Extras> {
+    /// The length of the buffer in bytes
+    #[serde(default, rename = "byteLength")]
+    pub byte_length: u32,
+
+    /// Optional user-defined name for this object
+    pub name: Option<String>,
+
+    /// Uniform resource locator of the buffer
+    ///
+    /// Relative paths are relative to the .gltf file
+    pub uri: String,
+
+    /// Extension specific data
+    #[serde(default)]
+    pub extensions: BufferExtensions,
+
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <E as Extras>::Buffer,
+}
+
+/// Extension specific data for `Buffer`
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct BufferExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+/// A view into a buffer generally representing a subset of the buffer
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct BufferView<E: Extras> {
+    /// The parent `Buffer`
+    pub buffer: Index<Buffer<E>>,
+
+    /// The length of the `BufferView` in bytes
+    #[serde(rename = "byteLength")]
+    pub byte_length: u32,
+
+    /// Offset into the parent buffer in bytes
+    #[serde(rename = "byteOffset")]
+    pub byte_offset: u32,
+
+    /// The stride in bytes between vertex attributes or other interleavable data
+    ///
+    /// When zero, data is assumed to be tightly packed
+    #[serde(default)]
+    pub byte_stride: u32,
+
+    /// Optional user-defined name for this object
+    pub name: Option<String>,
+
+    /// Optional target the buffer should be bound to
+    pub target: Option<Target>,
+
+    /// Extension specific data
+    #[serde(default)]
+    pub extensions: BufferViewExtensions,
+
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <E as Extras>::BufferView,
+}
+
+/// Extension specific data for `BufferView`
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct BufferViewExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
 impl<E: Extras> Buffer<E> {
+    #[doc(hidden)]
     pub fn range_check(&self, _root: &Root<E>) -> Result<(), ()> {
         Ok(())
     }
 }
 
 impl<E: Extras> BufferView<E> {
+    #[doc(hidden)]
     pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
         let _ = root.try_get(&self.buffer)?;
         Ok(())
     }
 }
-

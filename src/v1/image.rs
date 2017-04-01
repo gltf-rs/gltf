@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use v1::Extras;
- 
+
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct ImageExtensions {
     #[serde(default)]
@@ -28,7 +28,7 @@ pub struct Image<E: Extras> {
     ///
     /// This is not necessarily unique, e.g., an image and a buffer could have
     /// the same name, or two images could even have the same name.
-    pub name: Option<String>, 
+    pub name: Option<String>,
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
@@ -38,4 +38,3 @@ pub struct Image<E: Extras> {
     #[serde(default)]
     pub extras: <E as Extras>::Image,
 }
-

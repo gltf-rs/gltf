@@ -9,34 +9,49 @@
 
 use v2::{accessor, scene, Extras, Index, Root};
 
+/// Joints and matrices defining a skin
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct Skin<E: Extras> {
+    /// Extension specific data
+    #[serde(default)]
+    pub extensions: SkinExtensions,
+    
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <E as Extras>::Skin,
+    
+    /// The index of the accessor containing the 4x4 inverse-bind matrices
+    ///
+    /// When `None`,each matrix is assumed to be the 4x4 identity matrix
+    /// which implies that the inverse-bind matrices were pre-applied
+    #[serde(rename = "inverseBindMatrices")]
+    pub inverse_bind_matrices: Option<Index<accessor::Accessor<E>>>,
+    
+    /// Indices of skeleton nodes used as joints in this skin
+    ///
+    /// The array length must be the same as the `count` property of the
+    /// `inverse_bind_matrices` `Accessor` (when defined)
+    pub joints: Vec<Index<scene::Node<E>>>,
+    
+    /// Optional user-defined name for this object
+    pub name: Option<String>,
+    
+    /// The index of the node used as a skeleton root
+    ///
+    /// When `None`, joints transforms resolve to scene root
+    pub skeleton: Option<Index<scene::Node<E>>>,
+}
+
+/// Extension specific data for `Skin`
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct SkinExtensions {
     #[serde(default)]
     _allow_extra_fields: (),
 }
 
-/// [Joints and matrices defining a skin](https://github.com/KhronosGroup/glTF/blob/d63b796e6b7f6b084c710b97b048d59d749cb04a/specification/2.0/schema/skin.schema.json)
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct Skin<E: Extras> {
-    /// Optional data targeting official extensions
-    #[serde(default)]
-    pub extensions: SkinExtensions,
-    /// Optional application specific data
-    #[serde(default)]
-    pub extras: <E as Extras>::Skin,
-    /// The index of the accessor containing the 4x4 inverse-bind matrices
-    #[serde(rename = "inverseBindMatrices")]
-    pub inverse_bind_matrices: Option<Index<accessor::Accessor<E>>>,
-    /// Indices of skeleton nodes used as joints in this skin
-    pub joints: Vec<Index<scene::Node<E>>>,
-    /// Optional user-defined name for this object
-    pub name: Option<String>,
-    /// The index of the node used as a skeleton root
-    pub skeleton: Option<Index<scene::Node<E>>>,
-}
-
 impl<E: Extras> Skin<E> {
+    #[doc(hidden)]
     pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
         if let Some(ref accessor) = self.inverse_bind_matrices {
             let _ = root.try_get(accessor)?;
@@ -50,4 +65,3 @@ impl<E: Extras> Skin<E> {
         Ok(())
     }
 }
-

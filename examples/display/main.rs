@@ -16,15 +16,17 @@ fn main() {
         Ok(root) => {
             println!("glTF version 1.0");
             println!("{:#?}", root);
-        },
-        Err(_) => match v2::import::<_, v2::extras::Any>(&path) {
-            Ok(root) => {
-                println!("glTF version 2.0");
-                println!("{:?}", root);
-            },
-            Err(err) => {
-                println!("Error: {:#?}", err);
-            },
-        },
+        }
+        Err(_) => {
+            match v2::import::<_, v2::extras::Any>(&path) {
+                Ok(root) => {
+                    println!("glTF version 2.0");
+                    println!("{:?}", root);
+                }
+                Err(err) => {
+                    println!("Error: {:#?}", err);
+                }
+            }
+        }
     }
 }

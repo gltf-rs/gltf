@@ -67,7 +67,7 @@ pub struct Node<E: Extras> {
     pub translation: [f32; 3],
 
     pub name: Option<String>,
-    
+
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
     pub extensions: NodeExtensions,
@@ -78,12 +78,7 @@ pub struct Node<E: Extras> {
 }
 
 fn node_matrix_default() -> [f32; 16] {
-    [
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.0, 0.0, 0.0, 1.0,
-    ]
+    [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
 }
 
 fn node_rotation_default() -> [f32; 4] {

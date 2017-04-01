@@ -116,4 +116,3 @@ impl Extras for None {
     type TechniqueParameter = None;
     type Texture = None;
 }
-

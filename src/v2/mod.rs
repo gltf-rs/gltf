@@ -32,7 +32,8 @@ pub trait Get<T> {
     fn get(&self, id: &Index<T>) -> &T;
 }
 
-/// Helper trait for retrieving top-level objects by a universal identifier
+/// Helper trait for attempting to retrieve top-level objects by a universal
+/// identifier
 pub trait TryGet<T> {
     /// Attempts to retrieve a single value at the given index
     fn try_get(&self, id: &Index<T>) -> Result<&T, ()>;
@@ -43,44 +44,53 @@ pub trait TryGet<T> {
 pub enum ImportError {
     /// Failure when deserializing a .gltf metadata file
     Deserialize(serde_json::error::Error),
+    
     /// A glTF extension required by the asset has not been enabled by the user
     ExtensionDisabled(String),
+    
     /// A glTF extension required by the asset is not supported by the library
     ExtensionUnsupported(String),
+    
     /// The .gltf data is invalid
     Invalid(String),
+    
     /// Standard input / output error
     Io(std::io::Error),
-    /// The asset glTF version is not supported by the library
-    VersionUnsupported(String),
+    
+    /// The glTF version of the asset is incompatible with this function
+    IncompatibleVersion(String),
 }
 
-/// Index into an array owned by the root glTF object
+/// Represents an offset into an array of type `T` owned by the root glTF object
 #[derive(Clone, Copy, Debug)]
 pub struct Index<T>(u32, std::marker::PhantomData<T>);
 
+/// Extension specific data for `Asset`
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct AssetExtensions {
     #[serde(default)]
     _allow_extra_fields: (),
 }
 
-/// [Contains metadata about the glTF asset]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#asset)
+/// Metadata about the glTF asset
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Asset<E: Extras> {
     /// A copyright message suitable for display to credit the content creator
     pub copyright: Option<String>,
-    /// Optional data targeting official extensions
+    
+    /// Extension specific data
     #[serde(default)]
     pub extensions: AssetExtensions,
+    
     /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::Asset,
+    
     /// Tool that generated this glTF model
     pub generator: Option<String>,
-    /// glTF version
+
+    /// The glTF version of this asset
     #[serde(default = "asset_version_default")]
     pub version: String,
 }
@@ -89,54 +99,73 @@ fn asset_version_default() -> String {
     "2.0".to_string()
 }
 
-/// [The root object for a glTF asset]
-/// (https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#gltf)
+/// The root object for a glTF asset
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Root<E: Extras> {
     #[serde(default)]
     accessors: Vec<accessor::Accessor<E>>,
+    
     #[serde(default)]
     animations: Vec<animation::Animation<E>>,
+
+    /// Metadata about the glTF asset
     asset: Asset<E>,
+    
     #[serde(default)]
     buffers: Vec<buffer::Buffer<E>>,
+    
     #[serde(default, rename = "bufferViews")]
     buffer_views: Vec<buffer::BufferView<E>>,
+
+    /// Names of glTF extensions used somewhere in this asset
     #[serde(default, rename = "extensionsUsed")]
     extensions_used: Vec<String>,
+
+    /// Names of glTF extensions required to properly load this asset
     #[serde(default, rename = "extensionsRequired")]
     extensions_required: Vec<String>,
+    
     #[serde(default)]
     cameras: Vec<camera::Camera<E>>,
+    
     #[serde(default)]
     images: Vec<image::Image<E>>,
+    
     #[serde(default)]
     materials: Vec<material::Material<E>>,
+    
     #[serde(default)]
     meshes: Vec<mesh::Mesh<E>>,
+    
     #[serde(default)]
     nodes: Vec<scene::Node<E>>,
+    
     #[serde(default)]
     samplers: Vec<texture::Sampler<E>>,
+
+    /// The default scene
     #[serde(default = "root_scene_default")]
     scene: Index<scene::Scene<E>>,
+    
     #[serde(default)]
     scenes: Vec<scene::Scene<E>>,
+    
     #[serde(default)]
     skins: Vec<skin::Skin<E>>,
+    
     #[serde(default)]
     textures: Vec<texture::Texture<E>>,
 }
 
-fn root_scene_default<E>() -> Index<scene::Scene<E>>
-    where E: Extras
-{
+fn root_scene_default<E: Extras>() -> Index<scene::Scene<E>> {
     Index(0, std::marker::PhantomData)
 }
 
+/// Imports a glTF 2.0 asset
 pub fn import<P, E>(path: P) -> Result<Root<E>, ImportError>
-    where P: AsRef<std::path::Path>, E: Extras
+    where P: AsRef<std::path::Path>,
+          E: Extras
 {
     use self::ImportError::*;
     use std::io::Read;
@@ -186,7 +215,7 @@ impl<E: Extras> Root<E> {
     pub fn buffers(&self) -> &[buffer::Buffer<E>] {
         &self.buffers
     }
-    
+
     /// Returns the buffer view at the given index
     pub fn buffer_view(&self, index: Index<buffer::BufferView<E>>) -> &buffer::BufferView<E> {
         &self.buffer_views[index.0 as usize]
@@ -225,6 +254,9 @@ impl<E: Extras> Root<E> {
     }
 
     /// Returns a single item from the root object if the index is in range
+    // N.B. this is hidden from the docs because it's only necessary for
+    // validation during `import()`
+    #[doc(hidden)]
     pub fn try_get<T>(&self, index: &Index<T>) -> Result<&T, ()>
         where Self: TryGet<T>
     {
@@ -260,7 +292,7 @@ impl<E: Extras> Root<E> {
     pub fn meshes(&self) -> &[mesh::Mesh<E>] {
         &self.meshes
     }
-    
+
     /// Returns the node at the given index
     pub fn node(&self, index: Index<scene::Node<E>>) -> &scene::Node<E> {
         &self.nodes[index.0 as usize]
@@ -280,7 +312,7 @@ impl<E: Extras> Root<E> {
     pub fn samplers(&self) -> &[texture::Sampler<E>] {
         &self.samplers
     }
-    
+
     /// Returns the scene at the given index
     pub fn scene(&self, index: Index<scene::Scene<E>>) -> &scene::Scene<E> {
         &self.scenes[index.0 as usize]
@@ -310,7 +342,7 @@ impl<E: Extras> Root<E> {
     pub fn textures(&self) -> &[texture::Texture<E>] {
         &self.textures
     }
-    
+
     /// Performs a search for any indices that are out of range of the array
     /// they reference. Returns true if all indices are within range.
     fn range_check(&self) -> Result<(), ()> {
@@ -340,10 +372,12 @@ impl<E: Extras> Root<E> {
 }
 
 impl<T> Index<T> {
+    /// Creates a new `Index` representing an offset into an array containing `T`
     fn new(value: u32) -> Self {
         Index(value, std::marker::PhantomData)
     }
 
+    /// Returns the internal offset value
     pub fn value(&self) -> u32 {
         self.0
     }
@@ -365,9 +399,7 @@ impl<T> serde::Deserialize for Index<T> {
         impl<T> serde::de::Visitor for Visitor<T> {
             type Value = Index<T>;
 
-            fn expecting(&self, formatter: &mut std::fmt::Formatter)
-                         -> std::fmt::Result
-            {
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
                 formatter.write_str("GLenum")
             }
 
@@ -393,6 +425,7 @@ macro_rules! impl_get {
 
 macro_rules! impl_try_get {
     ($ty:ty, $field:ident) => {
+        #[doc(hidden)]
         impl<'a, E: Extras> TryGet<$ty> for Root<E> {
             fn try_get(&self, index: &Index<$ty>) -> Result<&$ty, ()> {
                 self.$field.get(index.value() as usize).ok_or(())
@@ -428,4 +461,3 @@ impl_try_get!(texture::Sampler<E>, samplers);
 impl_try_get!(scene::Scene<E>, scenes);
 impl_try_get!(skin::Skin<E>, skins);
 impl_try_get!(texture::Texture<E>, textures);
-

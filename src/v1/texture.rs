@@ -44,7 +44,7 @@ pub struct Sampler<E: Extras> {
 
     /// The user-defined name of this object.
     pub name: Option<String>,
-    
+
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
     pub extensions: SamplerExtensions,
@@ -175,7 +175,7 @@ pub struct Texture<E: Extras> {
     /// This is not necessarily unique, e.g., a texture and a buffer could have
     /// the same name, or two textures could even have the same name.
     pub name: Option<String>,
-    
+
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
     pub extensions: TextureExtensions,

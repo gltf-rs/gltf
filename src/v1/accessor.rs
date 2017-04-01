@@ -13,7 +13,7 @@ pub struct AccessorExtensions {
     #[serde(default)]
     _allow_extra_fields: (),
 }
- 
+
 enum_number! {
     ComponentType {
         I8 = 5120,
@@ -119,7 +119,7 @@ pub struct Accessor<E: Extras> {
 mod test {
     extern crate serde_json;
     use super::*;
-    use ::v1;
+    use v1;
 
     #[test]
     fn invalid_component_type() {
@@ -166,8 +166,7 @@ mod test {
     }
 }"#;
 
-        let accessor: Accessor<v1::extras::Any> = serde_json::from_str(data)
-            .unwrap();
+        let accessor: Accessor<v1::extras::Any> = serde_json::from_str(data).unwrap();
 
         assert_eq!("bufferViewWithVertices_id", accessor.buffer_view);
         assert_eq!(0, accessor.byte_offset);

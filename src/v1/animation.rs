@@ -86,7 +86,7 @@ pub struct Channel<E: Extras> {
 
     /// Application-specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::AnimationChannel
+    pub extras: <E as Extras>::AnimationChannel,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -155,7 +155,7 @@ pub struct Animation<E: Extras> {
 mod test {
     extern crate serde_json;
     use super::*;
-    use ::v1;
+    use v1;
 
     #[test]
     fn it_deserializes_an_animation() {
@@ -214,8 +214,7 @@ mod test {
         "Application specific": "The extra object can contain any properties."
     }
 }"#;
-        let animation: Animation<v1::extras::Any> = serde_json::from_str(data)
-            .unwrap();
+        let animation: Animation<v1::extras::Any> = serde_json::from_str(data).unwrap();
 
         assert_eq!("user-defined animation name", animation.name.unwrap());
         assert_eq!(2, animation.parameters.len());

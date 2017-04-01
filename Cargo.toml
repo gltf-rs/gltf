@@ -19,7 +19,8 @@ serde_derive = "0.9"
 serde_json = "0.9"
 
 [features]
-default = []
+default = ["KHR_binary_glTF"]
+KHR_binary_glTF = []
 KHR_materials_common = []
 
 [[example]]

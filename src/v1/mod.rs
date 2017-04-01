@@ -105,7 +105,7 @@ pub struct Root<E: Extras> {
     #[serde(rename = "extensionsRequired")]
     #[serde(default)]
     pub extensions_required: Vec<String>,
-    
+
     /// A dictionary object of image objects.
     ///
     /// The name of each image is an ID in the global glTF namespace that is
@@ -188,7 +188,7 @@ pub struct Root<E: Extras> {
     /// The name of each texture is an ID in the global glTF namespace that is
     /// used to reference the texture.
     #[serde(default)]
-    pub textures: HashMap<String, texture::Texture<E>>, 
+    pub textures: HashMap<String, texture::Texture<E>>,
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
@@ -200,7 +200,8 @@ pub struct Root<E: Extras> {
 }
 
 pub fn import<P, E>(path: P) -> Result<Root<E>, ImportError>
-    where P: AsRef<std::path::Path>, E: Extras
+    where P: AsRef<std::path::Path>,
+          E: Extras
 {
     use self::ImportError::*;
     use std::io::Read;

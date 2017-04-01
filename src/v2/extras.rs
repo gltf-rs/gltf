@@ -14,39 +14,88 @@ use std;
 
 /// Defines a family of user-defined data structures to be (de)serialized
 pub trait Extras: Clone + Debug + Default + Deserialize + Serialize {
+    /// `Extras` type for `Root`
     type Root: Clone + Debug + Default + Deserialize + Serialize;
+    
+     /// `Extras` type for `accessor::Accessor`
     type Accessor: Clone + Debug + Default + Deserialize + Serialize;
+    
+     /// `Extras` type for `accessor::sparse::Indices`
     type AccessorSparseIndices: Clone + Debug + Default + Deserialize + Serialize;
+    
+    /// `Extras` type for `accessor::sparse::Storage`
     type AccessorSparseStorage: Clone + Debug + Default + Deserialize + Serialize;
+    
+    /// `Extras` type for `accessor::sparse::Values`
     type AccessorSparseValues: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `Asset`
     type Asset: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `animation::Animation`
     type Animation: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `animation::Channel`
     type AnimationChannel: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `animation::Sampler`
     type AnimationSampler: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `animation::Target`
     type AnimationTarget: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `buffer::Buffer`
     type Buffer: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `buffer::BufferView`
     type BufferView: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `camera::Camera`
     type Camera: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `camera::Orthographic`
     type CameraOrthographic: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `camera::Perspective`
     type CameraPerspective: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `image::Image`
     type Image: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `material::Material`
     type Material: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `material::PbrMetallicRoughness`
     type MaterialPbrMetallicRoughness: Clone + Debug + Default + Deserialize + Serialize;
+    
+    /// `Extras` type for `material::NormalTexture`
     type MaterialNormalTexture: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `material::OcclusionTexture`
     type MaterialOcclusionTexture: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `mesh::Mesh`
     type Mesh: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `mesh::Primitive`
     type MeshPrimitive: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `scene::Node`
     type Node: Clone + Debug + Default + Deserialize + Serialize;
-    type Program: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `texture::Sampler`
     type Sampler: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `scene::Scene`
     type Scene: Clone + Debug + Default + Deserialize + Serialize;
-    type Shader: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `skin::Skin`
     type Skin: Clone + Debug + Default + Deserialize + Serialize;
-    type Technique: Clone + Debug + Default + Deserialize + Serialize;
-    type TechniqueState: Clone + Debug + Default + Deserialize + Serialize;
-    type TechniqueFunction: Clone + Debug + Default + Deserialize + Serialize;
-    type TechniqueParameter: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `texture::Texture`
     type Texture: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `texture::TextureInfo`
     type TextureInfo: Clone + Debug + Default + Deserialize + Serialize;
 }
 
@@ -81,15 +130,9 @@ impl Extras for Any {
     type Mesh = UntypedJsonObject;
     type MeshPrimitive = UntypedJsonObject;
     type Node = UntypedJsonObject;
-    type Program = UntypedJsonObject;
     type Sampler = UntypedJsonObject;
     type Scene = UntypedJsonObject;
-    type Shader = UntypedJsonObject;
     type Skin = UntypedJsonObject;
-    type Technique = UntypedJsonObject;
-    type TechniqueState = UntypedJsonObject;
-    type TechniqueFunction = UntypedJsonObject;
-    type TechniqueParameter = UntypedJsonObject;
     type Texture = UntypedJsonObject;
     type TextureInfo = UntypedJsonObject;
 }
@@ -125,16 +168,9 @@ impl Extras for None {
     type Mesh = None;
     type MeshPrimitive = None;
     type Node = None;
-    type Program = None;
     type Sampler = None;
     type Scene = None;
-    type Shader = None;
     type Skin = None;
-    type Technique = None;
-    type TechniqueState = None;
-    type TechniqueFunction = None;
-    type TechniqueParameter = None;
     type Texture = None;
     type TextureInfo = None;
 }
-

@@ -9,43 +9,40 @@
 
 use v2::{Extras, Root};
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct CameraExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
-}
-
-// TODO: This implementation is rubbish. Replace with enum instead
-// and derive (De)Serialize manually. It would be trivial to do so
-// if it were not for the `name`, `extension`, and `extra` fields.
 /// A camera's projection
+///
+/// A node can reference a camera to apply a transform to place the camera in the
+/// scene
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Camera<E: Extras> {
     /// Optional user-defined name for this object
     pub name: Option<String>,
-    
-    /// Orthographic camera values
+
+    /// An orthographic camera containing properties to create an orthographic
+    /// projection matrix
     pub orthographic: Option<Orthographic<E>>,
-    
-    /// Perspective camera values
+
+    /// A perspective camera containing properties to create a perspectiv
+    /// projection matrix
     pub perspective: Option<Perspective<E>>,
-    
-    /// `"perspective"` or `"orthographic"`
+
+    /// Specifies if the camera uses a perspective or orthographic projection
     #[serde(rename = "type")]
     pub ty: String,
-    
-    /// Optional data targeting official extensions
+
+    /// Extension specific data
     #[serde(default)]
     pub extensions: CameraExtensions,
-    
+
     /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::Camera,
 }
 
+/// Extension specific data for `Camera`
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct OrthographicExtensions {
+pub struct CameraExtensions {
     #[serde(default)]
     _allow_extra_fields: (),
 }
@@ -57,30 +54,31 @@ pub struct Orthographic<E: Extras> {
     /// The horizontal magnification of the view
     #[serde(default, rename = "xmag")]
     pub x_mag: f32,
-    
+
     /// The vertical magnification of the view
     #[serde(default, rename = "ymag")]
     pub y_mag: f32,
-    
+
     /// The distance to the far clipping plane
     #[serde(default, rename = "zfar")]
     pub z_far: f32,
-    
+
     /// The distance to the near clipping plane
     #[serde(default, rename = "znear")]
     pub z_near: f32,
-    
-    /// Optional data targeting official extensions
+
+    /// Extension specific data
     #[serde(default)]
     pub extensions: OrthographicExtensions,
-    
+
     /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::CameraOrthographic,
 }
 
+/// Extension specific data for `Orthographic`
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct PerspectiveExtensions {
+pub struct OrthographicExtensions {
     #[serde(default)]
     _allow_extra_fields: (),
 }
@@ -92,31 +90,38 @@ pub struct Perspective<E: Extras> {
     /// Aspect ratio of the field of view
     #[serde(default, rename = "aspectRatio")]
     pub aspect_ratio: f32,
-    
+
     /// The vertical field of view in radians
     #[serde(default, rename = "yfov")]
     pub y_fov: f32,
-    
+
     /// The distance to the far clipping plane
     #[serde(default, rename = "zfar")]
     pub z_far: f32,
-    
+
     /// The distance to the near clipping plane
     #[serde(default, rename = "znear")]
     pub z_near: f32,
-    
-    /// Optional data targeting official extensions
+
+    /// Extension specific data
     #[serde(default)]
     pub extensions: PerspectiveExtensions,
-    
+
     /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::CameraPerspective,
 }
 
+/// Extension specific data for `Perspective`
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct PerspectiveExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
 impl<E: Extras> Camera<E> {
+    #[doc(hidden)]
     pub fn range_check(&self, _root: &Root<E>) -> Result<(), ()> {
         Ok(())
     }
 }
-

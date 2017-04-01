@@ -53,7 +53,7 @@ pub struct Asset<E: Extras> {
     pub profile: AssetProfile,
 
     /// The glTF version.
-    pub version: String, 
+    pub version: String,
 
     /// A dictionary object containing extension-specific data.
     #[serde(default)]
