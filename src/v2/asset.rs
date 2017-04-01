@@ -9,13 +9,6 @@
 
 use v2::Extras;
 
-/// Extension specific data for `Asset`
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct AssetExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
-}
-
 /// Metadata about the glTF asset
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -42,3 +35,11 @@ pub struct Asset<E: Extras> {
 fn asset_version_default() -> String {
     "2.0".to_string()
 }
+
+/// Extension specific data for `Asset`
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct AssetExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
