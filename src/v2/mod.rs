@@ -11,19 +11,46 @@ use serde;
 use serde_json;
 use std;
 
+/// Contains `Accessor` and other related data structures
 pub mod accessor;
+
+/// Contains `Animation` and other related data structures
 pub mod animation;
+
+/// Contains `Asset` metadata
+pub mod asset;
+
+/// Contains `Buffer`, `BufferView`, and other related data structures
 pub mod buffer;
-pub mod extensions;
-pub mod extras;
+
+/// Contains `Camera` and other related data structures
 pub mod camera;
+
+/// Contains the names of 2.0 extensions enabled and supported by the library
+pub mod extensions;
+
+/// Contains convenience implementations of the `Extra` trait
+pub mod extras;
+
+/// Contains `Image` and other related data structures
 pub mod image;
+
+/// Contains `Material` and other related data structures
 pub mod material;
+
+/// Contains `Mesh` and other related data structures
 pub mod mesh;
+
+/// Contains `Scene`, `Node`, and other related data structures
 pub mod scene;
+
+/// Contains `Skin` and other related data structures
 pub mod skin;
+
+/// Contains `Texture`, `Sampler`, and other related data structures
 pub mod texture;
 
+/// Trait for (de)serializing user data in glTF 2.0 assets
 pub use self::extras::Extras;
 
 /// Helper trait for retrieving top-level objects by a universal identifier
@@ -65,41 +92,7 @@ pub enum ImportError {
 #[derive(Clone, Copy, Debug)]
 pub struct Index<T>(u32, std::marker::PhantomData<T>);
 
-/// Extension specific data for `Asset`
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct AssetExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
-}
-
-/// Metadata about the glTF asset
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct Asset<E: Extras> {
-    /// A copyright message suitable for display to credit the content creator
-    pub copyright: Option<String>,
-    
-    /// Extension specific data
-    #[serde(default)]
-    pub extensions: AssetExtensions,
-    
-    /// Optional application specific data
-    #[serde(default)]
-    pub extras: <E as Extras>::Asset,
-    
-    /// Tool that generated this glTF model
-    pub generator: Option<String>,
-
-    /// The glTF version of this asset
-    #[serde(default = "asset_version_default")]
-    pub version: String,
-}
-
-fn asset_version_default() -> String {
-    "2.0".to_string()
-}
-
-/// The root object for a glTF asset
+/// The root object of a glTF 2.0 asset
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Root<E: Extras> {
@@ -110,7 +103,7 @@ pub struct Root<E: Extras> {
     animations: Vec<animation::Animation<E>>,
 
     /// Metadata about the glTF asset
-    asset: Asset<E>,
+    asset: asset::Asset<E>,
     
     #[serde(default)]
     buffers: Vec<buffer::Buffer<E>>,
@@ -202,7 +195,7 @@ impl<E: Extras> Root<E> {
     }
 
     /// Returns the metadata included with this asset
-    pub fn asset(&self) -> &Asset<E> {
+    pub fn asset(&self) -> &asset::Asset<E> {
         &self.asset
     }
 

@@ -9,6 +9,7 @@
 
 use v2::{buffer, Extras, Index, Root};
 
+/// Contains data structures for sparse storage
 pub mod sparse {
     use super::*;
 

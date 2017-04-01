@@ -1,3 +1,4 @@
+
 // Copyright 2017 The gltf Library Developers
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -10,23 +11,55 @@ use serde_json;
 use std;
 use std::collections::HashMap;
 
+/// Contains `Accessor` and other related data structures
 pub mod accessor;
+
+/// Contains `Animation` and other related data structures
 pub mod animation;
+
+/// Contains `Asset` and `AssetProfile` metadata
 pub mod asset;
+
+/// Contains `Buffer`, `BufferView`, and other related data structures
 pub mod buffer;
+
+/// Contains `Camera` and other related data structures
 pub mod camera;
+
+/// Contains the names of 1.0 extensions enabled and supported by the library
 pub mod extensions;
+
+/// Contains convenience implementations of the `Extra` trait
 pub mod extras;
+
+/// Contains `Image` and other related data structures
 pub mod image;
+
+/// Contains `Material` and other related data structures
 pub mod material;
+
+/// Contains `Mesh` and other related data structures
 pub mod mesh;
+
+/// Contains `Program` and other related data structures
 pub mod program;
+
+/// Contains `Scene`, `Node`, and other related data structures
 pub mod scene;
+
+/// Contains `Shader`, and other related data structures
 pub mod shader;
+
+/// Contains `Skin` and other related data structures
 pub mod skin;
+
+/// Contains `Technique` and other related data structures
 pub mod technique;
+
+/// Contains `Texture`, `Sampler`, and other related data structures
 pub mod texture;
 
+/// Trait for (de)serializing user data in glTF 1.0 assets
 pub use self::extras::Extras;
 
 /// Error encountered when loading a glTF asset
@@ -34,24 +67,24 @@ pub use self::extras::Extras;
 pub enum ImportError {
     /// Failure when deserializing a .gltf metadata file
     Deserialize(serde_json::error::Error),
+
     /// A glTF extension required by the asset has not been enabled by the user
     ExtensionDisabled(String),
+
     /// A glTF extension required by the asset is not supported by the library
     ExtensionUnsupported(String),
+
     /// The .gltf data is invalid
     Invalid(String),
+
     /// Standard input / output error
     Io(std::io::Error),
-    /// The asset glTF version is not supported by the library
-    VersionUnsupported(String),
+
+    /// The glTF version of the asset is incompatible with this function
+    IncompatibleVersion(String),
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct RootExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
-}
-
+/// The root object for a glTF 1.0 asset
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Root<E: Extras> {
     /// A dictionary object of accessor objects.
@@ -190,15 +223,23 @@ pub struct Root<E: Extras> {
     #[serde(default)]
     pub textures: HashMap<String, texture::Texture<E>>,
 
-    /// A dictionary object containing extension-specific data.
+    /// Extension specific data
     #[serde(default)]
     pub extensions: RootExtensions,
 
-    /// Application-specific data.
+    /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::Root,
 }
 
+/// Extension specific data for `Root`
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct RootExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+/// Imports a glTF 1.0 asset
 pub fn import<P, E>(path: P) -> Result<Root<E>, ImportError>
     where P: AsRef<std::path::Path>,
           E: Extras
@@ -210,3 +251,4 @@ pub fn import<P, E>(path: P) -> Result<Root<E>, ImportError>
     file.read_to_string(&mut json).map_err(Io)?;
     serde_json::from_str(&json).map_err(Deserialize)
 }
+

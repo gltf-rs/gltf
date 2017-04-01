@@ -14,32 +14,88 @@ use std;
 
 /// Defines a family of user-defined data structures to be (de)serialized
 pub trait Extras: Clone + Debug + Default + Deserialize + Serialize {
+    /// `Extras` type for `Root`
     type Root: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `accessor::Accessor`
     type Accessor: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `asset::Asset`
     type Asset: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `asset::Profile`
+    type AssetProfile: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `animation::Animation`
     type Animation: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `animation::Channel`
     type AnimationChannel: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `animation::Sampler`
     type AnimationSampler: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `animation::Target`
     type AnimationTarget: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `buffer::Buffer`
     type Buffer: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `buffer::BufferView`
     type BufferView: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `camera::Camera`
     type Camera: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `camera::Orthographic`
     type CameraOrthographic: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `camera::Perspective`
     type CameraPerspective: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `image::Image`
     type Image: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `material::Material`
     type Material: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `mesh::Mesh`
     type Mesh: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `mesh::Primitive`
     type MeshPrimitive: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `scene::Node`
     type Node: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `program::Program`
     type Program: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `texture::Sampler`
     type Sampler: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `scene::Scene`
     type Scene: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `shader::Shader`
     type Shader: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `skin::Skin`
     type Skin: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `technique::Technique`
     type Technique: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `technique::State`
     type TechniqueState: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `technique::Function`
     type TechniqueFunction: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `technique::Parameter`
     type TechniqueParameter: Clone + Debug + Default + Deserialize + Serialize;
+
+    /// `Extras` type for `texture::Texture`
     type Texture: Clone + Debug + Default + Deserialize + Serialize;
 }
 
@@ -54,6 +110,7 @@ impl Extras for Any {
     type Root = UntypedJsonObject;
     type Accessor = UntypedJsonObject;
     type Asset = UntypedJsonObject;
+    type AssetProfile = UntypedJsonObject;
     type Animation = UntypedJsonObject;
     type AnimationChannel = UntypedJsonObject;
     type AnimationSampler = UntypedJsonObject;
@@ -91,6 +148,7 @@ impl Extras for None {
     type Root = None;
     type Accessor = None;
     type Asset = None;
+    type AssetProfile = None;
     type Animation = None;
     type AnimationChannel = None;
     type AnimationSampler = None;

@@ -17,10 +17,10 @@ pub trait Extras: Clone + Debug + Default + Deserialize + Serialize {
     /// `Extras` type for `Root`
     type Root: Clone + Debug + Default + Deserialize + Serialize;
     
-     /// `Extras` type for `accessor::Accessor`
+    /// `Extras` type for `accessor::Accessor`
     type Accessor: Clone + Debug + Default + Deserialize + Serialize;
     
-     /// `Extras` type for `accessor::sparse::Indices`
+    /// `Extras` type for `accessor::sparse::Indices`
     type AccessorSparseIndices: Clone + Debug + Default + Deserialize + Serialize;
     
     /// `Extras` type for `accessor::sparse::Storage`

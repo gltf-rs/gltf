@@ -6,35 +6,44 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::collections::HashMap;
+use serde_json::Value;
 use v1::Extras;
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct MaterialExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
-}
+/// An untyped JSON object
+pub type UntypedJsonObject = HashMap<String, Value>;
 
+/// The material appearance of a primitive
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Material<E: Extras> {
-    /// The ID of the technique.
+    /// Extension specific data
+    #[serde(default)]
+    pub extensions: MaterialExtensions,
+
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <E as Extras>::Material,
+    
+    /// The user-defined name of this object
+    pub name: Option<String>,
+
+    /// The ID of the technique
     ///
     /// If this is not supplied, and no extension is present that defines
     /// material properties, then the primitive should be rendered using a
     /// default material with 50% gray emissive color
     pub technique: Option<String>,
 
-    // TODO: implement values
-    /// The user-defined name of this object.
+    /// An untyped dictionary object of parameter values
     ///
-    /// This is not necessarily unique, e.g., a material and a buffer could have
-    /// the same name, or two materials could even have the same name.
-    pub name: Option<String>,
+    /// Parameters with the same name as the technique's parameter override the
+    /// technique's parameter value
+    pub values: UntypedJsonObject,
+}
 
-    /// A dictionary object containing extension-specific data.
+/// Extension specific data for `Material`
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct MaterialExtensions {
     #[serde(default)]
-    pub extensions: MaterialExtensions,
-
-    /// Application-specific data.
-    #[serde(default)]
-    pub extras: <E as Extras>::Material,
+    _allow_extra_fields: (),
 }

@@ -8,18 +8,6 @@
 
 use v1::Extras;
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct BufferExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
-}
-
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct BufferViewExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
-}
-
 enum_number! {
     Target {
         ArrayBuffer = 34962,
@@ -27,70 +15,79 @@ enum_number! {
     }
 }
 
+/// A buffer points to binary data representing geometry, animations, or skins
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Buffer<E: Extras> {
-    /// The uri of the buffer.
+    /// The uri of the buffer
     ///
-    /// Relative paths are relative to the .gltf file. Instead of referencing an
-    /// external file, the uri can also be a data-uri.
+    /// Relative paths are relative to the .gltf file
     pub uri: String,
 
-    /// The length of the buffer in bytes.
+    /// The length of the buffer in bytes
     #[serde(rename = "byteLength")]
     #[serde(default)]
     pub byte_length: usize,
 
-    /// XMLHttpRequest responseType.
+    /// XMLHttpRequest responseType
     #[serde(rename = "type")]
     pub kind: Option<String>,
 
-    /// The user-defined name of this object.
-    ///
-    /// This is not necessarily unique, e.g., a buffer and a bufferView could
-    /// have the same name, or two buffers could even have the same name.
+    /// The user-defined name of this object
     pub name: Option<String>,
 
-    /// A dictionary object containing extension-specific data.
+    /// Extension specific data
     #[serde(default)]
     pub extensions: BufferExtensions,
 
-    /// Application-specific data.
+    /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::Buffer,
 }
 
+/// Extension specific data for `Buffer`
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct BufferExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+/// A view into a buffer generally representing a subset of the buffer
 #[derive(Debug, Deserialize, Serialize)]
 pub struct BufferView<E: Extras> {
-    /// The ID of the buffer.
+    /// The ID of the parent buffer.
     pub buffer: String,
 
-    /// The offset into the buffer in bytes.
+    /// The offset into the parent buffer in bytes
     #[serde(rename = "byteOffset")]
     #[serde(default)]
     pub byte_offset: usize,
 
-    /// The length of the bufferView in bytes.
+    /// The length of the `BufferView` in bytes
     #[serde(rename = "byteLength")]
     #[serde(default)]
     pub byte_length: usize,
 
-    /// The target that the WebGL buffer should be bound to.
+    /// The target that the buffer should be bound to
     ///
-    /// When this is not provided, the bufferView contains animation or skin
-    /// data.
+    /// When this is not provided, the `BufferView` contains animation or skin
+    /// data
     pub target: Option<Target>,
 
-    /// The user-defined name of this object.
-    ///
-    /// This is not necessarily unique, e.g., a bufferView and a buffer could
-    /// have the same name, or two bufferViews could even have the same name.
+    /// The user-defined name of this object
     pub name: Option<String>,
 
-    /// A dictionary object containing extension-specific data.
+    /// Extension specific data
     #[serde(default)]
     pub extensions: BufferViewExtensions,
 
-    /// Application-specific data.
+    /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::BufferView,
+}
+
+/// Extension specific data for `BufferView`
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct BufferViewExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
 }

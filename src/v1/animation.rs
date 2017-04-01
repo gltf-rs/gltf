@@ -9,28 +9,11 @@
 use std::collections::HashMap;
 use v1::Extras;
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct AnimationExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
-}
-
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct ChannelExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
-}
-
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct SamplerExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
-}
-
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct TargetExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
+enum_string! {
+    Interpolation {
+        Linear = "LINEAR",
+        Step = "STEP",
+    }
 }
 
 enum_string! {
@@ -41,36 +24,45 @@ enum_string! {
     }
 }
 
-enum_string! {
-    Interpolation {
-        Linear = "LINEAR",
-        Step = "STEP",
-    }
-}
-
-impl Default for Interpolation {
-    fn default() -> Interpolation {
-        Interpolation::Linear
-    }
-}
-
+/// A keyframe animation
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Target<E: Extras> {
-    /// The ID of the node to target.
-    pub id: String,
-
-    /// The name of the node's TRS property to modify.
-    pub path: Path,
-
-    /// A dictionary object containing extension-specific data.
+pub struct Animation<E: Extras> {
+    /// An array of channels, each of which targets an animation's sampler at a
+    /// node's property
     #[serde(default)]
-    pub extensions: TargetExtensions,
+    pub channels: Vec<Channel<E>>,
 
-    /// Application-specific data.
+    /// A dictionary object of strings whose values are IDs of accessors with
+    /// keyframe data, e.g., time, translation, rotation, etc
     #[serde(default)]
-    pub extras: <E as Extras>::AnimationTarget,
+    pub parameters: HashMap<String, String>,
+
+    /// A dictionary object of animation.sampler objects that combines input and
+    /// output parameters with an interpolation algorithm to define a keyframe
+    /// graph (but not its target)
+    #[serde(default)]
+    pub samplers: HashMap<String, Sampler<E>>,
+
+    /// Optional user-defined name of this object
+    pub name: Option<String>,
+
+    /// Extension specific data
+    #[serde(default)]
+    pub extensions: AnimationExtensions,
+
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <E as Extras>::Animation,
 }
 
+/// Extension specific data for `Animation`
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct AnimationExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+/// Targets an animation's sampler at a node's property
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Channel<E: Extras> {
     /// The ID of a sampler in this animation used to compute the value for the
@@ -80,75 +72,89 @@ pub struct Channel<E: Extras> {
     /// The ID of the node and TRS property to target.
     pub target: Target<E>,
 
-    /// A dictionary object containing extension-specific data.
+    /// Extension specific data
     #[serde(default)]
     pub extensions: ChannelExtensions,
 
-    /// Application-specific data.
+    /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::AnimationChannel,
 }
 
+/// Extension specific data for `Channel`
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ChannelExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+/// Combines input and output parameters with an interpolation algorithm to
+/// define a keyframe graph (but not its target)
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Sampler<E: Extras> {
-    /// The ID of a parameter in this animation to use as keyframe input.
+    /// The ID of a parameter in this animation to use as keyframe input
     ///
-    /// This parameter must have type FLOAT. The values represent time in
+    /// This parameter must have type `f32`. The values represent time in
     /// seconds with `time[0] >= 0.0`, and monotonically increasing values,
     /// i.e., time[n + 1] >= time[n]
     pub input: String,
 
-    /// Interpolation algorithm.
+    /// Interpolation algorithm
     ///
     /// When an animation targets a node's rotation, and the animation's
-    /// interpolation is "LINEAR", spherical linear interpolation (slerp) should
-    /// be used to interpolate quaternions.
+    /// interpolation is `Linear`, spherical linear interpolation (slerp) should
+    /// be used to interpolate quaternions
     #[serde(default)]
     pub interpolation: Interpolation,
 
-    /// The ID of a parameter in this animation to use as keyframe output.
+    /// The ID of a parameter in this animation to use as keyframe output
     pub output: String,
 
-    /// A dictionary object containing extension-specific data.
+    /// Extension specific data
     #[serde(default)]
     pub extensions: SamplerExtensions,
 
-    /// Application-specific data.
+    /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::AnimationSampler,
 }
 
+/// Extension specific data for `Sampler`
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct SamplerExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+/// Defines the ID of the node and TRS property that an animation channel targets
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Animation<E: Extras> {
-    /// An array of channels, each of which targets an animation's sampler at a
-    /// node's property.
-    #[serde(default)]
-    pub channels: Vec<Channel<E>>,
+pub struct Target<E: Extras> {
+    /// The ID of the node to target
+    pub id: String,
 
-    /// A dictionary object of strings whose values are IDs of accessors with
-    /// keyframe data, e.g., time, translation, rotation, etc.
-    #[serde(default)]
-    pub parameters: HashMap<String, String>,
+    /// The name of the node's TRS property to modify
+    pub path: Path,
 
-    /// A dictionary object of animation.sampler objects that combines input and
-    /// output parameters with an interpolation algorithm to define a keyframe
-    /// graph (but not its target).
+    /// Extension specific data
     #[serde(default)]
-    pub samplers: HashMap<String, Sampler<E>>,
+    pub extensions: TargetExtensions,
 
-    /// The user-defined name of this object.
-    ///
-    /// This is not necessarily unique, e.g., an animation and a buffer could
-    /// have the same name, or two animations could even have the same name.
-    pub name: Option<String>,
-
-    /// A dictionary object containing extension-specific data.
+    /// Optional application specific data
     #[serde(default)]
-    pub extensions: AnimationExtensions,
+    pub extras: <E as Extras>::AnimationTarget,
+}
 
-    /// Application-specific data.
+/// Extension specific data for `Target`
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct TargetExtensions {
     #[serde(default)]
-    pub extras: <E as Extras>::Animation,
+    _allow_extra_fields: (),
+}
+
+impl Default for Interpolation {
+    fn default() -> Interpolation {
+        Interpolation::Linear
+    }
 }
 
 #[cfg(test)]

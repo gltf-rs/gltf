@@ -9,30 +9,6 @@
 use std::collections::HashMap;
 use v1::Extras;
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct FunctionExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
-}
-
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct ParameterExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
-}
-
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct StateExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
-}
-
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct TechniqueExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
-}
-
 enum_number! {
     ParameterType {
         Byte = 5120,
@@ -60,70 +36,8 @@ enum_number! {
     }
 }
 
-impl Default for ParameterType {
-    fn default() -> ParameterType {
-        ParameterType::Byte
-    }
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Parameter<E: Extras> {
-    /// When defined, the parameter is an array of count elements of the
-    /// specified type
-    pub count: Option<u32>,
-
-    /// The id of the node whose transform is used as the parameter's value.
-    ///
-    /// When this is defined, type must be 35676 (FLOAT_MAT4), therefore, when
-    /// the semantic is "MODELINVERSETRANSPOSE", "MODELVIEWINVERSETRANSPOSE", or
-    /// "VIEWPORT", the node property can't be defined.
-    pub node: Option<String>,
-
-    /// The datatype.
-    #[serde(rename = "type")]
-    #[serde(default)]
-    pub kind: ParameterType,
-
-    /// Identifies a parameter with a well-known meaning.
-    ///
-    /// Uniform semantics include:
-    /// "LOCAL" (FLOAT_MAT4)
-    /// "MODEL" (FLOAT_MAT4)
-    /// "VIEW" (FLOAT_MAT4)
-    /// "PROJECTION" (FLOAT_MAT4)
-    /// "MODELVIEW" (FLOAT_MAT4)
-    /// "MODELVIEWPROJECTION" (FLOAT_MAT4)
-    /// "MODELINVERSE" (FLOAT_MAT4)
-    /// "VIEWINVERSE" (FLOAT_MAT4)
-    /// "PROJECTIONINVERSE" (FLOAT_MAT4)
-    /// "MODELVIEWINVERSE" (FLOAT_MAT4)
-    /// "MODELVIEWPROJECTIONINVERSE" (FLOAT_MAT4)
-    /// "MODELINVERSETRANSPOSE" (FLOAT_MAT3)
-    /// "MODELVIEWINVERSETRANSPOSE" (FLOAT_MAT3)
-    /// "VIEWPORT" (FLOAT_VEC4)
-    /// "JOINTMATRIX" (FLOAT_MAT4)
-    ///
-    /// Attribute semantics include:
-    /// "POSITION"
-    /// "NORMAL"
-    /// "TEXCOORD"
-    /// "COLOR"
-    /// "JOINT"
-    /// "WEIGHT"
-    ///
-    /// Attribute semantics can be of the form [semantic]_[set_index] for
-    /// example "TEXCOORD_0".
-    pub semantic: Option<String>,
-
-    /// A dictionary object containing extension-specific data.
-    #[serde(default)]
-    pub extensions: ParameterExtensions,
-
-    /// Application-specific data.
-    #[serde(default)]
-    pub extras: <E as Extras>::TechniqueParameter,
-}
-
+/// Arguments for fixed-function rendering state functions other than
+/// `enable()`/`disable()`
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Function<E: Extras> {
     /// Floating-point values passed to blendColor(). [red, green, blue, alpha]
@@ -231,11 +145,11 @@ pub struct Function<E: Extras> {
     #[serde(default = "function_scissor_default")]
     pub scissor: [f32; 4],
 
-    /// A dictionary object containing extension-specific data.
+    /// Extension specific data
     #[serde(default)]
     pub extensions: FunctionExtensions,
 
-    /// Application-specific data.
+    /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::TechniqueFunction,
 }
@@ -288,6 +202,81 @@ fn function_scissor_default() -> [f32; 4] {
     [0.0, 0.0, 0.0, 0.0]
 }
 
+/// Extension specific data for `Function`
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct FunctionExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+/// An attribute or uniform input to a technique, and an optional semantic, and
+/// value
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Parameter<E: Extras> {
+    /// When defined, the parameter is an array of count elements of the
+    /// specified type
+    pub count: Option<u32>,
+
+    /// The id of the node whose transform is used as the parameter's value.
+    ///
+    /// When this is defined, type must be 35676 (FLOAT_MAT4), therefore, when
+    /// the semantic is "MODELINVERSETRANSPOSE", "MODELVIEWINVERSETRANSPOSE", or
+    /// "VIEWPORT", the node property can't be defined.
+    pub node: Option<String>,
+
+    /// The datatype.
+    #[serde(rename = "type")]
+    #[serde(default)]
+    pub kind: ParameterType,
+
+    /// Identifies a parameter with a well-known meaning.
+    ///
+    /// Uniform semantics include:
+    /// "LOCAL" (FLOAT_MAT4)
+    /// "MODEL" (FLOAT_MAT4)
+    /// "VIEW" (FLOAT_MAT4)
+    /// "PROJECTION" (FLOAT_MAT4)
+    /// "MODELVIEW" (FLOAT_MAT4)
+    /// "MODELVIEWPROJECTION" (FLOAT_MAT4)
+    /// "MODELINVERSE" (FLOAT_MAT4)
+    /// "VIEWINVERSE" (FLOAT_MAT4)
+    /// "PROJECTIONINVERSE" (FLOAT_MAT4)
+    /// "MODELVIEWINVERSE" (FLOAT_MAT4)
+    /// "MODELVIEWPROJECTIONINVERSE" (FLOAT_MAT4)
+    /// "MODELINVERSETRANSPOSE" (FLOAT_MAT3)
+    /// "MODELVIEWINVERSETRANSPOSE" (FLOAT_MAT3)
+    /// "VIEWPORT" (FLOAT_VEC4)
+    /// "JOINTMATRIX" (FLOAT_MAT4)
+    ///
+    /// Attribute semantics include:
+    /// "POSITION"
+    /// "NORMAL"
+    /// "TEXCOORD"
+    /// "COLOR"
+    /// "JOINT"
+    /// "WEIGHT"
+    ///
+    /// Attribute semantics can be of the form [semantic]_[set_index] for
+    /// example "TEXCOORD_0".
+    pub semantic: Option<String>,
+
+    /// Extension specific data
+    #[serde(default)]
+    pub extensions: ParameterExtensions,
+
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <E as Extras>::TechniqueParameter,
+}
+
+/// Extension specific data for `Parameter`
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ParameterExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+/// Fixed-function rendering states
 #[derive(Debug, Deserialize, Serialize)]
 pub struct State<E: Extras> {
     /// WebGL states to enable.
@@ -308,15 +297,23 @@ pub struct State<E: Extras> {
     /// enable() / disable().
     functions: Option<Function<E>>,
 
-    /// A dictionary object containing extension-specific data.
+    /// Extension specific data
     #[serde(default)]
     pub extensions: StateExtensions,
 
-    /// Application-specific data.
+    /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::TechniqueState,
 }
 
+/// Extension specific data for `State`
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct StateExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+/// A template for material appearances
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Technique<E: Extras> {
     /// A dictionary object of technique.parameters objects.
@@ -349,11 +346,25 @@ pub struct Technique<E: Extras> {
     /// have the same name, or two techniques could even have the same name.
     name: Option<String>,
 
-    /// A dictionary object containing extension-specific data.
+    /// Extension specific data
     #[serde(default)]
     pub extensions: TechniqueExtensions,
 
-    /// Application-specific data.
+    /// Optional application specific data
     #[serde(default)]
     pub extras: <E as Extras>::Technique,
 }
+
+/// Extension specific data for `Technique`
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct TechniqueExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
+}
+
+impl Default for ParameterType {
+    fn default() -> ParameterType {
+        ParameterType::Byte
+    }
+}
+

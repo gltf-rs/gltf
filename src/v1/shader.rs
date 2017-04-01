@@ -8,17 +8,43 @@
 
 use v1::Extras;
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct ShaderExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
-}
-
 enum_number! {
     ShaderType {
         Fragment = 35632,
         Vertex = 35633,
     }
+}
+
+/// A vertex or fragment shader
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Shader<E: Extras> {
+    /// The uri of the GLSL source
+    ///
+    /// Relative paths are relative to the .gltf file
+    pub uri: String,
+
+    /// The shader stage
+    #[serde(default)]
+    #[serde(rename = "type")]
+    pub kind: ShaderType,
+
+    /// The user-defined name of this object
+    pub name: Option<String>,
+
+    /// Extension specific data
+    #[serde(default)]
+    pub extensions: ShaderExtensions,
+
+    /// Optional application specific data
+    #[serde(default)]
+    pub extras: <E as Extras>::Shader,
+}
+
+/// Extension specific data for `Shader`
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ShaderExtensions {
+    #[serde(default)]
+    _allow_extra_fields: (),
 }
 
 impl Default for ShaderType {
@@ -27,32 +53,3 @@ impl Default for ShaderType {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Shader<E: Extras> {
-    /// The uri of the GLSL source.
-    ///
-    /// Relative paths are relative to the .gltf file. Instead of referencing an
-    /// external file, the uri can also be a data-uri.
-    pub uri: String,
-
-    /// The shader stage.
-    ///
-    /// Allowed values are 35632 (FRAGMENT_SHADER) and 35633 (VERTEX_SHADER).
-    #[serde(default)]
-    #[serde(rename = "type")]
-    pub kind: ShaderType,
-
-    /// The user-defined name of this object.
-    ///
-    /// This is not necessarily unique, e.g., a shader and a buffer could have
-    /// the same name, or two shaders could even have the same name.
-    pub name: Option<String>,
-
-    /// A dictionary object containing extension-specific data.
-    #[serde(default)]
-    pub extensions: ShaderExtensions,
-
-    /// Application-specific data.
-    #[serde(default)]
-    pub extras: <E as Extras>::Shader,
-}

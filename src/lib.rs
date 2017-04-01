@@ -1,3 +1,4 @@
+
 // Copyright 2017 The gltf Library Developers
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -14,5 +15,9 @@ extern crate serde_json;
 #[macro_use]
 mod macros;
 
+/// Contains data structures and functions for loading glTF 1.0
 pub mod v1;
+
+/// Contains data structures and functions for loading glTF 2.0
 pub mod v2;
+
