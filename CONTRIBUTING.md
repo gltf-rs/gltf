@@ -1,6 +1,10 @@
 
 # Contributing guide
 
+## Code of conduct
+
+Contributors are expected to abide by the [Rust code of conduct](https://www.rust-lang.org/en-US/conduct.html).
+
 ## Branches
 
  * `master` contains the code of the latest published crate version on crates.io.
