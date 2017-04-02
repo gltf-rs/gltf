@@ -10,7 +10,6 @@
 use serde_json;
 use std;
 use v1::{Extras, Root};
-use v1::root::extensions::{KhrBinaryGltf, KhrBinaryGltfHeader};
 
 /// Error encountered when loading a glTF asset
 #[derive(Debug)]
@@ -35,14 +34,12 @@ pub enum ImportError {
 }
 
 /// Imports a binary glTF 1.0 asset
+#[cfg(feature = "KHR_binary_glTF")]
 fn import_binary_gltf<S, E>(mut stream: S) -> Result<Root<E>, ImportError>
     where S: std::io::Read, E: Extras
 {
-    use self::ImportError::*;
-
-    #[cfg(not(feature = "KHR_binary_glTF"))]
-    return Err(ExtensionDisabled("KHR_binary_glTF"));
-
+    use v1::root::extensions::{KhrBinaryGltf, KhrBinaryGltfHeader};
+    
     let header: KhrBinaryGltfHeader = unsafe {
         let mut buffer = [0u8; 16];
         stream.read_exact(&mut buffer[..])?;
@@ -51,13 +48,13 @@ fn import_binary_gltf<S, E>(mut stream: S) -> Result<Root<E>, ImportError>
 
     if header.version != 1 {
         let message = format!("KHR_binary_glTF version: {}", header.version);
-        return Err(IncompatibleVersion(message));
+        return Err(ImportError::IncompatibleVersion(message));
     }
 
     if header.content_format != 0 {
         let message = format!("KHR_binary_glTF contentFormat: {}",
                               header.content_format);
-        return Err(Invalid(message));
+        return Err(ImportError::Invalid(message));
     }
     
     let mut content = Vec::with_capacity(header.content_length as usize);
@@ -81,6 +78,14 @@ fn import_binary_gltf<S, E>(mut stream: S) -> Result<Root<E>, ImportError>
     });
     
     Ok(root)
+}
+
+/// Imports a binary glTF 1.0 asset
+#[cfg(not(feature = "KHR_binary_glTF"))]
+fn import_binary_gltf<S, E>(_stream: S) -> Result<Root<E>, ImportError>
+    where S: std::io::Read, E: Extras
+{  
+    return Err(ImportError::ExtensionDisabled("KHR_binary_glTF".to_string()));
 }
 
 /// Imports a standard (plain text JSON) glTF 1.0 asset

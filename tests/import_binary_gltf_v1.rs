@@ -1,8 +1,7 @@
 
-extern crate gltf as gltf_crate;
+extern crate gltf;
 
-use gltf_crate::v1 as gltf;
-
+#[cfg(feature = "KHR_binary_glTF")]
 #[test]
 fn import_v1() {
     // find glTF-Sample-Models/1.0 -name *.glb -printf "\"%p\",\n" | grep glTF-Binary/
@@ -30,7 +29,7 @@ fn import_v1() {
         "glTF-Sample-Models/1.0/RiggedSimple/glTF-Binary/RiggedSimple.glb"
     ];
     for asset in &assets {
-        match gltf::import::<_, gltf::extras::None>(&asset) {
+        match gltf::v1::import::<_, gltf::v1::extras::None>(&asset) {
             Ok(_) => {}
             Err(err) => {
                 println!("{:?}", err);

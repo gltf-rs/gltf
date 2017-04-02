@@ -1,7 +1,5 @@
 
-extern crate gltf as gltf_crate;
-
-use gltf_crate::v2 as gltf;
+extern crate gltf;
 
 #[test]
 fn import_v2() {
@@ -12,7 +10,7 @@ fn import_v2() {
         "glTF-Sample-Models/2.0/Lantern/glTF/Lantern.gltf",
     ];
     for asset in &assets {
-        match gltf::import::<_, gltf::extras::None>(asset) {
+        match gltf::v2::import::<_, gltf::v2::extras::None>(asset) {
             Ok(_) => {}
             Err(err) => {
                 println!("{:?}", err);
