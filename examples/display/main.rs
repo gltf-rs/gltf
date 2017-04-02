@@ -12,7 +12,8 @@ use gltf::{v1, v2};
 
 fn main() {
     let path = std::env::args().nth(1).unwrap();
-    match v1::import::<_, v1::extras::Any>(&path) {
+    let file = std::fs::File::open(&path).expect("I/O error");
+    match v1::import::<_, v1::extras::Any>(file) {
         Ok(root) => {
             println!("glTF version 1.0");
             println!("{:#?}", root);

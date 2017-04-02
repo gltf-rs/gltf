@@ -9,7 +9,7 @@
 
 use serde_json;
 use std;
-use std::collections::HashMap;
+use std::io::Read;
 
 /// Contains `Accessor` and other related data structures
 pub mod accessor;
@@ -44,6 +44,9 @@ pub mod mesh;
 /// Contains `Program` and other related data structures
 pub mod program;
 
+/// Contains `Root`
+pub mod root;
+
 /// Contains `Scene`, `Node`, and other related data structures
 pub mod scene;
 
@@ -61,6 +64,9 @@ pub mod texture;
 
 /// Trait for (de)serializing user data in glTF 1.0 assets
 pub use self::extras::Extras;
+
+/// Re-export of the root glTF object
+pub use self::root::Root;
 
 /// Error encountered when loading a glTF asset
 #[derive(Debug)]
@@ -84,171 +90,95 @@ pub enum ImportError {
     IncompatibleVersion(String),
 }
 
-/// The root object for a glTF 1.0 asset
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Root<E: Extras> {
-    /// A dictionary object of accessor objects.
-    ///
-    /// The name of each accessor is an ID in the global glTF namespace that is
-    /// used to reference the accessor. An accessor is a typed view into a
-    /// bufferView.
-    #[serde(default)]
-    pub accessors: HashMap<String, accessor::Accessor<E>>,
+/// Imports a binary encoded glTF 1.0 asset
+///
+/// # Notes
+///
+/// * `data` must be 4 byte aligned
+fn import_binary_gltf<S, E>(mut stream: S) -> Result<Root<E>, ImportError>
+    where S: std::io::Read, E: Extras
+{
+    use self::ImportError::*;
 
-    /// A dictionary object of keyframe animation objects.
-    ///
-    /// The name of each animation is an ID in the global glTF namespace that is
-    /// used to reference the animation.
-    #[serde(default)]
-    pub animation: HashMap<String, animation::Animation<E>>,
+    #[cfg(not(feature = "KHR_binary_glTF"))]
+    return Err(ExtensionDisabled("KHR_binary_glTF"));
 
-    /// Metadata about the glTF asset.
-    pub asset: asset::Asset<E>,
+    let header: root::extensions::KhrBinaryGltfHeader = unsafe {
+        let mut buffer = [0u8; 16];
+        stream.read_exact(&mut buffer)?;
+        std::mem::transmute_copy(&buffer)
+    };
 
-    /// A dictionary object of buffer objects.
-    ///
-    /// The name of each buffer is an ID in the global glTF namespace that is
-    /// used to reference the buffer. A buffer points to binary geometry,
-    /// animation, or skins.
-    #[serde(default)]
-    pub buffers: HashMap<String, buffer::Buffer<E>>,
+    if header.version != 1 {
+        let message = format!("KHR_binary_header version: {}", header.version);
+        return Err(IncompatibleVersion(message));
+    }
 
-    /// A dictionary object of bufferView objects.
-    ///
-    /// The name of each bufferView is an ID in the global glTF namespace that
-    /// is used to reference the bufferView. A bufferView is a view into a
-    /// buffer generally representing a subset of the buffer.
-    #[serde(rename = "bufferViews")]
-    #[serde(default)]
-    pub buffer_views: HashMap<String, buffer::BufferView<E>>,
+    if header.content_format != 0 {
+        let message = format!("KHR_binary_header contentFormat: {}",
+                              header.content_format);
+        return Err(Invalid(message));
+    }
+    
+    let mut content = Vec::with_capacity(header.content_length as usize);
+    unsafe {
+        content.set_len(header.content_length as usize);
+    }
+    stream.read_exact(&mut content[..])?;
 
-    /// A dictionary object of camera objects.
-    ///
-    /// The name of each camera is an ID in the global glTF namespace that is
-    /// used to reference the camera. A camera defines a projection matrix.
-    #[serde(default)]
-    pub cameras: HashMap<String, camera::Camera<E>>,
+    let body_length = header.length - header.content_length - 16;
+    let mut body = Vec::with_capacity(body_length as usize);
+    unsafe {
+        body.set_len(body_length as usize);
+    }
+    stream.read_exact(&mut body[..])?;
 
-    /// Names of glTF extensions used somewhere in this asset.
-    #[serde(rename = "extensionsUsed")]
-    #[serde(default)]
-    pub extensions_used: Vec<String>,
-
-    /// Names of glTF extensions required to properly load this asset.
-    #[serde(rename = "extensionsRequired")]
-    #[serde(default)]
-    pub extensions_required: Vec<String>,
-
-    /// A dictionary object of image objects.
-    ///
-    /// The name of each image is an ID in the global glTF namespace that is
-    /// used to reference the image. An image defines data used to create a
-    /// texture.
-    #[serde(default)]
-    pub images: HashMap<String, image::Image<E>>,
-
-    /// A dictionary object of material objects.
-    ///
-    /// The name of each material is an ID in the global glTF namespace that is
-    /// used to reference the material. A material defines the appearance of a
-    /// primitive.
-    #[serde(default)]
-    pub materials: HashMap<String, material::Material<E>>,
-
-    /// A dictionary object of mesh objects.
-    ///
-    /// The name of each mesh is an ID in the global glTF namespace that is used
-    /// to reference the mesh. A mesh is a set of primitives to be rendered.
-    #[serde(default)]
-    pub meshes: HashMap<String, mesh::Mesh<E>>,
-
-    /// A dictionary object of node objects in the node hierarchy.
-    ///
-    /// The name of each node is an ID in the global glTF namespace that is used
-    /// to reference the node.
-    #[serde(default)]
-    pub nodes: HashMap<String, scene::Node<E>>,
-
-    /// A dictionary object of shader program objects.
-    ///
-    /// The name of each program is an ID in the global glTF namespace that is
-    /// used to reference the program.
-    #[serde(default)]
-    pub programs: HashMap<String, program::Program<E>>,
-
-    /// A dictionary object of sampler objects.
-    ///
-    /// The name of each sampler is an ID in the global glTF namespace that is
-    /// used to reference the sampler. A sampler contains properties for texture
-    /// filtering and wrapping modes.
-    #[serde(default)]
-    pub samplers: HashMap<String, texture::Sampler<E>>,
-
-    /// The ID of the default scene.
-    pub scene: Option<String>,
-
-    /// A dictionary object of scene objects.
-    ///
-    /// The name of each scene is an ID in the global glTF namespace that is
-    /// used to reference the scene.
-    #[serde(default)]
-    pub scenes: HashMap<String, scene::Scene<E>>,
-
-    /// A dictionary object of shader objects.
-    ///
-    /// The name of each shader is an ID in the global glTF namespace that is
-    /// used to reference the shader.
-    #[serde(default)]
-    pub shaders: HashMap<String, shader::Shader<E>>,
-
-    /// A dictionary object of skin objects.
-    ///
-    /// The name of each skin is an ID in the global glTF namespace that is used
-    /// to reference the skin. A skin is defined by joints and matrices.
-    #[serde(default)]
-    pub skins: HashMap<String, skin::Skin<E>>,
-
-    /// A dictionary object of technique objects.
-    ///
-    /// The name of each technique is an ID in the global glTF namespace that is
-    /// used to reference the technique. A technique is a template for a
-    /// material appearance.
-    #[serde(default)]
-    pub techniques: HashMap<String, technique::Technique<E>>,
-
-    /// A dictionary object of texture objects.
-    ///
-    /// The name of each texture is an ID in the global glTF namespace that is
-    /// used to reference the texture.
-    #[serde(default)]
-    pub textures: HashMap<String, texture::Texture<E>>,
-
-    /// Extension specific data
-    #[serde(default)]
-    pub extensions: RootExtensions,
-
-    /// Optional application specific data
-    #[serde(default)]
-    pub extras: <E as Extras>::Root,
+    let mut root: Root<E> = serde_json::from_slice(&content)?;
+    root.extensions.khr_binary_gltf = Some(root::extensions::KhrBinaryGltf {
+        body: body,
+        content: content,
+        header: header,
+    });
+    
+    Ok(root)
 }
 
-/// Extension specific data for `Root`
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct RootExtensions {
-    #[serde(default)]
-    _allow_extra_fields: (),
+/// Imports a standard (plain text JSON) glTF 1.0 asset
+fn import_standard_gltf<E>(data: Vec<u8>) -> Result<Root<E>, ImportError>
+    where E: Extras
+{
+    let root: Root<E> = serde_json::from_slice(&data)?;
+
+    Ok(root)
 }
 
 /// Imports a glTF 1.0 asset
-pub fn import<P, E>(path: P) -> Result<Root<E>, ImportError>
-    where P: AsRef<std::path::Path>,
-          E: Extras
+pub fn import<S, E>(mut stream: S) -> Result<Root<E>, ImportError>
+    where S: Read, E: Extras
 {
-    use self::ImportError::*;
-    use std::io::Read;
-    let mut file = std::fs::File::open(path).map_err(Io)?;
-    let mut json = String::new();
-    file.read_to_string(&mut json).map_err(Io)?;
-    serde_json::from_str(&json).map_err(Deserialize)
+    let mut buffer = Vec::with_capacity(4);
+    unsafe {
+        buffer.set_len(4);
+    }
+    stream.read_exact(&mut buffer)?;
+
+    if buffer.starts_with(b"glTF") {
+        import_binary_gltf(stream)
+    } else {
+        stream.read_to_end(&mut buffer)?;
+        import_standard_gltf(buffer)
+    }
+}
+
+impl From<serde_json::Error> for ImportError {
+    fn from(err: serde_json::Error) -> ImportError {
+        ImportError::Deserialize(err)
+    }
+}
+
+impl From<std::io::Error> for ImportError {
+    fn from(err: std::io::Error) -> ImportError {
+        ImportError::Io(err)
+    }
 }
 

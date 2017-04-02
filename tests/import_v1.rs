@@ -28,7 +28,8 @@ fn import_v1() {
                   "glTF-Sample-Models/1.0/BarramundiFish/glTF/BarramundiFish.gltf",
                   "glTF-Sample-Models/1.0/RiggedSimple/glTF/RiggedSimple.gltf"];
     for asset in &assets {
-        match gltf::import::<_, gltf::extras::None>(asset) {
+        let file = std::fs::File::open(&asset).expect("I/O error");
+        match gltf::import::<_, gltf::extras::None>(file) {
             Ok(_) => {}
             Err(err) => {
                 println!("{:?}", err);
