@@ -46,6 +46,10 @@ pub struct Root<E: Extras> {
     #[serde(default, rename = "bufferViews")]
     buffer_views: Vec<buffer::BufferView<E>>,
 
+    /// The default scene
+    #[serde(default = "root_scene_default", rename = "scene")]
+    default_scene: Index<scene::Scene<E>>,
+    
     /// Extension specific data
     #[serde(default)]
     extensions: RootExtensions,
@@ -79,10 +83,6 @@ pub struct Root<E: Extras> {
     
     #[serde(default)]
     samplers: Vec<texture::Sampler<E>>,
-
-    /// The default scene
-    #[serde(default = "root_scene_default")]
-    scene: Index<scene::Scene<E>>,
     
     #[serde(default)]
     scenes: Vec<scene::Scene<E>>,
@@ -158,6 +158,11 @@ impl<E: Extras> Root<E> {
     /// Returns all cameras as a slice
     pub fn cameras(&self) -> &[camera::Camera<E>] {
         &self.cameras
+    }
+
+    /// Returns the default scene
+    pub fn default_scene(&self) -> &scene::Scene<E> {
+        self.get(&self.default_scene)
     }
 
     /// Returns the extensions referenced in this .gltf file
@@ -291,7 +296,7 @@ impl<E: Extras> Root<E> {
         range_check!(scenes);
         range_check!(skins);
         range_check!(textures);
-        let _ = self.try_get(&self.scene)?;
+        let _ = self.try_get(&self.default_scene)?;
         Ok(())
     }
 }
