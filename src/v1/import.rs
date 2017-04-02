@@ -55,7 +55,7 @@ fn import_binary_gltf<S, E>(mut stream: S) -> Result<Root<E>, ImportError>
     }
 
     if header.content_format != 0 {
-        let message = format!("KHR_binary_header contentFormat: {}",
+        let message = format!("KHR_binary_glTF contentFormat: {}",
                               header.content_format);
         return Err(Invalid(message));
     }
