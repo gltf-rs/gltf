@@ -38,8 +38,10 @@ the following layout:
  * `impl x`s, then
  * `impl x for y`s
 
-An exception to this rule is when defining default functions for serde, in which
-case they should appear immediately after the struct they initialize.
+Exceptions:
+
+ * Default functions for serde should appear immediately after the struct they initialize
+ * Data structures that require a precise layout (e.g. `BinaryGltfHeader`)
 
 Rationale: Ease of finding things.
 
