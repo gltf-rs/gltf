@@ -190,7 +190,7 @@ pub struct Root<E: Extras> {
 /// Extension specific data for `Root`
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct RootExtensions {
-    /// Owns the binary encoded data for binary glTF assets
+    /// Owns the binary encoded data for binary glTF 1.0 assets
     #[cfg(feature = "KHR_binary_glTF")]
     #[serde(skip_deserializing, skip_serializing)]
     pub khr_binary_gltf: Option<extensions::KhrBinaryGltf>,

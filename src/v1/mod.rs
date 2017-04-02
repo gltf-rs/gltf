@@ -7,10 +7,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use serde_json;
-use std;
-use std::io::Read;
-
 /// Contains `Accessor` and other related data structures
 pub mod accessor;
 
@@ -34,6 +30,9 @@ pub mod extras;
 
 /// Contains `Image` and other related data structures
 pub mod image;
+
+/// Contains functions for importing glTF 1.0 assets
+pub mod import;
 
 /// Contains `Material` and other related data structures
 pub mod material;
@@ -62,123 +61,8 @@ pub mod technique;
 /// Contains `Texture`, `Sampler`, and other related data structures
 pub mod texture;
 
-/// Trait for (de)serializing user data in glTF 1.0 assets
 pub use self::extras::Extras;
-
-/// Re-export of the root glTF object
+pub use self::import::{import, ImportError};
 pub use self::root::Root;
 
-/// Error encountered when loading a glTF asset
-#[derive(Debug)]
-pub enum ImportError {
-    /// Failure when deserializing a .gltf metadata file
-    Deserialize(serde_json::error::Error),
-
-    /// A glTF extension required by the asset has not been enabled by the user
-    ExtensionDisabled(String),
-
-    /// A glTF extension required by the asset is not supported by the library
-    ExtensionUnsupported(String),
-
-    /// The .gltf data is invalid
-    Invalid(String),
-
-    /// Standard input / output error
-    Io(std::io::Error),
-
-    /// The glTF version of the asset is incompatible with this function
-    IncompatibleVersion(String),
-}
-
-/// Imports a binary encoded glTF 1.0 asset
-///
-/// # Notes
-///
-/// * `data` must be 4 byte aligned
-fn import_binary_gltf<S, E>(mut stream: S) -> Result<Root<E>, ImportError>
-    where S: std::io::Read, E: Extras
-{
-    use self::ImportError::*;
-
-    #[cfg(not(feature = "KHR_binary_glTF"))]
-    return Err(ExtensionDisabled("KHR_binary_glTF"));
-
-    let header: root::extensions::KhrBinaryGltfHeader = unsafe {
-        let mut buffer = [0u8; 16];
-        stream.read_exact(&mut buffer)?;
-        std::mem::transmute_copy(&buffer)
-    };
-
-    if header.version != 1 {
-        let message = format!("KHR_binary_header version: {}", header.version);
-        return Err(IncompatibleVersion(message));
-    }
-
-    if header.content_format != 0 {
-        let message = format!("KHR_binary_header contentFormat: {}",
-                              header.content_format);
-        return Err(Invalid(message));
-    }
-    
-    let mut content = Vec::with_capacity(header.content_length as usize);
-    unsafe {
-        content.set_len(header.content_length as usize);
-    }
-    stream.read_exact(&mut content[..])?;
-
-    let body_length = header.length - header.content_length - 16;
-    let mut body = Vec::with_capacity(body_length as usize);
-    unsafe {
-        body.set_len(body_length as usize);
-    }
-    stream.read_exact(&mut body[..])?;
-
-    let mut root: Root<E> = serde_json::from_slice(&content)?;
-    root.extensions.khr_binary_gltf = Some(root::extensions::KhrBinaryGltf {
-        body: body,
-        content: content,
-        header: header,
-    });
-    
-    Ok(root)
-}
-
-/// Imports a standard (plain text JSON) glTF 1.0 asset
-fn import_standard_gltf<E>(data: Vec<u8>) -> Result<Root<E>, ImportError>
-    where E: Extras
-{
-    let root: Root<E> = serde_json::from_slice(&data)?;
-
-    Ok(root)
-}
-
-/// Imports a glTF 1.0 asset
-pub fn import<S, E>(mut stream: S) -> Result<Root<E>, ImportError>
-    where S: Read, E: Extras
-{
-    let mut buffer = Vec::with_capacity(4);
-    unsafe {
-        buffer.set_len(4);
-    }
-    stream.read_exact(&mut buffer)?;
-
-    if buffer.starts_with(b"glTF") {
-        import_binary_gltf(stream)
-    } else {
-        stream.read_to_end(&mut buffer)?;
-        import_standard_gltf(buffer)
-    }
-}
-
-impl From<serde_json::Error> for ImportError {
-    fn from(err: serde_json::Error) -> ImportError {
-        ImportError::Deserialize(err)
-    }
-}
-
-impl From<std::io::Error> for ImportError {
-    fn from(err: std::io::Error) -> ImportError {
-        ImportError::Io(err)
-    }
-}
 
