@@ -26,3 +26,7 @@ KHR_binary_glTF = []
 name = "gltf_display"
 path = "examples/display/main.rs"
 
+[[example]]
+name = "walk_tree"
+path = "examples/walk_tree/main.rs"
+

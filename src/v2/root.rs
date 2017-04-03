@@ -231,6 +231,34 @@ impl<E: Extras> Root<E> {
     pub fn nodes(&self) -> &[scene::Node<E>] {
         &self.nodes
     }
+    
+    /// Performs a search for any indices that are out of range of the array
+    /// they reference. Returns true if all indices are within range.
+    #[doc(hidden)]
+    pub fn range_check(&self) -> Result<(), ()> {
+        macro_rules! range_check {
+            ($field:ident) => {
+                for item in self.$field.iter() {
+                    let _ = item.range_check(self)?; 
+                }
+            }
+        }
+        range_check!(accessors);
+        range_check!(animations);
+        range_check!(buffers);
+        range_check!(buffer_views);
+        range_check!(cameras);
+        range_check!(images);
+        range_check!(materials);
+        range_check!(meshes);
+        range_check!(nodes);
+        range_check!(samplers);
+        range_check!(scenes);
+        range_check!(skins);
+        range_check!(textures);
+        let _ = self.try_get(&self.default_scene)?;
+        Ok(())
+    }
 
     /// Returns the sampler at the given index
     pub fn sampler(&self, index: Index<texture::Sampler<E>>) -> &texture::Sampler<E> {
@@ -272,32 +300,9 @@ impl<E: Extras> Root<E> {
         &self.textures
     }
 
-    /// Performs a search for any indices that are out of range of the array
-    /// they reference. Returns true if all indices are within range.
-    #[doc(hidden)]
-    pub fn range_check(&self) -> Result<(), ()> {
-        macro_rules! range_check {
-            ($field:ident) => {
-                for item in self.$field.iter() {
-                    let _ = item.range_check(self)?; 
-                }
-            }
-        }
-        range_check!(accessors);
-        range_check!(animations);
-        range_check!(buffers);
-        range_check!(buffer_views);
-        range_check!(cameras);
-        range_check!(images);
-        range_check!(materials);
-        range_check!(meshes);
-        range_check!(nodes);
-        range_check!(samplers);
-        range_check!(scenes);
-        range_check!(skins);
-        range_check!(textures);
-        let _ = self.try_get(&self.default_scene)?;
-        Ok(())
+    /// Returns the root tree iterator
+    pub fn tree<'a>(&'a self) -> tree::Root<'a, E> {
+        tree::Root::new(self)
     }
 }
 
