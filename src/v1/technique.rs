@@ -37,7 +37,7 @@ enum_number! {
 }
 
 /// Arguments for fixed-function rendering state functions other than
-/// `enable()`/`disable()`
+/// `enable()`/`disable()`.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Function<E: Extras> {
     /// Floating-point values passed to blendColor(). [red, green, blue, alpha]
@@ -145,11 +145,11 @@ pub struct Function<E: Extras> {
     #[serde(default = "function_scissor_default")]
     pub scissor: [f32; 4],
 
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: FunctionExtensions,
 
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::TechniqueFunction,
 }
@@ -202,7 +202,7 @@ fn function_scissor_default() -> [f32; 4] {
     [0.0, 0.0, 0.0, 0.0]
 }
 
-/// Extension specific data for `Function`
+/// Extension specific data for `Function`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct FunctionExtensions {
     #[serde(default)]
@@ -210,11 +210,11 @@ pub struct FunctionExtensions {
 }
 
 /// An attribute or uniform input to a technique, and an optional semantic, and
-/// value
+/// value.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Parameter<E: Extras> {
     /// When defined, the parameter is an array of count elements of the
-    /// specified type
+    /// specified type.
     pub count: Option<u32>,
 
     /// The id of the node whose transform is used as the parameter's value.
@@ -260,23 +260,23 @@ pub struct Parameter<E: Extras> {
     /// example "TEXCOORD_0".
     pub semantic: Option<String>,
 
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: ParameterExtensions,
 
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::TechniqueParameter,
 }
 
-/// Extension specific data for `Parameter`
+/// Extension specific data for `Parameter`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct ParameterExtensions {
     #[serde(default)]
     _allow_extra_fields: (),
 }
 
-/// Fixed-function rendering states
+/// Fixed-function rendering states.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct State<E: Extras> {
     /// WebGL states to enable.
@@ -297,23 +297,23 @@ pub struct State<E: Extras> {
     /// enable() / disable().
     functions: Option<Function<E>>,
 
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: StateExtensions,
 
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::TechniqueState,
 }
 
-/// Extension specific data for `State`
+/// Extension specific data for `State`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct StateExtensions {
     #[serde(default)]
     _allow_extra_fields: (),
 }
 
-/// A template for material appearances
+/// A template for material appearances.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Technique<E: Extras> {
     /// A dictionary object of technique.parameters objects.
@@ -346,16 +346,16 @@ pub struct Technique<E: Extras> {
     /// have the same name, or two techniques could even have the same name.
     name: Option<String>,
 
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: TechniqueExtensions,
 
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::Technique,
 }
 
-/// Extension specific data for `Technique`
+/// Extension specific data for `Technique`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct TechniqueExtensions {
     #[serde(default)]

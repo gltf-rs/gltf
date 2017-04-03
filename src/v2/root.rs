@@ -10,24 +10,24 @@
 use std;
 use v2::*;
 
-/// Helper trait for retrieving top-level objects by a universal identifier
+/// Helper trait for retrieving top-level objects by a universal identifier.
 pub trait Get<T> {
-    /// Retrieves a single value at the given index
+    /// Retrieves a single value at the given index.
     fn get(&self, id: &Index<T>) -> &T;
 }
 
 /// Helper trait for attempting to retrieve top-level objects by a universal
-/// identifier
+/// identifier.
 pub trait TryGet<T> {
-    /// Attempts to retrieve a single value at the given index
+    /// Attempts to retrieve a single value at the given index.
     fn try_get(&self, id: &Index<T>) -> Result<&T, ()>;
 }
 
-/// Represents an offset into an array of type `T` owned by the root glTF object
+/// Represents an offset into an array of type `T` owned by the root glTF object.
 #[derive(Clone, Copy, Debug)]
 pub struct Index<T>(u32, std::marker::PhantomData<T>);
 
-/// The root object of a glTF 2.0 asset
+/// The root object of a glTF 2.0 asset.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Root<E: Extras> {
@@ -37,7 +37,7 @@ pub struct Root<E: Extras> {
     #[serde(default)]
     animations: Vec<animation::Animation<E>>,
 
-    /// Metadata about the glTF asset
+    /// Metadata about the glTF asset.
     asset: asset::Asset<E>,
     
     #[serde(default)]
@@ -46,23 +46,23 @@ pub struct Root<E: Extras> {
     #[serde(default, rename = "bufferViews")]
     buffer_views: Vec<buffer::BufferView<E>>,
 
-    /// The default scene
+    /// The default scene.
     #[serde(default = "root_scene_default", rename = "scene")]
     default_scene: Index<scene::Scene<E>>,
     
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     extensions: RootExtensions,
 
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::Root,
     
-    /// Names of glTF extensions used somewhere in this asset
+    /// Names of glTF extensions used somewhere in this asset.
     #[serde(default, rename = "extensionsUsed")]
     extensions_used: Vec<String>,
 
-    /// Names of glTF extensions required to properly load this asset
+    /// Names of glTF extensions required to properly load this asset.
     #[serde(default, rename = "extensionsRequired")]
     extensions_required: Vec<String>,
     
@@ -98,93 +98,93 @@ fn root_scene_default<E: Extras>() -> Index<scene::Scene<E>> {
     Index(0, std::marker::PhantomData)
 }
 
-/// Extension specific data for `Root`
+/// Extension specific data for `Root`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct RootExtensions {
     _allow_extra_fields: (),
 }
 
 impl<E: Extras> Root<E> {
-    /// Returns the accessor at the given index
+    /// Returns the accessor at the given index.
     pub fn accessor(&self, index: Index<accessor::Accessor<E>>) -> &accessor::Accessor<E> {
         &self.accessors[index.0 as usize]
     }
 
-    /// Returns all accessors as a slice
+    /// Returns all accessors as a slice.
     pub fn accessors(&self) -> &[accessor::Accessor<E>] {
         &self.accessors
     }
 
-    /// Returns the animation at the given index
+    /// Returns the animation at the given index.
     pub fn animation(&self, index: Index<animation::Animation<E>>) -> &animation::Animation<E> {
         &self.animations[index.0 as usize]
     }
 
-    /// Returns all animations as a slice
+    /// Returns all animations as a slice.
     pub fn animations(&self) -> &[animation::Animation<E>] {
         &self.animations
     }
 
-    /// Returns the metadata included with this asset
+    /// Returns the metadata included with this asset.
     pub fn asset(&self) -> &asset::Asset<E> {
         &self.asset
     }
 
-    /// Returns the buffer at the given index
+    /// Returns the buffer at the given index.
     pub fn buffer(&self, index: Index<buffer::Buffer<E>>) -> &buffer::Buffer<E> {
         &self.buffers[index.0 as usize]
     }
 
-    /// Returns all buffers as a slice
+    /// Returns all buffers as a slice.
     pub fn buffers(&self) -> &[buffer::Buffer<E>] {
         &self.buffers
     }
 
-    /// Returns the buffer view at the given index
+    /// Returns the buffer view at the given index.
     pub fn buffer_view(&self, index: Index<buffer::BufferView<E>>) -> &buffer::BufferView<E> {
         &self.buffer_views[index.0 as usize]
     }
 
-    /// Returns all buffer views as a slice
+    /// Returns all buffer views as a slice.
     pub fn buffer_views(&self) -> &[buffer::BufferView<E>] {
         &self.buffer_views
     }
 
-    /// Returns the camera at the given index
+    /// Returns the camera at the given index.
     pub fn camera(&self, index: Index<camera::Camera<E>>) -> &camera::Camera<E> {
         &self.cameras[index.0 as usize]
     }
 
-    /// Returns all cameras as a slice
+    /// Returns all cameras as a slice.
     pub fn cameras(&self) -> &[camera::Camera<E>] {
         &self.cameras
     }
 
-    /// Returns the default scene
+    /// Returns the default scene.
     pub fn default_scene(&self) -> &scene::Scene<E> {
         self.get(&self.default_scene)
     }
 
-    /// Returns the extensions referenced in this .gltf file
+    /// Returns the extensions referenced in this .gltf file.
     pub fn extensions_used(&self) -> &[String] {
         &self.extensions_used
     }
 
-    /// Returns the extensions required to load and render this asset
+    /// Returns the extensions required to load and render this asset.
     pub fn extensions_required(&self) -> &[String] {
         &self.extensions_required
     }
 
-    /// Returns a single item from the root object
+    /// Returns a single item from the root object.
     pub fn get<T>(&self, index: &Index<T>) -> &T
         where Self: Get<T>
     {
         (self as &Get<T>).get(index)
     }
 
-    /// Returns a single item from the root object if the index is in range
+    /// Returns a single item from the root object if the index is in range.
     // N.B. this is hidden from the docs because it's only necessary for
-    // validation during `import()`
+    // validation during `import()`.
     #[doc(hidden)]
     pub fn try_get<T>(&self, index: &Index<T>) -> Result<&T, ()>
         where Self: TryGet<T>
@@ -192,42 +192,42 @@ impl<E: Extras> Root<E> {
         (self as &TryGet<T>).try_get(index)
     }
 
-    /// Returns the image at the given index
+    /// Returns the image at the given index.
     pub fn image(&self, index: Index<image::Image<E>>) -> &image::Image<E> {
         &self.images[index.0 as usize]
     }
 
-    /// Returns all images as a slice
+    /// Returns all images as a slice.
     pub fn images(&self) -> &[image::Image<E>] {
         &self.images
     }
 
-    /// Returns the material at the given index
+    /// Returns the material at the given index.
     pub fn material(&self, index: Index<material::Material<E>>) -> &material::Material<E> {
         &self.materials[index.0 as usize]
     }
 
-    /// Returns all materials as a slice
+    /// Returns all materials as a slice.
     pub fn materials(&self) -> &[material::Material<E>] {
         &self.materials
     }
 
-    /// Returns the mesh at the given index
+    /// Returns the mesh at the given index.
     pub fn mesh(&self, index: Index<mesh::Mesh<E>>) -> &mesh::Mesh<E> {
         &self.meshes[index.0 as usize]
     }
 
-    /// Returns all meshes as a slice
+    /// Returns all meshes as a slice.
     pub fn meshes(&self) -> &[mesh::Mesh<E>] {
         &self.meshes
     }
 
-    /// Returns the node at the given index
+    /// Returns the node at the given index.
     pub fn node(&self, index: Index<scene::Node<E>>) -> &scene::Node<E> {
         &self.nodes[index.0 as usize]
     }
 
-    /// Returns all nodes as a slice
+    /// Returns all nodes as a slice.
     pub fn nodes(&self) -> &[scene::Node<E>] {
         &self.nodes
     }
@@ -260,59 +260,59 @@ impl<E: Extras> Root<E> {
         Ok(())
     }
 
-    /// Returns the sampler at the given index
+    /// Returns the sampler at the given index.
     pub fn sampler(&self, index: Index<texture::Sampler<E>>) -> &texture::Sampler<E> {
         &self.samplers[index.0 as usize]
     }
 
-    /// Returns all samplers as a slice
+    /// Returns all samplers as a slice.
     pub fn samplers(&self) -> &[texture::Sampler<E>] {
         &self.samplers
     }
 
-    /// Returns the scene at the given index
+    /// Returns the scene at the given index.
     pub fn scene(&self, index: Index<scene::Scene<E>>) -> &scene::Scene<E> {
         &self.scenes[index.0 as usize]
     }
 
-    /// Returns all scenes as a slice
+    /// Returns all scenes as a slice.
     pub fn scenes(&self) -> &[scene::Scene<E>] {
         &self.scenes
     }
 
-    /// Returns the skin at the given index
+    /// Returns the skin at the given index.
     pub fn skin(&self, index: Index<skin::Skin<E>>) -> &skin::Skin<E> {
         &self.skins[index.0 as usize]
     }
 
-    /// Returns all skins as a slice
+    /// Returns all skins as a slice.
     pub fn skins(&self) -> &[skin::Skin<E>] {
         &self.skins
     }
 
-    /// Returns the texture at the given index
+    /// Returns the texture at the given index.
     pub fn texture(&self, index: Index<texture::Texture<E>>) -> &texture::Texture<E> {
         &self.textures[index.0 as usize]
     }
 
-    /// Returns all textures as a slice
+    /// Returns all textures as a slice.
     pub fn textures(&self) -> &[texture::Texture<E>] {
         &self.textures
     }
 
-    /// Returns the root tree iterator
+    /// Returns the root tree iterator.
     pub fn tree<'a>(&'a self) -> tree::Root<'a, E> {
         tree::Root::new(self)
     }
 }
 
 impl<T> Index<T> {
-    /// Creates a new `Index` representing an offset into an array containing `T`
+    /// Creates a new `Index` representing an offset into an array containing `T`.
     fn new(value: u32) -> Self {
         Index(value, std::marker::PhantomData)
     }
 
-    /// Returns the internal offset value
+    /// Returns the internal offset value.
     pub fn value(&self) -> u32 {
         self.0
     }

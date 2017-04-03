@@ -10,38 +10,38 @@ use std::collections::HashMap;
 use serde_json::Value;
 use v1::Extras;
 
-/// An untyped JSON object
+/// An untyped JSON object.
 pub type UntypedJsonObject = HashMap<String, Value>;
 
-/// The material appearance of a primitive
+/// The material appearance of a primitive.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Material<E: Extras> {
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: MaterialExtensions,
 
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::Material,
     
-    /// The user-defined name of this object
+    /// The user-defined name of this object.
     pub name: Option<String>,
 
-    /// The ID of the technique
+    /// The ID of the technique.
     ///
     /// If this is not supplied, and no extension is present that defines
     /// material properties, then the primitive should be rendered using a
-    /// default material with 50% gray emissive color
+    /// default material with 50% gray emissive color.
     pub technique: Option<String>,
 
-    /// An untyped dictionary object of parameter values
+    /// An untyped dictionary object of parameter values.
     ///
     /// Parameters with the same name as the technique's parameter override the
-    /// technique's parameter value
+    /// technique's parameter value.
     pub values: UntypedJsonObject,
 }
 
-/// Extension specific data for `Material`
+/// Extension specific data for `Material`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct MaterialExtensions {
     #[serde(default)]

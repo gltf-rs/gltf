@@ -12,97 +12,97 @@ use serde::export::fmt::Debug;
 use serde_json;
 use std;
 
-/// Defines a family of user-defined data structures to be (de)serialized
+/// Defines a family of user-defined data structures to be (de)serialized.
 pub trait Extras: Clone + Debug + Default + Deserialize + Serialize {
-    /// `Extras` type for `Root`
+    /// `Extras` type for `Root`.
     type Root: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `accessor::Accessor`
+    /// `Extras` type for `accessor::Accessor`.
     type Accessor: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `asset::Asset`
+    /// `Extras` type for `asset::Asset`.
     type Asset: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `asset::Profile`
+    /// `Extras` type for `asset::Profile`.
     type AssetProfile: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `animation::Animation`
+    /// `Extras` type for `animation::Animation`.
     type Animation: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `animation::Channel`
+    /// `Extras` type for `animation::Channel`.
     type AnimationChannel: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `animation::Sampler`
+    /// `Extras` type for `animation::Sampler`.
     type AnimationSampler: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `animation::Target`
+    /// `Extras` type for `animation::Target`.
     type AnimationTarget: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `buffer::Buffer`
+    /// `Extras` type for `buffer::Buffer`.
     type Buffer: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `buffer::BufferView`
+    /// `Extras` type for `buffer::BufferView`.
     type BufferView: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `camera::Camera`
+    /// `Extras` type for `camera::Camera`.
     type Camera: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `camera::Orthographic`
+    /// `Extras` type for `camera::Orthographic`.
     type CameraOrthographic: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `camera::Perspective`
+    /// `Extras` type for `camera::Perspective`.
     type CameraPerspective: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `image::Image`
+    /// `Extras` type for `image::Image`.
     type Image: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `material::Material`
+    /// `Extras` type for `material::Material`.
     type Material: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `mesh::Mesh`
+    /// `Extras` type for `mesh::Mesh`.
     type Mesh: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `mesh::Primitive`
+    /// `Extras` type for `mesh::Primitive`.
     type MeshPrimitive: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `scene::Node`
+    /// `Extras` type for `scene::Node`.
     type Node: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `program::Program`
+    /// `Extras` type for `program::Program`.
     type Program: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `texture::Sampler`
+    /// `Extras` type for `texture::Sampler`.
     type Sampler: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `scene::Scene`
+    /// `Extras` type for `scene::Scene`.
     type Scene: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `shader::Shader`
+    /// `Extras` type for `shader::Shader`.
     type Shader: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `skin::Skin`
+    /// `Extras` type for `skin::Skin`.
     type Skin: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `technique::Technique`
+    /// `Extras` type for `technique::Technique`.
     type Technique: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `technique::State`
+    /// `Extras` type for `technique::State`.
     type TechniqueState: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `technique::Function`
+    /// `Extras` type for `technique::Function`.
     type TechniqueFunction: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `technique::Parameter`
+    /// `Extras` type for `technique::Parameter`.
     type TechniqueParameter: Clone + Debug + Default + Deserialize + Serialize;
 
-    /// `Extras` type for `texture::Texture`
+    /// `Extras` type for `texture::Texture`.
     type Texture: Clone + Debug + Default + Deserialize + Serialize;
 }
 
-/// Untyped JSON object
+/// Untyped JSON object.
 pub type UntypedJsonObject = std::collections::HashMap<String, serde_json::Value>;
 
-/// Type representing any user-defined data whatsoever
+/// Type representing any user-defined data whatsoever.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Any;
 
@@ -137,7 +137,7 @@ impl Extras for Any {
     type Texture = UntypedJsonObject;
 }
 
-/// Type representing no user-defined data
+/// Type representing no user-defined data.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct None {
     #[serde(default)]

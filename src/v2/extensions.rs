@@ -7,9 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-/// Names of glTF 2.0 extensions enabled by the user
+/// Names of glTF 2.0 extensions enabled by the user.
 pub const ENABLED_EXTENSIONS: &'static [&'static str] = &[];
 
-/// Names of glTF 2.0 extensions supported by the library
+/// Names of glTF 2.0 extensions supported by the library.
 pub const SUPPORTED_EXTENSIONS: &'static [&'static str] = &[];
 

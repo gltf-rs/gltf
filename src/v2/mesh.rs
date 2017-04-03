@@ -84,7 +84,7 @@ pub struct Primitive<E: Extras> {
     
     /// Maps attribute names (only `"POSITION"` and `"NORMAL"`) to their
     /// deviations in the morph target.
-    // TODO: Confirm that this the correct implementation
+    // TODO: Confirm that this the correct implementation.
     #[serde(default)]
     pub targets: Vec<HashMap<String, Index<accessor::Accessor<E>>>>,
 }

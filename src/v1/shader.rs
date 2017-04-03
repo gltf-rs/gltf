@@ -15,32 +15,32 @@ enum_number! {
     }
 }
 
-/// A vertex or fragment shader
+/// A vertex or fragment shader.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Shader<E: Extras> {
-    /// The uri of the GLSL source
+    /// The uri of the GLSL source.
     ///
-    /// Relative paths are relative to the .gltf file
+    /// Relative paths are relative to the .gltf file.
     pub uri: String,
 
-    /// The shader stage
+    /// The shader stage.
     #[serde(default)]
     #[serde(rename = "type")]
     pub kind: ShaderType,
 
-    /// The user-defined name of this object
+    /// The user-defined name of this object.
     pub name: Option<String>,
 
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: ShaderExtensions,
 
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::Shader,
 }
 
-/// Extension specific data for `Shader`
+/// Extension specific data for `Shader`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct ShaderExtensions {
     #[serde(default)]

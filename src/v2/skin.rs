@@ -9,41 +9,41 @@
 
 use v2::{accessor, scene, Extras, Index, Root};
 
-/// Joints and matrices defining a skin
+/// Joints and matrices defining a skin.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Skin<E: Extras> {
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: SkinExtensions,
     
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::Skin,
     
-    /// The index of the accessor containing the 4x4 inverse-bind matrices
+    /// The index of the accessor containing the 4x4 inverse-bind matrices.
     ///
     /// When `None`,each matrix is assumed to be the 4x4 identity matrix
-    /// which implies that the inverse-bind matrices were pre-applied
+    /// which implies that the inverse-bind matrices were pre-applied.
     #[serde(rename = "inverseBindMatrices")]
     pub inverse_bind_matrices: Option<Index<accessor::Accessor<E>>>,
     
-    /// Indices of skeleton nodes used as joints in this skin
+    /// Indices of skeleton nodes used as joints in this skin.
     ///
     /// The array length must be the same as the `count` property of the
-    /// `inverse_bind_matrices` `Accessor` (when defined)
+    /// `inverse_bind_matrices` `Accessor` (when defined).
     pub joints: Vec<Index<scene::Node<E>>>,
     
-    /// Optional user-defined name for this object
+    /// Optional user-defined name for this object.
     pub name: Option<String>,
     
-    /// The index of the node used as a skeleton root
+    /// The index of the node used as a skeleton root.
     ///
-    /// When `None`, joints transforms resolve to scene root
+    /// When `None`, joints transforms resolve to scene root.
     pub skeleton: Option<Index<scene::Node<E>>>,
 }
 
-/// Extension specific data for `Skin`
+/// Extension specific data for `Skin`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct SkinExtensions {
     #[serde(default)]

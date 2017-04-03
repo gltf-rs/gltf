@@ -8,57 +8,57 @@
 
 use v1::Extras;
 
-/// Metadata about the glTF asset
+/// Metadata about the glTF asset.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Asset<E: Extras> {
-    /// A copyright message suitable for display to credit the content creator
+    /// A copyright message suitable for display to credit the content creator.
     pub copyright: Option<String>,
 
-    /// Tool that generated this glTF model
+    /// Tool that generated this glTF model.
     pub generator: Option<String>,
 
-    /// Specifies if the shaders were generated with pre-multiplied alpha
+    /// Specifies if the shaders were generated with pre-multiplied alpha.
     #[serde(default, rename = "premultipliedAlpha")]
     pub pre_multiplied_alpha: bool,
 
-    /// Specifies the target rendering API and version
+    /// Specifies the target rendering API and version.
     pub profile: AssetProfile<E>,
 
-    /// The glTF version
+    /// The glTF version.
     pub version: String,
 
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: AssetExtensions,
 
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::Asset,
 }
 
-/// Extension specific data for `Asset`
+/// Extension specific data for `Asset`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct AssetExtensions {
     #[serde(default)]
     _allow_extra_fields: (),
 }
 
-/// Specifies the target rendering API and version
+/// Specifies the target rendering API and version.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct AssetProfile<E: Extras> {
-    /// Specifies the target rendering API
+    /// Specifies the target rendering API.
     #[serde(default = "asset_profile_api_default")]
     pub api: String,
 
-    /// The API version
+    /// The API version.
     #[serde(default = "asset_profile_version_default")]
     pub version: String, 
 
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: AssetProfileExtensions,
 
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::AssetProfile,
 }
@@ -71,7 +71,7 @@ fn asset_profile_version_default() -> String {
     "1.0.3".to_string()
 }
 
-/// Extension specific data for `AssetProfile`
+/// Extension specific data for `AssetProfile`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct AssetProfileExtensions {
     #[serde(default)]

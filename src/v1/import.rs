@@ -11,29 +11,29 @@ use serde_json;
 use std;
 use v1::{Extras, Root};
 
-/// Error encountered when loading a glTF asset
+/// Error encountered when loading a glTF asset.
 #[derive(Debug)]
 pub enum ImportError {
-    /// Failure when deserializing a .gltf metadata file
+    /// Failure when deserializing a .gltf metadata file.
     Deserialize(serde_json::error::Error),
 
-    /// A glTF extension required by the asset has not been enabled by the user
+    /// A glTF extension required by the asset has not been enabled by the user.
     ExtensionDisabled(String),
 
-    /// A glTF extension required by the asset is not supported by the library
+    /// A glTF extension required by the asset is not supported by the library.
     ExtensionUnsupported(String),
 
-    /// The .gltf data is invalid
+    /// The .gltf data is invalid.
     Invalid(String),
 
-    /// Standard input / output error
+    /// Standard input / output error.
     Io(std::io::Error),
 
-    /// The glTF version of the asset is incompatible with this function
+    /// The glTF version of the asset is incompatible with this function.
     IncompatibleVersion(String),
 }
 
-/// Imports a binary glTF 1.0 asset
+/// Imports a binary glTF 1.0 asset.
 #[cfg(feature = "KHR_binary_glTF")]
 fn import_binary_gltf<S, E>(mut stream: S) -> Result<Root<E>, ImportError>
     where S: std::io::Read, E: Extras
@@ -80,7 +80,7 @@ fn import_binary_gltf<S, E>(mut stream: S) -> Result<Root<E>, ImportError>
     Ok(root)
 }
 
-/// Imports a binary glTF 1.0 asset
+/// Imports a binary glTF 1.0 asset.
 #[cfg(not(feature = "KHR_binary_glTF"))]
 fn import_binary_gltf<S, E>(_stream: S) -> Result<Root<E>, ImportError>
     where S: std::io::Read, E: Extras
@@ -88,7 +88,7 @@ fn import_binary_gltf<S, E>(_stream: S) -> Result<Root<E>, ImportError>
     return Err(ImportError::ExtensionDisabled("KHR_binary_glTF".to_string()));
 }
 
-/// Imports a standard (plain text JSON) glTF 1.0 asset
+/// Imports a standard (plain text JSON) glTF 1.0 asset.
 fn import_standard_gltf<E>(data: Vec<u8>) -> Result<Root<E>, ImportError>
     where E: Extras
 {
@@ -97,7 +97,7 @@ fn import_standard_gltf<E>(data: Vec<u8>) -> Result<Root<E>, ImportError>
     Ok(root)
 }
 
-/// Imports a glTF 1.0 asset
+/// Imports a glTF 1.0 asset.
 pub fn import<P, E>(path: P) -> Result<Root<E>, ImportError>
     where P: AsRef<std::path::Path>, E: Extras
 {

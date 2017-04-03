@@ -52,37 +52,37 @@ enum_number! {
     }
 }
 
-/// Texture sampler properties for filtering and wrapping modes
+/// Texture sampler properties for filtering and wrapping modes.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Sampler<E: Extras> {
-    /// Magnification filter
+    /// Magnification filter.
     #[serde(rename = "magFilter")]
     #[serde(default = "sample_mag_filter_default")]
     pub mag_filter: Filter,
 
-    /// Minification filter
+    /// Minification filter.
     #[serde(rename = "minFilter")]
     #[serde(default = "sample_min_filter_default")]
     pub min_filter: Filter,
 
-    /// `s` wrapping mode
+    /// `s` wrapping mode.
     #[serde(rename = "wrapS")]
     #[serde(default = "sample_wrap_s_default")]
     pub wrap_s: Wrap,
 
-    /// `t` wrapping mode
+    /// `t` wrapping mode.
     #[serde(rename = "wrapT")]
     #[serde(default = "sample_wrap_t_default")]
     pub wrap_t: Wrap,
 
-    /// The user-defined name of this object
+    /// The user-defined name of this object.
     pub name: Option<String>,
 
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: SamplerExtensions,
 
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::Sampler,
 }
@@ -103,53 +103,53 @@ fn sample_wrap_t_default() -> Wrap {
     Wrap::Repeat
 }
 
-/// Extension specific data for `Sampler`
+/// Extension specific data for `Sampler`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct SamplerExtensions {
     #[serde(default)]
     _allow_extra_fields: (),
 }
 
-/// A texture and its sampler
+/// A texture and its sampler.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Texture<E: Extras> {
-    /// The texture's format
+    /// The texture's format.
     #[serde(default)]
     pub format: Format,
 
-    /// The texture's internal format
+    /// The texture's internal format.
     #[serde(rename = "internalFormat")]
     #[serde(default)]
     pub internal_format: Format,
 
-    /// The ID of the sampler used by this texture
+    /// The ID of the sampler used by this texture.
     pub sampler: String,
 
-    /// The ID of the image used by this texture
+    /// The ID of the image used by this texture.
     pub source: String,
 
-    /// The target that the WebGL texture should be bound to
+    /// The target that the WebGL texture should be bound to.
     #[serde(default)]
     pub target: Target,
 
-    /// Texel datatype
+    /// Texel datatype.
     #[serde(rename = "type")]
     #[serde(default)]
     pub kind: TexelType,
 
-    /// The user-defined name of this object
+    /// The user-defined name of this object.
     pub name: Option<String>,
 
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: TextureExtensions,
 
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::Texture,
 }
 
-/// Extension specific data for `Texture`
+/// Extension specific data for `Texture`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct TextureExtensions {
     #[serde(default)]

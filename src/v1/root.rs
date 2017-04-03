@@ -2,44 +2,44 @@
 use std::collections::HashMap;
 use v1::*;
 
-/// Extension specific data structures for `Root`
+/// Extension specific data structures for `Root`.
 pub mod extensions {
-    /// Header format for binary glTF (without the initial magic string)
+    /// Header format for binary glTF (without the initial magic string).
     #[cfg(feature = "KHR_binary_glTF")]
     #[derive(Clone, Debug)]
     #[repr(C)]
     pub struct KhrBinaryGltfHeader {
-        /// The binary glTF version number
+        /// The binary glTF version number.
         pub version: u32,
         
         /// The total length of the binary glTF in bytes, including the
-        /// header, content and body
+        /// header, content and body.
         pub length: u32,
         
-        /// The length in bytes of the glTF content
+        /// The length in bytes of the glTF content.
         pub content_length: u32,
         
-        /// Specifies the format of the glTF content
+        /// Specifies the format of the glTF content.
         ///
-        /// Must be 0 (JSON)
+        /// Must be 0 (JSON).
         pub content_format: u32,
     }
 
     #[cfg(feature = "KHR_binary_glTF")]
     #[derive(Clone, Debug)]
     pub struct KhrBinaryGltf {          
-        /// The internal binary glTF data
+        /// The internal binary glTF data.
         pub body: Vec<u8>,
         
-        /// The binary glTF equivalent of the .gltf file
+        /// The binary glTF equivalent of the .gltf file.
         pub content: Vec<u8>,
 
-        /// The binary glTF header (without the initial magic string)
+        /// The binary glTF header (without the initial magic string).
         pub header: KhrBinaryGltfHeader,
     }
 }
 
-/// The root object for a glTF 1.0 asset
+/// The root object for a glTF 1.0 asset.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Root<E: Extras> {
     /// A dictionary object of accessor objects.
@@ -178,19 +178,19 @@ pub struct Root<E: Extras> {
     #[serde(default)]
     pub textures: HashMap<String, texture::Texture<E>>,
 
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: RootExtensions,
 
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::Root,
 }
 
-/// Extension specific data for `Root`
+/// Extension specific data for `Root`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct RootExtensions {
-    /// Owns the binary encoded data for binary glTF 1.0 assets
+    /// Owns the binary encoded data for binary glTF 1.0 assets.
     #[cfg(feature = "KHR_binary_glTF")]
     #[serde(skip_deserializing, skip_serializing)]
     pub khr_binary_gltf: Option<extensions::KhrBinaryGltf>,

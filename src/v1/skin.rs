@@ -8,38 +8,38 @@
 
 use v1::Extras;
 
-/// Joints and matrices defining a skin
+/// Joints and matrices defining a skin.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Skin<E: Extras> {
-    /// 4x4 transformation matrix stored in column-major order
+    /// 4x4 transformation matrix stored in column-major order.
     #[serde(default = "skin_bind_shape_matrix")]
     #[serde(rename = "bindShapeMatrix")]
     pub bind_shape_matrix: [f32; 16],
 
     /// The ID of the accessor containing the floating-point 4x4 inverse-bind
-    /// matrices
+    /// matrices.
     #[serde(rename = "inverseBindMatrices")]
     pub inverse_bind_matrices: Option<String>,
 
     /// Joint names of the joints (nodes with a joint_name property) in this
-    /// skin
+    /// skin.
     ///
     /// The array length is the same as the count property of the
     /// inverse_bind_matrices accessor, and the same as the total quantity of
     /// all skeleton nodes from node-trees referenced by the skinned mesh
-    /// instance node's skeletons array
+    /// instance node's skeletons array.
     #[serde(default)]
     #[serde(rename = "jointNames")]
     pub join_names: Vec<String>,
 
-    /// The user-defined name of this object
+    /// The user-defined name of this object.
     pub name: Option<String>,
 
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: SkinExtensions,
 
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::Skin,
 }
@@ -53,7 +53,7 @@ fn skin_bind_shape_matrix() -> [f32; 16] {
     ]
 }
 
-/// Extension specific data for `Skin`
+/// Extension specific data for `Skin`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct SkinExtensions {
     #[serde(default)]

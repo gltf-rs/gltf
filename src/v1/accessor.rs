@@ -33,67 +33,67 @@ enum_string! {
     }
 }
 
-/// A typed view into a `BufferView`
+/// A typed view into a `BufferView`.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Accessor<E: Extras> {
-    /// The ID of the bufferView
+    /// The ID of the bufferView.
     #[serde(rename = "bufferView")]
     pub buffer_view: String,
 
-    /// The offset relative to the start of the `BufferView` in bytes
+    /// The offset relative to the start of the `BufferView` in bytes.
     ///
-    /// This must be a multiple of the size of the data type
+    /// This must be a multiple of the size of the data type.
     #[serde(rename = "byteOffset")]
     pub byte_offset: u32,
 
-    /// The stride, in bytes, between attributes referenced by this accessor
+    /// The stride, in bytes, between attributes referenced by this accessor.
     ///
-    /// When this is zero, the attributes are assumed to be tightly packed
+    /// When this is zero, the attributes are assumed to be tightly packed.
     #[serde(rename = "byteStride")]
     #[serde(default)]
     pub byte_stride: u32,
 
-    /// The data type of components in the attribute
+    /// The data type of components in the attribute.
     #[serde(rename = "componentType")]
     pub component_type: ComponentType,
 
     /// The number of attributes referenced by this accessor, not to be confused
-    /// with the number of bytes or number of components
+    /// with the number of bytes or number of components.
     pub count: u32,
 
     /// Specifies if the attribute is a scalar, vector, or matrix, and the
-    /// number of elements in the vector or matrix
+    /// number of elements in the vector or matrix.
     #[serde(rename = "type")]
     #[serde(default)]
     pub kind: Kind,
 
-    /// Maximum value of each component in this attribute
+    /// Maximum value of each component in this attribute.
     ///
     /// When both min and max arrays are defined, they have the same length. The
     /// length is determined by the value of the type property; it can be 1, 2,
-    /// 3, 4, 9, or 16
+    /// 3, 4, 9, or 16.
     pub max: Option<Vec<f32>>,
 
-    /// Minimum value of each component in this attribute
+    /// Minimum value of each component in this attribute.
     ///
     /// When both min and max arrays are defined, they have the same length. The
     /// length is determined by the value of the type property; it can be 1, 2,
-    /// 3, 4, 9, or 16
+    /// 3, 4, 9, or 16.
     pub min: Option<Vec<f32>>,
 
-    /// Optional user-defined name of this object
+    /// Optional user-defined name of this object.
     pub name: Option<String>,
 
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: AccessorExtensions,
 
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::Accessor,
 }
 
-/// Extension specific data for `Accessor`
+/// Extension specific data for `Accessor`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct AccessorExtensions {
     #[serde(default)]

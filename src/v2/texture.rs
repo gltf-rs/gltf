@@ -60,39 +60,39 @@ enum_number! {
     }
 }
 
-/// Texture sampler properties for filtering and wrapping modes
+/// Texture sampler properties for filtering and wrapping modes.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Sampler<E: Extras> {
-    /// Magnification filter
+    /// Magnification filter.
     #[serde(default, rename = "magFilter")]
     pub mag_filter: MagFilter,
 
-    /// Minification filter
+    /// Minification filter.
     #[serde(default, rename = "minFilter")]
     pub min_filter: MinFilter,
 
-    /// Optional user-defined name for this object
+    /// Optional user-defined name for this object.
     pub name: Option<String>,
 
-    /// `s` wrapping mode
+    /// `s` wrapping mode.
     #[serde(default, rename = "wrapS")]
     pub wrap_s: WrappingMode,
 
-    /// `t` wrapping mode
+    /// `t` wrapping mode.
     #[serde(default, rename = "wrapT")]
     pub wrap_t: WrappingMode,
 
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: SamplerExtensions,
 
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::Sampler,
 }
 
-/// Extension specific data for `Sampler`
+/// Extension specific data for `Sampler`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct SamplerExtensions {
     #[serde(default)]
@@ -102,41 +102,41 @@ pub struct SamplerExtensions {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Texture<E: Extras> {
-    /// Texel data type
+    /// Texel data type.
     #[serde(default, rename = "type")]
     pub data_type: DataType,
 
-    /// Optional user-defined name for this object
+    /// Optional user-defined name for this object.
     pub name: Option<String>,
 
-    /// The texture format
+    /// The texture format.
     #[serde(default)]
     pub format: Format,
 
-    /// The texture internal format
+    /// The texture internal format.
     #[serde(default, rename = "internalFormat")]
     pub internal_format: Format,
 
-    /// The index of the sampler used by this texture
+    /// The index of the sampler used by this texture.
     pub sampler: Index<Sampler<E>>,
 
-    /// The index of the image used by this texture
+    /// The index of the image used by this texture.
     pub source: Index<image::Image<E>>,
 
-    /// The target the texture should be bound to
+    /// The target the texture should be bound to.
     #[serde(default)]
     pub target: Target,
 
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: TextureExtensions,
 
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::Texture,
 }
 
-/// Extension specific data for `Texture`
+/// Extension specific data for `Texture`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct TextureExtensions {
     #[serde(default)]
@@ -146,25 +146,25 @@ pub struct TextureExtensions {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-/// Reference to a `Texture`
+/// Reference to a `Texture`.
 pub struct TextureInfo<E: Extras> {
-    /// The index of the texture
+    /// The index of the texture.
     pub index: Index<Texture<E>>,
 
-    /// The set index of the texture's `TEXCOORD` attribute
+    /// The set index of the texture's `TEXCOORD` attribute.
     #[serde(default, rename = "texCoord")]
     pub tex_coord: u32,
 
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: TextureInfoExtensions,
 
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::TextureInfo,
 }
 
-/// Extension specific data for `TextureInfo`
+/// Extension specific data for `TextureInfo`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct TextureInfoExtensions {
     #[serde(default)]

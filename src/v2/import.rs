@@ -11,29 +11,29 @@ use serde_json;
 use std;
 use v2::{Extras, Root};
 
-/// Error encountered when importing a glTF 2.0 asset
+/// Error encountered when importing a glTF 2.0 asset.
 #[derive(Debug)]
 pub enum ImportError {
-    /// Failure when deserializing a .gltf metadata file
+    /// Failure when deserializing a .gltf metadata file.
     Deserialize(serde_json::error::Error),
     
-    /// A glTF extension required by the asset has not been enabled by the user
+    /// A glTF extension required by the asset has not been enabled by the user.
     ExtensionDisabled(String),
     
-    /// A glTF extension required by the asset is not supported by the library
+    /// A glTF extension required by the asset is not supported by the library.
     ExtensionUnsupported(String),
     
-    /// The .gltf data is invalid
+    /// The .gltf data is invalid.
     Invalid(String),
     
-    /// Standard input / output error
+    /// Standard input / output error.
     Io(std::io::Error),
     
-    /// The glTF version of the asset is incompatible with this function
+    /// The glTF version of the asset is incompatible with this function.
     IncompatibleVersion(String),
 }
 
-/// Imports a standard (plain text JSON) glTF 2.0 asset
+/// Imports a standard (plain text JSON) glTF 2.0 asset.
 fn import_standard_gltf<E>(data: Vec<u8>) -> Result<Root<E>, ImportError>
     where E: Extras
 {
@@ -42,7 +42,7 @@ fn import_standard_gltf<E>(data: Vec<u8>) -> Result<Root<E>, ImportError>
     Ok(root)
 }
 
-/// Imports a glTF 2.0 asset
+/// Imports a glTF 2.0 asset.
 pub fn import<P, E>(path: P) -> Result<Root<E>, ImportError>
     where P: AsRef<std::path::Path>,
           E: Extras
