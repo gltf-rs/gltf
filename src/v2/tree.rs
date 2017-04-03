@@ -51,7 +51,7 @@ pub struct Scene<'a, E: 'a + Extras> {
 
 /// An `Iterator` that visits the children of a node.
 #[derive(Debug)]
-pub struct WalkChildNodes<'a, E: 'a + Extras> {
+pub struct IterChildNodes<'a, E: 'a + Extras> {
     index: usize,
     parent: &'a Node<'a, E>,
     root: &'a v2::root::Root<E>,
@@ -59,7 +59,7 @@ pub struct WalkChildNodes<'a, E: 'a + Extras> {
 
 /// An `Iterator` that visits every node in a scene.
 #[derive(Debug)]
-pub struct WalkNodes<'a, E: 'a + Extras> {
+pub struct IterNodes<'a, E: 'a + Extras> {
     index: usize,
     root: &'a v2::root::Root<E>,
     scene: &'a v2::scene::Scene<E>,
@@ -67,7 +67,7 @@ pub struct WalkNodes<'a, E: 'a + Extras> {
 
 /// An `Iterator` that visits every scene in a glTF asset.
 #[derive(Debug)]
-pub struct WalkScenes<'a, E: 'a + Extras> {
+pub struct IterScenes<'a, E: 'a + Extras> {
     index: usize,
     root: &'a v2::root::Root<E>,
 }
@@ -99,8 +99,8 @@ impl<'a, E: 'a + Extras> Node<'a, E> {
     }
 
     /// Returns an `Iterator` that visits every child node.
-    pub fn walk_child_nodes(&'a self) -> WalkChildNodes<'a, E> {
-        WalkChildNodes {
+    pub fn iter_child_nodes(&'a self) -> IterChildNodes<'a, E> {
+        IterChildNodes {
             index: 0,
             parent: self,
             root: self.root,            
@@ -122,9 +122,9 @@ impl<'a, E: 'a + Extras> Root<'a, E> {
         }
     }
 
-    /// Returns an `Iterator` that walks the scenes of the glTF asset.
-    pub fn walk_scenes(&'a self) -> WalkScenes<'a, E> {
-        WalkScenes {            
+    /// Returns an `Iterator` that iters the scenes of the glTF asset.
+    pub fn iter_scenes(&'a self) -> IterScenes<'a, E> {
+        IterScenes {            
             index: 0,
             root: self.root,
         }
@@ -137,9 +137,9 @@ impl<'a, E: 'a + Extras> Scene<'a, E> {
         &self.scene
     }
 
-    /// Returns an `Iterator` that walks the root nodes in a scene.
-    pub fn walk_nodes(&'a self) -> WalkNodes<'a, E> {
-        WalkNodes {
+    /// Returns an `Iterator` that iters the root nodes in a scene.
+    pub fn iter_nodes(&'a self) -> IterNodes<'a, E> {
+        IterNodes {
             index: 0,
             root: self.root,
             scene: self.scene,
@@ -147,7 +147,7 @@ impl<'a, E: 'a + Extras> Scene<'a, E> {
     }
 }
 
-impl<'a, E: 'a + Extras> Iterator for WalkChildNodes<'a, E> {
+impl<'a, E: 'a + Extras> Iterator for IterChildNodes<'a, E> {
     type Item = Node<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         if self.index < self.parent.node.children.len() {
@@ -163,7 +163,7 @@ impl<'a, E: 'a + Extras> Iterator for WalkChildNodes<'a, E> {
     }
 }
 
-impl<'a, E: 'a + Extras> Iterator for WalkNodes<'a, E> {
+impl<'a, E: 'a + Extras> Iterator for IterNodes<'a, E> {
     type Item = Node<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         if self.index < self.scene.nodes.len() {
@@ -179,7 +179,7 @@ impl<'a, E: 'a + Extras> Iterator for WalkNodes<'a, E> {
     }
 }
 
-impl<'a, E: 'a + Extras> Iterator for WalkScenes<'a, E> {
+impl<'a, E: 'a + Extras> Iterator for IterScenes<'a, E> {
     type Item = Scene<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         if self.index < self.root.scenes().len() {

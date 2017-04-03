@@ -11,30 +11,20 @@ extern crate gltf;
 
 type Extras = gltf::v2::extras::None;
 
-fn walk_nodes(node: &gltf::v2::tree::Node<Extras>, level: u32) {
-    println!("Node");
-    for child in node.walk_child_nodes() {
-        walk_nodes(&child, level + 1);
-    }
-}
-
-fn walk_tree(root: &gltf::v2::tree::Root<Extras>) {
-    for scene in root.walk_scenes() {
-        if let Some(name) = scene.data().name.as_ref() {
-            println!("Scene \"{}\":", name);
-        } else {
-            println!("Unnamed scene");
-        };
-        for node in scene.walk_nodes() {
-            walk_nodes(&node, 1);
-        }
+fn visit_nodes(node: &gltf::v2::tree::Node<Extras>, level: u32) {
+    println!("Node {}", level);
+    for child in node.iter_child_nodes() {
+        visit_nodes(&child, level + 1);
     }
 }
 
 fn main() {
     let path = "glTF-Sample-Models/2.0/Lantern/glTF/Lantern.gltf";
-    let root = gltf::v2::import::<_, Extras>(path).unwrap();
-    let tree = root.tree();
-    walk_tree(&tree);
+    let gltf = gltf::v2::import::<_, Extras>(path).unwrap();
+    for scene in gltf.tree().iter_scenes() {
+        for node in scene.iter_nodes() {
+            visit_nodes(&node, 1);
+        }
+    }
 }
 
