@@ -20,7 +20,7 @@ fn walk_nodes(node: &gltf::v2::tree::Node<Extras>, level: u32) {
 
 fn walk_tree(root: &gltf::v2::tree::Root<Extras>) {
     for scene in root.walk_scenes() {
-        if let Some(name) = scene.name.as_ref() {
+        if let Some(name) = scene.data().name.as_ref() {
             println!("Scene \"{}\":", name);
         } else {
             println!("Unnamed scene");

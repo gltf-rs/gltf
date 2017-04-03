@@ -7,8 +7,16 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::ops::Deref;
 use v2::{self, Extras};
+
+/// A set of primitives to be rendered.
+///
+/// A node can contain one or more meshes and its transform places the meshes in
+/// the scene.
+#[derive(Debug)]
+pub struct Mesh<'a, E: 'a + Extras> {
+    root: &'a v2::root::Root<E>,
+}
 
 /// A node in the node hierarchy.  When the node contains `skin`, all
 /// `mesh.primitives` must contain `JOINT` and `WEIGHT` attributes.
@@ -23,15 +31,14 @@ use v2::{self, Extras};
 /// not be present.
 #[derive(Debug)]
 pub struct Node<'a, E: 'a + Extras> {
+    parent: Option<&'a Node<'a, E>>,
     root: &'a v2::root::Root<E>,
-    /// Deref
     node: &'a v2::scene::Node<E>,
 }
 
 /// The root object for a glTF asset.
 #[derive(Debug)]
 pub struct Root<'a, E: 'a + Extras> {
-    /// Deref
     root: &'a v2::root::Root<E>,
 }
 
@@ -39,19 +46,18 @@ pub struct Root<'a, E: 'a + Extras> {
 #[derive(Debug)]
 pub struct Scene<'a, E: 'a + Extras> {
     root: &'a v2::root::Root<E>,
-    /// Deref
     scene: &'a v2::scene::Scene<E>,
 }
 
-/// An `Iterator` that visits the children of a `Node`
+/// An `Iterator` that visits the children of a node.
 #[derive(Debug)]
 pub struct WalkChildNodes<'a, E: 'a + Extras> {
     index: usize,
-    parent: &'a v2::scene::Node<E>,
+    parent: &'a Node<'a, E>,
     root: &'a v2::root::Root<E>,
 }
 
-/// An `Iterator` that visits every node in a `Scene`
+/// An `Iterator` that visits every node in a scene.
 #[derive(Debug)]
 pub struct WalkNodes<'a, E: 'a + Extras> {
     index: usize,
@@ -59,7 +65,7 @@ pub struct WalkNodes<'a, E: 'a + Extras> {
     scene: &'a v2::scene::Scene<E>,
 }
 
-/// An `Iterator` that visits every scene in a glTF asset
+/// An `Iterator` that visits every scene in a glTF asset.
 #[derive(Debug)]
 pub struct WalkScenes<'a, E: 'a + Extras> {
     index: usize,
@@ -67,7 +73,32 @@ pub struct WalkScenes<'a, E: 'a + Extras> {
 }
 
 impl<'a, E: 'a + Extras> Node<'a, E> {
-    /// Returns an `Iterator` that visits every child node
+    /// Returns the camera referenced by this node.
+    pub fn camera(&'a self) -> Option<&'a v2::camera::Camera<E>> {
+        self.node.camera.as_ref().map(|index| self.root.get(index))
+    }
+
+    /// Returns the internal glTF object data.
+    pub fn data(&'a self) -> &'a v2::scene::Node<E> {
+        &self.node
+    }
+    
+    /// Returns the mesh referenced by this node.
+    pub fn mesh(&'a self) -> Option<&'a v2::mesh::Mesh<E>> {
+        self.node.mesh.as_ref().map(|index| self.root.get(index))
+    }
+
+    /// Returns this node's parent node.
+    pub fn parent(&'a self) -> Option<&'a Node<E>> {
+        self.parent
+    }
+    
+    /// Returns the skin referenced by this node.
+    pub fn skin(&'a self) -> Option<&'a v2::skin::Skin<E>> {
+        self.node.skin.as_ref().map(|index| self.root.get(index))
+    }
+
+    /// Returns an `Iterator` that visits every child node.
     pub fn walk_child_nodes(&'a self) -> WalkChildNodes<'a, E> {
         WalkChildNodes {
             index: 0,
@@ -77,14 +108,12 @@ impl<'a, E: 'a + Extras> Node<'a, E> {
     }
 }
 
-impl<'a, E: 'a + Extras> Deref for Node<'a, E> {
-    type Target = v2::scene::Node<E>;
-    fn deref(&self) -> &Self::Target {
-        self.node
-    }
-}
-
 impl<'a, E: 'a + Extras> Root<'a, E> {
+    /// Returns the internal glTF object data.
+    pub fn data(&'a self) -> &'a v2::root::Root<E> {
+        &self.root
+    }
+
     /// Returns a reference to the glTF root object that can be used to perform
     /// tree traversal operations.
     pub fn new(root: &'a v2::root::Root<E>) -> Self {
@@ -93,24 +122,22 @@ impl<'a, E: 'a + Extras> Root<'a, E> {
         }
     }
 
-    /// Returns an `Iterator` that walks the scenes of the glTF asset
+    /// Returns an `Iterator` that walks the scenes of the glTF asset.
     pub fn walk_scenes(&'a self) -> WalkScenes<'a, E> {
         WalkScenes {            
             index: 0,
-            root: self,
+            root: self.root,
         }
     }
 }
 
-impl<'a, E: 'a + Extras> Deref for Root<'a, E> {
-    type Target = v2::root::Root<E>;
-    fn deref(&self) -> &Self::Target {
-        self.root
-    }
-}
-
 impl<'a, E: 'a + Extras> Scene<'a, E> {
-    /// Returns an `Iterator` that walks the root nodes in a scene
+    /// Returns the internal glTF object data.
+    pub fn data(&'a self) -> &'a v2::scene::Scene<E> {
+        &self.scene
+    }
+
+    /// Returns an `Iterator` that walks the root nodes in a scene.
     pub fn walk_nodes(&'a self) -> WalkNodes<'a, E> {
         WalkNodes {
             index: 0,
@@ -120,21 +147,14 @@ impl<'a, E: 'a + Extras> Scene<'a, E> {
     }
 }
 
-impl<'a, E: 'a + Extras> Deref for Scene<'a, E> {
-    type Target = v2::scene::Scene<E>;
-    fn deref(&self) -> &Self::Target {
-        self.scene
-    }
-}
-
-
 impl<'a, E: 'a + Extras> Iterator for WalkChildNodes<'a, E> {
     type Item = Node<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.parent.children.len() {
+        if self.index < self.parent.node.children.len() {
             self.index += 1;
             Some(Node {
-                node: self.root.get(&self.parent.children[self.index - 1]),
+                node: self.root.get(&self.parent.node.children[self.index - 1]),
+                parent: Some(self.parent),
                 root: self.root,
             })
         } else {
@@ -150,6 +170,7 @@ impl<'a, E: 'a + Extras> Iterator for WalkNodes<'a, E> {
             self.index += 1;
             Some(Node {
                 node: self.root.get(&self.scene.nodes[self.index - 1]),
+                parent: None,
                 root: self.root,
             })
         } else {

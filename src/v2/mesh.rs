@@ -22,74 +22,74 @@ enum_number! {
     }
 }
 
-/// Extension specific data for `Mesh`
+/// Extension specific data for `Mesh`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct MeshExtensions {
     #[serde(default)]
     _allow_extra_fields: (),
 }
 
-/// A set of primitives to be rendered
+/// A set of primitives to be rendered.
 ///
 /// A node can contain one or more meshes and its transform places the meshes in
-/// the scene
+/// the scene.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Mesh<E: Extras> {
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: MeshExtensions,
     
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::Mesh,
     
-    /// Optional user-defined name for this object
+    /// Optional user-defined name for this object.
     pub name: Option<String>,
     
-    /// Defines the geometry to be renderered with a material
+    /// Defines the geometry to be renderered with a material.
     pub primitives: Vec<Primitive<E>>,
 
-    /// Defines the weights to be applied to the morph targets
+    /// Defines the weights to be applied to the morph targets.
     #[serde(default)]
     pub weights: Vec<f32>,
 }
 
-/// Geometry to be rendered with the given material
+/// Geometry to be rendered with the given material.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Primitive<E: Extras> {
     /// Maps attribute semantic names to the `Accessor`s containing the
-    /// corresponding attribute data
+    /// corresponding attribute data.
     #[serde(default)]
     pub attributes: HashMap<String, Index<accessor::Accessor<E>>>,
     
-    /// Extension specific data
+    /// Extension specific data.
     #[serde(default)]
     pub extensions: PrimitiveExtensions,
     
-    /// Optional application specific data
+    /// Optional application specific data.
     #[serde(default)]
     pub extras: <E as Extras>::MeshPrimitive,
     
-    /// The `Accessor` that contains the indices
+    /// The `Accessor` that contains the indices.
     pub indices: Option<Index<accessor::Accessor<E>>>,
     
-    /// The material to apply to this primitive when rendering
+    /// The material to apply to this primitive when rendering.
     pub material: Index<material::Material<E>>,
     
-    /// The type of primitives to render
+    /// The type of primitives to render.
     #[serde(default)]
     pub mode: Mode,
     
     /// Maps attribute names (only `"POSITION"` and `"NORMAL"`) to their
-    /// deviations in the morph target
+    /// deviations in the morph target.
     // TODO: Confirm that this the correct implementation
     #[serde(default)]
     pub targets: Vec<HashMap<String, Index<accessor::Accessor<E>>>>,
 }
 
-/// Extension specific data for `Primitive`
+/// Extension specific data for `Primitive`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct PrimitiveExtensions {
     #[serde(default)]
