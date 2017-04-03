@@ -48,15 +48,15 @@ fn main() {
     // Import some glTF 2.0 and walk the node hierarchy of its scenes
     let path = "path/to/asset.gltf";
     let gltf = gltf::v2::import::<_, Extras>(path).unwrap();
-    for scene in gltf.tree().walk_scenes() {
-        for node in scene.walk_nodes() {
+    for scene in gltf.tree().iter_scenes() {
+        for node in scene.iter_nodes() {
             visit_node(&node);
         }
     }
 }
 
 fn visit_node(node: &gltf::v2::tree::Node<Extras>) {
-    for child in node.walk_child_nodes() {
+    for child in node.iter_child_nodes() {
         visit_node(&child);
     }
 }
