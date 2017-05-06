@@ -184,11 +184,14 @@ pub struct Gltf {
 }
 
 impl Gltf {
-    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
+    fn open_impl(path: &Path) -> Result<Self, Error> {
         let mut file = File::open(path)?;
         let mut json = String::new();
         file.read_to_string(&mut json)?;
+        serde_json::from_str(&json).map_err(|err| Error::Parse(err))
+    }
 
-        serde_json::from_str(&json).map_err(|cause| Error::Parse(cause))
+    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
+        Gltf::open_impl(path.as_ref())
     }
 }
