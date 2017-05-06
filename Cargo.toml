@@ -1,6 +1,6 @@
 [package]
 name = "gltf"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["alteous <alteous@outlook.com>"]
 description = "glTF asset loader"
 documentation = "https://docs.rs/gltf"
