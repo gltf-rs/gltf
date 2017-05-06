@@ -184,7 +184,7 @@ pub struct Gltf {
 }
 
 impl Gltf {
-    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
+    pub fn open(path: &Path) -> Result<Self, Error> {
         let mut file = File::open(path)?;
         let mut json = String::new();
         file.read_to_string(&mut json)?;
