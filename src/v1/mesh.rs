@@ -26,11 +26,11 @@ enum_number! {
 /// A node can contain one or more meshes and the node's transform places the
 /// meshes in the scene.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Mesh<E: Extras> {
+pub struct Mesh {
     /// An array of primitives, each defining geometry to be rendered with a
     /// material.
     #[serde(default)]
-    pub primitives: Vec<Primitive<E>>,
+    pub primitives: Vec<Primitive>,
 
     /// The user-defined name of this object.
     pub name: Option<String>,
@@ -41,7 +41,7 @@ pub struct Mesh<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Mesh,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Mesh`.
@@ -53,7 +53,7 @@ pub struct MeshExtensions {
 
 /// Geometry to be rendered with the given material.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Primitive<E: Extras> {
+pub struct Primitive {
     /// A dictionary object of strings, where each string is the ID of the
     /// accessor containing an attribute.
     #[serde(default)]
@@ -81,7 +81,7 @@ pub struct Primitive<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::MeshPrimitive,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Primitive`.

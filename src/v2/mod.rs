@@ -54,9 +54,6 @@ pub mod skin;
 /// Contains `Texture`, `Sampler`, and other related data structures.
 pub mod texture;
 
-/// Contains convenience iterators for traversing the glTF tree.
-pub mod tree;
-
 pub use self::extras::Extras;
 pub use self::import::{import, ImportError};
 pub use self::root::{Index, Root};

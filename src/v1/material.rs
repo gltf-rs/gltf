@@ -15,14 +15,14 @@ pub type UntypedJsonObject = HashMap<String, Value>;
 
 /// The material appearance of a primitive.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Material<E: Extras> {
+pub struct Material {
     /// Extension specific data.
     #[serde(default)]
     pub extensions: MaterialExtensions,
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Material,
+    pub extras: Extras,
     
     /// The user-defined name of this object.
     pub name: Option<String>,

@@ -11,7 +11,7 @@ use v1::Extras;
 /// A shader program, including its vertex and fragment shader, and names of
 /// vertex shader attributes.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Program<E: Extras> {
+pub struct Program {
     /// Names of GLSL vertex shader attributes.
     #[serde(default)]
     pub attributes: Vec<String>,
@@ -33,7 +33,7 @@ pub struct Program<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Program,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Program`.

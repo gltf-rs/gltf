@@ -17,7 +17,7 @@ enum_number! {
 
 /// A vertex or fragment shader.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Shader<E: Extras> {
+pub struct Shader {
     /// The uri of the GLSL source.
     ///
     /// Relative paths are relative to the .gltf file.
@@ -37,7 +37,7 @@ pub struct Shader<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Shader,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Shader`.

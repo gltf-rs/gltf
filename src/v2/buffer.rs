@@ -19,7 +19,7 @@ enum_number! {
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Buffer<E: Extras> {
+pub struct Buffer {
     /// The length of the buffer in bytes.
     #[serde(default, rename = "byteLength")]
     pub byte_length: u32,
@@ -38,7 +38,7 @@ pub struct Buffer<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Buffer,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Buffer`.
@@ -51,9 +51,9 @@ pub struct BufferExtensions {
 /// A view into a buffer generally representing a subset of the buffer.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct BufferView<E: Extras> {
+pub struct BufferView {
     /// The parent `Buffer`.
-    pub buffer: Index<Buffer<E>>,
+    pub buffer: Index<Buffer>,
 
     /// The length of the `BufferView` in bytes.
     #[serde(rename = "byteLength")]
@@ -81,7 +81,7 @@ pub struct BufferView<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::BufferView,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `BufferView`.
@@ -91,16 +91,16 @@ pub struct BufferViewExtensions {
     _allow_extra_fields: (),
 }
 
-impl<E: Extras> Buffer<E> {
+impl Buffer {
     #[doc(hidden)]
-    pub fn range_check(&self, _root: &Root<E>) -> Result<(), ()> {
+    pub fn range_check(&self, _root: &Root) -> Result<(), ()> {
         Ok(())
     }
 }
 
-impl<E: Extras> BufferView<E> {
+impl BufferView {
     #[doc(hidden)]
-    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+    pub fn range_check(&self, root: &Root) -> Result<(), ()> {
         let _ = root.try_get(&self.buffer)?;
         Ok(())
     }

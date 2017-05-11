@@ -20,14 +20,14 @@ enum_string! {
 /// A node can reference a camera ID to apply a transform to place the camera in
 /// the scene.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Camera<E: Extras> {
+pub struct Camera {
     /// An orthographic camera containing properties to create an orthographic
     /// projection matrix.
-    pub orthographic: Option<Orthographic<E>>,
+    pub orthographic: Option<Orthographic>,
 
     /// A perspective camera containing properties to create a perspective
     /// projection matrix.
-    pub perspective: Option<Perspective<E>>,
+    pub perspective: Option<Perspective>,
 
     /// Specifies if the camera uses a perspective or orthographic projection.
     ///
@@ -46,7 +46,7 @@ pub struct Camera<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Camera,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Camera`.
@@ -59,7 +59,7 @@ pub struct CameraExtensions {
 /// An orthographic camera containing properties to create an orthographic
 /// projection matrix.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Orthographic<E: Extras> {
+pub struct Orthographic {
     /// The horizontal magnification of the view.
     #[serde(rename = "xmag")]
     pub x_mag: f32,
@@ -82,7 +82,7 @@ pub struct Orthographic<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::CameraOrthographic,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Orthographic`.
@@ -95,7 +95,7 @@ pub struct OrthographicExtensions {
 /// A perspective camera containing properties to create a perspective projection
 /// matrix.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Perspective<E: Extras> {
+pub struct Perspective {
     /// The aspect ratio of the field of view.
     ///
     /// When this is undefined, the aspect ratio of the canvas is used.
@@ -124,7 +124,7 @@ pub struct Perspective<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::CameraPerspective,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Perspective`.

@@ -28,27 +28,27 @@ enum_string! {
 /// A keyframe animation.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Animation<E: Extras> {
+pub struct Animation {
     /// Extension specific data.
     #[serde(default)]
     pub extensions: AnimationExtensions,
     
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Animation,
+    pub extras: Extras,
     
     /// An array of channels, each of which targets an animation's sampler at a
     /// node's property.
     ///
     /// Different channels of the same animation must not have equal targets.
-    pub channels: Vec<Channel<E>>,
+    pub channels: Vec<Channel>,
     
     /// Optional user-defined name for this object.
     pub name: Option<String>,
     
     /// An array of samplers that combine input and output accessors with an
     /// interpolation algorithm to define a keyframe graph (but not its target).
-    pub samplers: Vec<Sampler<E>>,
+    pub samplers: Vec<Sampler>,
 }
 
 /// Extension specific data for `Animation`.
@@ -61,12 +61,12 @@ pub struct AnimationExtensions {
 /// Targets an animation's sampler at a node's property.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Channel<E: Extras> {
+pub struct Channel {
     /// The index of the sampler used to compute the value for the target.
-    pub sampler: Index<Sampler<E>>,
+    pub sampler: Index<Sampler>,
     
     /// The index of the node and TRS property to target.
-    pub target: Target<E>,
+    pub target: Target,
     
     /// Extension specific data.
     #[serde(default)]
@@ -74,7 +74,7 @@ pub struct Channel<E: Extras> {
     
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::AnimationChannel,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Channel`.
@@ -87,17 +87,17 @@ pub struct ChannelExtensions {
 /// The index of the node and TRS property that an animation channel targets.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Target<E: Extras> {
+pub struct Target {
     /// Extension specific data.
     #[serde(default)]
     pub extensions: TargetExtensions,
     
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::AnimationTarget,
+    pub extras: Extras,
     
     /// The index of the node to target.
-    pub node: Index<scene::Node<E>>,
+    pub node: Index<scene::Node>,
     
     /// The name of the node's TRS property to modify or the 'weights' of the
     /// morph targets it instantiates.
@@ -114,23 +114,23 @@ pub struct TargetExtensions {
 /// Defines a keyframe graph but not its target.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Sampler<E: Extras> {
+pub struct Sampler {
     /// Extension specific data.
     #[serde(default)]
     pub extensions: SamplerExtensions,
     
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::AnimationSampler,
+    pub extras: Extras,
     
     /// The index of the accessor containing keyframe input values (e.g. time).
-    pub input: Index<accessor::Accessor<E>>,
+    pub input: Index<accessor::Accessor>,
     
     /// The interpolation algorithm.
     pub interpolation: Interpolation,
     
     /// The index of an accessor containing keyframe output values.
-    pub output: Index<accessor::Accessor<E>>,
+    pub output: Index<accessor::Accessor>,
 }
 
 /// Extension specific data for `Sampler`.
@@ -140,9 +140,9 @@ pub struct SamplerExtensions {
     _allow_extra_fields: (),
 }
 
-impl<E: Extras> Animation<E> {
+impl Animation {
     #[doc(hidden)]
-    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+    pub fn range_check(&self, root: &Root) -> Result<(), ()> {
         for sampler in &self.samplers {
             let _ = root.try_get(&sampler.input)?;
             let _ = root.try_get(&sampler.output)?;

@@ -31,13 +31,13 @@ pub mod sparse {
     /// Indices of those attributes that deviate from their initialization value.
     #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(deny_unknown_fields)]
-    pub struct Indices<E: Extras> {
+    pub struct Indices {
         /// The parent `BufferView` containing the sparse indices.
         ///
         /// The referenced `BufferView` must not have `ArrayBuffer` nor
         /// `ElementArrayBuffer` as its target.
         #[serde(rename = "bufferView")]
-        pub buffer_view: Index<buffer::BufferView<E>>,
+        pub buffer_view: Index<buffer::BufferView>,
 
         /// The offset relative to the start of the parent `BufferView` in bytes.
         #[serde(default, rename = "byteOffset")]
@@ -50,7 +50,7 @@ pub mod sparse {
         pub extensions: IndicesExtensions,
 
         /// Optional application specific data.
-        pub extras: <E as Extras>::AccessorSparseIndices,
+        pub extras: Extras,
     }
 
     /// Extension specific data for `Storage`.
@@ -62,7 +62,7 @@ pub mod sparse {
 
     /// Sparse storage of attributes that deviate from their initialization value.
     #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct Storage<E: Extras> {
+    pub struct Storage {
         /// The number of attributes encoded in this sparse accessor.
         pub count: u32,
 
@@ -70,20 +70,20 @@ pub mod sparse {
         /// that deviate from their initialization value.
         ///
         /// Indices must strictly increase.
-        pub indices: Indices<E>,
+        pub indices: Indices,
 
         /// Array of size `count * number_of_components` storing the displaced
         /// accessor attributes pointed by `indices`.
         ///
         /// Substituted values must have the same `component_type` and number of
         /// components as the base `Accessor`.
-        pub values: Values<E>,
+        pub values: Values,
 
         /// Extension specific data.
         pub extensions: StorageExtensions,
 
         /// Optional application specific data.
-        pub extras: <E as Extras>::AccessorSparseStorage,
+        pub extras: Extras,
     }
 
     /// Extension specific data for `Values`.
@@ -97,13 +97,13 @@ pub mod sparse {
     /// accessor attributes pointed by `accessor::sparse::Indices`.
     #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(deny_unknown_fields)]
-    pub struct Values<E: Extras> {
+    pub struct Values {
         /// The parent `BufferView` containing the sparse indices.
         ///
         /// The referenced `BufferView` must not have `ArrayBuffer` nor
         /// `ElementArrayBuffer` as its target.
         #[serde(rename = "bufferView")]
-        pub buffer_view: Index<buffer::BufferView<E>>,
+        pub buffer_view: Index<buffer::BufferView>,
 
         /// The offset relative to the start of the parent `BufferView` in bytes.
         #[serde(default, rename = "byteOffset")]
@@ -113,7 +113,7 @@ pub mod sparse {
         pub extensions: ValuesExtensions,
 
         /// Optional application specific data.
-        pub extras: <E as Extras>::AccessorSparseValues,
+    pub extras: Extras,
     }
 }
 
@@ -127,10 +127,10 @@ pub struct AccessorExtensions {
 /// A typed view into a `BufferView`.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Accessor<E: Extras> {
+pub struct Accessor {
     /// The parent `BufferView` this accessor reads from.
     #[serde(rename = "bufferView")]
-    pub buffer_view: Index<buffer::BufferView<E>>,
+    pub buffer_view: Index<buffer::BufferView>,
     
     /// The offset relative to the start of the parent `BufferView` in bytes.
     #[serde(default, rename = "byteOffset")]
@@ -150,7 +150,7 @@ pub struct Accessor<E: Extras> {
     
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Accessor,
+    pub extras: Extras,
     
     /// The multiplicity of each component.
     #[serde(rename = "type")]
@@ -173,13 +173,13 @@ pub struct Accessor<E: Extras> {
     
     /// Sparse storage of attributes that deviate from their initialization
     /// value.
-    pub sparse: Option<sparse::Storage<E>>,
+    pub sparse: Option<sparse::Storage>,
 }
 
-impl<E: Extras> Accessor<E> {
+impl Accessor {
     /// Returns `Ok(())` if all indices are in range of the maximums.
     #[doc(hidden)]
-    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+    pub fn range_check(&self, root: &Root) -> Result<(), ()> {
         if let Some(ref sparse) = self.sparse {
             let _ = root.try_get(&sparse.indices.buffer_view)?;
             let _ = root.try_get(&sparse.values.buffer_view)?;

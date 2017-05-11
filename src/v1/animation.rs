@@ -26,11 +26,11 @@ enum_string! {
 
 /// A keyframe animation.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Animation<E: Extras> {
+pub struct Animation {
     /// An array of channels, each of which targets an animation's sampler at a
     /// node's property.
     #[serde(default)]
-    pub channels: Vec<Channel<E>>,
+    pub channels: Vec<Channel>,
 
     /// A dictionary object of strings whose values are IDs of accessors with
     /// keyframe data, e.g., time, translation, rotation, etc.
@@ -41,7 +41,7 @@ pub struct Animation<E: Extras> {
     /// output parameters with an interpolation algorithm to define a keyframe
     /// graph (but not its target).
     #[serde(default)]
-    pub samplers: HashMap<String, Sampler<E>>,
+    pub samplers: HashMap<String, Sampler>,
 
     /// Optional user-defined name of this object.
     pub name: Option<String>,
@@ -52,7 +52,7 @@ pub struct Animation<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Animation,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Animation`.
@@ -64,13 +64,13 @@ pub struct AnimationExtensions {
 
 /// Targets an animation's sampler at a node's property.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Channel<E: Extras> {
+pub struct Channel {
     /// The ID of a sampler in this animation used to compute the value for the
     /// target, e.g., a node's translation, rotation, or scale (TRS).
     pub sampler: String,
 
     /// The ID of the node and TRS property to target.
-    pub target: Target<E>,
+    pub target: Target,
 
     /// Extension specific data.
     #[serde(default)]
@@ -78,7 +78,7 @@ pub struct Channel<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::AnimationChannel,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Channel`.
@@ -91,7 +91,7 @@ pub struct ChannelExtensions {
 /// Combines input and output parameters with an interpolation algorithm to
 /// define a keyframe graph (but not its target).
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Sampler<E: Extras> {
+pub struct Sampler {
     /// The ID of a parameter in this animation to use as keyframe input.
     ///
     /// This parameter must have type `f32`. The values represent time in
@@ -116,7 +116,7 @@ pub struct Sampler<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::AnimationSampler,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Sampler`.
@@ -128,7 +128,7 @@ pub struct SamplerExtensions {
 
 /// Defines the ID of the node and TRS property that an animation channel targets.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Target<E: Extras> {
+pub struct Target {
     /// The ID of the node to target.
     pub id: String,
 
@@ -141,7 +141,7 @@ pub struct Target<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::AnimationTarget,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Target`.
@@ -161,7 +161,6 @@ impl Default for Interpolation {
 mod test {
     extern crate serde_json;
     use super::*;
-    use v1;
 
     #[test]
     fn it_deserializes_an_animation() {
@@ -220,7 +219,7 @@ mod test {
         "Application specific": "The extra object can contain any properties."
     }
 }"#;
-        let animation: Animation<v1::extras::Any> = serde_json::from_str(data).unwrap();
+        let animation: Animation = serde_json::from_str(data).unwrap();
 
         assert_eq!("user-defined animation name", animation.name.unwrap());
         assert_eq!(2, animation.parameters.len());

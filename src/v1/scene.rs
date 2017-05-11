@@ -25,7 +25,7 @@ use v1::Extras;
 ///   (referenced by an animation.channel.target), only TRS properties may be
 ///   present; `matrix` will not be present.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Node<E: Extras> {
+pub struct Node {
     /// The ID of the camera referenced by this node.
     pub camera: Option<String>,
 
@@ -79,7 +79,7 @@ pub struct Node<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Node,
+    pub extras: Extras,
 }
 
 fn node_matrix_default() -> [f32; 16] {
@@ -107,7 +107,7 @@ pub struct NodeExtensions {
 
 /// The root nodes of a scene.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Scene<E: Extras> {
+pub struct Scene {
     /// The IDs of each root node.
     #[serde(default)]
     pub nodes: Vec<String>,
@@ -121,7 +121,7 @@ pub struct Scene<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Scene,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Scene`.

@@ -24,13 +24,13 @@ use v2::{camera, mesh, scene, skin, Extras, Index, Root};
 ///   will not be present.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Node<E: Extras> {
+pub struct Node {
     /// The camera referenced by this node.
-    pub camera: Option<Index<camera::Camera<E>>>,
+    pub camera: Option<Index<camera::Camera>>,
     
     /// The child nodes belonging to this node in the node heirarchy.
     #[serde(default)]
-    pub children: Vec<Index<scene::Node<E>>>,
+    pub children: Vec<Index<scene::Node>>,
     
     /// Extension specific data.
     #[serde(default)]
@@ -38,14 +38,14 @@ pub struct Node<E: Extras> {
     
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Node,
+    pub extras: Extras,
     
     /// 4x4 column-major transformation matrix.
     #[serde(default = "node_matrix_default")]
     pub matrix: [[f32; 4]; 4],
     
     /// The `Mesh` in this node.
-    pub mesh: Option<Index<mesh::Mesh<E>>>,
+    pub mesh: Option<Index<mesh::Mesh>>,
     
     /// Optional user-defined name for this object.
     pub name: Option<String>,
@@ -63,7 +63,7 @@ pub struct Node<E: Extras> {
     pub translation: [f32; 3],
     
     /// The index of the skin referenced by this node.
-    pub skin: Option<Index<skin::Skin<E>>>,
+    pub skin: Option<Index<skin::Skin>>,
     
     /// The weights of the instantiated morph target.
     ///
@@ -94,21 +94,21 @@ fn node_scale_default() -> [f32; 3] {
 /// The root `Node`s of a scene.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Scene<E: Extras> {
+pub struct Scene {
     /// Extension specific data.
     #[serde(default)]
     pub extensions: SceneExtensions,
     
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Scene,
+    pub extras: Extras,
     
     /// Optional user-defined name for this object.
     pub name: Option<String>,
     
     /// The indices of each root `Node`.
     #[serde(default)]
-    pub nodes: Vec<Index<Node<E>>>,
+    pub nodes: Vec<Index<Node>>,
 }
 
 /// Extension specific data for `Scene`.
@@ -118,9 +118,9 @@ pub struct SceneExtensions {
     _allow_extra_fields: (),
 }
 
-impl<E: Extras> Node<E> {
+impl Node {
     #[doc(hidden)]
-    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+    pub fn range_check(&self, root: &Root) -> Result<(), ()> {
         if let Some(ref camera) = self.camera {
             let _ = root.try_get(&camera)?;
             for node in &self.children {
@@ -137,9 +137,9 @@ impl<E: Extras> Node<E> {
     }
 }
 
-impl<E: Extras> Scene<E> {
+impl Scene {
     #[doc(hidden)]
-    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+    pub fn range_check(&self, root: &Root) -> Result<(), ()> {
         for node in &self.nodes {
             let _ = root.try_get(node)?;
         }

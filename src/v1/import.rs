@@ -9,7 +9,8 @@
 
 use serde_json;
 use std;
-use v1::{Extras, Root};
+use std::path::Path;
+use v1::Root;
 
 /// Error encountered when loading a glTF asset.
 #[derive(Debug)]
@@ -35,8 +36,8 @@ pub enum ImportError {
 
 /// Imports a binary glTF 1.0 asset.
 #[cfg(feature = "KHR_binary_glTF")]
-fn import_binary_gltf<S, E>(mut stream: S) -> Result<Root<E>, ImportError>
-    where S: std::io::Read, E: Extras
+fn import_binary_gltf<S>(mut stream: S) -> Result<Root, ImportError>
+    where S: std::io::Read
 {
     use v1::root::extensions::{KhrBinaryGltf, KhrBinaryGltfHeader};
     
@@ -70,7 +71,7 @@ fn import_binary_gltf<S, E>(mut stream: S) -> Result<Root<E>, ImportError>
     }
     stream.read_exact(&mut body[..])?;
 
-    let mut root: Root<E> = serde_json::from_slice(&content)?;
+    let mut root: Root = serde_json::from_slice(&content)?;
     root.extensions.khr_binary_gltf = Some(KhrBinaryGltf {
         body: body,
         content: content,
@@ -82,25 +83,19 @@ fn import_binary_gltf<S, E>(mut stream: S) -> Result<Root<E>, ImportError>
 
 /// Imports a binary glTF 1.0 asset.
 #[cfg(not(feature = "KHR_binary_glTF"))]
-fn import_binary_gltf<S, E>(_stream: S) -> Result<Root<E>, ImportError>
-    where S: std::io::Read, E: Extras
+fn import_binary_gltf<S>(_stream: S) -> Result<Root, ImportError>
+    where S: std::io::Read
 {  
     return Err(ImportError::ExtensionDisabled("KHR_binary_glTF".to_string()));
 }
 
 /// Imports a standard (plain text JSON) glTF 1.0 asset.
-fn import_standard_gltf<E>(data: Vec<u8>) -> Result<Root<E>, ImportError>
-    where E: Extras
-{
-    let root: Root<E> = serde_json::from_slice(&data)?;
-
+fn import_standard_gltf(data: Vec<u8>) -> Result<Root, ImportError> {
+    let root: Root = serde_json::from_slice(&data)?;
     Ok(root)
 }
 
-/// Imports a glTF 1.0 asset.
-pub fn import<P, E>(path: P) -> Result<Root<E>, ImportError>
-    where P: AsRef<std::path::Path>, E: Extras
-{
+fn import_impl(path: &Path) -> Result<Root, ImportError> {
     use std::io::Read;
     
     let mut file = std::fs::File::open(path)?;
@@ -119,6 +114,11 @@ pub fn import<P, E>(path: P) -> Result<Root<E>, ImportError>
     }
 }
 
+/// Imports a glTF 1.0 asset.
+pub fn import<P: AsRef<Path>>(path: P) -> Result<Root, ImportError> {
+    import_impl(path.as_ref())
+}
+
 impl From<serde_json::Error> for ImportError {
     fn from(err: serde_json::Error) -> ImportError {
         ImportError::Deserialize(err)
@@ -130,3 +130,4 @@ impl From<std::io::Error> for ImportError {
         ImportError::Io(err)
     }
 }
+

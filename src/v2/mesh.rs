@@ -35,20 +35,20 @@ pub struct MeshExtensions {
 /// the scene.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Mesh<E: Extras> {
+pub struct Mesh {
     /// Extension specific data.
     #[serde(default)]
     pub extensions: MeshExtensions,
     
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Mesh,
+    pub extras: Extras,
     
     /// Optional user-defined name for this object.
     pub name: Option<String>,
     
     /// Defines the geometry to be renderered with a material.
-    pub primitives: Vec<Primitive<E>>,
+    pub primitives: Vec<Primitive>,
 
     /// Defines the weights to be applied to the morph targets.
     #[serde(default)]
@@ -58,11 +58,11 @@ pub struct Mesh<E: Extras> {
 /// Geometry to be rendered with the given material.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Primitive<E: Extras> {
+pub struct Primitive {
     /// Maps attribute semantic names to the `Accessor`s containing the
     /// corresponding attribute data.
     #[serde(default)]
-    pub attributes: HashMap<String, Index<accessor::Accessor<E>>>,
+    pub attributes: HashMap<String, Index<accessor::Accessor>>,
     
     /// Extension specific data.
     #[serde(default)]
@@ -70,13 +70,13 @@ pub struct Primitive<E: Extras> {
     
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::MeshPrimitive,
+    pub extras: Extras,
     
     /// The `Accessor` that contains the indices.
-    pub indices: Option<Index<accessor::Accessor<E>>>,
+    pub indices: Option<Index<accessor::Accessor>>,
     
     /// The material to apply to this primitive when rendering.
-    pub material: Index<material::Material<E>>,
+    pub material: Index<material::Material>,
     
     /// The type of primitives to render.
     #[serde(default)]
@@ -86,7 +86,7 @@ pub struct Primitive<E: Extras> {
     /// deviations in the morph target.
     // TODO: Confirm that this the correct implementation.
     #[serde(default)]
-    pub targets: Vec<HashMap<String, Index<accessor::Accessor<E>>>>,
+    pub targets: Vec<HashMap<String, Index<accessor::Accessor>>>,
 }
 
 /// Extension specific data for `Primitive`.
@@ -96,9 +96,9 @@ pub struct PrimitiveExtensions {
     _allow_extra_fields: (),
 }
 
-impl<E: Extras> Mesh<E> {
+impl Mesh {
     #[doc(hidden)]
-    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+    pub fn range_check(&self, root: &Root) -> Result<(), ()> {
         for primitive in &self.primitives {
             for accessor in primitive.attributes.values() {
                 let _ = root.try_get(accessor)?;

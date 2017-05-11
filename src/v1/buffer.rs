@@ -17,7 +17,7 @@ enum_number! {
 
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Buffer<E: Extras> {
+pub struct Buffer {
     /// The uri of the buffer.
     ///
     /// Relative paths are relative to the .gltf file.
@@ -41,7 +41,7 @@ pub struct Buffer<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Buffer,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Buffer`.
@@ -53,7 +53,7 @@ pub struct BufferExtensions {
 
 /// A view into a buffer generally representing a subset of the buffer.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct BufferView<E: Extras> {
+pub struct BufferView {
     /// The ID of the parent buffer.
     pub buffer: String,
 
@@ -82,7 +82,7 @@ pub struct BufferView<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::BufferView,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `BufferView`.

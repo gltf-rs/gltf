@@ -63,7 +63,7 @@ enum_number! {
 /// Texture sampler properties for filtering and wrapping modes.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Sampler<E: Extras> {
+pub struct Sampler {
     /// Magnification filter.
     #[serde(default, rename = "magFilter")]
     pub mag_filter: MagFilter,
@@ -89,7 +89,7 @@ pub struct Sampler<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Sampler,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Sampler`.
@@ -101,7 +101,7 @@ pub struct SamplerExtensions {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Texture<E: Extras> {
+pub struct Texture {
     /// Texel data type.
     #[serde(default, rename = "type")]
     pub data_type: DataType,
@@ -118,10 +118,10 @@ pub struct Texture<E: Extras> {
     pub internal_format: Format,
 
     /// The index of the sampler used by this texture.
-    pub sampler: Index<Sampler<E>>,
+    pub sampler: Index<Sampler>,
 
     /// The index of the image used by this texture.
-    pub source: Index<image::Image<E>>,
+    pub source: Index<image::Image>,
 
     /// The target the texture should be bound to.
     #[serde(default)]
@@ -133,7 +133,7 @@ pub struct Texture<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Texture,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Texture`.
@@ -147,9 +147,9 @@ pub struct TextureExtensions {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 /// Reference to a `Texture`.
-pub struct TextureInfo<E: Extras> {
+pub struct TextureInfo {
     /// The index of the texture.
-    pub index: Index<Texture<E>>,
+    pub index: Index<Texture>,
 
     /// The set index of the texture's `TEXCOORD` attribute.
     #[serde(default, rename = "texCoord")]
@@ -161,7 +161,7 @@ pub struct TextureInfo<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::TextureInfo,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `TextureInfo`.
@@ -171,16 +171,16 @@ pub struct TextureInfoExtensions {
     _allow_extra_fields: (),
 }
 
-impl<E: Extras> Sampler<E> {
+impl Sampler {
     #[doc(hidden)]
-    pub fn range_check(&self, _root: &Root<E>) -> Result<(), ()> {
+    pub fn range_check(&self, _root: &Root) -> Result<(), ()> {
         Ok(())
     }
 }
 
-impl<E: Extras> Texture<E> {
+impl Texture {
     #[doc(hidden)]
-    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+    pub fn range_check(&self, root: &Root) -> Result<(), ()> {
         let _ = root.try_get(&self.sampler)?;
         let _ = root.try_get(&self.source)?;
         Ok(())

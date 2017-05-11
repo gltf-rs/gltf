@@ -54,7 +54,7 @@ enum_number! {
 
 /// Texture sampler properties for filtering and wrapping modes.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Sampler<E: Extras> {
+pub struct Sampler {
     /// Magnification filter.
     #[serde(rename = "magFilter")]
     #[serde(default = "sample_mag_filter_default")]
@@ -84,7 +84,7 @@ pub struct Sampler<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Sampler,
+    pub extras: Extras,
 }
 
 fn sample_mag_filter_default() -> Filter {
@@ -112,7 +112,7 @@ pub struct SamplerExtensions {
 
 /// A texture and its sampler.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Texture<E: Extras> {
+pub struct Texture {
     /// The texture's format.
     #[serde(default)]
     pub format: Format,
@@ -146,7 +146,7 @@ pub struct Texture<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Texture,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Texture`.

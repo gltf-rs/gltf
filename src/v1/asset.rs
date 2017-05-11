@@ -10,7 +10,7 @@ use v1::Extras;
 
 /// Metadata about the glTF asset.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Asset<E: Extras> {
+pub struct Asset {
     /// A copyright message suitable for display to credit the content creator.
     pub copyright: Option<String>,
 
@@ -22,7 +22,7 @@ pub struct Asset<E: Extras> {
     pub pre_multiplied_alpha: bool,
 
     /// Specifies the target rendering API and version.
-    pub profile: AssetProfile<E>,
+    pub profile: AssetProfile,
 
     /// The glTF version.
     pub version: String,
@@ -33,7 +33,7 @@ pub struct Asset<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Asset,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Asset`.
@@ -45,7 +45,7 @@ pub struct AssetExtensions {
 
 /// Specifies the target rendering API and version.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct AssetProfile<E: Extras> {
+pub struct AssetProfile {
     /// Specifies the target rendering API.
     #[serde(default = "asset_profile_api_default")]
     pub api: String,
@@ -60,7 +60,7 @@ pub struct AssetProfile<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::AssetProfile,
+    pub extras: Extras,
 }
 
 fn asset_profile_api_default() -> String {

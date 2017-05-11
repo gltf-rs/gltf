@@ -12,7 +12,7 @@ use v2::Extras;
 /// Metadata about the glTF asset.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Asset<E: Extras> {
+pub struct Asset {
     /// A copyright message suitable for display to credit the content creator.
     pub copyright: Option<String>,
     
@@ -22,7 +22,7 @@ pub struct Asset<E: Extras> {
     
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Asset,
+    pub extras: Extras,
     
     /// Tool that generated this glTF model.
     pub generator: Option<String>,

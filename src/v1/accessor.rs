@@ -35,7 +35,7 @@ enum_string! {
 
 /// A typed view into a `BufferView`.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Accessor<E: Extras> {
+pub struct Accessor {
     /// The ID of the bufferView.
     #[serde(rename = "bufferView")]
     pub buffer_view: String,
@@ -90,7 +90,7 @@ pub struct Accessor<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Accessor,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Accessor`.
@@ -116,7 +116,6 @@ impl Default for Kind {
 mod test {
     extern crate serde_json;
     use super::*;
-    use v1;
 
     #[test]
     fn invalid_component_type() {
@@ -129,7 +128,7 @@ mod test {
     "type": "SCALAR"
 }"#;
 
-        let accessor = serde_json::from_str::<Accessor<v1::extras::Any>>(data);
+        let accessor = serde_json::from_str::<Accessor>(data);
         assert!(accessor.is_err());
     }
 
@@ -163,7 +162,7 @@ mod test {
     }
 }"#;
 
-        let accessor: Accessor<v1::extras::Any> = serde_json::from_str(data).unwrap();
+        let accessor: Accessor = serde_json::from_str(data).unwrap();
 
         assert_eq!("bufferViewWithVertices_id", accessor.buffer_view);
         assert_eq!(0, accessor.byte_offset);

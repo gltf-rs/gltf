@@ -1,3 +1,4 @@
+
 // Copyright 2017 The gltf Library Developers
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -119,3 +120,4 @@ macro_rules! enum_number {
         }
     }
 }
+

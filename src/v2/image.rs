@@ -12,10 +12,10 @@ use v2::{buffer, Extras, Index, Root};
 /// Image data used to create a texture.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Image<E: Extras> {
+pub struct Image {
     /// The `BufferView` that contains the image if `uri` is `None`.
     #[serde(rename = "bufferView")]
-    pub buffer_view: Option<Index<buffer::BufferView<E>>>,
+    pub buffer_view: Option<Index<buffer::BufferView>>,
 
     /// The image's MIME type.
     #[serde(rename = "mimeType")]
@@ -38,7 +38,7 @@ pub struct Image<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Image,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Image`.
@@ -48,9 +48,9 @@ pub struct ImageExtensions {
     _allow_extra_fields: (),
 }
 
-impl<E: Extras> Image<E> {
+impl Image {
     #[doc(hidden)]
-    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+    pub fn range_check(&self, root: &Root) -> Result<(), ()> {
         if let Some(ref buffer_view) = self.buffer_view {
             let _ = root.try_get(buffer_view)?;
         }

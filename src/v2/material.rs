@@ -20,7 +20,7 @@ enum_string! {
 /// The material appearance of a primitive.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Material<E: Extras> {
+pub struct Material {
     /// The alpha cutoff of the material.
     ///
     /// * In `Mask` mode this value specifies the cutoff threshold and is
@@ -68,14 +68,14 @@ pub struct Material<E: Extras> {
     /// Defines the metallic-roughness material model from Physically-Based
     /// Rendering (PBR) methodology.
     #[serde(rename = "pbrMetallicRoughness")]
-    pub pbr_metallic_roughness: PbrMetallicRoughness<E>,
+    pub pbr_metallic_roughness: PbrMetallicRoughness,
 
     /// A tangent space normal map.
     ///
     /// Each texel represents the XYZ components of a normal vector in tangent
     /// space.
     #[serde(rename = "normalTexture")]
-    pub normal_texture: Option<NormalTexture<E>>,
+    pub normal_texture: Option<NormalTexture>,
 
     /// The occlusion map texture.
     ///
@@ -83,7 +83,7 @@ pub struct Material<E: Extras> {
     /// should receive full indirect lighting and black indicating no indirect
     /// lighting.
     #[serde(rename = "occlusionTexture")]
-    pub occlusion_texture: Option<OcclusionTexture<E>>,
+    pub occlusion_texture: Option<OcclusionTexture>,
 
     /// The emissive map texture.
     ///
@@ -94,7 +94,7 @@ pub struct Material<E: Extras> {
     ///
     /// If a fourth component (A) is present, it is ignored.
     #[serde(rename = "emissiveTexture")]
-    pub emissive_texture: Option<texture::TextureInfo<E>>,
+    pub emissive_texture: Option<texture::TextureInfo>,
 
     /// The emissive color of the material.
     ///
@@ -112,7 +112,7 @@ pub struct Material<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Material,
+    pub extras: Extras,
 }
 
 fn material_alpha_cutoff_default() -> f32 {
@@ -130,7 +130,7 @@ pub struct MaterialExtensions {
 /// material model from Physically-Based Rendering (PBR) methodology.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct PbrMetallicRoughness<E: Extras> {
+pub struct PbrMetallicRoughness {
     /// The base color factor.
     ///
     /// The RGBA components of the base color of the material.
@@ -152,7 +152,7 @@ pub struct PbrMetallicRoughness<E: Extras> {
     ///
     /// The stored texels must not be premultiplied.
     #[serde(rename = "baseColorTexture")]
-    pub base_color_texture: texture::TextureInfo<E>,
+    pub base_color_texture: texture::TextureInfo,
 
     /// The metalness of the material.
     ///
@@ -181,7 +181,7 @@ pub struct PbrMetallicRoughness<E: Extras> {
     /// * If the third component (B) and/or the fourth component (A) are present
     ///   then they are ignored.
     #[serde(rename = "metallicRoughnessTexture")]
-    pub metallic_roughness_texture: texture::TextureInfo<E>,
+    pub metallic_roughness_texture: texture::TextureInfo,
 
     /// Extension specific data.
     #[serde(default)]
@@ -189,7 +189,7 @@ pub struct PbrMetallicRoughness<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::MaterialPbrMetallicRoughness,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `PbrMetallicRoughness`.
@@ -214,9 +214,9 @@ fn material_pbr_metallic_roughness_roughness_factor_default() -> f32 {
 /// Defines the normal texture of a material.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct NormalTexture<E: Extras> {
+pub struct NormalTexture {
     /// The index of the texture.
-    pub index: Index<texture::Texture<E>>,
+    pub index: Index<texture::Texture>,
 
     /// The scalar multiplier applied to each normal vector of the texture.
     ///
@@ -234,7 +234,7 @@ pub struct NormalTexture<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::MaterialNormalTexture,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `NormalTexture`.
@@ -251,9 +251,9 @@ fn material_normal_texture_scale_default() -> f32 {
 /// Defines the occlusion texture of a material.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct OcclusionTexture<E: Extras> {
+pub struct OcclusionTexture {
     /// The index of the texture.
-    pub index: Index<texture::Texture<E>>,
+    pub index: Index<texture::Texture>,
 
     /// The scalar multiplier controlling the amount of occlusion applied.
     ///
@@ -274,7 +274,7 @@ pub struct OcclusionTexture<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::MaterialOcclusionTexture,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `OcclusionTexture`.
@@ -288,9 +288,9 @@ fn material_occlusion_texture_strength_default() -> f32 {
     1.0
 }
 
-impl<E: Extras> Material<E> {
+impl Material {
     #[doc(hidden)]
-    pub fn range_check(&self, root: &Root<E>) -> Result<(), ()> {
+    pub fn range_check(&self, root: &Root) -> Result<(), ()> {
         if let Some(ref texture) = self.normal_texture {
             let _ = root.try_get(&texture.index)?;
         }

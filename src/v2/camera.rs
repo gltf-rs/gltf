@@ -15,17 +15,17 @@ use v2::{Extras, Root};
 /// scene.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Camera<E: Extras> {
+pub struct Camera {
     /// Optional user-defined name for this object.
     pub name: Option<String>,
 
     /// An orthographic camera containing properties to create an orthographic
     /// projection matrix.
-    pub orthographic: Option<Orthographic<E>>,
+    pub orthographic: Option<Orthographic>,
 
     /// A perspective camera containing properties to create a perspective
     /// projection matrix.
-    pub perspective: Option<Perspective<E>>,
+    pub perspective: Option<Perspective>,
 
     /// Specifies if the camera uses a perspective or orthographic projection.
     #[serde(rename = "type")]
@@ -37,7 +37,7 @@ pub struct Camera<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Camera,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Camera`.
@@ -50,7 +50,7 @@ pub struct CameraExtensions {
 /// Values for an orthographic camera.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Orthographic<E: Extras> {
+pub struct Orthographic {
     /// The horizontal magnification of the view.
     #[serde(default, rename = "xmag")]
     pub x_mag: f32,
@@ -73,7 +73,7 @@ pub struct Orthographic<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::CameraOrthographic,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Orthographic`.
@@ -86,7 +86,7 @@ pub struct OrthographicExtensions {
 /// Values for a perspective camera.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Perspective<E: Extras> {
+pub struct Perspective {
     /// Aspect ratio of the field of view.
     #[serde(default, rename = "aspectRatio")]
     pub aspect_ratio: f32,
@@ -109,7 +109,7 @@ pub struct Perspective<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::CameraPerspective,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Perspective`.
@@ -119,9 +119,9 @@ pub struct PerspectiveExtensions {
     _allow_extra_fields: (),
 }
 
-impl<E: Extras> Camera<E> {
+impl Camera {
     #[doc(hidden)]
-    pub fn range_check(&self, _root: &Root<E>) -> Result<(), ()> {
+    pub fn range_check(&self, _root: &Root) -> Result<(), ()> {
         Ok(())
     }
 }

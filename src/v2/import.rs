@@ -9,7 +9,8 @@
 
 use serde_json;
 use std;
-use v2::{Extras, Root};
+use std::path::Path;
+use v2::Root;
 
 /// Error encountered when importing a glTF 2.0 asset.
 #[derive(Debug)]
@@ -34,19 +35,12 @@ pub enum ImportError {
 }
 
 /// Imports a standard (plain text JSON) glTF 2.0 asset.
-fn import_standard_gltf<E>(data: Vec<u8>) -> Result<Root<E>, ImportError>
-    where E: Extras
-{
-    let root: Root<E> = serde_json::from_slice(&data)?;
-
+fn import_standard_gltf(data: Vec<u8>) -> Result<Root, ImportError> {
+    let root: Root = serde_json::from_slice(&data)?;
     Ok(root)
 }
 
-/// Imports a glTF 2.0 asset.
-pub fn import<P, E>(path: P) -> Result<Root<E>, ImportError>
-    where P: AsRef<std::path::Path>,
-          E: Extras
-{
+fn import_impl(path: &Path) -> Result<Root, ImportError> {
     use std::io::Read;
     use self::ImportError::*;
     
@@ -54,8 +48,8 @@ pub fn import<P, E>(path: P) -> Result<Root<E>, ImportError>
     let mut buffer = Vec::new();
     file.read_to_end(&mut buffer)?;
 
-    let root: Root<E> = if buffer.starts_with(b"glTF") {
-        return Err(ExtensionUnsupported("Binary glTF 2.0".to_string()));
+    let root: Root = if buffer.starts_with(b"glTF") {
+        return Err(ExtensionUnsupported("KHR_binary_glTF (2.0)".to_string()));
     } else {
         file.read_to_end(&mut buffer)?;
         import_standard_gltf(buffer)?
@@ -64,9 +58,13 @@ pub fn import<P, E>(path: P) -> Result<Root<E>, ImportError>
     if root.range_check().is_ok() {
         Ok(root)
     } else {
-
         Err(Invalid("index out of range".to_string()))
     }
+}
+
+/// Imports a glTF 2.0 asset.
+pub fn import<P: AsRef<Path>>(path: P) -> Result<Root, ImportError> {
+    import_impl(path.as_ref())
 }
 
 impl From<serde_json::Error> for ImportError {
@@ -80,3 +78,4 @@ impl From<std::io::Error> for ImportError {
         ImportError::Io(err)
     }
 }
+

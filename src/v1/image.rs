@@ -11,7 +11,7 @@ use v1::Extras;
 
 /// Image data used to create a texture.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Image<E: Extras> {
+pub struct Image {
     /// The uri of the image.
     ///
     /// Relative paths are relative to the .gltf file.
@@ -28,7 +28,7 @@ pub struct Image<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Image,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Image`.

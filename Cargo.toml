@@ -20,13 +20,10 @@ serde_json = "0.9"
 
 [features]
 default = []
+extras = []
 KHR_binary_glTF = []
 
 [[example]]
 name = "gltf_display"
 path = "examples/display/main.rs"
-
-[[example]]
-name = "walk_tree"
-path = "examples/walk_tree/main.rs"
 

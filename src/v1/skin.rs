@@ -10,7 +10,7 @@ use v1::Extras;
 
 /// Joints and matrices defining a skin.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Skin<E: Extras> {
+pub struct Skin {
     /// 4x4 transformation matrix stored in column-major order.
     #[serde(default = "skin_bind_shape_matrix")]
     #[serde(rename = "bindShapeMatrix")]
@@ -41,7 +41,7 @@ pub struct Skin<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Skin,
+    pub extras: Extras,
 }
 
 fn skin_bind_shape_matrix() -> [f32; 16] {

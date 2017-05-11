@@ -39,7 +39,7 @@ enum_number! {
 /// Arguments for fixed-function rendering state functions other than
 /// `enable()`/`disable()`.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Function<E: Extras> {
+pub struct Function {
     /// Floating-point values passed to blendColor(). [red, green, blue, alpha]
     #[serde(rename = "blendColor")]
     #[serde(default = "function_blend_color_default")]
@@ -151,7 +151,7 @@ pub struct Function<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::TechniqueFunction,
+    pub extras: Extras,
 }
 
 fn function_blend_color_default() -> [f32; 4] {
@@ -212,7 +212,7 @@ pub struct FunctionExtensions {
 /// An attribute or uniform input to a technique, and an optional semantic, and
 /// value.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Parameter<E: Extras> {
+pub struct Parameter {
     /// When defined, the parameter is an array of count elements of the
     /// specified type.
     pub count: Option<u32>,
@@ -266,7 +266,7 @@ pub struct Parameter<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::TechniqueParameter,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Parameter`.
@@ -278,7 +278,7 @@ pub struct ParameterExtensions {
 
 /// Fixed-function rendering states.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct State<E: Extras> {
+pub struct State {
     /// WebGL states to enable.
     ///
     /// States not in the array are disabled.
@@ -295,7 +295,7 @@ pub struct State<E: Extras> {
 
     /// Arguments for fixed-function rendering state functions other than
     /// enable() / disable().
-    functions: Option<Function<E>>,
+    functions: Option<Function>,
 
     /// Extension specific data.
     #[serde(default)]
@@ -303,7 +303,7 @@ pub struct State<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::TechniqueState,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `State`.
@@ -315,13 +315,13 @@ pub struct StateExtensions {
 
 /// A template for material appearances.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Technique<E: Extras> {
+pub struct Technique {
     /// A dictionary object of technique.parameters objects.
     ///
     /// Each parameter defines an attribute or uniform input, and an optional
     /// semantic and value.
     #[serde(default)]
-    parameters: HashMap<String, Parameter<E>>,
+    parameters: HashMap<String, Parameter>,
 
     /// A dictionary object of strings that maps GLSL attribute names to
     /// technique parameter IDs.
@@ -338,7 +338,7 @@ pub struct Technique<E: Extras> {
 
     /// Fixed-function rendering states.
     #[serde(default)]
-    states: Option<State<E>>,
+    states: Option<State>,
 
     /// The user-defined name of this object.
     ///
@@ -352,7 +352,7 @@ pub struct Technique<E: Extras> {
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: <E as Extras>::Technique,
+    pub extras: Extras,
 }
 
 /// Extension specific data for `Technique`.
