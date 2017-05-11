@@ -1,8 +1,8 @@
 # gltf
 
-This library is intended to load [glTF](https://www.khronos.org/gltf), a file format designed for the efficient transmission of 3D assets.
+This crate is intended to load [glTF](https://www.khronos.org/gltf), a file format designed for the efficient transmission of 3D assets.
 
-This library requires rustc version 1.15 or above in order to compile.
+`rustc` version 1.15 or above is required.
 
 [![Build Status](https://travis-ci.org/alteous/gltf.svg?branch=master)](https://travis-ci.org/alteous/gltf)
 [![crates.io](https://img.shields.io/crates/v/gltf.svg)](https://crates.io/crates/gltf)
@@ -12,65 +12,55 @@ This library requires rustc version 1.15 or above in order to compile.
 
 ### Usage
 
-#### All glTF versions
-
 Add `gltf` to the dependencies section of `Cargo.toml`.
 
 ```toml
 [dependencies]
 gltf = "0.5"
 ```
-#### glTF 1.0
+Import some glTF 1.0 / 2.0.
 
 ```rust
 extern crate gltf;
 
-// This loads all available "extra" data
-type Extras = gltf::v1::extras::Any;
-
 fn main() {
-    // Import some glTF 1.0 and print the data to the console
-    let path = "path/to/asset.gltf";
-    let root = gltf::v1::import::<_, Extras>(path).unwrap();
-    println!("{:#?}", root);
-}
-```
-
-#### glTF 2.0
-
-```rust
-extern crate gltf;
-
-// This ignores all "extra" data
-type Extras = gltf::v2::extras::None;
-
-fn main() {
-    // Import some glTF 2.0 and walk the node hierarchy of its scenes
-    let path = "path/to/asset.gltf";
-    let gltf = gltf::v2::import::<_, Extras>(path).unwrap();
-    for scene in gltf.tree().iter_scenes() {
-        for node in scene.iter_nodes() {
-            visit_node(&node);
-        }
+    // Import some glTF 1.0
+    match gltf::v1::import("Example-1.0.gltf") {
+        Ok(root) => println!("glTF 1.0: {:#?}", root),
+        Err(err) => println!("{:?}", err),
     }
-}
 
-fn visit_node(node: &gltf::v2::tree::Node<Extras>) {
-    for child in node.iter_child_nodes() {
-        visit_node(&child);
+    // Import some glTF 2.0
+    match gltf::v2::import("Example-2.0.gltf") {
+        Ok(root) => println!("glTF 2.0: {:#?}", root),
+        Err(err) => println!("{:?}", err),
     }
 }
 ```
+
 ### Extensions
 
-All glTF extensions are opt-in and are enabled by specifying [features](http://doc.crates.io/specifying-dependencies.html#choosing-features) in the Cargo.toml manifest file. For example, the below demonstrates enabling the `KHR_binary_glTF` extension:
+All glTF extensions are opt-in and are enabled by specifying [features](http://doc.crates.io/specifying-dependencies.html#choosing-features) in your crate's Cargo.toml manifest file.
+
+Currently, only the `KHR_binary_glTF` extension for glTF 1.0 is supported by the crate.
+
+#### Examples
+
+Enabling the `KHR_binary_glTF` extension.
 
 ```toml
 [dependencies]
 gltf = { version = "0.5", features = ["KHR_binary_glTF"] }
 ```
 
-Currently, only the `KHR_binary_glTF` extension for glTF 1.0 is supported by the library.
+### Extras
+
+By default, `gltf` ignores all `extras` included with glTF assets. You can negate this by enabling the `extras` feature.
+
+```toml
+[dependencies]
+gltf = { version = "0.5", features = ["extras"] }
+```
 
 ### Examples
 
@@ -80,13 +70,6 @@ If you want to see how the structure of the glTF file is deserialized, you can
 use the example here to poke at it.
 
 ```sh
-cargo run --example gltf_display path/to/gltf_file
+cargo run --example gltf_display Example.gltf
 ```
 
-#### walk_tree
-
-If you want to view the node hierarchy of a glTF 2.0 asset, try this example.
-
-```sh
-cargo run --example walk_tree path/to/gltf_file
-```
