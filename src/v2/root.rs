@@ -320,12 +320,12 @@ impl<T> serde::Serialize for Index<T> {
     }
 }
 
-impl<T> serde::Deserialize for Index<T> {
+impl<'de, T> serde::Deserialize<'de> for Index<T> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: serde::Deserializer
+        where D: serde::Deserializer<'de>
     {
         struct Visitor<T>(std::marker::PhantomData<T>);
-        impl<T> serde::de::Visitor for Visitor<T> {
+        impl<'de, T> serde::de::Visitor<'de> for Visitor<T> {
             type Value = Index<T>;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
