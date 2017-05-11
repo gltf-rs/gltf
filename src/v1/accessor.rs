@@ -43,7 +43,7 @@ pub struct Accessor<E: Extras> {
     /// The offset relative to the start of the `BufferView` in bytes.
     ///
     /// This must be a multiple of the size of the data type.
-    #[serde(rename = "byteOffset")]
+    #[serde(default, rename = "byteOffset")]
     pub byte_offset: u32,
 
     /// The stride, in bytes, between attributes referenced by this accessor.
