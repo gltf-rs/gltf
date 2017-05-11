@@ -60,7 +60,7 @@ pub struct BufferView<E: Extras> {
     pub byte_length: u32,
 
     /// Offset into the parent buffer in bytes.
-    #[serde(rename = "byteOffset")]
+    #[serde(default, rename = "byteOffset")]
     pub byte_offset: u32,
 
     /// The stride in bytes between vertex attributes or other interleavable data.
