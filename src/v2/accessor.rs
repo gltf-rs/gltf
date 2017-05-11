@@ -133,7 +133,7 @@ pub struct Accessor<E: Extras> {
     pub buffer_view: Index<buffer::BufferView<E>>,
     
     /// The offset relative to the start of the parent `BufferView` in bytes.
-    #[serde(rename = "byteOffset")]
+    #[serde(default, rename = "byteOffset")]
     pub byte_offset: u32,
     
     /// The number of components within the `BufferView` - not to be confused
