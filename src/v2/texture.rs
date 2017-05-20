@@ -118,7 +118,7 @@ pub struct Texture {
     pub internal_format: Format,
 
     /// The index of the sampler used by this texture.
-    pub sampler: Index<Sampler>,
+    pub sampler: Option<Index<Sampler>>,
 
     /// The index of the image used by this texture.
     pub source: Index<image::Image>,
@@ -181,7 +181,9 @@ impl Sampler {
 impl Texture {
     #[doc(hidden)]
     pub fn range_check(&self, root: &Root) -> Result<(), ()> {
-        let _ = root.try_get(&self.sampler)?;
+        if let Some(ref sampler) = self.sampler {
+            let _ = root.try_get(sampler)?;
+        }
         let _ = root.try_get(&self.source)?;
         Ok(())
     }
