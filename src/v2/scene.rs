@@ -42,7 +42,7 @@ pub struct Node {
     
     /// 4x4 column-major transformation matrix.
     #[serde(default = "node_matrix_default")]
-    pub matrix: [[f32; 4]; 4],
+    pub matrix: [f32; 16],
     
     /// The `Mesh` in this node.
     pub mesh: Option<Index<mesh::Mesh>>,
@@ -79,8 +79,11 @@ pub struct NodeExtensions {
     _allow_extra_fields: (),
 }
 
-fn node_matrix_default() -> [[f32; 4]; 4] {
-    [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
+fn node_matrix_default() -> [f32; 16] {
+    [1.0, 0.0, 0.0, 0.0, 
+     0.0, 1.0, 0.0, 0.0, 
+     0.0, 0.0, 1.0, 0.0, 
+     0.0, 0.0, 0.0, 1.0]
 }
 
 fn node_rotation_default() -> [f32; 4] {
