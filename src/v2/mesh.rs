@@ -76,7 +76,7 @@ pub struct Primitive {
     pub indices: Option<Index<accessor::Accessor>>,
     
     /// The material to apply to this primitive when rendering.
-    pub material: Index<material::Material>,
+    pub material: Option<Index<material::Material>>,
     
     /// The type of primitives to render.
     #[serde(default)]
@@ -106,7 +106,9 @@ impl Mesh {
             if let Some(ref indices) = primitive.indices {
                 let _ = root.try_get(indices)?;
             }
-            let _ = root.try_get(&primitive.material)?;
+            if let Some(ref material) = primitive.material {
+                let _ = root.try_get(&material)?;
+            }
             for map in &primitive.targets {
                 for accessor in map.values() {
                     let _ = root.try_get(accessor)?;
