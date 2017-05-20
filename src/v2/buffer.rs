@@ -66,7 +66,7 @@ pub struct BufferView {
     /// The stride in bytes between vertex attributes or other interleavable data.
     ///
     /// When zero, data is assumed to be tightly packed.
-    #[serde(default)]
+    #[serde(default, rename = "byteStride")]
     pub byte_stride: u32,
 
     /// Optional user-defined name for this object.

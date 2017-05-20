@@ -152,7 +152,7 @@ pub struct PbrMetallicRoughness {
     ///
     /// The stored texels must not be premultiplied.
     #[serde(rename = "baseColorTexture")]
-    pub base_color_texture: texture::TextureInfo,
+    pub base_color_texture: Option<texture::TextureInfo>,
 
     /// The metalness of the material.
     ///
@@ -181,7 +181,7 @@ pub struct PbrMetallicRoughness {
     /// * If the third component (B) and/or the fourth component (A) are present
     ///   then they are ignored.
     #[serde(rename = "metallicRoughnessTexture")]
-    pub metallic_roughness_texture: texture::TextureInfo,
+    pub metallic_roughness_texture: Option<texture::TextureInfo>,
 
     /// Extension specific data.
     #[serde(default)]
@@ -300,8 +300,12 @@ impl Material {
         if let Some(ref texture) = self.emissive_texture {
             let _ = root.try_get(&texture.index)?;
         }
-        let _ = root.try_get(&self.pbr_metallic_roughness.base_color_texture.index)?;
-        let _ = root.try_get(&self.pbr_metallic_roughness.metallic_roughness_texture.index)?;
+        if let Some(ref bct) = self.pbr_metallic_roughness.base_color_texture {
+            let _ = root.try_get(&bct.index)?;
+        }
+        if let Some(ref mrt) = self.pbr_metallic_roughness.metallic_roughness_texture {
+            let _ = root.try_get(&mrt.index)?;
+        }
         Ok(())
     }
 }
