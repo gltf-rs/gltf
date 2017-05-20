@@ -13,7 +13,7 @@ fn import_v2() {
         match gltf::v2::import(asset) {
             Ok(_) => {}
             Err(err) => {
-                println!("{:?}", err);
+                println!("{}: {:?}", asset, err);
                 panic!()
             }
         }
