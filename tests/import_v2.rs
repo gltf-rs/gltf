@@ -1,56 +1,51 @@
 
+// Copyright 2017 The gltf Library Developers
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
 extern crate gltf;
 
-#[test]
-fn import_v2() {
-    let assets = [
-        // minimal example taken from https://github.com/javagl/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_006_SimpleAnimation.md
-        "tests/minimal.gltf",
-        "glTF-Sample-Models/2.0/2CylinderEngine/glTF/2CylinderEngine.gltf",
-        "glTF-Sample-Models/2.0/AnimatedCube/glTF/AnimatedCube.gltf",
-        "glTF-Sample-Models/2.0/AnimatedMorphCube/glTF/AnimatedMorphCube.gltf",
-        "glTF-Sample-Models/2.0/AnimatedMorphSphere/glTF/AnimatedMorphSphere.gltf",
-        "glTF-Sample-Models/2.0/AnimatedTriangle/glTF/AnimatedTriangle.gltf",
-        "glTF-Sample-Models/2.0/Avocado/glTF/Avocado.gltf",
-        "glTF-Sample-Models/2.0/BarramundiFish/glTF/BarramundiFish.gltf",
-        "glTF-Sample-Models/2.0/BoomBox/glTF/BoomBox.gltf",
-        "glTF-Sample-Models/2.0/Box/glTF/Box.gltf",
-        "glTF-Sample-Models/2.0/BoxAnimated/glTF/BoxAnimated.gltf",
-        "glTF-Sample-Models/2.0/BoxTextured/glTF/BoxTextured.gltf",
-        "glTF-Sample-Models/2.0/BrainStem/glTF/BrainStem.gltf",
-        "glTF-Sample-Models/2.0/Buggy/glTF/Buggy.gltf",
-        "glTF-Sample-Models/2.0/Cameras/glTF/Cameras.gltf",
-        "glTF-Sample-Models/2.0/CesiumMan/glTF/CesiumMan.gltf",
-        "glTF-Sample-Models/2.0/CesiumMilkTruck/glTF/CesiumMilkTruck.gltf",
-        "glTF-Sample-Models/2.0/Corset/glTF/Corset.gltf",
-        "glTF-Sample-Models/2.0/Cube/glTF/Cube.gltf",
-        "glTF-Sample-Models/2.0/Duck/glTF/Duck.gltf",
-        "glTF-Sample-Models/2.0/GearboxAssy/glTF/GearboxAssy.gltf",
-        "glTF-Sample-Models/2.0/Lantern/glTF/Lantern.gltf",
-        // See https://github.com/KhronosGroup/glTF-Sample-Models/issues/70
-        // "glTF-Sample-Models/2.0/MetalRoughSpheres/glTF/MetalRoughSpheres.gltf",
-        "glTF-Sample-Models/2.0/Monster/glTF/Monster.gltf",
-        "glTF-Sample-Models/2.0/NormalTangentTest/glTF/NormalTangentTest.gltf",
-        "glTF-Sample-Models/2.0/ReciprocatingSaw/glTF/ReciprocatingSaw.gltf",
-        "glTF-Sample-Models/2.0/RiggedFigure/glTF/RiggedFigure.gltf",
-        "glTF-Sample-Models/2.0/RiggedSimple/glTF/RiggedSimple.gltf",
-        "glTF-Sample-Models/2.0/SciFiHelmet/glTF/SciFiHelmet.gltf",
-        "glTF-Sample-Models/2.0/SimpleMeshes/glTF/SimpleMeshes.gltf",
-        "glTF-Sample-Models/2.0/SmilingFace/glTF/SmilingFace.gltf",
-        "glTF-Sample-Models/2.0/Suzanne/glTF/Suzanne.gltf",
-        "glTF-Sample-Models/2.0/Triangle/glTF/Triangle.gltf",
-        "glTF-Sample-Models/2.0/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf",
-        "glTF-Sample-Models/2.0/TwoSidedPlane/glTF/TwoSidedPlane.gltf",
-        "glTF-Sample-Models/2.0/VC/glTF/VC.gltf",
-        "glTF-Sample-Models/2.0/WalkingLady/glTF/WalkingLady.gltf",
-    ];
-    for asset in assets.iter() {
-        match gltf::v2::import(asset) {
-            Ok(_) => {}
-            Err(err) => {
-                println!("{}: {:?}", asset, err);
-                panic!()
+use std::{fs, io, path};
+
+fn try_import(path: &path::Path) {
+    let _ = gltf::v2::import(&path).map_err(|err| {
+        println!("{:?}: {:?}", path, err);
+        panic!();
+    });
+}
+
+fn run() -> io::Result<()> {
+    let sample_dir_path = path::Path::new("./glTF-Sample-Models/2.0");
+    for entry in fs::read_dir(&sample_dir_path)? {
+        let entry = entry?;
+        let metadata = entry.metadata()?;
+        if metadata.is_dir() {
+            let entry_path = entry.path();
+            if let Some(file_name) = entry_path.file_name() {
+                if file_name.to_string_lossy() == "MetalRoughSpheres" {
+                    // TODO: Remove once this model has been fixed.
+                    // See https://github.com/KhronosGroup/glTF-Sample-Models/issues/68 for details.
+                    continue;
+                }
+                let mut gltf_path = entry_path.join("glTF").join(file_name);
+                gltf_path.set_extension("gltf");
+                try_import(&gltf_path);
             }
         }
     }
+    Ok(())
 }
+
+#[test]
+fn import_v2() {
+    // Import all 'standard' glTF in the glTF-Sample-Models/2.0 directory.
+    run().expect("No I/O errors");
+
+    // Minimal example taken from https://github.com/javagl/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_006_SimpleAnimation.md
+    try_import(path::Path::new("tests/minimal.gltf"));
+}
+
