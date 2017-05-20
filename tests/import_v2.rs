@@ -8,6 +8,7 @@ fn import_v2() {
         "glTF-Sample-Models/2.0/Corset/glTF/Corset.gltf",
         "glTF-Sample-Models/2.0/BoomBox/glTF/BoomBox.gltf",
         "glTF-Sample-Models/2.0/Lantern/glTF/Lantern.gltf",
+        "glTF-Sample-Models/2.0/Box/glTF/Box.gltf",
     ];
     for asset in &assets {
         match gltf::v2::import(asset) {
