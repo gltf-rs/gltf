@@ -1,41 +1,35 @@
 
 extern crate gltf;
 
-#[cfg(feature = "KHR_binary_glTF")]
-#[test]
-fn import_v1() {
-    // find glTF-Sample-Models/1.0 -name *.glb -printf "\"%p\",\n" | grep glTF-Binary/
-    let assets = [
-        "glTF-Sample-Models/1.0/2CylinderEngine/glTF-Binary/2CylinderEngine.glb",
-        "glTF-Sample-Models/1.0/VC/glTF-Binary/VC.glb",
-        "glTF-Sample-Models/1.0/BrainStem/glTF-Binary/BrainStem.glb",
-        "glTF-Sample-Models/1.0/BoxAnimated/glTF-Binary/BoxAnimated.glb",
-        "glTF-Sample-Models/1.0/BoxWithoutIndices/glTF-Binary/BoxWithoutIndices.glb",
-        "glTF-Sample-Models/1.0/CesiumMilkTruck/glTF-Binary/CesiumMilkTruck.glb",
-        "glTF-Sample-Models/1.0/Buggy/glTF-Binary/Buggy.glb",
-        "glTF-Sample-Models/1.0/Avocado/glTF-Binary/Avocado.glb",
-        "glTF-Sample-Models/1.0/WalkingLady/glTF-Binary/WalkingLady.glb",
-        "glTF-Sample-Models/1.0/ReciprocatingSaw/glTF-Binary/ReciprocatingSaw.glb",
-        "glTF-Sample-Models/1.0/GearboxAssy/glTF-Binary/GearboxAssy.glb",
-        "glTF-Sample-Models/1.0/Monster/glTF-Binary/Monster.glb",
-        "glTF-Sample-Models/1.0/Duck/glTF-Binary/Duck.glb",
-        "glTF-Sample-Models/1.0/RiggedFigure/glTF-Binary/RiggedFigure.glb",
-        "glTF-Sample-Models/1.0/BoxTextured/glTF-Binary/BoxTextured.glb",
-        "glTF-Sample-Models/1.0/BoxSemantics/glTF-Binary/BoxSemantics.glb",
-        "glTF-Sample-Models/1.0/Box/glTF-Binary/Box.glb",
-        "glTF-Sample-Models/1.0/SmilingFace/glTF-Binary/SmilingFace.glb",
-        "glTF-Sample-Models/1.0/CesiumMan/glTF-Binary/CesiumMan.glb",
-        "glTF-Sample-Models/1.0/BarramundiFish/glTF-Binary/BarramundiFish.glb",
-        "glTF-Sample-Models/1.0/RiggedSimple/glTF-Binary/RiggedSimple.glb"
-    ];
-    for asset in &assets {
-        match gltf::v1::import(&asset) {
-            Ok(_) => {}
-            Err(err) => {
-                println!("{:?}", err);
-                panic!()
+use std::{fs, io, path};
+
+fn try_import(path: &path::Path) {
+    let _ = gltf::v1::import(&path).map_err(|err| {
+        println!("{:?}: {:?}", path, err);
+        panic!();
+    });
+}
+
+fn run() -> io::Result<()> {
+    let sample_dir_path = path::Path::new("./glTF-Sample-Models/1.0");
+    for entry in fs::read_dir(&sample_dir_path)? {
+        let entry = entry?;
+        let metadata = entry.metadata()?;
+        if metadata.is_dir() {
+            let entry_path = entry.path();
+            if let Some(file_name) = entry_path.file_name() {
+                let mut gltf_path = entry_path.join("glTF-Binary").join(file_name);
+                gltf_path.set_extension("glb");
+                try_import(&gltf_path);
             }
         }
     }
+    Ok(())
+}
+
+#[cfg(feature = "KHR_binary_glTF")]
+#[test]
+fn import_v1() {
+    run().expect("No I/O errors");
 }
 

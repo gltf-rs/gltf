@@ -45,7 +45,7 @@ fn import_v2() {
     // Import all 'standard' glTF in the glTF-Sample-Models/2.0 directory.
     run().expect("No I/O errors");
 
-    // Minimal example taken from https://github.com/javagl/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_006_SimpleAnimation.md
+    // Minimal example taken from https://github.com/javagl/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_003_MinimalGltfFile.md
     try_import(path::Path::new("tests/minimal.gltf"));
 }
 
