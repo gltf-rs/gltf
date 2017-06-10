@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use std::collections::HashMap;
-use v2::{accessor, material, Extras, Index, Root};
+use v2::json::{accessor, material, Extras, Index, Root};
 
 enum_number! {
     Mode {

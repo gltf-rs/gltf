@@ -7,7 +7,7 @@
 // except according to those terms.
 
 use std::collections::HashMap;
-use v1::Extras;
+use v1::json::Extras;
 
 enum_number! {
     ParameterType {

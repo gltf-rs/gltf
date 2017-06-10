@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use std;
-use v2::*;
+use v2::json::*;
 
 /// Helper trait for retrieving top-level objects by a universal identifier.
 pub trait Get<T> {

@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::{accessor, scene, Extras, Index, Root};
+use v2::json::{accessor, scene, Extras, Index, Root};
 
 /// Joints and matrices defining a skin.
 #[derive(Clone, Debug, Deserialize, Serialize)]

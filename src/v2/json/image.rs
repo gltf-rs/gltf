@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::{buffer, Extras, Index, Root};
+use v2::json::{buffer, Extras, Index, Root};
 
 /// Image data used to create a texture.
 #[derive(Clone, Debug, Deserialize, Serialize)]

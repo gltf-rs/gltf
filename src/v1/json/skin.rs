@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v1::Extras;
+use v1::json::Extras;
 
 /// Joints and matrices defining a skin.
 #[derive(Debug, Deserialize, Serialize)]

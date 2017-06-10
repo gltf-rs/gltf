@@ -1,6 +1,6 @@
 
 use std::collections::HashMap;
-use v1::*;
+use v1::json::*;
 
 /// Extension specific data structures for `Root`.
 pub mod extensions {

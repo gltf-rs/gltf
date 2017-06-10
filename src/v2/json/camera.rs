@@ -1,3 +1,4 @@
+
 // Copyright 2017 The gltf Library Developers
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -6,21 +7,18 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v1::Extras;
-
-enum_string! {
-    CameraType {
-        Orthographic = "orthographic",
-        Perspective = "perspective",
-    }
-}
+use v2::json::{Extras, Root};
 
 /// A camera's projection.
 ///
-/// A node can reference a camera ID to apply a transform to place the camera in
-/// the scene.
-#[derive(Debug, Deserialize, Serialize)]
+/// A node can reference a camera to apply a transform to place the camera in the
+/// scene.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct Camera {
+    /// Optional user-defined name for this object.
+    pub name: Option<String>,
+
     /// An orthographic camera containing properties to create an orthographic
     /// projection matrix.
     pub orthographic: Option<Orthographic>,
@@ -30,15 +28,8 @@ pub struct Camera {
     pub perspective: Option<Perspective>,
 
     /// Specifies if the camera uses a perspective or orthographic projection.
-    ///
-    /// Based on this, either the camera's perspective or orthographic property
-    /// will be defined.
     #[serde(rename = "type")]
-    #[serde(default)]
-    pub kind: CameraType,
-
-    /// The user-defined name of this object.
-    pub name: Option<String>,
+    pub ty: String,
 
     /// Extension specific data.
     #[serde(default)]
@@ -56,24 +47,24 @@ pub struct CameraExtensions {
     _allow_extra_fields: (),
 }
 
-/// An orthographic camera containing properties to create an orthographic
-/// projection matrix.
-#[derive(Debug, Deserialize, Serialize)]
+/// Values for an orthographic camera.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct Orthographic {
     /// The horizontal magnification of the view.
-    #[serde(rename = "xmag")]
+    #[serde(default, rename = "xmag")]
     pub x_mag: f32,
 
     /// The vertical magnification of the view.
-    #[serde(rename = "ymag")]
+    #[serde(default, rename = "ymag")]
     pub y_mag: f32,
 
     /// The distance to the far clipping plane.
-    #[serde(rename = "zfar")]
+    #[serde(default, rename = "zfar")]
     pub z_far: f32,
 
     /// The distance to the near clipping plane.
-    #[serde(rename = "znear")]
+    #[serde(default, rename = "znear")]
     pub z_near: f32,
 
     /// Extension specific data.
@@ -92,30 +83,24 @@ pub struct OrthographicExtensions {
     _allow_extra_fields: (),
 }
 
-/// A perspective camera containing properties to create a perspective projection
-/// matrix.
-#[derive(Debug, Deserialize, Serialize)]
+/// Values for a perspective camera.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct Perspective {
-    /// The aspect ratio of the field of view.
-    ///
-    /// When this is undefined, the aspect ratio of the canvas is used.
-    #[serde(rename = "aspectRatio")]
-    pub aspect_ratio: Option<f32>,
+    /// Aspect ratio of the field of view.
+    #[serde(default, rename = "aspectRatio")]
+    pub aspect_ratio: f32,
 
     /// The vertical field of view in radians.
-    #[serde(rename = "yfov")]
+    #[serde(default, rename = "yfov")]
     pub y_fov: f32,
 
     /// The distance to the far clipping plane.
-    ///
-    /// `z_far` must be greater than `z_near`.
-    #[serde(rename = "zfar")]
+    #[serde(default, rename = "zfar")]
     pub z_far: f32,
 
     /// The distance to the near clipping plane.
-    ///
-    /// `z_far` must be greater than `z_near`.
-    #[serde(rename = "znear")]
+    #[serde(default, rename = "znear")]
     pub z_near: f32,
 
     /// Extension specific data.
@@ -134,8 +119,9 @@ pub struct PerspectiveExtensions {
     _allow_extra_fields: (),
 }
 
-impl Default for CameraType {
-    fn default() -> CameraType {
-        CameraType::Perspective
+impl Camera {
+    #[doc(hidden)]
+    pub fn range_check(&self, _root: &Root) -> Result<(), ()> {
+        Ok(())
     }
 }

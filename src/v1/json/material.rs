@@ -8,7 +8,7 @@
 
 use std::collections::HashMap;
 use serde_json::Value;
-use v1::Extras;
+use v1::json::Extras;
 
 /// An untyped JSON object.
 pub type UntypedJsonObject = HashMap<String, Value>;

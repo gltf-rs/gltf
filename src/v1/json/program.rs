@@ -1,4 +1,3 @@
-
 // Copyright 2017 The gltf Library Developers
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -7,34 +6,39 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v1::Extras;
+use v1::json::Extras;
 
-/// Image data used to create a texture.
+/// A shader program, including its vertex and fragment shader, and names of
+/// vertex shader attributes.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Image {
-    /// The uri of the image.
-    ///
-    /// Relative paths are relative to the .gltf file.
-    ///
-    /// The image format must be jpg, png, bmp, or gif.
-    pub uri: String,
+pub struct Program {
+    /// Names of GLSL vertex shader attributes.
+    #[serde(default)]
+    pub attributes: Vec<String>,
+
+    /// The ID of the fragment shader.
+    #[serde(rename = "fragmentShader")]
+    pub fragment_shader: String,
+
+    /// The ID of the vertex shader.
+    #[serde(rename = "vertexShader")]
+    pub vertex_shader: String,
 
     /// The user-defined name of this object.
     pub name: Option<String>,
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: ImageExtensions,
+    pub extensions: ProgramExtensions,
 
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
 }
 
-/// Extension specific data for `Image`.
+/// Extension specific data for `Program`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct ImageExtensions {
+pub struct ProgramExtensions {
     #[serde(default)]
     _allow_extra_fields: (),
 }
-

@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::{texture, Extras, Index, Root};
+use v2::json::{texture, Extras, Index, Root};
 
 enum_string! {
     AlphaMode {

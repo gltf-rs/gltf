@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::{camera, mesh, scene, skin, Extras, Index, Root};
+use v2::json::{camera, mesh, scene, skin, Extras, Index, Root};
 
 /// A node in the node hierarchy.
 ///

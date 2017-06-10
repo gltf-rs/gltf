@@ -10,7 +10,7 @@
 use serde_json;
 use std;
 use std::path::Path;
-use v1::Root;
+use v1::json::Root;
 
 /// Error encountered when loading a glTF asset.
 #[derive(Debug)]
@@ -39,7 +39,7 @@ pub enum ImportError {
 fn import_binary_gltf<S>(mut stream: S) -> Result<Root, ImportError>
     where S: std::io::Read
 {
-    use v1::root::extensions::{KhrBinaryGltf, KhrBinaryGltfHeader};
+    use v1::json::root::extensions::{KhrBinaryGltf, KhrBinaryGltfHeader};
     
     let header: KhrBinaryGltfHeader = unsafe {
         let mut buffer = [0u8; 16];
