@@ -7,13 +7,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{buffer, Extras, Index, Root};
+use v2::json::{buffer, Extras, Index};
 
 /// Image data used to create a texture.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Image {
-    /// The `BufferView` that contains the image if `uri` is `None`.
+    /// The index of the buffer view that contains the image. Use this instead of the image's uri property.
     #[serde(rename = "bufferView")]
     pub buffer_view: Option<Index<buffer::View>>,
 
@@ -24,12 +24,7 @@ pub struct Image {
     /// Optional user-defined name for this object.
     pub name: Option<String>,
 
-    /// The uniform resource identifier of the of the image if `buffer_view` is
-    /// `None`.
-    ///
-    /// Relative paths are relative to the .gltf file.
-    ///
-    /// The image format must be jpg, png, bmp, or gif.
+    /// The uri of the image.  Relative paths are relative to the .gltf file.  Instead of referencing an external file, the uri can also be a data-uri.  The image format must be jpg or png.
     pub uri: Option<String>,
 
     /// Extension specific data.
@@ -45,15 +40,5 @@ pub struct Image {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct ImageExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
-}
-
-impl Image {
-    #[doc(hidden)]
-    pub fn range_check(&self, root: &Root) -> Result<(), ()> {
-        if let Some(ref buffer_view) = self.buffer_view {
-            let _ = root.try_get(buffer_view)?;
-        }
-        Ok(())
-    }
+    _allow_unknown_fields: (),
 }

@@ -40,7 +40,7 @@ pub struct Asset {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct AssetExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// Specifies the target rendering API and version.
@@ -75,6 +75,6 @@ fn asset_profile_version_default() -> String {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct AssetProfileExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 

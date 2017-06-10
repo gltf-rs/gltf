@@ -19,6 +19,6 @@ pub type Extras = Void;
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Void {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 

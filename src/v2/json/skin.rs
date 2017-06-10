@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{accessor, scene, Extras, Index, Root};
+use v2::json::{accessor, scene, Extras, Index};
 
 /// Joints and matrices defining a skin.
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -47,21 +47,5 @@ pub struct Skin {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct SkinExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
-}
-
-impl Skin {
-    #[doc(hidden)]
-    pub fn range_check(&self, root: &Root) -> Result<(), ()> {
-        if let Some(ref accessor) = self.inverse_bind_matrices {
-            let _ = root.try_get(accessor)?;
-        }
-        for joint in &self.joints {
-            let _ = root.try_get(joint)?;
-        }
-        if let Some(ref node) = self.skeleton {
-            let _ = root.try_get(node)?;
-        }
-        Ok(())
-    }
+    _allow_unknown_fields: (),
 }

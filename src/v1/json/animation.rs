@@ -59,7 +59,7 @@ pub struct Animation {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct AnimationExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// Targets an animation's sampler at a node's property.
@@ -85,7 +85,7 @@ pub struct Channel {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct ChannelExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// Combines input and output parameters with an interpolation algorithm to
@@ -123,7 +123,7 @@ pub struct Sampler {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct SamplerExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// Defines the ID of the node and TRS property that an animation channel targets.
@@ -148,7 +148,7 @@ pub struct Target {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct TargetExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 impl Default for Interpolation {

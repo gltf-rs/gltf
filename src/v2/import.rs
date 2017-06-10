@@ -34,6 +34,34 @@ pub enum ImportError {
     IncompatibleVersion(String),
 }
 
+fn validate(root: &Root) -> Result<(), ()> {
+    use v2::validation::Validate;
+    macro_rules! validate {
+        ($field:ident) => {
+            for item in root.$field.iter() {
+                let _ = item.validate(root)?; 
+            }
+        }
+    }
+    validate!(accessors);
+    validate!(animations);
+    validate!(buffers);
+    validate!(buffer_views);
+    validate!(cameras);
+    validate!(images);
+    validate!(materials);
+    validate!(meshes);
+    validate!(nodes);
+    validate!(samplers);
+    validate!(scenes);
+    validate!(skins);
+    validate!(textures);
+    if let Some(ref scene) = root.default_scene {
+        let _ = root.try_get(scene)?;
+    }
+    Ok(())
+}
+
 /// Imports a standard (plain text JSON) glTF 2.0 asset.
 fn import_standard_gltf(data: Vec<u8>) -> Result<Root, ImportError> {
     let root: Root = serde_json::from_slice(&data)?;
@@ -49,16 +77,16 @@ fn import_impl(path: &Path) -> Result<Root, ImportError> {
     file.read_to_end(&mut buffer)?;
 
     let root: Root = if buffer.starts_with(b"glTF") {
-        return Err(ExtensionUnsupported("KHR_binary_glTF (2.0)".to_string()));
+        return Err(ExtensionUnsupported("KHR_binary_glTF".to_string()));
     } else {
         file.read_to_end(&mut buffer)?;
         import_standard_gltf(buffer)?
     };
 
-    if root.range_check().is_ok() {
+    if validate(&root).is_ok() {
         Ok(root)
     } else {
-        Err(Invalid("index out of range".to_string()))
+        Err(Invalid("Index out of range".to_string()))
     }
 }
 

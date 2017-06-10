@@ -195,6 +195,6 @@ pub struct RootExtensions {
     #[serde(skip_deserializing, skip_serializing)]
     pub khr_binary_gltf: Option<extensions::KhrBinaryGltf>,
 
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 

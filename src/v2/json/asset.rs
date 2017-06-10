@@ -27,19 +27,18 @@ pub struct Asset {
     /// Tool that generated this glTF model.
     pub generator: Option<String>,
 
+    /// The minimum glTF version that this asset targets.
+    #[serde(rename = "minVersion")]
+    pub min_version: Option<String>,
+    
     /// The glTF version of this asset.
-    #[serde(default = "asset_version_default")]
     pub version: String,
-}
-
-fn asset_version_default() -> String {
-    "2.0".to_string()
 }
 
 /// Extension specific data for `Asset`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct AssetExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 

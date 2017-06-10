@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{accessor, scene, Extras, Index, Root};
+use v2::json::{accessor, scene, Extras, Index};
 
 /// A keyframe animation.
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -39,14 +39,14 @@ pub struct Animation {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct AnimationExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// Targets an animation's sampler at a node's property.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Channel {
-    /// The index of the sampler used to compute the value for the target.
+    /// The index of a sampler in this animation used to compute the value for the target.
     pub sampler: Index<Sampler>,
     
     /// The index of the node and TRS property to target.
@@ -65,7 +65,7 @@ pub struct Channel {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct ChannelExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// The index of the node and TRS property that an animation channel targets.
@@ -92,7 +92,7 @@ pub struct Target {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct TargetExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// Defines a keyframe graph but not its target.
@@ -107,36 +107,24 @@ pub struct Sampler {
     #[serde(default)]
     pub extras: Extras,
     
-    /// The index of the accessor containing keyframe input values (e.g. time).
+    /// The index of an accessor containing keyframe input values, e.g., time.
     pub input: Index<accessor::Accessor>,
     
     /// The interpolation algorithm.
+    #[serde(default = "sampler_interpolation_default")]
     pub interpolation: String,
     
     /// The index of an accessor containing keyframe output values.
     pub output: Index<accessor::Accessor>,
 }
 
+fn sampler_interpolation_default() -> String {
+    "LINEAR".to_string()
+}
+
 /// Extension specific data for `Sampler`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct SamplerExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
-}
-
-impl Animation {
-    #[doc(hidden)]
-    pub fn range_check(&self, root: &Root) -> Result<(), ()> {
-        for sampler in &self.samplers {
-            let _ = root.try_get(&sampler.input)?;
-            let _ = root.try_get(&sampler.output)?;
-        }
-        for channel in &self.channels {
-            let _ = root.try_get(&channel.target.node)?;
-            if channel.sampler.value() as usize >= self.samplers.len() {
-                return Err(());
-            }
-        }
-        Ok(())
-    }
+    _allow_unknown_fields: (),
 }

@@ -40,5 +40,5 @@ pub struct Program {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct ProgramExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }

@@ -48,7 +48,7 @@ pub struct Buffer {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct BufferExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// A view into a buffer generally representing a subset of the buffer.
@@ -89,5 +89,5 @@ pub struct BufferView {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct BufferViewExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }

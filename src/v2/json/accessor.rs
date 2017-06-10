@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{buffer, Extras, Index, Root};
+use v2::json::{buffer, Extras, Index};
 
 /// Contains data structures for sparse storage.
 pub mod sparse {
@@ -17,17 +17,17 @@ pub mod sparse {
     #[derive(Clone, Debug, Default, Deserialize, Serialize)]
     pub struct IndicesExtensions {
         #[serde(default)]
-        _allow_extra_fields: (),
+        _allow_unknown_fields: (),
     }
 
     /// Indices of those attributes that deviate from their initialization value.
     #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(deny_unknown_fields)]
     pub struct Indices {
-        /// The parent `BufferView` containing the sparse indices.
+        /// The parent buffer view containing the sparse indices.
         ///
-        /// The referenced `BufferView` must not have `ArrayBuffer` nor
-        /// `ElementArrayBuffer` as its target.
+        /// The referenced buffer view must not have `ARRAY_BUFFER` nor
+        /// `ELEMENT_ARRAY_BUFFER` as its target.
         #[serde(rename = "bufferView")]
         pub buffer_view: Index<buffer::View>,
 
@@ -50,12 +50,13 @@ pub mod sparse {
     #[derive(Clone, Debug, Default, Deserialize, Serialize)]
     pub struct StorageExtensions {
         #[serde(default)]
-        _allow_extra_fields: (),
+        _allow_unknown_fields: (),
     }
 
     /// Sparse storage of attributes that deviate from their initialization value.
     #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct Storage {
+    #[serde(deny_unknown_fields)]
+    pub struct Sparse {
         /// The number of attributes encoded in this sparse accessor.
         pub count: u32,
 
@@ -83,7 +84,7 @@ pub mod sparse {
     #[derive(Clone, Debug, Default, Deserialize, Serialize)]
     pub struct ValuesExtensions {
         #[serde(default)]
-        _allow_extra_fields: (),
+        _allow_unknown_fields: (),
     }
 
     /// Array of size `count * number_of_components` storing the displaced
@@ -91,14 +92,14 @@ pub mod sparse {
     #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(deny_unknown_fields)]
     pub struct Values {
-        /// The parent `BufferView` containing the sparse indices.
+        /// The parent buffer view containing the sparse indices.
         ///
-        /// The referenced `BufferView` must not have `ArrayBuffer` nor
-        /// `ElementArrayBuffer` as its target.
+        /// The referenced buffer view must not have `ARRAY_BUFFER` nor
+        /// `ELEMENT_ARRAY_BUFFER` as its target.
         #[serde(rename = "bufferView")]
         pub buffer_view: Index<buffer::View>,
 
-        /// The offset relative to the start of the parent `BufferView` in bytes.
+        /// The offset relative to the start of the parent buffer view in bytes.
         #[serde(default, rename = "byteOffset")]
         pub byte_offset: u32,
 
@@ -114,14 +115,14 @@ pub mod sparse {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct AccessorExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// A typed view into a `BufferView`.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Accessor {
-    /// The parent `BufferView` this accessor reads from.
+    /// The parent buffer view this accessor reads from.
     #[serde(rename = "bufferView")]
     pub buffer_view: Index<buffer::View>,
     
@@ -129,11 +130,11 @@ pub struct Accessor {
     #[serde(default, rename = "byteOffset")]
     pub byte_offset: u32,
     
-    /// The number of components within the `BufferView` - not to be confused
-    /// with the number of bytes in the `BufferView`.
+    /// The number of components within the buffer view - not to be confused
+    /// with the number of bytes in the buffer view.
     pub count: u32,
     
-    /// The data type of each component.
+    /// The data type of components in the attribute.
     #[serde(rename = "componentType")]
     pub component_type: u32,
     
@@ -145,39 +146,24 @@ pub struct Accessor {
     #[serde(default)]
     pub extras: Extras,
     
-    /// The multiplicity of each component.
+    /// Specifies if the attribute is a scalar, vector, or matrix.
     #[serde(rename = "type")]
     pub type_: String,
     
-    /// Minimum value of each element in this attribute.
-    #[serde(default)]
+    /// Minimum value of each component in this attribute.
     pub min: Vec<f32>,
 
-    /// Maximum value of each element in this attribute.
-    #[serde(default)]
+    /// Maximum value of each component in this attribute.
     pub max: Vec<f32>,
-    
+
     /// Optional user-defined name for this object.
     pub name: Option<String>,
-    
+
     /// Specifies whether integer data values should be normalized.
     #[serde(default)]
     pub normalized: bool,
     
     /// Sparse storage of attributes that deviate from their initialization
     /// value.
-    pub sparse: Option<sparse::Storage>,
-}
-
-impl Accessor {
-    /// Returns `Ok(())` if all indices are in range of the maximums.
-    #[doc(hidden)]
-    pub fn range_check(&self, root: &Root) -> Result<(), ()> {
-        if let Some(ref sparse) = self.sparse {
-            let _ = root.try_get(&sparse.indices.buffer_view)?;
-            let _ = root.try_get(&sparse.values.buffer_view)?;
-        }
-        let _ = root.try_get(&self.buffer_view)?;
-        Ok(())
-    }
+    pub sparse: Option<sparse::Sparse>,
 }

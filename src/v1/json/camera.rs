@@ -53,7 +53,7 @@ pub struct Camera {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct CameraExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// An orthographic camera containing properties to create an orthographic
@@ -89,7 +89,7 @@ pub struct Orthographic {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct OrthographicExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// A perspective camera containing properties to create a perspective projection
@@ -131,7 +131,7 @@ pub struct Perspective {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct PerspectiveExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 impl Default for CameraType {

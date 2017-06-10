@@ -48,7 +48,7 @@ pub struct Mesh {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct MeshExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// Geometry to be rendered with the given material.
@@ -88,7 +88,7 @@ pub struct Primitive {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct PrimitiveExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 impl Default for Mode {

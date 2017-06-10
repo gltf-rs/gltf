@@ -13,5 +13,8 @@ pub mod json;
 /// Contains functions for importing glTF 2.0 assets.
 pub mod import;
 
+/// Contains functions that validate glTF JSON data against the specification.
+pub mod validation;
+
 pub use self::import::{import, ImportError};
 

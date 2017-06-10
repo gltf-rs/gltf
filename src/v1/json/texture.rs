@@ -107,7 +107,7 @@ fn sample_wrap_t_default() -> Wrap {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct SamplerExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// A texture and its sampler.
@@ -153,7 +153,7 @@ pub struct Texture {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct TextureExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 impl Default for Filter {

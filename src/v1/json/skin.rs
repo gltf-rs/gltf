@@ -57,6 +57,6 @@ fn skin_bind_shape_matrix() -> [f32; 16] {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct SkinExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 

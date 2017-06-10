@@ -206,7 +206,7 @@ fn function_scissor_default() -> [f32; 4] {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct FunctionExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// An attribute or uniform input to a technique, and an optional semantic, and
@@ -273,7 +273,7 @@ pub struct Parameter {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct ParameterExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// Fixed-function rendering states.
@@ -310,7 +310,7 @@ pub struct State {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct StateExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// A template for material appearances.
@@ -359,7 +359,7 @@ pub struct Technique {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct TechniqueExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 impl Default for ParameterType {

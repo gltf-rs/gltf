@@ -7,19 +7,19 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{image, Extras, Index, Root};
+use v2::json::{image, Extras, Index};
 
 /// Texture sampler properties for filtering and wrapping modes.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Sampler {
     /// Magnification filter.
-    #[serde(default = "sampler_mag_filter_default", rename = "magFilter")]
-    pub mag_filter: u32,
+    #[serde(rename = "magFilter")]
+    pub mag_filter: Option<u32>,
 
     /// Minification filter.
-    #[serde(default = "sampler_min_filter_default", rename = "minFilter")]
-    pub min_filter: u32,
+    #[serde(rename = "minFilter")]
+    pub min_filter: Option<u32>,
 
     /// Optional user-defined name for this object.
     pub name: Option<String>,
@@ -41,14 +41,6 @@ pub struct Sampler {
     pub extras: Extras,
 }
 
-fn sampler_mag_filter_default() -> u32 {
-    9729
-}
-
-fn sampler_min_filter_default() -> u32 {
-    9986
-}
-
 fn sampler_wrap_s_default() -> u32 {
     10497
 }
@@ -61,36 +53,20 @@ fn sampler_wrap_t_default() -> u32 {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct SamplerExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Texture {
-    /// Texel data type.
-    #[serde(default = "texture_type_default", rename = "type")]
-    pub type_: u32,
-
     /// Optional user-defined name for this object.
     pub name: Option<String>,
-
-    /// The texture format.
-    #[serde(default = "texture_format_default")]
-    pub format: u32,
-
-    /// The texture internal format.
-    #[serde(default = "texture_internal_format_default", rename = "internalFormat")]
-    pub internal_format: u32,
 
     /// The index of the sampler used by this texture.
     pub sampler: Option<Index<Sampler>>,
 
     /// The index of the image used by this texture.
     pub source: Index<image::Image>,
-
-    /// The target the texture should be bound to.
-    #[serde(default = "texture_target_default")]
-    pub target: u32,
 
     /// Extension specific data.
     #[serde(default)]
@@ -101,27 +77,11 @@ pub struct Texture {
     pub extras: Extras,
 }
 
-fn texture_format_default() -> u32 {
-    6408
-}
-
-fn texture_internal_format_default() -> u32 {
-    6408
-}
-
-fn texture_target_default() -> u32 {
-    3553
-}
-
-fn texture_type_default() -> u32 {
-    5121
-}
-
 /// Extension specific data for `Texture`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct TextureExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 
@@ -149,23 +109,5 @@ pub struct Info {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct InfoExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
-}
-
-impl Sampler {
-    #[doc(hidden)]
-    pub fn range_check(&self, _root: &Root) -> Result<(), ()> {
-        Ok(())
-    }
-}
-
-impl Texture {
-    #[doc(hidden)]
-    pub fn range_check(&self, root: &Root) -> Result<(), ()> {
-        if let Some(ref sampler) = self.sampler {
-            let _ = root.try_get(sampler)?;
-        }
-        let _ = root.try_get(&self.source)?;
-        Ok(())
-    }
+    _allow_unknown_fields: (),
 }

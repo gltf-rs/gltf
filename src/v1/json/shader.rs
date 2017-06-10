@@ -44,7 +44,7 @@ pub struct Shader {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct ShaderExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 impl Default for ShaderType {

@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{Extras, Index, Root};
+use v2::json::{Extras, Index};
 
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -20,10 +20,8 @@ pub struct Buffer {
     /// Optional user-defined name for this object.
     pub name: Option<String>,
 
-    /// Uniform resource locator of the buffer.
-    ///
-    /// Relative paths are relative to the .gltf file.
-    pub uri: String,
+    /// The uri of the buffer.  Relative paths are relative to the .gltf file.  Instead of referencing an external file, the uri can also be a data-uri.
+    pub uri: Option<String>,
 
     /// Extension specific data.
     #[serde(default)]
@@ -38,7 +36,7 @@ pub struct Buffer {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct BufferExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// A view into a buffer generally representing a subset of the buffer.
@@ -59,8 +57,8 @@ pub struct View {
     /// The stride in bytes between vertex attributes or other interleavable data.
     ///
     /// When zero, data is assumed to be tightly packed.
-    #[serde(default, rename = "byteStride")]
-    pub byte_stride: u32,
+    #[serde(rename = "byteStride")]
+    pub byte_stride: Option<u32>,
 
     /// Optional user-defined name for this object.
     pub name: Option<String>,
@@ -81,20 +79,5 @@ pub struct View {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct ViewExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
-}
-
-impl Buffer {
-    #[doc(hidden)]
-    pub fn range_check(&self, _root: &Root) -> Result<(), ()> {
-        Ok(())
-    }
-}
-
-impl View {
-    #[doc(hidden)]
-    pub fn range_check(&self, root: &Root) -> Result<(), ()> {
-        let _ = root.try_get(&self.buffer)?;
-        Ok(())
-    }
+    _allow_unknown_fields: (),
 }

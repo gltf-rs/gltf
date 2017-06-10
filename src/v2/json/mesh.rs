@@ -8,13 +8,13 @@
 // except according to those terms.
 
 use std::collections::HashMap;
-use v2::json::{accessor, material, Extras, Index, Root};
+use v2::json::{accessor, material, Extras, Index};
 
 /// Extension specific data for `Mesh`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct MeshExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// A set of primitives to be rendered.
@@ -39,8 +39,7 @@ pub struct Mesh {
     pub primitives: Vec<Primitive>,
 
     /// Defines the weights to be applied to the morph targets.
-    #[serde(default)]
-    pub weights: Vec<f32>,
+    pub weights: Option<Vec<f32>>,
 }
 
 /// Geometry to be rendered with the given material.
@@ -49,7 +48,6 @@ pub struct Mesh {
 pub struct Primitive {
     /// Maps attribute semantic names to the `Accessor`s containing the
     /// corresponding attribute data.
-    #[serde(default)]
     pub attributes: HashMap<String, Index<accessor::Accessor>>,
     
     /// Extension specific data.
@@ -60,20 +58,18 @@ pub struct Primitive {
     #[serde(default)]
     pub extras: Extras,
     
-    /// The `Accessor` that contains the indices.
+    /// The index of the accessor that contains the indices.
     pub indices: Option<Index<accessor::Accessor>>,
     
-    /// The material to apply to this primitive when rendering.
+    /// The index of the material to apply to this primitive when rendering
     pub material: Option<Index<material::Material>>,
     
     /// The type of primitives to render.
     #[serde(default = "primitive_mode_default")]
     pub mode: u32,
     
-    /// Maps attribute names (only `"POSITION"` and `"NORMAL"`) to their
-    /// deviations in the morph target.
-    #[serde(default)]
-    pub targets: Vec<HashMap<String, Index<accessor::Accessor>>>,
+    /// An array of Morph Targets, each  Morph Target is a dictionary mapping attributes (only `POSITION`, `NORMAL`, and `TANGENT` supported) to their deviations in the Morph Target.
+    pub targets: Option<Vec<HashMap<String, Index<accessor::Accessor>>>>,
 }
 
 fn primitive_mode_default() -> u32 {
@@ -84,28 +80,5 @@ fn primitive_mode_default() -> u32 {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct PrimitiveExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
-}
-
-impl Mesh {
-    #[doc(hidden)]
-    pub fn range_check(&self, root: &Root) -> Result<(), ()> {
-        for primitive in &self.primitives {
-            for accessor in primitive.attributes.values() {
-                let _ = root.try_get(accessor)?;
-            }
-            if let Some(ref indices) = primitive.indices {
-                let _ = root.try_get(indices)?;
-            }
-            if let Some(ref material) = primitive.material {
-                let _ = root.try_get(&material)?;
-            }
-            for map in &primitive.targets {
-                for accessor in map.values() {
-                    let _ = root.try_get(accessor)?;
-                }
-            }
-        }
-        Ok(())
-    }
+    _allow_unknown_fields: (),
 }

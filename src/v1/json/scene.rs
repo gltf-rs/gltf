@@ -102,7 +102,7 @@ fn node_translation_default() -> [f32; 3] {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct NodeExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// The root nodes of a scene.
@@ -128,6 +128,6 @@ pub struct Scene {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct SceneExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 

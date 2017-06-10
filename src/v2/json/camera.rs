@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{Extras, Root};
+use v2::json::{Extras};
 
 /// A camera's projection.
 ///
@@ -44,7 +44,7 @@ pub struct Camera {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct CameraExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// Values for an orthographic camera.
@@ -52,19 +52,15 @@ pub struct CameraExtensions {
 #[serde(deny_unknown_fields)]
 pub struct Orthographic {
     /// The horizontal magnification of the view.
-    #[serde(default, rename = "xmag")]
     pub xmag: f32,
 
     /// The vertical magnification of the view.
-    #[serde(default, rename = "ymag")]
     pub ymag: f32,
 
     /// The distance to the far clipping plane.
-    #[serde(default, rename = "zfar")]
     pub zfar: f32,
 
     /// The distance to the near clipping plane.
-    #[serde(default, rename = "znear")]
     pub znear: f32,
 
     /// Extension specific data.
@@ -80,7 +76,7 @@ pub struct Orthographic {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct OrthographicExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 /// Values for a perspective camera.
@@ -92,15 +88,13 @@ pub struct Perspective {
     pub aspect_ratio: f32,
 
     /// The vertical field of view in radians.
-    #[serde(default, rename = "yfov")]
     pub yfov: f32,
 
     /// The distance to the far clipping plane.
-    #[serde(default, rename = "zfar")]
+    #[serde(default)]
     pub zfar: f32,
 
     /// The distance to the near clipping plane.
-    #[serde(default, rename = "znear")]
     pub znear: f32,
 
     /// Extension specific data.
@@ -116,12 +110,5 @@ pub struct Perspective {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct PerspectiveExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
-}
-
-impl Camera {
-    #[doc(hidden)]
-    pub fn range_check(&self, _root: &Root) -> Result<(), ()> {
-        Ok(())
-    }
+    _allow_unknown_fields: (),
 }

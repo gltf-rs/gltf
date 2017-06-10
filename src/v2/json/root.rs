@@ -32,25 +32,29 @@ pub struct Index<T>(u32, std::marker::PhantomData<T>);
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Root {
+    /// An array of accessors.
     #[serde(default)]
     pub accessors: Vec<accessor::Accessor>,
     
+    /// An array of keyframe animations.
     #[serde(default)]
     pub animations: Vec<animation::Animation>,
 
     /// Metadata about the glTF asset.
     pub asset: asset::Asset,
     
+    /// An array of buffers.
     #[serde(default)]
     pub buffers: Vec<buffer::Buffer>,
     
+    /// An array of buffer views.
     #[serde(default, rename = "bufferViews")]
     pub buffer_views: Vec<buffer::View>,
 
     /// The default scene.
-    #[serde(default = "root_scene_default", rename = "scene")]
-    pub default_scene: Index<scene::Scene>,
-    
+    #[serde(rename = "scene")]
+    pub default_scene: Option<Index<scene::Scene>>,
+
     /// Extension specific data.
     #[serde(default)]
     pub extensions: RootExtensions,
@@ -67,42 +71,47 @@ pub struct Root {
     #[serde(default, rename = "extensionsRequired")]
     pub extensions_required: Vec<String>,
     
+    /// An array of cameras.
     #[serde(default)]
     pub cameras: Vec<camera::Camera>,
     
+    /// An array of images.
     #[serde(default)]
     pub images: Vec<image::Image>,
     
+    /// An array of materials.
     #[serde(default)]
     pub materials: Vec<material::Material>,
     
+    /// An array of meshes.
     #[serde(default)]
     pub meshes: Vec<mesh::Mesh>,
     
+    /// An array of nodes.
     #[serde(default)]
     pub nodes: Vec<scene::Node>,
     
+    /// An array of samplers.
     #[serde(default)]
     pub samplers: Vec<texture::Sampler>,
     
+    /// An array of scenes.
     #[serde(default)]
     pub scenes: Vec<scene::Scene>,
     
+    /// An array of skins.
     #[serde(default)]
     pub skins: Vec<skin::Skin>,
     
+    /// An array of textures.
     #[serde(default)]
     pub textures: Vec<texture::Texture>,
-}
-
-fn root_scene_default() -> Index<scene::Scene> {
-    Index(0, std::marker::PhantomData)
 }
 
 /// Extension specific data for `Root`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct RootExtensions {
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
 
 impl Root {
@@ -162,8 +171,8 @@ impl Root {
     }
 
     /// Returns the default scene.
-    pub fn default_scene(&self) -> &scene::Scene {
-        self.get(&self.default_scene)
+    pub fn default_scene(&self) -> Option<&scene::Scene> {
+        self.default_scene.as_ref().map(|s| self.get(s))
     }
 
     /// Returns the extensions referenced in this .gltf file.
@@ -231,33 +240,6 @@ impl Root {
     /// Returns all nodes as a slice.
     pub fn nodes(&self) -> &[scene::Node] {
         &self.nodes
-    }
-    
-    /// Performs a search for any indices that are out of range of the array
-    /// they reference. Returns true if all indices are within range.
-    pub fn range_check(&self) -> Result<(), ()> {
-        macro_rules! range_check {
-            ($field:ident) => {
-                for item in self.$field.iter() {
-                    let _ = item.range_check(self)?; 
-                }
-            }
-        }
-        range_check!(accessors);
-        range_check!(animations);
-        range_check!(buffers);
-        range_check!(buffer_views);
-        range_check!(cameras);
-        range_check!(images);
-        range_check!(materials);
-        range_check!(meshes);
-        range_check!(nodes);
-        range_check!(samplers);
-        range_check!(scenes);
-        range_check!(skins);
-        range_check!(textures);
-        let _ = self.try_get(&self.default_scene)?;
-        Ok(())
     }
 
     /// Returns the sampler at the given index.

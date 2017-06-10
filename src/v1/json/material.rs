@@ -45,5 +45,5 @@ pub struct Material {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct MaterialExtensions {
     #[serde(default)]
-    _allow_extra_fields: (),
+    _allow_unknown_fields: (),
 }
