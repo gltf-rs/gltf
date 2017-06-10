@@ -7,14 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-/// Contains (de)serializable data structures that represent the glTF JSON data.
-pub mod json;
+/// Names of glTF 2.0 extensions enabled by the user.
+pub const ENABLED_EXTENSIONS: &'static [&'static str] = &[];
 
-/// Contains functions for importing glTF 2.0 assets.
-pub mod import;
-
-/// Contains functions that validate glTF JSON data against the specification.
-pub mod validation;
-
-pub use self::import::import;
+/// Names of glTF 2.0 extensions supported by the library.
+pub const SUPPORTED_EXTENSIONS: &'static [&'static str] = &[];
 

@@ -7,168 +7,312 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::borrow::Cow;
 use v2::json::*;
 
+pub use self::error::Error;
+
+use self::error::oob;
+
+/// Trait for validating glTF JSON data against the 2.0 specification.
 pub trait Validate {
-    fn validate(&self, root: &Root) -> Result<(), ()>;
+    /// Validates the data.
+    fn validate<E: FnMut(Error)>(&self, root: &Root, err: E);
 }
 
-impl Validate for mesh::Mesh {
-    fn validate(&self, root: &Root) -> Result<(), ()> {
-        for primitive in &self.primitives {
-            for accessor in primitive.attributes.values() {
-                let _ = root.try_get(accessor)?;
+/// Contains `Error` and other related data structures.
+pub mod error {
+    use std::borrow::Cow;
+    
+    #[derive(Clone, Copy, Debug)]
+    /// Specifies what kind of error occured during validation.
+    pub enum Kind {
+        /// An index was found to be out of bounds.
+        IndexOutOfBounds,
+    }
+
+    /// Error type encountered when validating glTF JSON data.
+    #[derive(Clone, Debug)]
+    pub struct Error {
+        /// What kind of error occured during validation.
+        kind: Kind,
+
+        /// The source of the error, i.e. the path of the offending JSON data.
+        source: Cow<'static, str>,
+    }
+
+    /// Returns an `IndexOutOfBounds` error.
+    pub fn oob(source: Cow<'static, str>) -> Error {
+        Error {
+            kind: Kind::IndexOutOfBounds,
+            source: source,
+        }
+    }
+
+    impl Error {
+        /// Propagates an error up in the JSON heirarchy.
+        pub fn propagate(self, from_source: Cow<'static, str>) -> Self {
+            let src = format!("{}.{}", from_source.as_ref(), self.source.as_ref());
+            Self {
+                kind: self.kind,
+                source: Cow::from(src),
             }
-            if let Some(ref indices) = primitive.indices {
-                let _ = root.try_get(indices)?;
+        }
+    }
+
+    impl ::std::error::Error for Error {
+        fn description(&self) -> &str {
+            match self.kind {
+                Kind::IndexOutOfBounds => "index out of range",
             }
-            if let Some(ref material) = primitive.material {
-                let _ = root.try_get(&material)?;
+        }
+    }
+
+    impl ::std::fmt::Display for Error {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+            use ::std::error::Error;
+            write!(f, "{}: {}", self.source.as_ref(), self.description())
+        }
+    }
+}
+
+impl Validate for mesh::Primitive {
+    fn validate<E: FnMut(Error)>(&self, root: &Root, mut err: E) {
+        for (attribute, accessor) in self.attributes.iter() {
+            if let Err(_) = root.try_get(accessor) {
+                let src = Cow::from(format!("attributes[{}]", attribute));
+                err(oob(src));
             }
-            if let Some(ref targets) = primitive.targets {
-                for map in targets.iter() {
-                    for accessor in map.values() {
-                        let _ = root.try_get(accessor)?;
+        }
+        if let Some(ref indices) = self.indices {
+            if let Err(_) = root.try_get(indices) {
+                let src = Cow::from("indices");
+                err(oob(src));
+            }
+        }
+        if let Some(ref material) = self.material {
+            if let Err(_) = root.try_get(&material) {
+                let src = Cow::from("material");
+                err(oob(src));
+            }
+        }
+        if let Some(ref targets) = self.targets {
+            for (index, map) in targets.iter().enumerate() {
+                for (attribute, accessor) in map.iter() {
+                    if let Err(_) = root.try_get(accessor) {
+                        let src = format!("targets[{}][{}]", index, attribute);
+                        err(oob(Cow::from(src)));
                     }
                 }
             }
         }
-        Ok(())
+    }
+}
+
+impl Validate for mesh::Mesh {
+    fn validate<E: FnMut(Error)>(&self, root: &Root, mut err: E) {
+        for (index, primitive) in self.primitives.iter().enumerate() {
+            primitive.validate(root, |e| {
+                let src = Cow::from(format!("primitive[{}]", index));
+                err(e.propagate(src));
+            });
+        }
     }
 }
 
 impl Validate for accessor::Accessor {
-    fn validate(&self, root: &Root) -> Result<(), ()> {
+    fn validate<E: FnMut(Error)>(&self, root: &Root, mut err: E) {
         if let Some(ref sparse) = self.sparse {
-            let _ = root.try_get(&sparse.indices.buffer_view)?;
-            let _ = root.try_get(&sparse.values.buffer_view)?;
+            if let Err(_) = root.try_get(&sparse.indices.buffer_view) {
+                let src = Cow::from("sparse.indices.buffer_view");
+                err(oob(src));
+            }
+            if let Err(_) = root.try_get(&sparse.values.buffer_view) {
+                let src = Cow::from("sparse.values.buffer_view");
+                err(oob(src));
+            }
         }
-        let _ = root.try_get(&self.buffer_view)?;
-        Ok(())
+        if let Err(_) = root.try_get(&self.buffer_view) {
+            let src = Cow::from("buffer_view");
+            err(oob(src));
+        }
     }
 }
 
 impl Validate for material::Material {
-    fn validate(&self, root: &Root) -> Result<(), ()> {
+    fn validate<E: FnMut(Error)>(&self, root: &Root, mut err: E) {
         if let Some(ref texture) = self.normal_texture {
-            let _ = root.try_get(&texture.index)?;
+            if let Err(_) = root.try_get(&texture.index) {
+                let src = Cow::from("normal_texture.index");
+                err(oob(src));
+            }
         }
         if let Some(ref texture) = self.occlusion_texture {
-            let _ = root.try_get(&texture.index)?;
+            if let Err(_) = root.try_get(&texture.index) {
+                let src = Cow::from("occlusion_texture.index");
+                err(oob(src));
+            }
         }
         if let Some(ref texture) = self.emissive_texture {
-            let _ = root.try_get(&texture.index)?;
+            if let Err(_) = root.try_get(&texture.index) {
+                let src = Cow::from("emissive_texture.index");
+                err(oob(src));
+            }
         }
         if let Some(ref bct) = self.pbr_metallic_roughness.base_color_texture {
-            let _ = root.try_get(&bct.index)?;
+            if let Err(_) = root.try_get(&bct.index) {
+                let src = Cow::from("pbr_metallic_roughness.base_color_texture.index");
+                err(oob(src));
+            }
         }
         if let Some(ref mrt) = self.pbr_metallic_roughness.metallic_roughness_texture {
-            let _ = root.try_get(&mrt.index)?;
+            if let Err(_) = root.try_get(&mrt.index) {
+                let src = Cow::from("pbr_metallic_roughness.metallic_roughness_texture.index");
+                err(oob(src));
+            }
         }
-        Ok(())
     }
 }
 
 impl Validate for animation::Animation {
-    fn validate(&self, root: &Root) -> Result<(), ()> {
-        for sampler in &self.samplers {
-            let _ = root.try_get(&sampler.input)?;
-            let _ = root.try_get(&sampler.output)?;
-        }
-        for channel in &self.channels {
-            let _ = root.try_get(&channel.target.node)?;
-            if channel.sampler.value() as usize >= self.samplers.len() {
-                return Err(());
+    fn validate<E: FnMut(Error)>(&self, root: &Root, mut err: E) {
+        for (index, sampler) in self.samplers.iter().enumerate() {
+            if let Err(_) = root.try_get(&sampler.input) {
+                let src = Cow::from(format!("samplers[{}].input", index));
+                err(oob(src));
+            }
+            if let Err(_) = root.try_get(&sampler.output) {
+                let src = Cow::from(format!("samplers[{}].output", index));
+                err(oob(src));
             }
         }
-        Ok(())
+        for (index, channel) in self.channels.iter().enumerate() {
+            if let Err(_) = root.try_get(&channel.target.node) {
+                let src = Cow::from(format!("channels[{}].target.node", index));
+                err(oob(src));
+            }
+            if channel.sampler.value() as usize >= self.samplers.len() {
+                let src = Cow::from(format!("channels[{}].sampler", index));
+                err(oob(src));
+            }
+        }
     }
 }
 
 impl Validate for buffer::Buffer {
-    fn validate(&self, _root: &Root) -> Result<(), ()> {
-        Ok(())
+    fn validate<E: FnMut(Error)>(&self, _root: &Root, _err: E) {
+        // nop
     }
 }
 
 impl Validate for camera::Camera {
-    fn validate(&self, _root: &Root) -> Result<(), ()> {
-        Ok(())
+    fn validate<E: FnMut(Error)>(&self, _root: &Root, _err: E) {
+        // nop
     }
 }
 
 impl Validate for buffer::View {
-    fn validate(&self, root: &Root) -> Result<(), ()> {
-        let _ = root.try_get(&self.buffer)?;
-        Ok(())
+    fn validate<E: FnMut(Error)>(&self, root: &Root, mut err: E) {
+        if let Err(_) = root.try_get(&self.buffer) {
+            let src = Cow::from("buffer");
+            err(oob(src));
+        }
     }
 }
 
 impl Validate for image::Image {
-    fn validate(&self, root: &Root) -> Result<(), ()> {
+    fn validate<E: FnMut(Error)>(&self, root: &Root, mut err: E) {
         if let Some(ref buffer_view) = self.buffer_view {
-            let _ = root.try_get(buffer_view)?;
+            if let Err(_) = root.try_get(buffer_view) {
+                let src = Cow::from("buffer_view");
+                err(oob(src));
+            }
         }
-        Ok(())
     }
 }
 
 impl Validate for skin::Skin {
-    fn validate(&self, root: &Root) -> Result<(), ()> {
+    fn validate<E: FnMut(Error)>(&self, root: &Root, mut err: E) {
         if let Some(ref accessor) = self.inverse_bind_matrices {
-            let _ = root.try_get(accessor)?;
+            if let Err(_) = root.try_get(accessor) {
+                let src = Cow::from("inverse_bind_matrices");
+                err(oob(src));
+            }
         }
-        for joint in &self.joints {
-            let _ = root.try_get(joint)?;
+        for (index, joint) in self.joints.iter().enumerate() {
+            if let Err(_) = root.try_get(joint) {
+                let src = Cow::from(format!("joints[{}]", index));
+                err(oob(src));
+            }
         }
         if let Some(ref node) = self.skeleton {
-            let _ = root.try_get(node)?;
+            if let Err(_) = root.try_get(node) {
+                let src = Cow::from("skeleton");
+                err(oob(src));
+            }
         }
-        Ok(())
     }
 }
 
 impl Validate for texture::Sampler {
-    fn validate(&self, _root: &Root) -> Result<(), ()> {
-        Ok(())
+    fn validate<E: FnMut(Error)>(&self, _root: &Root, _err: E) {
+        // nop
     }
 }
 
 impl Validate for texture::Texture {
-    fn validate(&self, root: &Root) -> Result<(), ()> {
+    fn validate<E: FnMut(Error)>(&self, root: &Root, mut err: E) {
         if let Some(ref sampler) = self.sampler {
-            let _ = root.try_get(sampler)?;
+            if let Err(_) = root.try_get(sampler) {
+                let src = Cow::from("sampler");
+                err(oob(src));
+            }
         }
-        let _ = root.try_get(&self.source)?;
-        Ok(())
+        if let Err(_) = root.try_get(&self.source) {
+            let src = Cow::from("source");
+            err(oob(src));
+        }
     }
 }
 
 impl Validate for scene::Node {
-    fn validate(&self, root: &Root) -> Result<(), ()> {
+    fn validate<E: FnMut(Error)>(&self, root: &Root, mut err: E) {
         if let Some(ref camera) = self.camera {
-            let _ = root.try_get(&camera)?;
-            if let Some(ref children) = self.children {
-            for node in children.iter() {
-                let _ = root.try_get(node)?;
+            if let Err(_) = root.try_get(&camera) {
+                let src = Cow::from("camera");
+                err(oob(src));
             }
+            if let Some(ref children) = self.children {
+                for (index, node) in children.iter().enumerate() {
+                    if let Err(_) = root.try_get(node) {
+                        let src = Cow::from(format!("children[{}]", index));
+                        err(oob(src));
+                    }
+                }
             }
         }
         if let Some(ref mesh) = self.mesh {
-            let _ = root.try_get(mesh)?;
+            if let Err(_) = root.try_get(mesh) {
+                let src = Cow::from("mesh");
+                err(oob(src));
+            }
         }
         if let Some(ref skin) = self.skin {
-            let _ = root.try_get(skin)?;
+            if let Err(_) = root.try_get(skin) {
+                let src = Cow::from("skin");
+                err(oob(src));
+            }
         }
-        Ok(())
     }
 }
 
 impl Validate for scene::Scene {
-    fn validate(&self, root: &Root) -> Result<(), ()> {
-        for node in &self.nodes {
-            let _ = root.try_get(node)?;
+    fn validate<E: FnMut(Error)>(&self, root: &Root, mut err: E) {
+        for (index, node) in self.nodes.iter().enumerate() {
+            if let Err(_) = root.try_get(node) {
+                let src = Cow::from(format!("nodes[{}]", index));
+                err(oob(src));
+            }
         }
-        Ok(())
     }
 }

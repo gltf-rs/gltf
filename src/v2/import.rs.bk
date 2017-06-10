@@ -11,11 +11,10 @@ use serde_json;
 use std;
 use std::path::Path;
 use v2::json::Root;
-use v2::validation;
 
 /// Error encountered when importing a glTF 2.0 asset.
 #[derive(Debug)]
-pub enum Error {
+pub enum ImportError {
     /// Failure when deserializing a .gltf metadata file.
     Deserialize(serde_json::error::Error),
     
@@ -26,7 +25,7 @@ pub enum Error {
     ExtensionUnsupported(String),
     
     /// The .gltf data is invalid.
-    Validation(Vec<validation::Error>),
+    Invalid(String),
     
     /// Standard input / output error.
     Io(std::io::Error),
@@ -35,55 +34,43 @@ pub enum Error {
     IncompatibleVersion(String),
 }
 
-fn validate(root: &Root) -> Vec<validation::Error> {
-    use self::validation::Validate;
-    use std::borrow::Cow;
-    let mut errs = Vec::new();
+fn validate(root: &Root) -> Result<(), ()> {
+    use v2::validation::Validate;
     macro_rules! validate {
-        ($($field:ident,)*) => {
-            $(
-                for (index, item) in root.$field.iter().enumerate() {
-                    item.validate(root, |e| {
-                        let src = format!("{}[{}]", stringify!($field), index);
-                        let err = e.propagate(Cow::from(src));
-                        errs.push(err);
-                    });
-                }
-            )*
+        ($field:ident) => {
+            for item in root.$field.iter() {
+                let _ = item.validate(root)?; 
+            }
         }
     }
-    validate!(
-        accessors,
-        animations,
-        buffers,
-        buffer_views,
-        cameras,
-        images,
-        materials,
-        meshes,
-        nodes,
-        samplers,
-        scenes,
-        skins,
-        textures,
-    );
+    validate!(accessors);
+    validate!(animations);
+    validate!(buffers);
+    validate!(buffer_views);
+    validate!(cameras);
+    validate!(images);
+    validate!(materials);
+    validate!(meshes);
+    validate!(nodes);
+    validate!(samplers);
+    validate!(scenes);
+    validate!(skins);
+    validate!(textures);
     if let Some(ref scene) = root.default_scene {
-        if root.try_get(scene).is_err() {
-            errs.push(validation::error::oob(Cow::from("scene")));
-        }
+        let _ = root.try_get(scene)?;
     }
-    errs
+    Ok(())
 }
 
 /// Imports a standard (plain text JSON) glTF 2.0 asset.
-fn import_standard_gltf(data: Vec<u8>) -> Result<Root, Error> {
+fn import_standard_gltf(data: Vec<u8>) -> Result<Root, ImportError> {
     let root: Root = serde_json::from_slice(&data)?;
     Ok(root)
 }
 
-fn import_impl(path: &Path) -> Result<Root, Error> {
+fn import_impl(path: &Path) -> Result<Root, ImportError> {
     use std::io::Read;
-    use self::Error::*;
+    use self::ImportError::*;
     
     let mut file = std::fs::File::open(path)?;
     let mut buffer = Vec::new();
@@ -96,33 +83,27 @@ fn import_impl(path: &Path) -> Result<Root, Error> {
         import_standard_gltf(buffer)?
     };
 
-    let errs = validate(&root);
-    if errs.is_empty() {
+    if validate(&root).is_ok() {
         Ok(root)
     } else {
-        Err(Validation(errs))
+        Err(Invalid("Index out of range".to_string()))
     }
 }
 
 /// Imports a glTF 2.0 asset.
-pub fn import<P: AsRef<Path>>(path: P) -> Result<Root, Error> {
+pub fn import<P: AsRef<Path>>(path: P) -> Result<Root, ImportError> {
     import_impl(path.as_ref())
 }
 
-impl From<serde_json::Error> for Error {
-    fn from(err: serde_json::Error) -> Error {
-        Error::Deserialize(err)
+impl From<serde_json::Error> for ImportError {
+    fn from(err: serde_json::Error) -> ImportError {
+        ImportError::Deserialize(err)
     }
 }
 
-impl From<std::io::Error> for Error {
-    fn from(err: std::io::Error) -> Error {
-        Error::Io(err)
+impl From<std::io::Error> for ImportError {
+    fn from(err: std::io::Error) -> ImportError {
+        ImportError::Io(err)
     }
 }
 
-impl From<Vec<validation::Error>> for Error {
-    fn from(errs: Vec<validation::Error>) -> Error {
-        Error::Validation(errs)
-    }
-}

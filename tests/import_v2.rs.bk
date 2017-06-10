@@ -13,7 +13,7 @@ use std::{fs, io, path};
 
 fn try_import(path: &path::Path) {
     let _ = gltf::v2::import(&path).map_err(|err| {
-        println!("{:?}: {:#?}", path, err);
+        println!("{:?}: {:?}", path, err);
         panic!();
     });
 }

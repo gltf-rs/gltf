@@ -18,7 +18,7 @@ pub mod animation;
 /// Contains `Asset` metadata.
 pub mod asset;
 
-/// Contains `Buffer`, `View`, and other related data structures.
+/// Contains `Buffer`, `BufferView`, and other related data structures.
 pub mod buffer;
 
 /// Contains `Camera` and other related data structures.

@@ -7,14 +7,17 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-/// Contains (de)serializable data structures that represent the glTF JSON data.
-pub mod json;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
 
-/// Contains functions for importing glTF 2.0 assets.
-pub mod import;
+#[macro_use]
+mod macros;
 
-/// Contains functions that validate glTF JSON data against the specification.
-pub mod validation;
+/// Contains data structures and functions for loading glTF 1.0.
+pub mod v1;
 
-pub use self::import::import;
+/// Contains data structures and functions for loading glTF 2.0.
+pub mod v2;
 

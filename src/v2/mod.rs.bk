@@ -16,5 +16,5 @@ pub mod import;
 /// Contains functions that validate glTF JSON data against the specification.
 pub mod validation;
 
-pub use self::import::import;
+pub use self::import::{import, ImportError};
 
