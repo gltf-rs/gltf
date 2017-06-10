@@ -16,7 +16,7 @@ use self::error::oob;
 
 /// Trait for validating glTF JSON data against the 2.0 specification.
 pub trait Validate {
-    /// Validates the data.
+    /// Validates the data against the glTF 2.0 specification.
     fn validate<E: FnMut(Error)>(&self, root: &Root, err: E);
 }
 

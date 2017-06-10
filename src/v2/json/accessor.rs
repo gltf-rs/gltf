@@ -118,7 +118,7 @@ pub struct AccessorExtensions {
     _allow_unknown_fields: (),
 }
 
-/// A typed view into a `BufferView`.
+/// A typed view into a buffer view.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Accessor {
