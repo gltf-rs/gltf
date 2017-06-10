@@ -9,79 +9,28 @@
 
 use v2::json::{image, Extras, Index, Root};
 
-enum_number! {
-    DataType {
-        U8 = 5121,
-        U16R5G6B5 = 33635,
-        U16R4G4B4A4 = 32819,
-        U16R5G5B5A1 = 32820,
-    }
-}
-
-enum_number! {
-    Format {
-        Alpha = 6406,
-        Rgb = 6407,
-        Rgba = 6408,
-        Luminance = 6409,
-        LuminanceAlpha = 6410,
-    }
-}
-
-enum_number! {
-    MagFilter {
-        Nearest = 9728,
-        Linear = 9729,
-    }
-}
-
-enum_number! {
-    MinFilter {
-        Nearest = 9728,
-        Linear = 9729,
-        NearestMipmapNearest = 9984,
-        LinearMipmapNearest = 9985,
-        NearestMipmapLinear = 9986,
-        LinearMipmapLinear = 9987,
-    }
-}
-
-enum_number! {
-    Target {
-        Texture2d = 3553,
-    }
-}
-
-enum_number! {
-    WrappingMode {
-        ClampToEdge = 33071,
-        MirroredRepeat = 33648,
-        Repeat = 10497,
-    }
-}
-
 /// Texture sampler properties for filtering and wrapping modes.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Sampler {
     /// Magnification filter.
-    #[serde(default, rename = "magFilter")]
-    pub mag_filter: MagFilter,
+    #[serde(default = "sampler_mag_filter_default", rename = "magFilter")]
+    pub mag_filter: u32,
 
     /// Minification filter.
-    #[serde(default, rename = "minFilter")]
-    pub min_filter: MinFilter,
+    #[serde(default = "sampler_min_filter_default", rename = "minFilter")]
+    pub min_filter: u32,
 
     /// Optional user-defined name for this object.
     pub name: Option<String>,
 
     /// `s` wrapping mode.
-    #[serde(default, rename = "wrapS")]
-    pub wrap_s: WrappingMode,
+    #[serde(default = "sampler_wrap_s_default", rename = "wrapS")]
+    pub wrap_s: u32,
 
     /// `t` wrapping mode.
-    #[serde(default, rename = "wrapT")]
-    pub wrap_t: WrappingMode,
+    #[serde(default = "sampler_wrap_t_default", rename = "wrapT")]
+    pub wrap_t: u32,
 
     /// Extension specific data.
     #[serde(default)]
@@ -90,6 +39,22 @@ pub struct Sampler {
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
+}
+
+fn sampler_mag_filter_default() -> u32 {
+    9729
+}
+
+fn sampler_min_filter_default() -> u32 {
+    9986
+}
+
+fn sampler_wrap_s_default() -> u32 {
+    10497
+}
+
+fn sampler_wrap_t_default() -> u32 {
+    10497
 }
 
 /// Extension specific data for `Sampler`.
@@ -103,19 +68,19 @@ pub struct SamplerExtensions {
 #[serde(deny_unknown_fields)]
 pub struct Texture {
     /// Texel data type.
-    #[serde(default, rename = "type")]
-    pub data_type: DataType,
+    #[serde(default = "texture_type_default", rename = "type")]
+    pub type_: u32,
 
     /// Optional user-defined name for this object.
     pub name: Option<String>,
 
     /// The texture format.
-    #[serde(default)]
-    pub format: Format,
+    #[serde(default = "texture_format_default")]
+    pub format: u32,
 
     /// The texture internal format.
-    #[serde(default, rename = "internalFormat")]
-    pub internal_format: Format,
+    #[serde(default = "texture_internal_format_default", rename = "internalFormat")]
+    pub internal_format: u32,
 
     /// The index of the sampler used by this texture.
     pub sampler: Option<Index<Sampler>>,
@@ -124,8 +89,8 @@ pub struct Texture {
     pub source: Index<image::Image>,
 
     /// The target the texture should be bound to.
-    #[serde(default)]
-    pub target: Target,
+    #[serde(default = "texture_target_default")]
+    pub target: u32,
 
     /// Extension specific data.
     #[serde(default)]
@@ -134,6 +99,22 @@ pub struct Texture {
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
+}
+
+fn texture_format_default() -> u32 {
+    6408
+}
+
+fn texture_internal_format_default() -> u32 {
+    6408
+}
+
+fn texture_target_default() -> u32 {
+    3553
+}
+
+fn texture_type_default() -> u32 {
+    5121
 }
 
 /// Extension specific data for `Texture`.
@@ -147,7 +128,7 @@ pub struct TextureExtensions {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 /// Reference to a `Texture`.
-pub struct TextureInfo {
+pub struct Info {
     /// The index of the texture.
     pub index: Index<Texture>,
 
@@ -157,16 +138,16 @@ pub struct TextureInfo {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: TextureInfoExtensions,
+    pub extensions: InfoExtensions,
 
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
 }
 
-/// Extension specific data for `TextureInfo`.
+/// Extension specific data for `Info`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct TextureInfoExtensions {
+pub struct InfoExtensions {
     #[serde(default)]
     _allow_extra_fields: (),
 }
@@ -186,41 +167,5 @@ impl Texture {
         }
         let _ = root.try_get(&self.source)?;
         Ok(())
-    }
-}
-
-impl Default for DataType {
-    fn default() -> Self {
-        DataType::U8
-    }
-}
-
-impl Default for Format {
-    fn default() -> Self {
-        Format::Rgba
-    }
-}
-
-impl Default for MagFilter {
-    fn default() -> Self {
-        MagFilter::Linear
-    }
-}
-
-impl Default for MinFilter {
-    fn default() -> Self {
-        MinFilter::NearestMipmapLinear
-    }
-}
-
-impl Default for Target {
-    fn default() -> Self {
-        Target::Texture2d
-    }
-}
-
-impl Default for WrappingMode {
-    fn default() -> Self {
-        WrappingMode::Repeat
     }
 }

@@ -9,14 +9,6 @@
 
 use v2::json::{texture, Extras, Index, Root};
 
-enum_string! {
-    AlphaMode {
-        Blend = "BLEND",
-        Mask = "MASK",
-        Opaque = "OPAQUE",
-    }
-}
-
 /// The material appearance of a primitive.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -47,8 +39,8 @@ pub struct Material {
     ///   destination areas and the rendered output is combined with the
     ///   background using the normal painting operation (i.e. the Porter and
     ///   Duff over operator).
-    #[serde(default, rename = "alphaMode")]
-    pub alpha_mode: AlphaMode,
+    #[serde(default = "material_alpha_mode_default", rename = "alphaMode")]
+    pub alpha_mode: String,
 
     /// Specifies whether the material is double-sided.
     ///
@@ -94,7 +86,7 @@ pub struct Material {
     ///
     /// If a fourth component (A) is present, it is ignored.
     #[serde(rename = "emissiveTexture")]
-    pub emissive_texture: Option<texture::TextureInfo>,
+    pub emissive_texture: Option<texture::Info>,
 
     /// The emissive color of the material.
     ///
@@ -113,6 +105,10 @@ pub struct Material {
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
+}
+
+fn material_alpha_mode_default() -> String {
+    "OPAQUE".to_string()
 }
 
 fn material_alpha_cutoff_default() -> f32 {
@@ -152,7 +148,7 @@ pub struct PbrMetallicRoughness {
     ///
     /// The stored texels must not be premultiplied.
     #[serde(rename = "baseColorTexture")]
-    pub base_color_texture: Option<texture::TextureInfo>,
+    pub base_color_texture: Option<texture::Info>,
 
     /// The metalness of the material.
     ///
@@ -181,7 +177,7 @@ pub struct PbrMetallicRoughness {
     /// * If the third component (B) and/or the fourth component (A) are present
     ///   then they are ignored.
     #[serde(rename = "metallicRoughnessTexture")]
-    pub metallic_roughness_texture: Option<texture::TextureInfo>,
+    pub metallic_roughness_texture: Option<texture::Info>,
 
     /// Extension specific data.
     #[serde(default)]
@@ -307,11 +303,5 @@ impl Material {
             let _ = root.try_get(&mrt.index)?;
         }
         Ok(())
-    }
-}
-
-impl Default for AlphaMode {
-    fn default() -> Self {
-        AlphaMode::Opaque
     }
 }

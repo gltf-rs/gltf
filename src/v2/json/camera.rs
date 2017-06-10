@@ -29,7 +29,7 @@ pub struct Camera {
 
     /// Specifies if the camera uses a perspective or orthographic projection.
     #[serde(rename = "type")]
-    pub ty: String,
+    pub type_: String,
 
     /// Extension specific data.
     #[serde(default)]
@@ -53,19 +53,19 @@ pub struct CameraExtensions {
 pub struct Orthographic {
     /// The horizontal magnification of the view.
     #[serde(default, rename = "xmag")]
-    pub x_mag: f32,
+    pub xmag: f32,
 
     /// The vertical magnification of the view.
     #[serde(default, rename = "ymag")]
-    pub y_mag: f32,
+    pub ymag: f32,
 
     /// The distance to the far clipping plane.
     #[serde(default, rename = "zfar")]
-    pub z_far: f32,
+    pub zfar: f32,
 
     /// The distance to the near clipping plane.
     #[serde(default, rename = "znear")]
-    pub z_near: f32,
+    pub znear: f32,
 
     /// Extension specific data.
     #[serde(default)]
@@ -93,15 +93,15 @@ pub struct Perspective {
 
     /// The vertical field of view in radians.
     #[serde(default, rename = "yfov")]
-    pub y_fov: f32,
+    pub yfov: f32,
 
     /// The distance to the far clipping plane.
     #[serde(default, rename = "zfar")]
-    pub z_far: f32,
+    pub zfar: f32,
 
     /// The distance to the near clipping plane.
     #[serde(default, rename = "znear")]
-    pub z_near: f32,
+    pub znear: f32,
 
     /// Extension specific data.
     #[serde(default)]

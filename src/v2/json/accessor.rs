@@ -13,14 +13,6 @@ use v2::json::{buffer, Extras, Index, Root};
 pub mod sparse {
     use super::*;
 
-    enum_number! {
-        ComponentType {
-            U8 = 5121,
-            U16 = 5123,
-            U32 = 5125,
-        }
-    }
-
     /// Extension specific data for `Indices`.
     #[derive(Clone, Debug, Default, Deserialize, Serialize)]
     pub struct IndicesExtensions {
@@ -37,14 +29,15 @@ pub mod sparse {
         /// The referenced `BufferView` must not have `ArrayBuffer` nor
         /// `ElementArrayBuffer` as its target.
         #[serde(rename = "bufferView")]
-        pub buffer_view: Index<buffer::BufferView>,
+        pub buffer_view: Index<buffer::View>,
 
         /// The offset relative to the start of the parent `BufferView` in bytes.
         #[serde(default, rename = "byteOffset")]
         pub byte_offset: u32,
         
         /// The data type of each index.
-        pub component_type: ComponentType,
+        #[serde(rename = "componentType")]
+        pub component_type: u32,
 
         /// Extension specific data.
         pub extensions: IndicesExtensions,
@@ -103,7 +96,7 @@ pub mod sparse {
         /// The referenced `BufferView` must not have `ArrayBuffer` nor
         /// `ElementArrayBuffer` as its target.
         #[serde(rename = "bufferView")]
-        pub buffer_view: Index<buffer::BufferView>,
+        pub buffer_view: Index<buffer::View>,
 
         /// The offset relative to the start of the parent `BufferView` in bytes.
         #[serde(default, rename = "byteOffset")]
@@ -113,7 +106,7 @@ pub mod sparse {
         pub extensions: ValuesExtensions,
 
         /// Optional application specific data.
-    pub extras: Extras,
+        pub extras: Extras,
     }
 }
 
@@ -130,7 +123,7 @@ pub struct AccessorExtensions {
 pub struct Accessor {
     /// The parent `BufferView` this accessor reads from.
     #[serde(rename = "bufferView")]
-    pub buffer_view: Index<buffer::BufferView>,
+    pub buffer_view: Index<buffer::View>,
     
     /// The offset relative to the start of the parent `BufferView` in bytes.
     #[serde(default, rename = "byteOffset")]
@@ -142,7 +135,7 @@ pub struct Accessor {
     
     /// The data type of each component.
     #[serde(rename = "componentType")]
-    pub component_type: ComponentType,
+    pub component_type: u32,
     
     /// Extension specific data.
     #[serde(default)]
@@ -154,7 +147,7 @@ pub struct Accessor {
     
     /// The multiplicity of each component.
     #[serde(rename = "type")]
-    pub kind: Kind,
+    pub type_: String,
     
     /// Minimum value of each element in this attribute.
     #[serde(default)]
@@ -186,28 +179,5 @@ impl Accessor {
         }
         let _ = root.try_get(&self.buffer_view)?;
         Ok(())
-    }
-}
-
-enum_number! {
-    ComponentType {
-        I8 = 5120,
-        U8 = 5121,
-        I16 = 5122,
-        U16 = 5123,
-        U32 = 5125,
-        F32 = 5126,
-    }
-}
-
-enum_string! {
-    Kind {
-        Scalar = "SCALAR",
-        Vec2 = "VEC2",
-        Vec3 = "VEC3",
-        Vec4 = "VEC4",
-        Mat2 = "MAT2",
-        Mat3 = "MAT3",
-        Mat4 = "MAT4",
     }
 }

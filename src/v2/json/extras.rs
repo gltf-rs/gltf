@@ -7,6 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::fmt;
+
 pub use serde_json::Value;
 
 /// Data type of the `extras` attribute of all glTF objects.
@@ -16,9 +18,20 @@ pub type Extras = Option<Value>;
 pub type Extras = Void;
 
 /// Type representing no user-defined data.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
 pub struct Void {
     #[serde(default)]
     _allow_extra_fields: (),
 }
 
+impl fmt::Debug for Void {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{{}}")
+    }
+}
+
+impl fmt::Display for Void {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{{}}")
+    }
+}

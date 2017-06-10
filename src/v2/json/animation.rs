@@ -9,22 +9,6 @@
 
 use v2::json::{accessor, scene, Extras, Index, Root};
 
-enum_string! {
-    Interpolation {
-        Linear = "LINEAR",
-        Step = "STEP",
-    }
-}
-
-enum_string! {
-    Path {
-        Rotation = "rotation",
-        Scale = "scale",
-        Translation = "translation",
-        Weights = "weights",
-    }
-}
-
 /// A keyframe animation.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -101,7 +85,7 @@ pub struct Target {
     
     /// The name of the node's TRS property to modify or the 'weights' of the
     /// morph targets it instantiates.
-    pub path: Path,
+    pub path: String,
 }
 
 /// Extension specific data for `Target`.
@@ -127,7 +111,7 @@ pub struct Sampler {
     pub input: Index<accessor::Accessor>,
     
     /// The interpolation algorithm.
-    pub interpolation: Interpolation,
+    pub interpolation: String,
     
     /// The index of an accessor containing keyframe output values.
     pub output: Index<accessor::Accessor>,

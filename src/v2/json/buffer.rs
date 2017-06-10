@@ -9,13 +9,6 @@
 
 use v2::json::{Extras, Index, Root};
 
-enum_number! {
-    Target {
-        ArrayBuffer = 34962,
-        ElementArrayBuffer = 34963,
-    }
-}
-
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -51,7 +44,7 @@ pub struct BufferExtensions {
 /// A view into a buffer generally representing a subset of the buffer.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct BufferView {
+pub struct View {
     /// The parent `Buffer`.
     pub buffer: Index<Buffer>,
 
@@ -73,20 +66,20 @@ pub struct BufferView {
     pub name: Option<String>,
 
     /// Optional target the buffer should be bound to.
-    pub target: Option<Target>,
+    pub target: Option<u32>,
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: BufferViewExtensions,
+    pub extensions: ViewExtensions,
 
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
 }
 
-/// Extension specific data for `BufferView`.
+/// Extension specific data for `View`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct BufferViewExtensions {
+pub struct ViewExtensions {
     #[serde(default)]
     _allow_extra_fields: (),
 }
@@ -98,7 +91,7 @@ impl Buffer {
     }
 }
 
-impl BufferView {
+impl View {
     #[doc(hidden)]
     pub fn range_check(&self, root: &Root) -> Result<(), ()> {
         let _ = root.try_get(&self.buffer)?;

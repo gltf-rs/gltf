@@ -15,7 +15,7 @@ use v2::json::{buffer, Extras, Index, Root};
 pub struct Image {
     /// The `BufferView` that contains the image if `uri` is `None`.
     #[serde(rename = "bufferView")]
-    pub buffer_view: Option<Index<buffer::BufferView>>,
+    pub buffer_view: Option<Index<buffer::View>>,
 
     /// The image's MIME type.
     #[serde(rename = "mimeType")]

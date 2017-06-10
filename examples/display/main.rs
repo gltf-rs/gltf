@@ -21,7 +21,7 @@ fn main() {
             match v2::import(&path) {
                 Ok(root) => {
                     println!("glTF version 2.0");
-                    println!("{:?}", root);
+                    println!("{:#?}", root);
                 }
                 Err(err) => {
                     println!("Error: {:#?}", err);

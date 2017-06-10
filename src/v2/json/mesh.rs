@@ -10,18 +10,6 @@
 use std::collections::HashMap;
 use v2::json::{accessor, material, Extras, Index, Root};
 
-enum_number! {
-    Mode {
-        Points = 0,
-        Lines = 1,
-        LineLoop = 2,
-        LineStrip = 3,
-        Triangles = 4,
-        TriangleStrip = 5,
-        TriangleFan = 6,
-    }
-}
-
 /// Extension specific data for `Mesh`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct MeshExtensions {
@@ -79,14 +67,17 @@ pub struct Primitive {
     pub material: Option<Index<material::Material>>,
     
     /// The type of primitives to render.
-    #[serde(default)]
-    pub mode: Mode,
+    #[serde(default = "primitive_mode_default")]
+    pub mode: u32,
     
     /// Maps attribute names (only `"POSITION"` and `"NORMAL"`) to their
     /// deviations in the morph target.
-    // TODO: Confirm that this the correct implementation.
     #[serde(default)]
     pub targets: Vec<HashMap<String, Index<accessor::Accessor>>>,
+}
+
+fn primitive_mode_default() -> u32 {
+    4
 }
 
 /// Extension specific data for `Primitive`.
@@ -116,11 +107,5 @@ impl Mesh {
             }
         }
         Ok(())
-    }
-}
-
-impl Default for Mode {
-    fn default() -> Self {
-        Mode::Triangles
     }
 }

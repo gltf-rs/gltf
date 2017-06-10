@@ -8,6 +8,7 @@
 // except according to those terms.
 
 use std;
+use std::fmt;
 use v2::json::*;
 
 /// Helper trait for retrieving top-level objects by a universal identifier.
@@ -24,7 +25,7 @@ pub trait TryGet<T> {
 }
 
 /// Represents an offset into an array of type `T` owned by the root glTF object.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct Index<T>(u32, std::marker::PhantomData<T>);
 
 /// The root object of a glTF 2.0 asset.
@@ -32,27 +33,27 @@ pub struct Index<T>(u32, std::marker::PhantomData<T>);
 #[serde(deny_unknown_fields)]
 pub struct Root {
     #[serde(default)]
-    accessors: Vec<accessor::Accessor>,
+    pub accessors: Vec<accessor::Accessor>,
     
     #[serde(default)]
-    animations: Vec<animation::Animation>,
+    pub animations: Vec<animation::Animation>,
 
     /// Metadata about the glTF asset.
-    asset: asset::Asset,
+    pub asset: asset::Asset,
     
     #[serde(default)]
-    buffers: Vec<buffer::Buffer>,
+    pub buffers: Vec<buffer::Buffer>,
     
     #[serde(default, rename = "bufferViews")]
-    buffer_views: Vec<buffer::BufferView>,
+    pub buffer_views: Vec<buffer::View>,
 
     /// The default scene.
     #[serde(default = "root_scene_default", rename = "scene")]
-    default_scene: Index<scene::Scene>,
+    pub default_scene: Index<scene::Scene>,
     
     /// Extension specific data.
     #[serde(default)]
-    extensions: RootExtensions,
+    pub extensions: RootExtensions,
 
     /// Optional application specific data.
     #[serde(default)]
@@ -60,38 +61,38 @@ pub struct Root {
     
     /// Names of glTF extensions used somewhere in this asset.
     #[serde(default, rename = "extensionsUsed")]
-    extensions_used: Vec<String>,
+    pub extensions_used: Vec<String>,
 
     /// Names of glTF extensions required to properly load this asset.
     #[serde(default, rename = "extensionsRequired")]
-    extensions_required: Vec<String>,
+    pub extensions_required: Vec<String>,
     
     #[serde(default)]
-    cameras: Vec<camera::Camera>,
+    pub cameras: Vec<camera::Camera>,
     
     #[serde(default)]
-    images: Vec<image::Image>,
+    pub images: Vec<image::Image>,
     
     #[serde(default)]
-    materials: Vec<material::Material>,
+    pub materials: Vec<material::Material>,
     
     #[serde(default)]
-    meshes: Vec<mesh::Mesh>,
+    pub meshes: Vec<mesh::Mesh>,
     
     #[serde(default)]
-    nodes: Vec<scene::Node>,
+    pub nodes: Vec<scene::Node>,
     
     #[serde(default)]
-    samplers: Vec<texture::Sampler>,
+    pub samplers: Vec<texture::Sampler>,
     
     #[serde(default)]
-    scenes: Vec<scene::Scene>,
+    pub scenes: Vec<scene::Scene>,
     
     #[serde(default)]
-    skins: Vec<skin::Skin>,
+    pub skins: Vec<skin::Skin>,
     
     #[serde(default)]
-    textures: Vec<texture::Texture>,
+    pub textures: Vec<texture::Texture>,
 }
 
 fn root_scene_default() -> Index<scene::Scene> {
@@ -141,12 +142,12 @@ impl Root {
     }
 
     /// Returns the buffer view at the given index.
-    pub fn buffer_view(&self, index: Index<buffer::BufferView>) -> &buffer::BufferView {
+    pub fn buffer_view(&self, index: Index<buffer::View>) -> &buffer::View {
         &self.buffer_views[index.0 as usize]
     }
 
     /// Returns all buffer views as a slice.
-    pub fn buffer_views(&self) -> &[buffer::BufferView] {
+    pub fn buffer_views(&self) -> &[buffer::View] {
         &self.buffer_views
     }
 
@@ -329,7 +330,7 @@ impl<'de, T> serde::Deserialize<'de> for Index<T> {
             type Value = Index<T>;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-                formatter.write_str("GLenum")
+                formatter.write_str("index into child of root")
             }
 
             fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
@@ -339,6 +340,18 @@ impl<'de, T> serde::Deserialize<'de> for Index<T> {
             }
         }
         deserializer.deserialize_u64(Visitor::<T>(std::marker::PhantomData))
+    }
+}
+
+impl<T> fmt::Debug for Index<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl<T> fmt::Display for Index<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
@@ -366,7 +379,7 @@ macro_rules! impl_try_get {
 impl_get!(accessor::Accessor, accessors);
 impl_get!(animation::Animation, animations);
 impl_get!(buffer::Buffer, buffers);
-impl_get!(buffer::BufferView, buffer_views);
+impl_get!(buffer::View, buffer_views);
 impl_get!(camera::Camera, cameras);
 impl_get!(image::Image, images);
 impl_get!(material::Material, materials);
@@ -380,7 +393,7 @@ impl_get!(texture::Texture, textures);
 impl_try_get!(accessor::Accessor, accessors);
 impl_try_get!(animation::Animation, animations);
 impl_try_get!(buffer::Buffer, buffers);
-impl_try_get!(buffer::BufferView, buffer_views);
+impl_try_get!(buffer::View, buffer_views);
 impl_try_get!(camera::Camera, cameras);
 impl_try_get!(image::Image, images);
 impl_try_get!(material::Material, materials);
