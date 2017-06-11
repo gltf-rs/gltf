@@ -167,14 +167,3 @@ pub struct Accessor {
     /// value.
     pub sparse: Option<sparse::Sparse>,
 }
-
-/*
-impl Validate for Accessor {
-    fn validate<F>(&self, root: &Root, path: JsonPath, report: &mut F)
-        where F: FnMut(Error)
-    {
-        self.buffer_view.validate(root, path.field("bufferView"), report);
-        self.sparse.validate(root, path.field("sparse"), report);
-    }
-}
-*/
