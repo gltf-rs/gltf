@@ -10,7 +10,7 @@
 use v2::json::{buffer, Extras, Index};
 
 /// Image data used to create a texture.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Image {
     /// The index of the buffer view that contains the image. Use this instead of the image's uri property.
@@ -37,7 +37,7 @@ pub struct Image {
 }
 
 /// Extension specific data for `Image`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct ImageExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),

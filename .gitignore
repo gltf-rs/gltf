@@ -1,3 +1,5 @@
 /target/
 Cargo.lock
+/gltf_validate_derive/target/
+/gltf_validate_derive/Cargo.lock
 *.bk

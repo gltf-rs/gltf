@@ -14,14 +14,14 @@ pub mod sparse {
     use super::*;
 
     /// Extension specific data for `Indices`.
-    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
     pub struct IndicesExtensions {
         #[serde(default)]
         _allow_unknown_fields: (),
     }
 
     /// Indices of those attributes that deviate from their initialization value.
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     #[serde(deny_unknown_fields)]
     pub struct Indices {
         /// The parent buffer view containing the sparse indices.
@@ -47,14 +47,14 @@ pub mod sparse {
     }
 
     /// Extension specific data for `Storage`.
-    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
     pub struct StorageExtensions {
         #[serde(default)]
         _allow_unknown_fields: (),
     }
 
     /// Sparse storage of attributes that deviate from their initialization value.
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     #[serde(deny_unknown_fields)]
     pub struct Sparse {
         /// The number of attributes encoded in this sparse accessor.
@@ -81,7 +81,7 @@ pub mod sparse {
     }
 
     /// Extension specific data for `Values`.
-    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
     pub struct ValuesExtensions {
         #[serde(default)]
         _allow_unknown_fields: (),
@@ -89,7 +89,7 @@ pub mod sparse {
 
     /// Array of size `count * number_of_components` storing the displaced
     /// accessor attributes pointed by `accessor::sparse::Indices`.
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     #[serde(deny_unknown_fields)]
     pub struct Values {
         /// The parent buffer view containing the sparse indices.
@@ -112,14 +112,14 @@ pub mod sparse {
 }
 
 /// Extension specific data for an `Accessor`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct AccessorExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// A typed view into a buffer view.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Accessor {
     /// The parent buffer view this accessor reads from.
@@ -167,3 +167,14 @@ pub struct Accessor {
     /// value.
     pub sparse: Option<sparse::Sparse>,
 }
+
+/*
+impl Validate for Accessor {
+    fn validate<F>(&self, root: &Root, path: JsonPath, report: &mut F)
+        where F: FnMut(Error)
+    {
+        self.buffer_view.validate(root, path.field("bufferView"), report);
+        self.sparse.validate(root, path.field("sparse"), report);
+    }
+}
+*/

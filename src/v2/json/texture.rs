@@ -10,7 +10,7 @@
 use v2::json::{image, Extras, Index};
 
 /// Texture sampler properties for filtering and wrapping modes.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Sampler {
     /// Magnification filter.
@@ -50,13 +50,13 @@ fn sampler_wrap_t_default() -> u32 {
 }
 
 /// Extension specific data for `Sampler`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct SamplerExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Texture {
     /// Optional user-defined name for this object.
@@ -78,14 +78,14 @@ pub struct Texture {
 }
 
 /// Extension specific data for `Texture`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct TextureExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 /// Reference to a `Texture`.
 pub struct Info {
@@ -106,7 +106,7 @@ pub struct Info {
 }
 
 /// Extension specific data for `Info`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct InfoExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),

@@ -13,7 +13,7 @@ use v2::json::{Extras};
 ///
 /// A node can reference a camera to apply a transform to place the camera in the
 /// scene.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Camera {
     /// Optional user-defined name for this object.
@@ -41,14 +41,14 @@ pub struct Camera {
 }
 
 /// Extension specific data for `Camera`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct CameraExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// Values for an orthographic camera.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Orthographic {
     /// The horizontal magnification of the view.
@@ -73,14 +73,14 @@ pub struct Orthographic {
 }
 
 /// Extension specific data for `Orthographic`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct OrthographicExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// Values for a perspective camera.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Perspective {
     /// Aspect ratio of the field of view.
@@ -107,7 +107,7 @@ pub struct Perspective {
 }
 
 /// Extension specific data for `Perspective`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct PerspectiveExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),

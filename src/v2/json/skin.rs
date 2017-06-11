@@ -10,7 +10,7 @@
 use v2::json::{accessor, scene, Extras, Index};
 
 /// Joints and matrices defining a skin.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Skin {
     /// Extension specific data.
@@ -44,7 +44,7 @@ pub struct Skin {
 }
 
 /// Extension specific data for `Skin`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct SkinExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),

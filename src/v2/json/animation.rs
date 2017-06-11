@@ -7,7 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{accessor, scene, Extras, Index};
+use v2::json::{accessor, scene, Extras, Index, Root};
+use v2::validation::{Error, JsonPath, Validate};
 
 /// A keyframe animation.
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -36,7 +37,7 @@ pub struct Animation {
 }
 
 /// Extension specific data for `Animation`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct AnimationExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
@@ -62,14 +63,14 @@ pub struct Channel {
 }
 
 /// Extension specific data for `Channel`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct ChannelExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// The index of the node and TRS property that an animation channel targets.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Target {
     /// Extension specific data.
@@ -89,14 +90,14 @@ pub struct Target {
 }
 
 /// Extension specific data for `Target`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct TargetExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// Defines a keyframe graph but not its target.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Sampler {
     /// Extension specific data.
@@ -123,8 +124,31 @@ fn sampler_interpolation_default() -> String {
 }
 
 /// Extension specific data for `Sampler`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct SamplerExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
+}
+
+impl Validate for Animation {
+    fn validate<F>(&self, root: &Root, path: JsonPath, mut report: &mut F)
+        where F: FnMut(Error)
+    {
+        self.samplers.validate(root, path.field("samplers"), report);
+        self.channels.validate(root, path.field("channels"), report);
+        for (index, channel) in self.channels.iter().enumerate() {
+            if channel.sampler.value() as usize >= self.samplers.len() {
+                let field = format!("channels[{}].sampler", index);
+                report(Error::index_out_of_bounds(path.field(&field)));
+            }
+        }
+    }
+}
+
+impl Validate for Channel {
+    fn validate<F>(&self, _root: &Root, _path: JsonPath, _report: &mut F)
+        where F: FnMut(Error)
+    {
+        // nop
+    }
 }

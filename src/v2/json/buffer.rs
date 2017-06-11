@@ -10,7 +10,7 @@
 use v2::json::{Extras, Index};
 
 /// A buffer points to binary data representing geometry, animations, or skins.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Buffer {
     /// The length of the buffer in bytes.
@@ -33,14 +33,14 @@ pub struct Buffer {
 }
 
 /// Extension specific data for `Buffer`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct BufferExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// A view into a buffer generally representing a subset of the buffer.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct View {
     /// The parent `Buffer`.
@@ -76,7 +76,7 @@ pub struct View {
 }
 
 /// Extension specific data for `View`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct ViewExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),

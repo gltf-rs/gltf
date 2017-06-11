@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use v2::json::{accessor, material, Extras, Index};
 
 /// Extension specific data for `Mesh`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct MeshExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
@@ -21,7 +21,7 @@ pub struct MeshExtensions {
 ///
 /// A node can contain one or more meshes and its transform places the meshes in
 /// the scene.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Mesh {
     /// Extension specific data.
@@ -43,7 +43,7 @@ pub struct Mesh {
 }
 
 /// Geometry to be rendered with the given material.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Primitive {
     /// Maps attribute semantic names to the `Accessor`s containing the
@@ -77,7 +77,7 @@ fn primitive_mode_default() -> u32 {
 }
 
 /// Extension specific data for `Primitive`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct PrimitiveExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),

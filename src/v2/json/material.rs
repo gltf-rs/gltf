@@ -10,7 +10,7 @@
 use v2::json::{texture, Extras, Index};
 
 /// The material appearance of a primitive.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Material {
     /// The alpha cutoff value of the material.
@@ -89,7 +89,7 @@ fn material_alpha_mode_default() -> String {
 }
 
 /// Extension specific data for `Material`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct MaterialExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
@@ -97,7 +97,7 @@ pub struct MaterialExtensions {
 
 /// A set of parameter values that are used to define the metallic-roughness
 /// material model from Physically-Based Rendering (PBR) methodology.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct PbrMetallicRoughness {
     /// The material's base color factor.
@@ -143,7 +143,7 @@ pub struct PbrMetallicRoughness {
 }
 
 /// Extension specific data for `PbrMetallicRoughness`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct PbrMetallicRoughnessExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
@@ -162,7 +162,7 @@ fn material_pbr_metallic_roughness_roughness_factor_default() -> f32 {
 }
 
 /// Defines the normal texture of a material.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct NormalTexture {
     /// The index of the texture.
@@ -188,7 +188,7 @@ pub struct NormalTexture {
 }
 
 /// Extension specific data for `NormalTexture`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct NormalTextureExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
@@ -199,7 +199,7 @@ fn material_normal_texture_scale_default() -> f32 {
 }
 
 /// Defines the occlusion texture of a material.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct OcclusionTexture {
     /// The index of the texture.
@@ -223,7 +223,7 @@ pub struct OcclusionTexture {
 }
 
 /// Extension specific data for `OcclusionTexture`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct OcclusionTextureExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),

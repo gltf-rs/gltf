@@ -10,7 +10,7 @@
 use v2::json::{camera, mesh, scene, skin, Extras, Index};
 
 /// A node in the node hierarchy.  When the node contains `skin`, all `mesh.primitives` must contain `JOINTS_0` and `WEIGHTS_0` attributes.  A node can have either a `matrix` or any combination of `translation`/`rotation`/`scale` (TRS) properties. TRS properties are converted to matrices and postmultiplied in the `T * R * S` order to compose the transformation matrix; first the scale is applied to the vertices, then the rotation, and then the translation. If none are provided, the transform is the identity. When a node is targeted for animation (referenced by an animation.channel.target), only TRS properties may be present; `matrix` will not be present..
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Node {
     /// The index of the camera referenced by this node.
@@ -57,7 +57,7 @@ pub struct Node {
 }
 
 /// Extension specific data for `Node`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct NodeExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
@@ -79,7 +79,7 @@ fn node_scale_default() -> [f32; 3] {
 }
 
 /// The root `Node`s of a scene.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Scene {
     /// Extension specific data.
@@ -98,7 +98,7 @@ pub struct Scene {
 }
 
 /// Extension specific data for `Scene`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct SceneExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
