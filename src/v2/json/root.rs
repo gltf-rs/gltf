@@ -29,7 +29,7 @@ pub trait TryGet<T> {
 pub struct Index<T>(u32, std::marker::PhantomData<T>);
 
 /// The root object of a glTF 2.0 asset.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Root {
     /// An array of accessors.

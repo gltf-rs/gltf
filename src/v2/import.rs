@@ -36,19 +36,15 @@ pub enum Error {
 }
 
 fn validate(root: &Root) -> Vec<validation::Error> {
-    use self::validation::Validate;
-    use std::borrow::Cow;
-    let mut errs = Vec::new();
+    use inflections::Inflect;
+    use self::validation::{Error, JsonPath, Validate};
+    let mut errs = vec![];
     macro_rules! validate {
         ($($field:ident,)*) => {
             $(
-                for (index, item) in root.$field.iter().enumerate() {
-                    item.validate(root, |e| {
-                        let src = format!("{}[{}]", stringify!($field), index);
-                        let err = e.propagate(Cow::from(src));
-                        errs.push(err);
-                    });
-                }
+                let field = stringify!($field).to_camel_case();
+                let path = JsonPath::new().field(&field);
+                root.$field.validate(root, path, &mut |err| errs.push(err));
             )*
         }
     }
@@ -69,7 +65,7 @@ fn validate(root: &Root) -> Vec<validation::Error> {
     );
     if let Some(ref scene) = root.default_scene {
         if root.try_get(scene).is_err() {
-            errs.push(validation::error::oob(Cow::from("scene")));
+            errs.push(Error::index_out_of_bounds(JsonPath::new().field("scene")));
         }
     }
     errs

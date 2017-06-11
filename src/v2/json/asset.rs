@@ -42,3 +42,16 @@ pub struct AssetExtensions {
     _allow_unknown_fields: (),
 }
 
+impl Default for Asset {
+    fn default() -> Self {
+        Self {
+            copyright: None,
+            extensions: Default::default(),
+            extras: Default::default(),
+            generator: None,
+            min_version: None,
+            version: "2.0".to_string(),
+        }
+    }
+}
+
