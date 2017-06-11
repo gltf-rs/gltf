@@ -7,6 +7,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+// Adapted from `validator_derive` (https://github.com/Keats/validator).
+//
+// See LICENSE for details.
+
 #![recursion_limit = "128"]
 
 extern crate inflections;

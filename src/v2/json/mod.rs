@@ -27,7 +27,7 @@ pub mod camera;
 /// Contains the names of 2.0 extensions enabled and supported by the library.
 pub mod extensions;
 
-/// Contains convenience implementations of the `Extra` trait.
+/// Contains `Extras`.
 pub mod extras;
 
 /// Contains `Image` and other related data structures.
