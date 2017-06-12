@@ -44,8 +44,8 @@ pub mod error {
         /// An index was found to be out of bounds.
         IndexOutOfBounds,
 
-        /// An invalid value was identified.
-        InvalidValue(serde_json::Value),
+        /// An invalid enumeration constant was identified.
+        InvalidEnum(serde_json::Value),
     }
 
     impl Error {
@@ -57,12 +57,12 @@ pub mod error {
             }
         }
 
-        /// Returns an `InvalidValue` error.
-        pub fn invalid_value<V>(path: JsonPath, value: V) -> Error
+        /// Returns an `InvalidEnum` error.
+        pub fn invalid_enum<V>(path: JsonPath, value: V) -> Error
             where V: Into<serde_json::Value>
         {
             Error {
-                kind: Kind::InvalidValue(value.into()),
+                kind: Kind::InvalidEnum(value.into()),
                 path: path,
             }
         }
@@ -72,7 +72,7 @@ pub mod error {
         fn description(&self) -> &str {
             match &self.kind {
                 &Kind::IndexOutOfBounds => "Index out of bounds",
-                &Kind::InvalidValue(_) => "Invalid value",
+                &Kind::InvalidEnum(_) => "Invalid enumeration constant",
             }
         }
     }
@@ -84,7 +84,7 @@ pub mod error {
                 &Kind::IndexOutOfBounds => {
                     write!(f, "{} ({})", self.path, self.description())
                 },
-                &Kind::InvalidValue(ref value) => {
+                &Kind::InvalidEnum(ref value) => {
                     write!(f, "{}: {} ({})", self.path, value, self.description())
                 }
             }
