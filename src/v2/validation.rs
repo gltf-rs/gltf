@@ -49,6 +49,9 @@ pub mod error {
 
         /// An invalid value was identified.
         InvalidValue(serde_json::Value),
+
+        /// Some required data has been omitted.
+        MissingData(String),
     }
 
     impl Error {
@@ -70,7 +73,7 @@ pub mod error {
             }
         }
 
-        /// Returns an `InvalidEnum` error.
+        /// Returns an `InvalidValue` error.
         pub fn invalid_value<V>(path: JsonPath, value: V) -> Error
             where V: Into<serde_json::Value>
         {
@@ -80,6 +83,13 @@ pub mod error {
             }
         }
 
+        /// Returns an `MissingData` error.
+        pub fn missing_data(path: JsonPath, reason: String) -> Error {
+            Error {
+                kind: Kind::MissingData(reason),
+                path: path,
+            }
+        }
     }
 
     impl std::error::Error for Error {
@@ -88,6 +98,7 @@ pub mod error {
                 &Kind::IndexOutOfBounds => "Index out of bounds",
                 &Kind::InvalidEnum(_) => "Invalid enumeration constant",
                 &Kind::InvalidValue(_) => "Invalid value",
+                &Kind::MissingData(_) => "Missing data",
             }
         }
     }
@@ -105,7 +116,9 @@ pub mod error {
                 &Kind::InvalidValue(ref value) => {
                     write!(f, "{}: {} ({})", self.path, value, self.description())
                 },
-
+                &Kind::MissingData(ref reason) => {
+                    write!(f, "{}: {} ({})", self.path, self.description(), reason)
+                },
             }
         }
     }
