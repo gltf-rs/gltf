@@ -7,7 +7,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{buffer, Extras, Index};
+use v2::json::{buffer, Extras, Index, Root};
+use v2::validation::{Error, JsonPath, Validate};
+
+/// All valid MIME types.
+pub const VALID_MIME_TYPES: &'static [&'static str] = &[
+    "image/jpeg",
+    "image/png",
+];
 
 /// Image data used to create a texture.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
@@ -19,7 +26,7 @@ pub struct Image {
 
     /// The image's MIME type.
     #[serde(rename = "mimeType")]
-    pub mime_type: Option<String>,
+    pub mime_type: Option<MimeType>,
 
     /// Optional user-defined name for this object.
     pub name: Option<String>,
@@ -41,4 +48,18 @@ pub struct Image {
 pub struct ImageExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
+}
+
+/// An image MIME type.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct MimeType(String);
+
+impl Validate for MimeType {
+    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
+        where F: FnMut(Error)
+    {
+        if !VALID_MIME_TYPES.contains(&self.0.as_str()) {
+            report(Error::invalid_enum(path, self.0.clone()));
+        }
+    }
 }
