@@ -82,7 +82,7 @@ pub mod error {
             }
         }
 
-        /// Returns an `MissingData` error.
+        /// Returns a `MissingData` error.
         pub fn missing_data(path: JsonPath, reason: String) -> Error {
             Error {
                 kind: Kind::MissingData(reason),
