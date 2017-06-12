@@ -10,6 +10,22 @@
 use v2::json::{accessor, scene, Extras, Index, Root};
 use v2::validation::{Error, JsonPath, Validate};
 
+/// All valid interpolation algorithms.
+pub const VALID_INTERPOLATION_ALGORITHMS: &'static [&'static str] = &[
+    "LINEAR",
+    "STEP",
+    "CATMULLROMSPLINE",
+    "CUBICSPLINE",
+];
+
+/// All valid TRS property names.
+pub const VALID_TRS_PROPERTIES: &'static [&'static str] = &[
+    "translation",
+    "rotation",
+    "scale",
+    "weights",
+];
+
 /// A keyframe animation.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -86,7 +102,7 @@ pub struct Target {
     
     /// The name of the node's TRS property to modify or the 'weights' of the
     /// morph targets it instantiates.
-    pub path: String,
+    pub path: TrsProperty,
 }
 
 /// Extension specific data for `Target`.
@@ -112,15 +128,11 @@ pub struct Sampler {
     pub input: Index<accessor::Accessor>,
     
     /// The interpolation algorithm.
-    #[serde(default = "sampler_interpolation_default")]
-    pub interpolation: String,
+    #[serde(default)]
+    pub interpolation: InterpolationAlgorithm,
     
     /// The index of an accessor containing keyframe output values.
     pub output: Index<accessor::Accessor>,
-}
-
-fn sampler_interpolation_default() -> String {
-    "LINEAR".to_string()
 }
 
 /// Extension specific data for `Sampler`.
@@ -129,6 +141,14 @@ pub struct SamplerExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
+
+/// Specifies an interpolation algorithm.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct InterpolationAlgorithm(pub String);
+
+/// Specifies a TRS property.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct TrsProperty(pub String);
 
 impl Validate for Animation {
     fn validate<F>(&self, root: &Root, path: JsonPath, mut report: &mut F)
@@ -150,5 +170,31 @@ impl Validate for Channel {
         where F: FnMut(Error)
     {
         // nop
+    }
+}
+
+impl Default for InterpolationAlgorithm {
+    fn default() -> Self {
+        InterpolationAlgorithm("LINEAR".to_string())
+    }
+}
+
+impl Validate for InterpolationAlgorithm {
+    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
+        where F: FnMut(Error)
+    {
+        if !VALID_INTERPOLATION_ALGORITHMS.contains(&self.0.as_ref()) {
+            report(Error::invalid_enum(path, self.0.clone()));
+        }
+    }
+}
+
+impl Validate for TrsProperty {
+    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
+        where F: FnMut(Error)
+    {
+        if !VALID_TRS_PROPERTIES.contains(&self.0.as_ref()) {
+            report(Error::invalid_enum(path, self.0.clone()));
+        }
     }
 }
