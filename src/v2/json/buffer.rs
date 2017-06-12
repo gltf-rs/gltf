@@ -7,7 +7,26 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{Extras, Index};
+use v2::json::{Extras, Index, Root};
+use v2::validation::{Error, JsonPath, Validate};
+
+/// Corresponds to `GL_ARRAY_BUFFER`.
+pub const ARRAY_BUFFER: u32 = 34962;
+
+/// Corresponds to `GL_ELEMENT_ARRAY_BUFFER`.
+pub const ELEMENT_ARRAY_BUFFER: u32 = 34963;
+
+/// The minimum byte stride.
+pub const MIN_BYTE_STRIDE: u32 = 4;
+
+/// The maximum byte stride.
+pub const MAX_BYTE_STRIDE: u32 = 252;
+
+/// All valid GPU buffer targets.
+pub const VALID_TARGETS: &'static [u32] = &[
+    ARRAY_BUFFER,
+    ELEMENT_ARRAY_BUFFER,
+];
 
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
@@ -58,13 +77,13 @@ pub struct View {
     ///
     /// When zero, data is assumed to be tightly packed.
     #[serde(rename = "byteStride")]
-    pub byte_stride: Option<u32>,
+    pub byte_stride: Option<ByteStride>,
 
     /// Optional user-defined name for this object.
     pub name: Option<String>,
 
     /// Optional target the buffer should be bound to.
-    pub target: Option<u32>,
+    pub target: Option<Target>,
 
     /// Extension specific data.
     #[serde(default)]
@@ -80,4 +99,37 @@ pub struct View {
 pub struct ViewExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
+}
+
+/// The stride, in bytes, between vertex attributes.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct ByteStride(pub u32);
+
+/// Specifies the target a GPU buffer should be bound to. 
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct Target(pub u32);
+
+impl Validate for ByteStride {
+    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
+        where F: FnMut(Error)
+    {
+        if self.0 % 4 != 0 {
+            // Not a multiple of 4
+            report(Error::invalid_value(path.clone(), self.0));
+        }
+
+        if self.0 < MIN_BYTE_STRIDE || self.0 > MAX_BYTE_STRIDE {
+            report(Error::invalid_value(path, self.0));
+        }
+    }
+}
+
+impl Validate for Target {
+    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
+        where F: FnMut(Error)
+    {
+        if !VALID_TARGETS.contains(&self.0) {
+            report(Error::invalid_enum(path, self.0));
+        }
+    }
 }

@@ -46,6 +46,9 @@ pub mod error {
 
         /// An invalid enumeration constant was identified.
         InvalidEnum(serde_json::Value),
+
+        /// An invalid value was identified.
+        InvalidValue(serde_json::Value),
     }
 
     impl Error {
@@ -66,6 +69,17 @@ pub mod error {
                 path: path,
             }
         }
+
+        /// Returns an `InvalidEnum` error.
+        pub fn invalid_value<V>(path: JsonPath, value: V) -> Error
+            where V: Into<serde_json::Value>
+        {
+            Error {
+                kind: Kind::InvalidValue(value.into()),
+                path: path,
+            }
+        }
+
     }
 
     impl std::error::Error for Error {
@@ -73,6 +87,7 @@ pub mod error {
             match &self.kind {
                 &Kind::IndexOutOfBounds => "Index out of bounds",
                 &Kind::InvalidEnum(_) => "Invalid enumeration constant",
+                &Kind::InvalidValue(_) => "Invalid value",
             }
         }
     }
@@ -86,7 +101,11 @@ pub mod error {
                 },
                 &Kind::InvalidEnum(ref value) => {
                     write!(f, "{}: {} ({})", self.path, value, self.description())
-                }
+                },
+                &Kind::InvalidValue(ref value) => {
+                    write!(f, "{}: {} ({})", self.path, value, self.description())
+                },
+
             }
         }
     }
