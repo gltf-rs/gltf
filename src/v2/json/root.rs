@@ -10,6 +10,7 @@
 use std;
 use std::fmt;
 use v2::json::*;
+use v2::validation::{Error, JsonPath, Validate};
 
 /// Helper trait for retrieving top-level objects by a universal identifier.
 pub trait Get<T> {
@@ -333,6 +334,18 @@ impl<T> fmt::Debug for Index<T> {
 impl<T> fmt::Display for Index<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+impl<T: Validate> Validate for Index<T>
+    where Root: TryGet<T>
+{
+    fn validate<F>(&self, root: &Root, path: JsonPath, mut report: &mut F)
+        where F: FnMut(Error)
+    {
+        if root.try_get(self).is_err() {
+            report(Error::index_out_of_bounds(path));
+        }
     }
 }
 

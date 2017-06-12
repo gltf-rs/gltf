@@ -11,7 +11,6 @@ use serde_json;
 use std;
 use std::collections::HashMap;
 use v2::json::*;
-use v2::json::root::TryGet;
 
 pub use self::error::Error;
 
@@ -212,18 +211,6 @@ impl<T: Validate> Validate for HashMap<String, T> {
     {
         for (key, value) in self.iter() {
             value.validate(root, path.key(key), report);
-        }
-    }
-}
-
-impl<T: Validate> Validate for Index<T>
-    where Root: TryGet<T>
-{
-    fn validate<F>(&self, root: &Root, path: JsonPath, mut report: &mut F)
-        where F: FnMut(Error)
-    {
-        if root.try_get(self).is_err() {
-            report(Error::index_out_of_bounds(path));
         }
     }
 }
