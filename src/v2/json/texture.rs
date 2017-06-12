@@ -99,6 +99,7 @@ pub struct SamplerExtensions {
     _allow_unknown_fields: (),
 }
 
+/// A texture and its sampler.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Texture {
@@ -126,7 +127,6 @@ pub struct TextureExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
-
 
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]

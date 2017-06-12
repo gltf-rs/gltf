@@ -121,7 +121,7 @@ pub struct PerspectiveExtensions {
 
 /// Specifies the camera type.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Type(String);
+pub struct Type(pub String);
 
 impl Validate for Camera {
     fn validate<F>(&self, root: &Root, path: JsonPath, report: &mut F)

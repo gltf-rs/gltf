@@ -52,7 +52,7 @@ pub struct ImageExtensions {
 
 /// An image MIME type.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct MimeType(String);
+pub struct MimeType(pub String);
 
 impl Validate for MimeType {
     fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)

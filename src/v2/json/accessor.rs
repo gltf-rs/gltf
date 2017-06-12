@@ -222,9 +222,9 @@ pub struct IndexComponentType(pub u32);
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct GenericComponentType(pub u32);
 
-/// Specifies if the attribute is a scalar, vector, or matrix.
+/// Specifies if an attribute is a scalar, vector, or matrix.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Type(String);
+pub struct Type(pub String);
 
 impl Validate for IndexComponentType {
     fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)

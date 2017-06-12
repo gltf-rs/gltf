@@ -11,9 +11,11 @@ use std::fmt;
 
 pub use serde_json::Value;
 
-/// Data type of the `extras` attribute of all glTF objects.
+/// Data type of the `extras` attribute on all glTF objects.
 #[cfg(feature = "extras")]
 pub type Extras = Option<Value>;
+
+/// Data type of the `extras` attribute on all glTF objects.
 #[cfg(not(feature = "extras"))]
 pub type Extras = Void;
 
