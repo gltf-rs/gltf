@@ -8,7 +8,47 @@
 // except according to those terms.
 
 use std::collections::HashMap;
-use v2::json::{accessor, material, Extras, Index};
+use v2::json::{accessor, material, Extras, Index, Root};
+use v2::validation::{Error, JsonPath, Validate};
+
+/// Corresponds to `GL_POINTS`.
+pub const POINTS: u32 = 0;
+
+/// Corresponds to `GL_LINES`.
+pub const LINES: u32 = 1;
+
+/// Corresponds to `GL_LINE_LOOP`.
+pub const LINE_LOOP: u32 = 2;
+
+/// Corresponds to `GL_LINE_STRIP`.
+pub const LINE_STRIP: u32 = 3;
+
+/// Corresponds to `GL_TRIANGLES`.
+pub const TRIANGLES: u32 = 4;
+
+/// Corresponds to `GL_TRIANGLE_STRIP`.
+pub const TRIANGLE_STRIP: u32 = 5;
+
+/// Corresponds to `GL_TRIANGLE_FAN`.
+pub const TRIANGLE_FAN: u32 = 6;
+
+/// All valid primitive rendering modes.
+pub const VALID_MODES: &'static [u32] = &[
+    POINTS,
+    LINES,
+    LINE_LOOP,
+    LINE_STRIP,
+    TRIANGLES,
+    TRIANGLE_STRIP,
+    TRIANGLE_FAN,
+];
+
+/// All valid semantic names for Morph targets.
+pub const VALID_MORPH_TARGETS: &'static [&'static str] = &[
+    "POSITION",
+    "NORMAL",
+    "TANGENT",
+];
 
 /// Extension specific data for `Mesh`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
@@ -65,15 +105,11 @@ pub struct Primitive {
     pub material: Option<Index<material::Material>>,
     
     /// The type of primitives to render.
-    #[serde(default = "primitive_mode_default")]
-    pub mode: u32,
+    #[serde(default)]
+    pub mode: Mode,
     
     /// An array of Morph Targets, each  Morph Target is a dictionary mapping attributes (only `POSITION`, `NORMAL`, and `TANGENT` supported) to their deviations in the Morph Target.
-    pub targets: Option<Vec<HashMap<String, Index<accessor::Accessor>>>>,
-}
-
-fn primitive_mode_default() -> u32 {
-    4
+    pub targets: Option<Vec<MorphTargets>>,
 }
 
 /// Extension specific data for `Primitive`.
@@ -81,4 +117,40 @@ fn primitive_mode_default() -> u32 {
 pub struct PrimitiveExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
+}
+
+/// The type of primitives to render.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct Mode(pub u32);
+
+/// A dictionary mapping attributes to their deviations in the Morph Target.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct MorphTargets(pub HashMap<String, Index<accessor::Accessor>>);
+
+impl Default for Mode {
+    fn default() -> Mode {
+        Mode(TRIANGLES)
+    }
+}
+
+impl Validate for Mode {
+    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
+        where F: FnMut(Error)
+    {
+        if !VALID_MODES.contains(&self.0) {
+            report(Error::invalid_value(path, self.0));
+        }
+    }
+}
+
+impl Validate for MorphTargets {
+    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
+        where F: FnMut(Error)
+    {
+        for attribute in self.0.keys() {
+            if !VALID_MORPH_TARGETS.contains(&attribute.as_str()) {
+                report(Error::invalid_value(path.key(attribute), attribute.clone()));
+            }
+        }
+    }
 }
