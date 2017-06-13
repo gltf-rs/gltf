@@ -7,30 +7,81 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{image, Extras, Index};
+use v2::json::{image, Extras, Index, Root};
+use v2::validation::{Error, JsonPath, Validate};
+
+/// Corresponds to `GL_NEAREST`.
+pub const NEAREST: u32 = 9728;
+
+/// Corresponds to `GL_LINEAR`.
+pub const LINEAR: u32 = 9729;
+
+/// Corresponds to `GL_NEAREST_MIPMAP_NEAREST`.
+pub const NEAREST_MIPMAP_NEAREST: u32 = 9984;
+
+/// Corresponds to `GL_LINEAR_MIPMAP_NEAREST`.
+pub const LINEAR_MIPMAP_NEAREST: u32 = 9985;
+
+/// Corresponds to `GL_NEAREST_MIPMAP_LINEAR`.
+pub const NEAREST_MIPMAP_LINEAR: u32 = 9986;
+
+/// Corresponds to `GL_LINEAR_MIPMAP_LINEAR`.
+pub const LINEAR_MIPMAP_LINEAR: u32 = 9987;
+
+/// Corresponds to `GL_CLAMP_TO_EDGE`.
+pub const CLAMP_TO_EDGE: u32 = 33071;
+
+/// Corresponds to `GL_MIRRORED_REPEAT`.
+pub const MIRRORED_REPEAT: u32 = 33648;
+
+/// Corresponds to `GL_REPEAT`.
+pub const REPEAT: u32 = 10497;
+
+/// All valid magnification filters.
+pub const VALID_MAG_FILTERS: &'static [u32] = &[
+    NEAREST,
+    LINEAR,
+];
+
+/// All valid minification filters.
+pub const VALID_MIN_FILTERS: &'static [u32] = &[
+    NEAREST,
+    LINEAR,
+    NEAREST_MIPMAP_NEAREST,
+    LINEAR_MIPMAP_NEAREST,
+    NEAREST_MIPMAP_LINEAR,
+    LINEAR_MIPMAP_LINEAR,
+];
+
+/// All valid wrapping modes.
+pub const VALID_WRAPPING_MODES: &'static [u32] = &[
+    CLAMP_TO_EDGE,
+    MIRRORED_REPEAT,
+    REPEAT,
+];
 
 /// Texture sampler properties for filtering and wrapping modes.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Sampler {
     /// Magnification filter.
     #[serde(rename = "magFilter")]
-    pub mag_filter: Option<u32>,
+    pub mag_filter: Option<MagFilter>,
 
     /// Minification filter.
     #[serde(rename = "minFilter")]
-    pub min_filter: Option<u32>,
+    pub min_filter: Option<MinFilter>,
 
     /// Optional user-defined name for this object.
     pub name: Option<String>,
 
     /// `s` wrapping mode.
-    #[serde(default = "sampler_wrap_s_default", rename = "wrapS")]
-    pub wrap_s: u32,
+    #[serde(default, rename = "wrapS")]
+    pub wrap_s: WrappingMode,
 
     /// `t` wrapping mode.
-    #[serde(default = "sampler_wrap_t_default", rename = "wrapT")]
-    pub wrap_t: u32,
+    #[serde(default, rename = "wrapT")]
+    pub wrap_t: WrappingMode,
 
     /// Extension specific data.
     #[serde(default)]
@@ -41,22 +92,15 @@ pub struct Sampler {
     pub extras: Extras,
 }
 
-fn sampler_wrap_s_default() -> u32 {
-    10497
-}
-
-fn sampler_wrap_t_default() -> u32 {
-    10497
-}
-
 /// Extension specific data for `Sampler`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct SamplerExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+/// A texture and its sampler.
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Texture {
     /// Optional user-defined name for this object.
@@ -78,14 +122,13 @@ pub struct Texture {
 }
 
 /// Extension specific data for `Texture`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct TextureExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 /// Reference to a `Texture`.
 pub struct Info {
@@ -106,8 +149,56 @@ pub struct Info {
 }
 
 /// Extension specific data for `Info`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct InfoExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
+}
+
+/// Magnification filter.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct MagFilter(pub u32);
+
+/// Minification filter.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct MinFilter(pub u32);
+
+/// Texture co-ordinate wrapping mode.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct WrappingMode(pub u32);
+
+impl Validate for MagFilter {
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        if !VALID_MAG_FILTERS.contains(&self.0) {
+            report(Error::invalid_enum(path(), self.0));
+        }
+    }
+}
+
+impl Validate for MinFilter {
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        if !VALID_MIN_FILTERS.contains(&self.0) {
+            report(Error::invalid_enum(path(), self.0));
+        }
+    }
+}
+
+impl Default for WrappingMode {
+    fn default() -> Self {
+        WrappingMode(REPEAT)
+    }
+}
+
+impl Validate for WrappingMode {
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        if !VALID_WRAPPING_MODES.contains(&self.0) {
+            report(Error::invalid_enum(path(), self.0));
+        }
+    }
 }

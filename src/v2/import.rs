@@ -35,46 +35,6 @@ pub enum Error {
     IncompatibleVersion(String),
 }
 
-fn validate(root: &Root) -> Vec<validation::Error> {
-    use self::validation::Validate;
-    use std::borrow::Cow;
-    let mut errs = Vec::new();
-    macro_rules! validate {
-        ($($field:ident,)*) => {
-            $(
-                for (index, item) in root.$field.iter().enumerate() {
-                    item.validate(root, |e| {
-                        let src = format!("{}[{}]", stringify!($field), index);
-                        let err = e.propagate(Cow::from(src));
-                        errs.push(err);
-                    });
-                }
-            )*
-        }
-    }
-    validate!(
-        accessors,
-        animations,
-        buffers,
-        buffer_views,
-        cameras,
-        images,
-        materials,
-        meshes,
-        nodes,
-        samplers,
-        scenes,
-        skins,
-        textures,
-    );
-    if let Some(ref scene) = root.default_scene {
-        if root.try_get(scene).is_err() {
-            errs.push(validation::error::oob(Cow::from("scene")));
-        }
-    }
-    errs
-}
-
 /// Imports a standard (plain text JSON) glTF 2.0 asset.
 fn import_standard_gltf(data: Vec<u8>) -> Result<Root, Error> {
     let root: Root = serde_json::from_slice(&data)?;
@@ -84,6 +44,7 @@ fn import_standard_gltf(data: Vec<u8>) -> Result<Root, Error> {
 fn import_impl(path: &Path) -> Result<Root, Error> {
     use std::io::Read;
     use self::Error::*;
+    use self::validation::{JsonPath, Validate};
     
     let mut file = std::fs::File::open(path)?;
     let mut buffer = Vec::new();
@@ -96,7 +57,8 @@ fn import_impl(path: &Path) -> Result<Root, Error> {
         import_standard_gltf(buffer)?
     };
 
-    let errs = validate(&root);
+    let mut errs = Vec::new();
+    root.validate(&root, || JsonPath::new(), &mut |err| errs.push(err));
     if errs.is_empty() {
         Ok(root)
     } else {

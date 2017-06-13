@@ -7,15 +7,23 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{texture, Extras, Index};
+use v2::json::{texture, Extras, Index, Root};
+use v2::validation::{Error, JsonPath, Validate};
+
+/// All valid alpha modes.
+pub const VALID_ALPHA_MODES: &'static [&'static str] = &[
+    "OPAQUE",
+    "MASK",
+    "BLEND",
+];
 
 /// The material appearance of a primitive.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Material {
     /// The alpha cutoff value of the material.
-    #[serde(default = "material_alpha_cutoff_default", rename = "alphaCutoff")]
-    pub alpha_cutoff: f32,
+    #[serde(default, rename = "alphaCutoff")]
+    pub alpha_cutoff: AlphaCutoff,
     
     /// The alpha rendering mode of the material.
     ///
@@ -33,8 +41,8 @@ pub struct Material {
     ///   destination areas and the rendered output is combined with the
     ///   background using the normal painting operation (i.e. the Porter and
     ///   Duff over operator).
-    #[serde(default = "material_alpha_mode_default", rename = "alphaMode")]
-    pub alpha_mode: String,
+    #[serde(default, rename = "alphaMode")]
+    pub alpha_mode: AlphaMode,
 
     /// Specifies whether the material is double-sided.
     ///
@@ -53,7 +61,7 @@ pub struct Material {
 
     /// A set of parameter values that are used to define the metallic-roughness material model from Physically-Based Rendering (PBR) methodology. When not specified, all the default values of `pbrMetallicRoughness` apply.
     #[serde(rename = "pbrMetallicRoughness")]
-    pub pbr_metallic_roughness: PbrMetallicRoughness,
+    pub pbr_metallic_roughness: Option<PbrMetallicRoughness>,
 
     /// A tangent space normal map. The texture contains RGB components in linear space. Each texel represents the XYZ components of a normal vector in tangent space. Red [0 to 255] maps to X [-1 to 1]. Green [0 to 255] maps to Y [-1 to 1]. Blue [128 to 255] maps to Z [1/255 to 1]. The normal vectors use OpenGL conventions where +X is right and +Y is up. +Z points toward the viewer.
     #[serde(rename = "normalTexture")]
@@ -69,7 +77,7 @@ pub struct Material {
 
     /// The emissive color of the material.
     #[serde(default, rename = "emissiveFactor")]
-    pub emissive_factor: [f32; 3],
+    pub emissive_factor: EmissiveFactor,
 
     /// Extension specific data.
     #[serde(default)]
@@ -80,16 +88,8 @@ pub struct Material {
     pub extras: Extras,
 }
 
-fn material_alpha_cutoff_default() -> f32 {
-    0.5
-}
-
-fn material_alpha_mode_default() -> String {
-    "OPAQUE".to_string()
-}
-
 /// Extension specific data for `Material`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct MaterialExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
@@ -97,30 +97,27 @@ pub struct MaterialExtensions {
 
 /// A set of parameter values that are used to define the metallic-roughness
 /// material model from Physically-Based Rendering (PBR) methodology.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct PbrMetallicRoughness {
     /// The material's base color factor.
-    #[serde(default = "material_pbr_metallic_roughness_base_color_factor_default")]
-    #[serde(rename = "baseColorFactor")]
-    pub base_color_factor: [f32; 4],
+    #[serde(default, rename = "baseColorFactor")]
+    pub base_color_factor: PbrBaseColorFactor,
 
     /// The base color texture.
     #[serde(rename = "baseColorTexture")]
     pub base_color_texture: Option<texture::Info>,
 
     /// The metalness of the material.
-    #[serde(default = "material_pbr_metallic_roughness_metallic_factor_default")]
-    #[serde(rename = "metallicFactor")]
-    pub metallic_factor: f32,
+    #[serde(default, rename = "metallicFactor")]
+    pub metallic_factor: StrengthFactor,
 
     /// The roughness of the material.
     ///
     /// * A value of 1.0 means the material is completely rough.
     /// * A value of 0.0 means the material is completely smooth.
-    #[serde(default = "material_pbr_metallic_roughness_roughness_factor_default")]
-    #[serde(rename = "roughnessFactor")]
-    pub roughness_factor: f32,
+    #[serde(default, rename = "roughnessFactor")]
+    pub roughness_factor: StrengthFactor,
 
     /// The metallic-roughness texture.
     ///
@@ -143,26 +140,14 @@ pub struct PbrMetallicRoughness {
 }
 
 /// Extension specific data for `PbrMetallicRoughness`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct PbrMetallicRoughnessExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
-fn material_pbr_metallic_roughness_base_color_factor_default() -> [f32; 4] {
-    [1.0, 1.0, 1.0, 1.0]
-}
-
-fn material_pbr_metallic_roughness_metallic_factor_default() -> f32 {
-    1.0
-}
-
-fn material_pbr_metallic_roughness_roughness_factor_default() -> f32 {
-    1.0
-}
-
 /// Defines the normal texture of a material.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct NormalTexture {
     /// The index of the texture.
@@ -188,7 +173,7 @@ pub struct NormalTexture {
 }
 
 /// Extension specific data for `NormalTexture`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct NormalTextureExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
@@ -199,15 +184,15 @@ fn material_normal_texture_scale_default() -> f32 {
 }
 
 /// Defines the occlusion texture of a material.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct OcclusionTexture {
     /// The index of the texture.
     pub index: Index<texture::Texture>,
 
     /// The scalar multiplier controlling the amount of occlusion applied.
-    #[serde(default = "material_occlusion_texture_strength_default")]
-    pub strength: f32,
+    #[serde(default)]
+    pub strength: StrengthFactor,
 
     /// The set index of the texture's `TEXCOORD` attribute.
     #[serde(default, rename = "texCoord")]
@@ -223,12 +208,111 @@ pub struct OcclusionTexture {
 }
 
 /// Extension specific data for `OcclusionTexture`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct OcclusionTextureExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
-fn material_occlusion_texture_strength_default() -> f32 {
-    1.0
+/// The alpha cutoff value of a material.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct AlphaCutoff(pub f32);
+
+/// The alpha rendering mode of a material.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct AlphaMode(pub String);
+
+/// The emissive color of a material.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
+pub struct EmissiveFactor(pub [f32; 3]);
+
+/// The base color factor of a material.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct PbrBaseColorFactor(pub [f32; 4]);
+
+/// A number in the inclusive range [0.0, 1.0] with a default value of 1.0.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct StrengthFactor(pub f32);
+
+impl Default for AlphaCutoff {
+    fn default() -> Self {
+        AlphaCutoff(0.5)
+    }
 }
+
+impl Default for AlphaMode {
+    fn default() -> Self {
+        AlphaMode("OPAQUE".to_string())
+    }
+}
+
+impl Validate for AlphaCutoff {
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        if self.0 < 0.0 {
+            report(Error::invalid_value(path(), self.0));
+        }
+    }
+}
+
+impl Validate for AlphaMode {
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        if !VALID_ALPHA_MODES.contains(&self.0.as_str()) {
+            report(Error::invalid_enum(path(), self.0.clone()));
+        }
+    }
+}
+
+impl Validate for EmissiveFactor {
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        for x in &self.0 {
+            if *x < 0.0 || *x > 1.0 {
+                report(Error::invalid_value(path(), self.0.to_vec()));
+                // Only report once
+                break;
+            }
+        }
+    }
+}
+
+impl Default for PbrBaseColorFactor {
+    fn default() -> Self {
+        PbrBaseColorFactor([1.0, 1.0, 1.0, 1.0])
+    }
+}
+
+impl Validate for PbrBaseColorFactor {
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        for x in &self.0 {
+            if *x < 0.0 || *x > 1.0 {
+                report(Error::invalid_value(path(), self.0.to_vec()));
+                // Only report once
+                break;
+            }
+        }
+    }
+}
+
+impl Default for StrengthFactor {
+    fn default() -> Self {
+        StrengthFactor(1.0)
+    }
+}
+
+impl Validate for StrengthFactor {
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        if self.0 < 0.0 || self.0 > 1.0 {
+            report(Error::invalid_value(path(), self.0));
+        }
+    }
+}
+

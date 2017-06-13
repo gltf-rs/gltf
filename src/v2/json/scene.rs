@@ -7,10 +7,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{camera, mesh, scene, skin, Extras, Index};
+use v2::json::{camera, mesh, scene, skin, Extras, Index, Root};
+use v2::validation::{Error, JsonPath, Validate};
 
 /// A node in the node hierarchy.  When the node contains `skin`, all `mesh.primitives` must contain `JOINTS_0` and `WEIGHTS_0` attributes.  A node can have either a `matrix` or any combination of `translation`/`rotation`/`scale` (TRS) properties. TRS properties are converted to matrices and postmultiplied in the `T * R * S` order to compose the transformation matrix; first the scale is applied to the vertices, then the rotation, and then the translation. If none are provided, the transform is the identity. When a node is targeted for animation (referenced by an animation.channel.target), only TRS properties may be present; `matrix` will not be present..
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Node {
     /// The index of the camera referenced by this node.
@@ -38,8 +39,8 @@ pub struct Node {
     pub name: Option<String>,
     
     /// The node's unit quaternion rotation in the order (x, y, z, w), where w is the scalar.
-    #[serde(default = "node_rotation_default")]
-    pub rotation: [f32; 4],
+    #[serde(default)]
+    pub rotation: UnitQuaternion,
 
     /// The node's non-uniform scale.
     #[serde(default = "node_scale_default")]
@@ -57,7 +58,7 @@ pub struct Node {
 }
 
 /// Extension specific data for `Node`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct NodeExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
@@ -70,16 +71,12 @@ fn node_matrix_default() -> [f32; 16] {
      0.0, 0.0, 0.0, 1.0]
 }
 
-fn node_rotation_default() -> [f32; 4] {
-    [0.0, 0.0, 0.0, 1.0]
-}
-
 fn node_scale_default() -> [f32; 3] {
     [1.0, 1.0, 1.0]
 }
 
 /// The root `Node`s of a scene.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Scene {
     /// Extension specific data.
@@ -98,8 +95,32 @@ pub struct Scene {
 }
 
 /// Extension specific data for `Scene`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct SceneExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
+}
+
+/// Unit quaternion rotation in the order (x, y, z, w), where w is the scalar.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct UnitQuaternion(pub [f32; 4]);
+
+impl Default for UnitQuaternion {
+    fn default() -> Self {
+        UnitQuaternion([0.0, 0.0, 0.0, 1.0])
+    }
+}
+
+impl Validate for UnitQuaternion {
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        for x in &self.0 {
+            if *x < -1.0 || *x > 1.0 {
+                report(Error::invalid_value(path(), self.0.to_vec()));
+                // Only report once
+                break;
+            }
+        }
+    }
 }

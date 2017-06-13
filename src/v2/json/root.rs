@@ -10,6 +10,7 @@
 use std;
 use std::fmt;
 use v2::json::*;
+use v2::validation::{Error, JsonPath, Validate};
 
 /// Helper trait for retrieving top-level objects by a universal identifier.
 pub trait Get<T> {
@@ -29,7 +30,7 @@ pub trait TryGet<T> {
 pub struct Index<T>(u32, std::marker::PhantomData<T>);
 
 /// The root object of a glTF 2.0 asset.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Root {
     /// An array of accessors.
@@ -52,8 +53,7 @@ pub struct Root {
     pub buffer_views: Vec<buffer::View>,
 
     /// The default scene.
-    #[serde(rename = "scene")]
-    pub default_scene: Option<Index<scene::Scene>>,
+    pub scene: Option<Index<scene::Scene>>,
 
     /// Extension specific data.
     #[serde(default)]
@@ -109,7 +109,7 @@ pub struct Root {
 }
 
 /// Extension specific data for `Root`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct RootExtensions {
     _allow_unknown_fields: (),
 }
@@ -172,7 +172,7 @@ impl Root {
 
     /// Returns the default scene.
     pub fn default_scene(&self) -> Option<&scene::Scene> {
-        self.default_scene.as_ref().map(|s| self.get(s))
+        self.scene.as_ref().map(|s| self.get(s))
     }
 
     /// Returns the extensions referenced in this .gltf file.
@@ -334,6 +334,18 @@ impl<T> fmt::Debug for Index<T> {
 impl<T> fmt::Display for Index<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+impl<T: Validate> Validate for Index<T>
+    where Root: TryGet<T>
+{
+    fn validate<P, R>(&self, root: &Root, path: P, mut report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        if root.try_get(self).is_err() {
+            report(Error::index_out_of_bounds(path()));
+        }
     }
 }
 

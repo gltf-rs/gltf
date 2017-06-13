@@ -7,22 +7,68 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{buffer, Extras, Index};
+use v2::json::{buffer, Extras, Index, Root};
+use v2::validation::{Error, JsonPath, Validate};
+
+/// Corresponds to `GL_BYTE`.
+pub const BYTE: u32 = 5120;
+
+/// Corresponds to `GL_UNSIGNED_BYTE`.
+pub const UNSIGNED_BYTE: u32 = 5121;
+
+/// Corresponds to `GL_SHORT`.
+pub const SHORT: u32 = 5122;
+
+/// Corresponds to `GL_UNSIGNED_SHORT`.
+pub const UNSIGNED_SHORT: u32 = 5123;
+
+/// Corresponds to `GL_UNSIGNED_INT`.
+pub const UNSIGNED_INT: u32 = 5125;
+
+/// Corresponds to `GL_FLOAT`.
+pub const FLOAT: u32 = 5126;
+
+/// All valid index component types.
+pub const VALID_INDEX_COMPONENT_TYPES: &'static [u32] = &[
+    UNSIGNED_BYTE,
+    UNSIGNED_SHORT,
+    UNSIGNED_INT,
+];
+
+/// All valid generic vertex attribute component types.
+pub const VALID_GENERIC_ATTRIBUTE_COMPONENT_TYPES: &'static [u32] = &[
+    BYTE,
+    UNSIGNED_BYTE,
+    SHORT,
+    UNSIGNED_SHORT,
+    UNSIGNED_INT,
+    FLOAT,
+];
+
+/// All valid accessor types.
+pub const VALID_ACCESSOR_TYPES: &'static [&'static str] = &[
+    "SCALAR",
+    "VEC2",
+    "VEC3",
+    "VEC4",
+    "MAT2",
+    "MAT3",
+    "MAT4",
+];
 
 /// Contains data structures for sparse storage.
 pub mod sparse {
     use super::*;
-
+    
     /// Extension specific data for `Indices`.
-    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
     pub struct IndicesExtensions {
         #[serde(default)]
         _allow_unknown_fields: (),
     }
 
     /// Indices of those attributes that deviate from their initialization value.
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    #[serde(deny_unknown_fields)]
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     pub struct Indices {
         /// The parent buffer view containing the sparse indices.
         ///
@@ -37,7 +83,7 @@ pub mod sparse {
         
         /// The data type of each index.
         #[serde(rename = "componentType")]
-        pub component_type: u32,
+        pub component_type: IndexComponentType,
 
         /// Extension specific data.
         pub extensions: IndicesExtensions,
@@ -47,14 +93,14 @@ pub mod sparse {
     }
 
     /// Extension specific data for `Storage`.
-    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
     pub struct StorageExtensions {
         #[serde(default)]
         _allow_unknown_fields: (),
     }
 
     /// Sparse storage of attributes that deviate from their initialization value.
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     #[serde(deny_unknown_fields)]
     pub struct Sparse {
         /// The number of attributes encoded in this sparse accessor.
@@ -81,7 +127,7 @@ pub mod sparse {
     }
 
     /// Extension specific data for `Values`.
-    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
     pub struct ValuesExtensions {
         #[serde(default)]
         _allow_unknown_fields: (),
@@ -89,7 +135,7 @@ pub mod sparse {
 
     /// Array of size `count * number_of_components` storing the displaced
     /// accessor attributes pointed by `accessor::sparse::Indices`.
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     #[serde(deny_unknown_fields)]
     pub struct Values {
         /// The parent buffer view containing the sparse indices.
@@ -112,14 +158,14 @@ pub mod sparse {
 }
 
 /// Extension specific data for an `Accessor`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct AccessorExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// A typed view into a buffer view.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Accessor {
     /// The parent buffer view this accessor reads from.
@@ -136,7 +182,7 @@ pub struct Accessor {
     
     /// The data type of components in the attribute.
     #[serde(rename = "componentType")]
-    pub component_type: u32,
+    pub component_type: GenericComponentType,
     
     /// Extension specific data.
     #[serde(default)]
@@ -148,7 +194,7 @@ pub struct Accessor {
     
     /// Specifies if the attribute is a scalar, vector, or matrix.
     #[serde(rename = "type")]
-    pub type_: String,
+    pub type_: Type,
     
     /// Minimum value of each component in this attribute.
     pub min: Vec<f32>,
@@ -166,4 +212,46 @@ pub struct Accessor {
     /// Sparse storage of attributes that deviate from their initialization
     /// value.
     pub sparse: Option<sparse::Sparse>,
+}
+
+/// The data type of an index.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct IndexComponentType(pub u32);
+
+/// The data type of a generic vertex attribute.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct GenericComponentType(pub u32);
+
+/// Specifies if an attribute is a scalar, vector, or matrix.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Type(pub String);
+
+impl Validate for IndexComponentType {
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        if !VALID_INDEX_COMPONENT_TYPES.contains(&self.0) {
+            report(Error::invalid_enum(path(), self.0));
+        }
+    }
+}
+
+impl Validate for GenericComponentType {
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        if !VALID_GENERIC_ATTRIBUTE_COMPONENT_TYPES.contains(&self.0) {
+            report(Error::invalid_enum(path(), self.0));
+        }
+    }
+}
+
+impl Validate for Type {
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        if !VALID_ACCESSOR_TYPES.contains(&self.0.as_str()) {
+            report(Error::invalid_enum(path(), self.0.clone()));
+        }
+    }
 }

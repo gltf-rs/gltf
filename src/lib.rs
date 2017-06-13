@@ -7,6 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#[macro_use]
+extern crate gltf_derive;
+extern crate inflections;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -20,4 +23,3 @@ pub mod v1;
 
 /// Contains data structures and functions for loading glTF 2.0.
 pub mod v2;
-

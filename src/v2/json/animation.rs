@@ -7,7 +7,24 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{accessor, scene, Extras, Index};
+use v2::json::{accessor, scene, Extras, Index, Root};
+use v2::validation::{Error, JsonPath, Validate};
+
+/// All valid interpolation algorithms.
+pub const VALID_INTERPOLATION_ALGORITHMS: &'static [&'static str] = &[
+    "LINEAR",
+    "STEP",
+    "CATMULLROMSPLINE",
+    "CUBICSPLINE",
+];
+
+/// All valid TRS property names.
+pub const VALID_TRS_PROPERTIES: &'static [&'static str] = &[
+    "translation",
+    "rotation",
+    "scale",
+    "weights",
+];
 
 /// A keyframe animation.
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -36,7 +53,7 @@ pub struct Animation {
 }
 
 /// Extension specific data for `Animation`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct AnimationExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
@@ -62,14 +79,14 @@ pub struct Channel {
 }
 
 /// Extension specific data for `Channel`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct ChannelExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// The index of the node and TRS property that an animation channel targets.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Target {
     /// Extension specific data.
@@ -85,18 +102,18 @@ pub struct Target {
     
     /// The name of the node's TRS property to modify or the 'weights' of the
     /// morph targets it instantiates.
-    pub path: String,
+    pub path: TrsProperty,
 }
 
 /// Extension specific data for `Target`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct TargetExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// Defines a keyframe graph but not its target.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Sampler {
     /// Extension specific data.
@@ -111,20 +128,73 @@ pub struct Sampler {
     pub input: Index<accessor::Accessor>,
     
     /// The interpolation algorithm.
-    #[serde(default = "sampler_interpolation_default")]
-    pub interpolation: String,
+    #[serde(default)]
+    pub interpolation: InterpolationAlgorithm,
     
     /// The index of an accessor containing keyframe output values.
     pub output: Index<accessor::Accessor>,
 }
 
-fn sampler_interpolation_default() -> String {
-    "LINEAR".to_string()
-}
-
 /// Extension specific data for `Sampler`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct SamplerExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
+}
+
+/// Specifies an interpolation algorithm.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct InterpolationAlgorithm(pub String);
+
+/// Specifies a TRS property.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct TrsProperty(pub String);
+
+impl Validate for Animation {
+    fn validate<P, R>(&self, root: &Root, path: P, mut report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        self.samplers.validate(root, || path().field("samplers"), report);
+        self.channels.validate(root, || path().field("channels"), report);
+        for (index, channel) in self.channels.iter().enumerate() {
+            if channel.sampler.value() as usize >= self.samplers.len() {
+                let field = format!("channels[{}].sampler", index);
+                report(Error::index_out_of_bounds(path().field(&field)));
+            }
+        }
+    }
+}
+
+impl Validate for Channel {
+    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        // nop
+    }
+}
+
+impl Default for InterpolationAlgorithm {
+    fn default() -> Self {
+        InterpolationAlgorithm("LINEAR".to_string())
+    }
+}
+
+impl Validate for InterpolationAlgorithm {
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        if !VALID_INTERPOLATION_ALGORITHMS.contains(&self.0.as_ref()) {
+            report(Error::invalid_enum(path(), self.0.clone()));
+        }
+    }
+}
+
+impl Validate for TrsProperty {
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        if !VALID_TRS_PROPERTIES.contains(&self.0.as_ref()) {
+            report(Error::invalid_enum(path(), self.0.clone()));
+        }
+    }
 }
