@@ -110,26 +110,26 @@ pub struct ByteStride(pub u32);
 pub struct Target(pub u32);
 
 impl Validate for ByteStride {
-    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if self.0 % 4 != 0 {
             // Not a multiple of 4
-            report(Error::invalid_value(path.clone(), self.0));
+            report(Error::invalid_value(path(), self.0));
         }
 
         if self.0 < MIN_BYTE_STRIDE || self.0 > MAX_BYTE_STRIDE {
-            report(Error::invalid_value(path, self.0));
+            report(Error::invalid_value(path(), self.0));
         }
     }
 }
 
 impl Validate for Target {
-    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_TARGETS.contains(&self.0) {
-            report(Error::invalid_enum(path, self.0));
+            report(Error::invalid_enum(path(), self.0));
         }
     }
 }

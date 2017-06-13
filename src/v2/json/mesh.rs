@@ -134,22 +134,22 @@ impl Default for Mode {
 }
 
 impl Validate for Mode {
-    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_MODES.contains(&self.0) {
-            report(Error::invalid_value(path, self.0));
+            report(Error::invalid_value(path(), self.0));
         }
     }
 }
 
 impl Validate for MorphTargets {
-    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
-        for attribute in self.0.keys() {
-            if !VALID_MORPH_TARGETS.contains(&attribute.as_str()) {
-                report(Error::invalid_value(path.key(attribute), attribute.clone()));
+        for attr in self.0.keys() {
+            if !VALID_MORPH_TARGETS.contains(&attr.as_str()) {
+                report(Error::invalid_value(path().key(attr), attr.clone()));
             }
         }
     }

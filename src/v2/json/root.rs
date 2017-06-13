@@ -340,11 +340,11 @@ impl<T> fmt::Display for Index<T> {
 impl<T: Validate> Validate for Index<T>
     where Root: TryGet<T>
 {
-    fn validate<F>(&self, root: &Root, path: JsonPath, mut report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, root: &Root, path: P, mut report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if root.try_get(self).is_err() {
-            report(Error::index_out_of_bounds(path));
+            report(Error::index_out_of_bounds(path()));
         }
     }
 }

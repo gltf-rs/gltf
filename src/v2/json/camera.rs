@@ -124,74 +124,74 @@ pub struct PerspectiveExtensions {
 pub struct Type(pub String);
 
 impl Validate for Camera {
-    fn validate<F>(&self, root: &Root, path: JsonPath, report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if self.orthographic.is_none() && self.perspective.is_none() {
             let reason = "one of `orthographic` or `perspective` is required";
-            report(Error::missing_data(path.clone(), reason.to_string()));
+            report(Error::missing_data(path().clone(), reason.to_string()));
         }
 
-        self.orthographic.validate(root, path.field("orthographic"), report);
-        self.perspective.validate(root, path.field("perspective"), report);
-        self.type_.validate(root, path.field("type"), report);
-        self.extensions.validate(root, path.field("extensions"), report);
-        self.extras.validate(root, path.field("extras"), report);
+        self.orthographic.validate(root, || path().field("orthographic"), report);
+        self.perspective.validate(root, || path().field("perspective"), report);
+        self.type_.validate(root, || path().field("type"), report);
+        self.extensions.validate(root, || path().field("extensions"), report);
+        self.extras.validate(root, || path().field("extras"), report);
     }
 }
 
 impl Validate for Orthographic {
-    fn validate<F>(&self, root: &Root, path: JsonPath, report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if self.znear < 0.0 {
-            report(Error::invalid_value(path.clone(), self.znear));
+            report(Error::invalid_value(path(), self.znear));
         }
  
         if self.zfar < 0.0  || self.zfar < self.znear {
-            report(Error::invalid_value(path.clone(), self.zfar));
+            report(Error::invalid_value(path(), self.zfar));
         }
 
-        self.extensions.validate(root, path.field("extensions"), report);
-        self.extras.validate(root, path.field("extras"), report);
+        self.extensions.validate(root, || path().field("extensions"), report);
+        self.extras.validate(root, || path().field("extras"), report);
     }
 }
 
 impl Validate for Perspective {
-    fn validate<F>(&self, root: &Root, path: JsonPath, report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         self.aspect_ratio.map(|aspect_ratio| {
             if aspect_ratio < 0.0 {
-                report(Error::invalid_value(path.clone(), aspect_ratio));
+                report(Error::invalid_value(path(), aspect_ratio));
             }
         });
 
         if self.yfov < 0.0 {
-            report(Error::invalid_value(path.clone(), self.yfov));
+            report(Error::invalid_value(path(), self.yfov));
         }
 
         if self.znear < 0.0 {
-            report(Error::invalid_value(path.clone(), self.znear));
+            report(Error::invalid_value(path(), self.znear));
         }
 
         self.zfar.map(|zfar| {
             if zfar < 0.0 || zfar < self.znear {
-                report(Error::invalid_value(path.clone(), zfar));
+                report(Error::invalid_value(path(), zfar));
             }
         });
 
-        self.extensions.validate(root, path.field("extensions"), report);
-        self.extras.validate(root, path.field("extras"), report);
+        self.extensions.validate(root, || path().field("extensions"), report);
+        self.extras.validate(root, || path().field("extras"), report);
     }
 }
 
 impl Validate for Type {
-    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_CAMERA_TYPES.contains(&self.0.as_ref()) {
-            report(Error::invalid_enum(path, self.0.clone()));
+            report(Error::invalid_enum(path(), self.0.clone()));
         }
     }
 }

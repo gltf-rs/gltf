@@ -227,31 +227,31 @@ pub struct GenericComponentType(pub u32);
 pub struct Type(pub String);
 
 impl Validate for IndexComponentType {
-    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_INDEX_COMPONENT_TYPES.contains(&self.0) {
-            report(Error::invalid_enum(path, self.0));
+            report(Error::invalid_enum(path(), self.0));
         }
     }
 }
 
 impl Validate for GenericComponentType {
-    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_GENERIC_ATTRIBUTE_COMPONENT_TYPES.contains(&self.0) {
-            report(Error::invalid_enum(path, self.0));
+            report(Error::invalid_enum(path(), self.0));
         }
     }
 }
 
 impl Validate for Type {
-    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_ACCESSOR_TYPES.contains(&self.0.as_str()) {
-            report(Error::invalid_enum(path, self.0.clone()));
+            report(Error::invalid_enum(path(), self.0.clone()));
         }
     }
 }

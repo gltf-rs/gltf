@@ -151,23 +151,23 @@ pub struct InterpolationAlgorithm(pub String);
 pub struct TrsProperty(pub String);
 
 impl Validate for Animation {
-    fn validate<F>(&self, root: &Root, path: JsonPath, mut report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, root: &Root, path: P, mut report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
-        self.samplers.validate(root, path.field("samplers"), report);
-        self.channels.validate(root, path.field("channels"), report);
+        self.samplers.validate(root, || path().field("samplers"), report);
+        self.channels.validate(root, || path().field("channels"), report);
         for (index, channel) in self.channels.iter().enumerate() {
             if channel.sampler.value() as usize >= self.samplers.len() {
                 let field = format!("channels[{}].sampler", index);
-                report(Error::index_out_of_bounds(path.field(&field)));
+                report(Error::index_out_of_bounds(path().field(&field)));
             }
         }
     }
 }
 
 impl Validate for Channel {
-    fn validate<F>(&self, _root: &Root, _path: JsonPath, _report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
@@ -180,21 +180,21 @@ impl Default for InterpolationAlgorithm {
 }
 
 impl Validate for InterpolationAlgorithm {
-    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_INTERPOLATION_ALGORITHMS.contains(&self.0.as_ref()) {
-            report(Error::invalid_enum(path, self.0.clone()));
+            report(Error::invalid_enum(path(), self.0.clone()));
         }
     }
 }
 
 impl Validate for TrsProperty {
-    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_TRS_PROPERTIES.contains(&self.0.as_ref()) {
-            report(Error::invalid_enum(path, self.0.clone()));
+            report(Error::invalid_enum(path(), self.0.clone()));
         }
     }
 }

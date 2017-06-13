@@ -40,14 +40,14 @@ fn expand(ast: &syn::MacroInput) -> quote::Tokens {
         .map(|ident| {
                  use inflections::Inflect;
                  let field = ident.as_ref().to_camel_case();
-                 quote!(self.#ident.validate(root, path.field(#field), report))
+                 quote!(self.#ident.validate(root, || path().field(#field), report))
              })
         .collect();
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
     quote!(
         impl #impl_generics ::v2::validation::Validate for #ident #ty_generics #where_clause {
-            fn validate<F>(&self, root: &::v2::json::Root, path: ::v2::validation::JsonPath, report: &mut F)
-                where F: FnMut(::v2::validation::Error)
+            fn validate<P, R>(&self, root: &::v2::json::Root, path: P, report: &mut R)
+                where P: Fn() -> ::v2::validation::JsonPath, R: FnMut(::v2::validation::Error),
             {
                 #(
                     #validations;

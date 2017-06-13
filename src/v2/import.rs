@@ -58,7 +58,7 @@ fn import_impl(path: &Path) -> Result<Root, Error> {
     };
 
     let mut errs = Vec::new();
-    root.validate(&root, JsonPath::new(), &mut |err| errs.push(err));
+    root.validate(&root, || JsonPath::new(), &mut |err| errs.push(err));
     if errs.is_empty() {
         Ok(root)
     } else {

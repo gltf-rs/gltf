@@ -168,21 +168,21 @@ pub struct MinFilter(pub u32);
 pub struct WrappingMode(pub u32);
 
 impl Validate for MagFilter {
-    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_MAG_FILTERS.contains(&self.0) {
-            report(Error::invalid_enum(path, self.0));
+            report(Error::invalid_enum(path(), self.0));
         }
     }
 }
 
 impl Validate for MinFilter {
-    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_MIN_FILTERS.contains(&self.0) {
-            report(Error::invalid_enum(path, self.0));
+            report(Error::invalid_enum(path(), self.0));
         }
     }
 }
@@ -194,11 +194,11 @@ impl Default for WrappingMode {
 }
 
 impl Validate for WrappingMode {
-    fn validate<F>(&self, _: &Root, path: JsonPath, report: &mut F)
-        where F: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_WRAPPING_MODES.contains(&self.0) {
-            report(Error::invalid_enum(path, self.0));
+            report(Error::invalid_enum(path(), self.0));
         }
     }
 }
