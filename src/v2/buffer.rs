@@ -10,12 +10,19 @@
 use v2::Gltf;
 use v2::json;
 
-pub enum Target {}
+/// Specifies the target a GPU buffer should be bound to. 
+pub enum Target {
+    /// Corresponds to `GL_ARRAY_BUFFER`.
+    ArrayBuffer = 34962,
+
+    /// Corresponds to `GL_ELEMENT_ARRAY_BUFFER`.
+    ElementArrayBuffer = 34963,
+}
 
 ///  A buffer points to binary data representing geometry, animations, or skins.
 pub struct Buffer<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::buffer::Buffer,
@@ -23,7 +30,7 @@ pub struct Buffer<'a> {
 
 impl<'a> Buffer<'a> {
     /// Constructs a `Buffer`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::buffer::Buffer) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::buffer::Buffer) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -36,34 +43,35 @@ impl<'a> Buffer<'a> {
     }
 
     ///  The length of the buffer in bytes.
-    pub fn byte_length(&self) -> &u32 {
-        unimplemented!()
+    pub fn byte_length(&self) -> u32 {
+        self.json.byte_length
     }
 
     ///  Optional user-defined name for this object.
-    pub fn name(&self) -> &Option<String> {
-        unimplemented!()
+    pub fn name(&self) -> Option<&str> {
+        self.json.name.as_ref().map(String::as_str)
     }
 
-    ///  The uri of the buffer. Relative paths are relative to the .gltf file. Instead of referencing an external file, the uri can also be a data-uri.
-    pub fn uri(&self) -> &Option<String> {
-        unimplemented!()
+    ///  The uri of the buffer. Relative paths are relative to the .gltf file.
+    /// Instead of referencing an external file, the uri can also be a data-uri.
+    pub fn uri(&self) -> Option<&str> {
+        self.json.uri.as_ref().map(String::as_str)
     }
 
     ///  Extension specific data.
     pub fn extensions(&self) -> &json::buffer::BufferExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
     ///  Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
 }
 ///  A view into a buffer generally representing a subset of the buffer.
 pub struct View<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::buffer::View,
@@ -71,7 +79,7 @@ pub struct View<'a> {
 
 impl<'a> View<'a> {
     /// Constructs a `View`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::buffer::View) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::buffer::View) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -85,41 +93,46 @@ impl<'a> View<'a> {
 
     ///  The parent `Buffer`.
     pub fn buffer(&self) -> Buffer<'a> {
-        unimplemented!()
+        Buffer::new(self.gltf, self.gltf.as_json().get(&self.json.buffer))
     }
 
     ///  The length of the `BufferView` in bytes.
-    pub fn byte_length(&self) -> &u32 {
-        unimplemented!()
+    pub fn byte_length(&self) -> u32 {
+        self.json.byte_length
     }
 
     ///  Offset into the parent buffer in bytes.
-    pub fn byte_offset(&self) -> &u32 {
-        unimplemented!()
+    pub fn byte_offset(&self) -> u32 {
+        self.json.byte_offset
     }
 
-    ///  The stride in bytes between vertex attributes or other interleavable data.  When zero, data is assumed to be tightly packed.
-    pub fn byte_stride(&self) -> &Option<u32> {
-        unimplemented!()
+    ///  The stride in bytes between vertex attributes or other interleavable data.
+    /// When zero, data is assumed to be tightly packed.
+    pub fn byte_stride(&self) -> Option<u32> {
+        self.json.byte_stride.map(|x| x.0)
     }
 
     ///  Optional user-defined name for this object.
-    pub fn name(&self) -> &Option<String> {
-        unimplemented!()
+    pub fn name(&self) -> Option<&str> {
+        self.json.name.as_ref().map(String::as_str)
     }
 
     ///  Optional target the buffer should be bound to.
-    pub fn target(&self) -> &Option<Target> {
-        unimplemented!()
+    pub fn target(&self) -> Option<Target> {
+        self.json.target.map(|x| match x.0 {
+            json::buffer::ARRAY_BUFFER => Target::ArrayBuffer,
+            json::buffer::ELEMENT_ARRAY_BUFFER => Target::ElementArrayBuffer,
+            _ => unreachable!(),
+        })
     }
 
     ///  Extension specific data.
     pub fn extensions(&self) -> &json::buffer::ViewExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
     ///  Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
 }

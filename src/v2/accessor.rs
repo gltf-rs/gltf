@@ -13,7 +13,7 @@ use v2::{buffer, json};
 ///  A typed view into a buffer view.
 pub struct Accessor<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::accessor::Accessor,
@@ -21,7 +21,7 @@ pub struct Accessor<'a> {
 
 impl<'a> Accessor<'a> {
     /// Constructs an `Accessor`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::accessor::Accessor) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::accessor::Accessor) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -35,32 +35,33 @@ impl<'a> Accessor<'a> {
 
     ///  The parent buffer view this accessor reads from.
     pub fn buffer_view(&self) -> buffer::View<'a> {
-        unimplemented!()
+        buffer::View::new(self.gltf, self.gltf.as_json().get(&self.json.buffer_view))
     }
 
     ///  The offset relative to the start of the parent `BufferView` in bytes.
-    pub fn byte_offset(&self) -> &u32 {
-        unimplemented!()
+    pub fn byte_offset(&self) -> u32 {
+        self.json.byte_offset
     }
 
-    ///  The number of components within the buffer view - not to be confused with the number of bytes in the buffer view.
-    pub fn count(&self) -> &u32 {
-        unimplemented!()
+    ///  The number of components within the buffer view - not to be confused with
+    /// the number of bytes in the buffer view.
+    pub fn count(&self) -> u32 {
+        self.json.count
     }
 
     ///  The data type of components in the attribute.
-    pub fn component_type(&self) -> &json::accessor::GenericComponentType {
+    pub fn component_type(&self) -> ! {
         unimplemented!()
     }
 
     ///  Extension specific data.
     pub fn extensions(&self) -> &json::accessor::AccessorExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
     ///  Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
 
     ///  Specifies if the attribute is a scalar, vector, or matrix.
@@ -69,27 +70,201 @@ impl<'a> Accessor<'a> {
     }
 
     ///  Minimum value of each component in this attribute.
-    pub fn min(&self) -> &Vec<f32> {
-        unimplemented!()
+    pub fn min(&self) -> &[f32] {
+        &self.json.min
     }
 
     ///  Maximum value of each component in this attribute.
-    pub fn max(&self) -> &Vec<f32> {
-        unimplemented!()
+    pub fn max(&self) -> &[f32] {
+        &self.json.max
     }
 
     ///  Optional user-defined name for this object.
-    pub fn name(&self) -> &Option<String> {
-        unimplemented!()
+    pub fn name(&self) -> Option<&str> {
+        self.json.name.as_ref().map(String::as_str)
     }
 
     ///  Specifies whether integer data values should be normalized.
-    pub fn normalized(&self) -> &bool {
-        unimplemented!()
+    pub fn normalized(&self) -> bool {
+        self.json.normalized
     }
 
     ///  Sparse storage of attributes that deviate from their initialization value.
-    pub fn sparse(&self) -> &Option<json::accessor::sparse::Sparse> {
-        unimplemented!()
+    pub fn sparse(&self) -> Option<sparse::Sparse<'a>> {
+        self.json.sparse.as_ref().map(|json| {
+            sparse::Sparse::new(self.gltf, json)
+        })
+    }
+}
+
+/// Contains data structures for sparse storage.
+pub mod sparse {
+    use v2::Gltf;
+    use v2::{buffer, json};
+    
+    ///  Indices of those attributes that deviate from their initialization value.
+    pub struct Indices<'a> {
+        /// The parent `Gltf` struct.
+        gltf: &'a Gltf<'a>,
+
+        /// The corresponding JSON struct.
+        json: &'a json::accessor::sparse::Indices,
+    }
+
+    impl<'a> Indices<'a> {
+        /// Constructs a `Indices`.
+        pub fn new(
+            gltf: &'a Gltf<'a>,
+            json: &'a json::accessor::sparse::Indices,
+        ) -> Self {
+            Self {
+                gltf: gltf,
+                json: json,
+            }
+        }
+
+        /// Returns the internal JSON item.
+        pub fn as_json(&self) ->  &json::accessor::sparse::Indices {
+            self.json
+        }
+
+        ///  The parent buffer view containing the sparse indices.  The referenced
+        /// buffer view must not have `ARRAY_BUFFER` nor `ELEMENT_ARRAY_BUFFER` as
+        /// its target.
+        pub fn buffer_view(&self) -> buffer::View<'a> {
+            buffer::View::new(
+                self.gltf,
+                self.gltf.as_json().get(&self.json.buffer_view),
+            )
+        }
+
+        ///  The offset relative to the start of the parent `BufferView` in bytes.
+        pub fn byte_offset(&self) -> u32 {
+            self.json.byte_offset
+        }
+
+        ///  The data type of each index.
+        pub fn component_type(&self) -> ! {
+            unimplemented!()
+        }
+
+        ///  Extension specific data.
+        pub fn extensions(&self) -> &json::accessor::sparse::IndicesExtensions {
+            &self.json.extensions
+        }
+
+        ///  Optional application specific data.
+        pub fn extras(&self) -> &json::Extras {
+            &self.json.extras
+        }
+    }
+    ///  Sparse storage of attributes that deviate from their initialization value.
+    pub struct Sparse<'a> {
+        /// The parent `Gltf` struct.
+        gltf: &'a Gltf<'a>,
+
+        /// The corresponding JSON struct.
+        json: &'a json::accessor::sparse::Sparse,
+    }
+
+    impl<'a> Sparse<'a> {
+        /// Constructs a `Sparse`.
+        pub fn new(
+            gltf: &'a Gltf<'a>,
+            json: &'a json::accessor::sparse::Sparse,
+        ) -> Self {
+            Self {
+                gltf: gltf,
+                json: json,
+            }
+        }
+
+        /// Returns the internal JSON item.
+        pub fn as_json(&self) -> &json::accessor::sparse::Sparse {
+            self.json
+        }
+
+        ///The number of attributes encoded in this sparse accessor.
+        pub fn count(&self) -> u32 {
+            self.json.count
+        }
+
+        /// Index array of size `count` that points to those accessor attributes
+        /// that deviate from their initialization value.  Indices must strictly
+        /// increase.
+        pub fn indices(&self) -> Indices<'a> {
+            Indices::new(self.gltf, &self.json.indices)
+        }
+
+        /// Array of size `count * number_of_components` storing the displaced
+        /// accessor attributes pointed by `indices`.  Substituted values must have
+        /// the same `component_type` and number of components as the base
+        /// `Accessor`.
+        pub fn values(&self) -> Values<'a> {
+            Values::new(self.gltf, &self.json.values)
+        }
+
+        ///  Extension specific data.
+        pub fn extensions(&self) -> &json::accessor::sparse::StorageExtensions {
+            &self.json.extensions
+        }
+
+        ///  Optional application specific data.
+        pub fn extras(&self) -> &json::Extras {
+            &self.json.extras
+        }
+    }
+
+    ///  Array of size `count * number_of_components` storing the displaced accessor
+    /// attributes pointed by `accessor::sparse::Indices`.
+    pub struct Values<'a> {
+        /// The parent `Gltf` struct.
+        gltf: &'a Gltf<'a>,
+
+        /// The corresponding JSON struct.
+        json: &'a json::accessor::sparse::Values,
+    }
+
+    impl<'a> Values<'a> {
+        /// Constructs a `Values`.
+        pub fn new(
+            gltf: &'a Gltf<'a>,
+            json: &'a json::accessor::sparse::Values,
+        ) -> Self {
+            Self {
+                gltf: gltf,
+                json: json,
+            }
+        }
+
+        /// Returns the internal JSON item.
+        pub fn as_json(&self) ->  &json::accessor::sparse::Values {
+            self.json
+        }
+
+        ///  The parent buffer view containing the sparse indices.  The referenced
+        /// buffer view must not have `ARRAY_BUFFER` nor `ELEMENT_ARRAY_BUFFER` as
+        /// its target.
+        pub fn buffer_view(&self) -> buffer::View<'a> {
+            buffer::View::new(
+                self.gltf,
+                self.gltf.as_json().get(&self.json.buffer_view),
+            )
+        }
+
+        ///  The offset relative to the start of the parent buffer view in bytes.
+        pub fn byte_offset(&self) -> u32 {
+            self.json.byte_offset
+        }
+
+        ///  Extension specific data.
+        pub fn extensions(&self) -> &json::accessor::sparse::ValuesExtensions {
+            &self.json.extensions
+        }
+
+        ///  Optional application specific data.
+        pub fn extras(&self) -> &json::Extras {
+            &self.json.extras
+        }
     }
 }

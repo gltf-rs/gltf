@@ -10,12 +10,17 @@
 use v2::Gltf;
 use v2::{json, texture};
 
-pub enum AlphaMode {}
+/// The alpha rendering mode of a material.
+pub enum AlphaMode {
+    Blend,
+    Mask,
+    Opaque,
+}
 
 ///  The material appearance of a primitive.
 pub struct Material<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::material::Material,
@@ -23,7 +28,7 @@ pub struct Material<'a> {
 
 impl<'a> Material<'a> {
     /// Constructs a `Material`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::material::Material) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::material::Material) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -37,7 +42,7 @@ impl<'a> Material<'a> {
 
     ///  The alpha cutoff value of the material.
     pub fn alpha_cutoff(&self) -> f32 {
-        unimplemented!()
+        self.json.alpha_cutoff.0
     }
 
     /// The alpha rendering mode of the material.  The material's alpha rendering
@@ -50,7 +55,13 @@ impl<'a> Material<'a> {
     /// output is combined with the background using the normal painting operation
     /// (i.e. the Porter and Duff over operator).
     pub fn alpha_mode(&self) -> AlphaMode {
-        unimplemented!()
+        use self::AlphaMode::*;
+        match self.json.alpha_mode.0.as_ref() {
+            "BLEND" => Blend,
+            "MASK" => Mask,
+            "OPAQUE" => Opaque,
+            _ => unreachable!(),
+        }
     }
 
     ///  Specifies whether the material is double-sided.  * When this value is false,
@@ -58,19 +69,21 @@ impl<'a> Material<'a> {
     /// is disabled and double sided lighting is enabled.  The back-face must have
     /// its normals reversed before the lighting equation is evaluated.
     pub fn double_sided(&self) -> bool {
-        unimplemented!()
+        self.json.double_sided
     }
 
     ///  Optional user-defined name for this object.
-    pub fn name(&self) -> &Option<String> {
-        unimplemented!()
+    pub fn name(&self) -> Option<&str> {
+        self.json.name.as_ref().map(String::as_str)
     }
 
     ///  A set of parameter values that are used to define the metallic-roughness
     /// material model from Physically-Based Rendering (PBR) methodology. When not
     /// specified, all the default values of `pbrMetallicRoughness` apply.
     pub fn pbr_metallic_roughness(&self) -> Option<PbrMetallicRoughness<'a>> {
-        unimplemented!()
+        self.json.pbr_metallic_roughness.as_ref().map(|json| {
+            PbrMetallicRoughness::new(self.gltf, json)
+        })
     }
 
     ///  A tangent space normal map. The texture contains RGB components in linear
@@ -80,7 +93,9 @@ impl<'a> Material<'a> {
     /// OpenGL conventions where +X is right and +Y is up. +Z points toward the
     /// viewer.
     pub fn normal_texture(&self) -> Option<NormalTexture<'a>> {
-        unimplemented!()
+        self.json.normal_texture.as_ref().map(|json| {
+            NormalTexture::new(self.gltf, json)
+        })
     }
 
     ///  The occlusion map texture. The occlusion values are sampled from the R
@@ -89,36 +104,40 @@ impl<'a> Material<'a> {
     /// linear. If other channels are present (GBA), they are ignored for occlusion
     /// calculations.
     pub fn occlusion_texture(&self) -> Option<OcclusionTexture<'a>> {
-        unimplemented!()
+        self.json.occlusion_texture.as_ref().map(|json| {
+            OcclusionTexture::new(self.gltf, json)
+        })
     }
 
     ///  The emissive map controls the color and intensity of the light being emitted
     /// by the material. This texture contains RGB components in sRGB color space. If
     /// a fourth component (A) is present, it is ignored.
     pub fn emissive_texture(&self) -> Option<texture::Info<'a>> {
-        unimplemented!()
+        self.json.emissive_texture.as_ref().map(|json| {
+            texture::Info::new(self.gltf, json)
+        })
     }
 
     ///  The emissive color of the material.
-    pub fn emissive_factor(&self) -> [f32; 4] {
-        unimplemented!()
+    pub fn emissive_factor(&self) -> [f32; 3] {
+        self.json.emissive_factor.0
     }
 
     ///  Extension specific data.
     pub fn extensions(&self) -> &json::material::MaterialExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
     ///  Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
 }
 ///  A set of parameter values that are used to define the metallic-roughness
 /// material model from Physically-Based Rendering (PBR) methodology.
 pub struct PbrMetallicRoughness<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::material::PbrMetallicRoughness,
@@ -126,7 +145,10 @@ pub struct PbrMetallicRoughness<'a> {
 
 impl<'a> PbrMetallicRoughness<'a> {
     /// Constructs a `PbrMetallicRoughness`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::material::PbrMetallicRoughness) -> Self {
+    pub fn new(
+        gltf: &'a Gltf<'a>,
+        json: &'a json::material::PbrMetallicRoughness,
+    ) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -140,23 +162,25 @@ impl<'a> PbrMetallicRoughness<'a> {
 
     ///  The material's base color factor.
     pub fn base_color_factor(&self) -> [f32; 4] {
-        unimplemented!()
+        self.json.base_color_factor.0
     }
 
     ///  The base color texture.
     pub fn base_color_texture(&self) -> Option<texture::Info<'a>> {
-        unimplemented!()
+        self.json.base_color_texture.as_ref().map(|json| {
+            texture::Info::new(self.gltf, json)
+        })
     }
 
     ///  The metalness of the material.
     pub fn metallic_factor(&self) -> f32 {
-        unimplemented!()
+        self.json.metallic_factor.0
     }
 
     ///  The roughness of the material.  * A value of 1.0 means the material is
     /// completely rough. * A value of 0.0 means the material is completely smooth.
     pub fn roughness_factor(&self) -> f32 {
-        unimplemented!()
+        self.json.roughness_factor.0
     }
 
     ///  The metallic-roughness texture.  This texture has two components:  * The
@@ -165,23 +189,26 @@ impl<'a> PbrMetallicRoughness<'a> {
     /// component (B) and/or the fourth component (A) are present then they are
     /// ignored.
     pub fn metallic_roughness_texture(&self) -> Option<texture::Info<'a>> {
-        unimplemented!()
+        self.json.metallic_roughness_texture.as_ref().map(|json| {
+            texture::Info::new(self.gltf, json)
+        })
     }
 
     ///  Extension specific data.
     pub fn extensions(&self) -> &json::material::PbrMetallicRoughnessExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
     ///  Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
 }
+
 ///  Defines the normal texture of a material.
 pub struct NormalTexture<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::material::NormalTexture,
@@ -189,7 +216,7 @@ pub struct NormalTexture<'a> {
 
 impl<'a> NormalTexture<'a> {
     /// Constructs a `NormalTexture`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::material::NormalTexture) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::material::NormalTexture) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -203,34 +230,35 @@ impl<'a> NormalTexture<'a> {
 
     /// The index of the texture.
     pub fn index(&self) -> texture::Texture<'a> {
+        // TODO: Make this `Deref` into `Texture<'a>`?
         unimplemented!()
     }
 
     /// The scalar multiplier applied to each normal vector of the texture.
     /// This value is ignored if normalTexture is not specified.
-    pub fn scale(&self) -> [f32; 3] {
-        unimplemented!()
+    pub fn scale(&self) -> f32 {
+        self.json.scale
     }
 
     /// The set index of the texture's `TEXCOORD` attribute.
     pub fn tex_coord(&self) -> u32 {
-        unimplemented!()
+        self.json.tex_coord
     }
 
     /// Extension specific data.
     pub fn extensions(&self) -> &json::material::NormalTextureExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
 }
 ///  Defines the occlusion texture of a material.
 pub struct OcclusionTexture<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::material::OcclusionTexture,
@@ -238,7 +266,10 @@ pub struct OcclusionTexture<'a> {
 
 impl<'a> OcclusionTexture<'a> {
     /// Constructs a `OcclusionTexture`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::material::OcclusionTexture) -> Self {
+    pub fn new(
+        gltf: &'a Gltf<'a>,
+        json: &'a json::material::OcclusionTexture,
+    ) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -252,26 +283,27 @@ impl<'a> OcclusionTexture<'a> {
 
     /// The index of the texture.
     pub fn index(&self) -> texture::Texture<'a> {
+        // TODO: Make this `Deref` into `Texture<'a>`?
         unimplemented!()
     }
 
     /// The scalar multiplier controlling the amount of occlusion applied.
     pub fn strength(&self) -> f32 {
-        unimplemented!()
+        self.json.strength.0
     }
 
     /// The set index of the texture's `TEXCOORD` attribute.
     pub fn tex_coord(&self) -> u32 {
-        unimplemented!()
+        self.json.tex_coord
     }
 
     /// Extension specific data.
     pub fn extensions(&self) -> &json::material::OcclusionTextureExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
 }

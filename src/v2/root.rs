@@ -39,7 +39,7 @@ pub struct IterAccessors<'a> {
     iter: SliceIter<'a, json::accessor::Accessor>,
 
     /// The internal root glTF object.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 }
 
 /// An `Iterator` that visits every animation in a glTF asset.
@@ -48,7 +48,7 @@ pub struct IterAnimations<'a> {
     iter: SliceIter<'a, json::animation::Animation>,
 
     /// The internal root glTF object.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 }
 
 /// An `Iterator` that visits every pre-loaded buffer in a glTF asset.
@@ -57,7 +57,7 @@ pub struct IterBuffers<'a> {
     index: usize,
 
     /// The internal root glTF object.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 }
 
 /// An `Iterator` that visits every pre-loaded buffer view in a glTF asset.
@@ -66,7 +66,7 @@ pub struct IterBufferViews<'a> {
     iter: SliceIter<'a, json::buffer::View>,
 
     /// The internal root glTF object.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 }
 
 /// An `Iterator` that visits every camera in a glTF asset.
@@ -75,7 +75,7 @@ pub struct IterCameras<'a> {
     iter: SliceIter<'a, json::camera::Camera>,
 
     /// The internal root glTF object.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 }
 
 /// An `Iterator` that visits every pre-loaded image in a glTF asset.
@@ -84,7 +84,7 @@ pub struct IterImages<'a> {
     index: usize,
 
     /// The internal root glTF object.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 }
 
 /// An `Iterator` that visits every material in a glTF asset.
@@ -93,7 +93,7 @@ pub struct IterMaterials<'a> {
     iter: SliceIter<'a, json::material::Material>,
 
     /// The internal root glTF object.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 }
 
 /// An `Iterator` that visits every node in a glTF asset.
@@ -102,7 +102,7 @@ pub struct IterNodes<'a> {
     iter: SliceIter<'a, json::scene::Node>,
 
     /// The internal root glTF object.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 }
 
 /// An `Iterator` that visits every sampler in a glTF asset.
@@ -111,7 +111,7 @@ pub struct IterSamplers<'a> {
     iter: SliceIter<'a, json::texture::Sampler>,
 
     /// The internal root glTF object.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 }
 
 /// An `Iterator` that visits every scene in a glTF asset.
@@ -120,7 +120,7 @@ pub struct IterScenes<'a> {
     iter: SliceIter<'a, json::scene::Scene>,
 
     /// The internal root glTF object.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 }
 
 /// An `Iterator` that visits every skin in a glTF asset.
@@ -129,7 +129,7 @@ pub struct IterSkins<'a> {
     iter: SliceIter<'a, json::skin::Skin>,
 
     /// The internal root glTF object.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 }
 
 /// An `Iterator` that visits every texture in a glTF asset.
@@ -138,13 +138,13 @@ pub struct IterTextures<'a> {
     iter: SliceIter<'a, json::texture::Texture>,
 
     /// The internal root glTF object.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 }
 
 /// The root object for a glTF asset.
 pub struct Root<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::root::Root,
@@ -152,7 +152,7 @@ pub struct Root<'a> {
 
 impl<'a> Root<'a> {
     /// Constructs a `Camera`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::root::Root) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::root::Root) -> Self {
         Self {
             gltf: gltf,
             json: json,

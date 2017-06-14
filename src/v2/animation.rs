@@ -10,13 +10,27 @@
 use v2::Gltf;
 use v2::{accessor, json, scene};
 
-pub enum InterpolationAlgorithm {}
-pub enum TrsProperty {}
+/// The interpolation algorithm.
+pub enum InterpolationAlgorithm {
+    CatmullRomSpline,
+    CubicSpline,
+    Linear,
+    Step,
+}
+
+/// The name of the node's TRS property to modify or the 'weights' of the
+/// morph targets it instantiates.
+pub enum TrsProperty {
+    Rotation,
+    Scale,
+    Translation,
+    Weights,
+}
 
 ///  A keyframe animation.
 pub struct Animation<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::animation::Animation,
@@ -24,7 +38,7 @@ pub struct Animation<'a> {
 
 impl<'a> Animation<'a> {
     /// Constructs an `Animation`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::animation::Animation) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::animation::Animation) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -38,22 +52,24 @@ impl<'a> Animation<'a> {
 
     ///  Extension specific data.
     pub fn extensions(&self) -> &json::animation::AnimationExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
     ///  Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
 
-    ///  An array of channels, each of which targets an animation's sampler at a node's property.  Different channels of the same animation must not have equal targets.
-    pub fn channels(&self) -> &Vec<Channel> {
+    ///  An array of channels, each of which targets an animation's sampler at a
+    /// node's property.  Different channels of the same animation must not have
+    /// equal targets.
+    pub fn channels(&self) -> ! {
         unimplemented!()
     }
 
     ///  Optional user-defined name for this object.
-    pub fn name(&self) -> &Option<String> {
-        unimplemented!()
+    pub fn name(&self) -> Option<&str> {
+        self.json.name.as_ref().map(String::as_str)
     }
 
     ///  An array of samplers that combine input and output accessors with an interpolation algorithm to define a keyframe graph (but not its target).
@@ -65,7 +81,7 @@ impl<'a> Animation<'a> {
 ///  Targets an animation's sampler at a node's property.
 pub struct Channel<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::animation::Channel,
@@ -73,7 +89,7 @@ pub struct Channel<'a> {
 
 impl<'a> Channel<'a> {
     /// Constructs a `Channel`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::animation::Channel) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::animation::Channel) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -97,18 +113,18 @@ impl<'a> Channel<'a> {
 
     ///  Extension specific data.
     pub fn extensions(&self) -> &json::animation::ChannelExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
     ///  Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
 }
 ///  The index of the node and TRS property that an animation channel targets.
 pub struct Target<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::animation::Target,
@@ -116,7 +132,7 @@ pub struct Target<'a> {
 
 impl<'a> Target<'a> {
     /// Constructs a `Target`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::animation::Target) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::animation::Target) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -130,12 +146,12 @@ impl<'a> Target<'a> {
 
     ///  Extension specific data.
     pub fn extensions(&self) -> &json::animation::TargetExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
     ///  Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
 
     ///  The index of the node to target.
@@ -151,7 +167,7 @@ impl<'a> Target<'a> {
 ///  Defines a keyframe graph but not its target.
 pub struct Sampler<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::animation::Sampler,
@@ -159,7 +175,7 @@ pub struct Sampler<'a> {
 
 impl<'a> Sampler<'a> {
     /// Constructs a `Sampler`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::animation::Sampler) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::animation::Sampler) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -173,26 +189,33 @@ impl<'a> Sampler<'a> {
 
     ///  Extension specific data.
     pub fn extensions(&self) -> &json::animation::SamplerExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
     ///  Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
 
     ///  The index of an accessor containing keyframe input values, e.g., time.
     pub fn input(&self) -> accessor::Accessor<'a> {
-        unimplemented!()
+        accessor::Accessor::new(self.gltf, self.gltf.as_json().get(&self.json.input))
     }
 
     ///  The interpolation algorithm.
     pub fn interpolation(&self) -> InterpolationAlgorithm {
-        unimplemented!()
+        use self::InterpolationAlgorithm::*;
+        match self.json.interpolation.0.as_str() {
+            "CATMULLROMSPLINE" => CatmullRomSpline,
+            "CUBICSPLINE" => CubicSpline,
+            "LINEAR" => Linear,
+            "STEP" => Step,
+            _ => unreachable!(),
+        }
     }
 
     ///  The index of an accessor containing keyframe output values.
     pub fn output(&self) -> accessor::Accessor<'a> {
-        unimplemented!()
+        accessor::Accessor::new(self.gltf, self.gltf.as_json().get(&self.json.output))
     }
 }

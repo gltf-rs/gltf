@@ -21,7 +21,7 @@ use v2::{camera, json, mesh, skin};
 /// `matrix` will not be present..
 pub struct Node<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::scene::Node,
@@ -29,7 +29,7 @@ pub struct Node<'a> {
 
 impl<'a> Node<'a> {
     /// Constructs a `Node`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::scene::Node) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::scene::Node) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -41,72 +41,79 @@ impl<'a> Node<'a> {
         self.json
     }
 
-    ///  The index of the camera referenced by this node.
+    /// The index of the camera referenced by this node.
     pub fn camera(&self) -> Option<camera::Camera<'a>> {
-        unimplemented!()
+        self.json.camera.as_ref().map(|index| {
+            camera::Camera::new(self.gltf, self.gltf.as_json().get(index))
+        })
     }
 
-    ///  The indices of this node's children.
+    /// The indices of this node's children.
     pub fn children(&self) -> ! {
         unimplemented!()
     }
 
-    ///  Extension specific data.
+    /// Extension specific data.
     pub fn extensions(&self) -> &json::scene::NodeExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
-    ///  Optional application specific data.
+    /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
 
-    ///  4x4 column-major transformation matrix.
-    pub fn matrix(&self) -> &[f32; 16] {
-        unimplemented!()
+    /// 4x4 column-major transformation matrix.
+    pub fn matrix(&self) -> [f32; 16] {
+        self.json.matrix
     }
 
-    ///  The index of the mesh in this node.
+    /// The index of the mesh in this node.
     pub fn mesh(&self) -> Option<mesh::Mesh<'a>> {
-        unimplemented!()
+        self.json.mesh.as_ref().map(|index| {
+            mesh::Mesh::new(self.gltf, self.gltf.as_json().get(index))
+        })
     }
 
-    ///  Optional user-defined name for this object.
-    pub fn name(&self) -> &Option<String> {
-        unimplemented!()
+    /// Optional user-defined name for this object.
+    pub fn name(&self) -> Option<&str> {
+        self.json.name.as_ref().map(String::as_str)
     }
 
-    ///  The node's unit quaternion rotation in the order (x, y, z, w), where w is
+    /// The node's unit quaternion rotation in the order (x, y, z, w), where w is
     /// the scalar.
     pub fn rotation(&self) -> [f32; 4] {
-        unimplemented!()
+        self.json.rotation.0
     }
 
-    ///  The node's non-uniform scale.
+    /// The node's non-uniform scale.
     pub fn scale(&self) -> [f32; 3] {
-        unimplemented!()
+        self.json.scale
     }
 
-    ///  The node's translation.
+    /// The node's translation.
     pub fn translation(&self) -> [f32; 3] {
-        unimplemented!()
+        self.json.translation
     }
 
-    ///  The index of the skin referenced by this node.
-    pub fn skin(&self) -> &Option<skin::Skin<'a>> {
-        unimplemented!()
+    /// The index of the skin referenced by this node.
+    pub fn skin(&self) -> Option<skin::Skin<'a>> {
+        self.json.skin.as_ref().map(|index| {
+            skin::Skin::new(self.gltf, self.gltf.as_json().get(index))
+        })
     }
 
-    ///  The weights of the instantiated Morph Target. Number of elements must match number of Morph Targets of used mesh.
+    /// The weights of the instantiated Morph Target. Number of elements must match
+    /// number of Morph Targets of used mesh.
     pub fn weights(&self) -> Option<&[f32]> {
-        unimplemented!()
+        self.json.weights.as_ref().map(Vec::as_slice)
     }
 }
 
 ///  The root `Node`s of a scene.
 pub struct Scene<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::scene::Scene,
@@ -114,7 +121,7 @@ pub struct Scene<'a> {
 
 impl<'a> Scene<'a> {
     /// Constructs a `Scene`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::scene::Scene) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::scene::Scene) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -126,22 +133,22 @@ impl<'a> Scene<'a> {
         self.json
     }
 
-    ///  Extension specific data.
+    /// Extension specific data.
     pub fn extensions(&self) -> &json::scene::SceneExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
-    ///  Optional application specific data.
+    /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
 
-    ///  Optional user-defined name for this object.
-    pub fn name(&self) -> &Option<String> {
-        unimplemented!()
+    /// Optional user-defined name for this object.
+    pub fn name(&self) -> Option<&str> {
+        self.json.name.as_ref().map(String::as_str)
     }
 
-    ///  The indices of each root node.
+    /// The indices of each root node.
     pub fn nodes(&self) -> ! {
         unimplemented!()
     }

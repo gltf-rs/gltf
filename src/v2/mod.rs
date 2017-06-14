@@ -7,6 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::ops::Deref;
+
 /// Contains `Accessor` and other related data structures.
 pub mod accessor;
 
@@ -51,4 +53,14 @@ pub mod validation;
 
 pub use self::import::import;
 
-pub struct Gltf;
+pub struct Gltf<'a> {
+    root: root::Root<'a>
+}
+
+impl<'a> Deref for Gltf<'a> {
+    type Target = root::Root<'a>;
+    fn deref(&self) -> &Self::Target {
+        &self.root
+    }
+}
+

@@ -59,19 +59,32 @@ pub struct Material {
     /// Optional user-defined name for this object.
     pub name: Option<String>,
 
-    /// A set of parameter values that are used to define the metallic-roughness material model from Physically-Based Rendering (PBR) methodology. When not specified, all the default values of `pbrMetallicRoughness` apply.
+    /// A set of parameter values that are used to define the metallic-roughness
+    /// material model from Physically-Based Rendering (PBR) methodology. When not
+    /// specified, all the default values of `pbrMetallicRoughness` apply.
     #[serde(rename = "pbrMetallicRoughness")]
     pub pbr_metallic_roughness: Option<PbrMetallicRoughness>,
 
-    /// A tangent space normal map. The texture contains RGB components in linear space. Each texel represents the XYZ components of a normal vector in tangent space. Red [0 to 255] maps to X [-1 to 1]. Green [0 to 255] maps to Y [-1 to 1]. Blue [128 to 255] maps to Z [1/255 to 1]. The normal vectors use OpenGL conventions where +X is right and +Y is up. +Z points toward the viewer.
+    /// A tangent space normal map. The texture contains RGB components in linear
+    /// space. Each texel represents the XYZ components of a normal vector in
+    /// tangent space. Red [0 to 255] maps to X [-1 to 1]. Green [0 to 255] maps to
+    /// Y [-1 to 1]. Blue [128 to 255] maps to Z [1/255 to 1]. The normal vectors use
+    /// OpenGL conventions where +X is right and +Y is up. +Z points toward the
+    /// viewer.
     #[serde(rename = "normalTexture")]
     pub normal_texture: Option<NormalTexture>,
 
-    /// The occlusion map texture. The occlusion values are sampled from the R channel. Higher values indicate areas that should receive full indirect lighting and lower values indicate no indirect lighting. These values are linear. If other channels are present (GBA), they are ignored for occlusion calculations.
+    /// The occlusion map texture. The occlusion values are sampled from the R
+    /// channel. Higher values indicate areas that should receive full indirect
+    /// lighting and lower values indicate no indirect lighting. These values are
+    /// linear. If other channels are present (GBA), they are ignored for occlusion
+    /// calculations.
     #[serde(rename = "occlusionTexture")]
     pub occlusion_texture: Option<OcclusionTexture>,
 
-    /// The emissive map controls the color and intensity of the light being emitted by the material. This texture contains RGB components in sRGB color space. If a fourth component (A) is present, it is ignored.
+    /// The emissive map controls the color and intensity of the light being emitted
+    /// by the material. This texture contains RGB components in sRGB color space.
+    /// If a fourth component (A) is present, it is ignored.
     #[serde(rename = "emissiveTexture")]
     pub emissive_texture: Option<texture::Info>,
 

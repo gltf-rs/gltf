@@ -31,7 +31,9 @@ pub struct Image {
     /// Optional user-defined name for this object.
     pub name: Option<String>,
 
-    /// The uri of the image.  Relative paths are relative to the .gltf file.  Instead of referencing an external file, the uri can also be a data-uri.  The image format must be jpg or png.
+    /// The uri of the image.  Relative paths are relative to the .gltf file.
+    /// Instead of referencing an external file, the uri can also be a data-uri.
+    /// The image format must be jpg or png.
     pub uri: Option<String>,
 
     /// Extension specific data.

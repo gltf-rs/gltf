@@ -10,14 +10,14 @@
 use v2::json::{image, Extras, Index, Root};
 use v2::validation::{Error, JsonPath, Validate};
 
-/// Corresponds to `GL_NEAREST`.
-pub const NEAREST: u32 = 9728;
-
 /// Corresponds to `GL_LINEAR`.
 pub const LINEAR: u32 = 9729;
 
-/// Corresponds to `GL_NEAREST_MIPMAP_NEAREST`.
-pub const NEAREST_MIPMAP_NEAREST: u32 = 9984;
+/// Corresponds to `GL_NEAREST`.
+pub const NEAREST: u32 = 9728;
+
+/// Corresponds to `GL_LINEAR_MIPMAP_LINEAR`.
+pub const LINEAR_MIPMAP_LINEAR: u32 = 9987;
 
 /// Corresponds to `GL_LINEAR_MIPMAP_NEAREST`.
 pub const LINEAR_MIPMAP_NEAREST: u32 = 9985;
@@ -25,8 +25,8 @@ pub const LINEAR_MIPMAP_NEAREST: u32 = 9985;
 /// Corresponds to `GL_NEAREST_MIPMAP_LINEAR`.
 pub const NEAREST_MIPMAP_LINEAR: u32 = 9986;
 
-/// Corresponds to `GL_LINEAR_MIPMAP_LINEAR`.
-pub const LINEAR_MIPMAP_LINEAR: u32 = 9987;
+/// Corresponds to `GL_NEAREST_MIPMAP_NEAREST`.
+pub const NEAREST_MIPMAP_NEAREST: u32 = 9984;
 
 /// Corresponds to `GL_CLAMP_TO_EDGE`.
 pub const CLAMP_TO_EDGE: u32 = 33071;

@@ -20,7 +20,7 @@ pub enum Kind {
 /// place the camera in the scene.
 pub struct Camera<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::camera::Camera,
@@ -31,7 +31,7 @@ pub struct Camera<'a> {
 
 impl<'a> Camera<'a> {
     /// Constructs a `Camera`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::camera::Camera) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::camera::Camera) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -49,8 +49,8 @@ impl<'a> Camera<'a> {
     }
 
     ///  Optional user-defined name for this object.
-    pub fn name(&self) -> &Option<String> {
-        unimplemented!()
+    pub fn name(&self) -> Option<&str> {
+        self.json.name.as_ref().map(String::as_str)
     }
 
     ///  Specifies if the camera uses a perspective or orthographic projection.
@@ -72,7 +72,7 @@ impl<'a> Camera<'a> {
 ///  Values for an orthographic camera.
 pub struct Orthographic<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::camera::Orthographic,
@@ -80,7 +80,7 @@ pub struct Orthographic<'a> {
 
 impl<'a> Orthographic<'a> {
     /// Constructs a `Orthographic`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::camera::Orthographic) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::camera::Orthographic) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -125,7 +125,7 @@ impl<'a> Orthographic<'a> {
 ///  Values for a perspective camera.
 pub struct Perspective<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::camera::Perspective,
@@ -133,7 +133,7 @@ pub struct Perspective<'a> {
 
 impl<'a> Perspective<'a> {
     /// Constructs a `Perspective`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::camera::Perspective) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::camera::Perspective) -> Self {
         Self {
             gltf: gltf,
             json: json,

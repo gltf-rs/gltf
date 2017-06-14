@@ -10,14 +10,52 @@
 use v2::Gltf;
 use v2::{image, json};
 
-pub enum MagFilter {}
-pub enum MinFilter {}
-pub enum WrappingMode {}
+/// Magnification filter.
+pub enum MagFilter {
+    /// Corresponds to `GL_NEAREST`.
+    Linear = 9729,
+
+    /// Corresponds to `GL_LINEAR`.
+    Nearest = 9728,
+}
+
+/// Minification filter.
+pub enum MinFilter {
+    /// Corresponds to `GL_NEAREST`.
+    Linear = 9729,
+
+    /// Corresponds to `GL_LINEAR`.
+    Nearest = 9728,
+
+    /// Corresponds to `GL_LINEAR_MIPMAP_LINEAR`.
+    LinearMipmapLinear = 9987,
+
+    /// Corresponds to `GL_LINEAR_MIPMAP_NEAREST`.
+    LinearMipmapNearest = 9985,
+
+    /// Corresponds to `GL_NEAREST_MIPMAP_LINEAR`.
+    NearestMipmapLinear = 9986,
+
+    /// Corresponds to `GL_NEAREST_MIPMAP_NEAREST`.
+    NearestMipmapNearest = 9984,
+}
+
+/// Texture co-ordinate wrapping mode.
+pub enum WrappingMode {
+    /// Corresponds to `GL_CLAMP_TO_EDGE`.
+    ClampToEdge = 33071,
+
+    /// Corresponds to `GL_MIRRORED_REPEAT`.
+    MirroredRepeat = 33648,
+
+    /// Corresponds to `GL_REPEAT`.
+    Repeat = 10497,
+}
 
 ///  Texture sampler properties for filtering and wrapping modes.
 pub struct Sampler<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::texture::Sampler,
@@ -25,7 +63,7 @@ pub struct Sampler<'a> {
 
 impl<'a> Sampler<'a> {
     /// Constructs a `Sampler`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::texture::Sampler) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::texture::Sampler) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -37,45 +75,71 @@ impl<'a> Sampler<'a> {
         self.json
     }
 
-    ///  Magnification filter.
+    /// Magnification filter.
     pub fn mag_filter(&self) -> Option<MagFilter> {
-        unimplemented!()
+        use self::MagFilter::*;
+        self.json.mag_filter.map(|x| match x.0 {
+            json::texture::LINEAR => Linear,
+            json::texture::NEAREST => Nearest,
+            _ => unreachable!(),
+        })
     }
 
-    ///  Minification filter.
+    /// Minification filter.
     pub fn min_filter(&self) -> Option<MinFilter> {
-        unimplemented!()
+        use self::MinFilter::*;
+        self.json.min_filter.map(|x| match x.0 {
+            json::texture::LINEAR => Linear,
+            json::texture::NEAREST => Nearest,    
+            json::texture::LINEAR_MIPMAP_LINEAR => LinearMipmapLinear,
+            json::texture::LINEAR_MIPMAP_NEAREST => LinearMipmapNearest,
+            json::texture::NEAREST_MIPMAP_LINEAR => NearestMipmapLinear,
+            json::texture::NEAREST_MIPMAP_NEAREST => NearestMipmapNearest,
+            _ => unreachable!(),
+        })
     }
 
-    ///  Optional user-defined name for this object.
-    pub fn name(&self) -> &Option<String> {
-        unimplemented!()
+    /// Optional user-defined name for this object.
+    pub fn name(&self) -> Option<&str> {
+        self.json.name.as_ref().map(String::as_str)
     }
 
-    ///  `s` wrapping mode.
+    /// `s` wrapping mode.
     pub fn wrap_s(&self) -> WrappingMode {
-        unimplemented!()
+        use self::WrappingMode::*;
+        match self.json.wrap_s.0 {
+            json::texture::CLAMP_TO_EDGE => ClampToEdge,
+            json::texture::MIRRORED_REPEAT => MirroredRepeat,
+            json::texture::REPEAT => Repeat,
+            _ => unreachable!(),
+        }
     }
 
-    ///  `t` wrapping mode.
+    /// `t` wrapping mode.
     pub fn wrap_t(&self) -> WrappingMode {
-        unimplemented!()
+        use self::WrappingMode::*;
+        match self.json.wrap_t.0 {
+            json::texture::CLAMP_TO_EDGE => ClampToEdge,
+            json::texture::MIRRORED_REPEAT => MirroredRepeat,
+            json::texture::REPEAT => Repeat,
+            _ => unreachable!(),
+        }
     }
 
-    ///  Extension specific data.
+    /// Extension specific data.
     pub fn extensions(&self) -> &json::texture::SamplerExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
-    ///  Optional application specific data.
+    /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
 }
-///  A texture and its sampler.
+/// A texture and its sampler.
 pub struct Texture<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::texture::Texture,
@@ -83,7 +147,7 @@ pub struct Texture<'a> {
 
 impl<'a> Texture<'a> {
     /// Constructs a `Texture`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::texture::Texture) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::texture::Texture) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -95,35 +159,37 @@ impl<'a> Texture<'a> {
         self.json
     }
 
-    ///  Optional user-defined name for this object.
-    pub fn name(&self) -> &Option<String> {
-        unimplemented!()
+    /// Optional user-defined name for this object.
+    pub fn name(&self) -> Option<&str> {
+        self.json.name.as_ref().map(String::as_str)
     }
 
-    ///  The index of the sampler used by this texture.
+    /// The index of the sampler used by this texture.
     pub fn sampler(&self) -> Option<Sampler<'a>> {
-        unimplemented!()
+        self.json.sampler.as_ref().map(|index| {
+            Sampler::new(self.gltf, self.gltf.as_json().get(index))
+        })
     }
 
-    ///  The index of the image used by this texture.
+    /// The index of the image used by this texture.
     pub fn source(&self) -> image::Image<'a> {
-        unimplemented!()
+        image::Image::new(self.gltf, self.gltf.as_json().get(&self.json.source))
     }
 
-    ///  Extension specific data.
+    /// Extension specific data.
     pub fn extensions(&self) -> &json::texture::TextureExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
-    ///  Optional application specific data.
+    /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
 }
 ///  Reference to a `Texture`.
 pub struct Info<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::texture::Info,
@@ -131,7 +197,7 @@ pub struct Info<'a> {
 
 impl<'a> Info<'a> {
     /// Constructs a `Info`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::texture::Info) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::texture::Info) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -143,23 +209,24 @@ impl<'a> Info<'a> {
         self.json
     }
 
-    ///  The index of the texture.
+    /// The index of the texture.
     pub fn index(&self) -> ! {
+        // TODO: `Deref` into `Texture<'a>`?
         unimplemented!()
     }
 
-    ///  The set index of the texture's `TEXCOORD` attribute.
+    /// The set index of the texture's `TEXCOORD` attribute.
     pub fn tex_coord(&self) -> u32 {
-        unimplemented!()
+        self.json.tex_coord
     }
 
-    ///  Extension specific data.
+    /// Extension specific data.
     pub fn extensions(&self) -> &json::texture::InfoExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
-    ///  Optional application specific data.
+    /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
 }
