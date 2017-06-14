@@ -7,39 +7,55 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::Gltf;
-use v2::json;
+use v2::{json, Gltf};
 
-#[derive(Clone, Copy, Debug)]
-pub enum Kind {
-    Orthographic,
-    Perspective,
+/// A camera's projection.
+#[derive(Clone, Debug)]
+pub enum Projection<'a> {
+    /// Describes an orthographic projection.
+    Orthographic(Orthographic<'a>),
+
+    /// Describes a perspective projection.
+    Perspective(Perspective<'a>),
 }
 
-///  A camera's projection.  A node can reference a camera to apply a transform to
+/// A camera's projection.  A node can reference a camera to apply a transform to
 /// place the camera in the scene.
+#[derive(Clone, Debug)]
 pub struct Camera<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    gltf: &'a Gltf,
 
     /// The corresponding JSON struct.
     json: &'a json::camera::Camera,
+}
+  
+///  Values for an orthographic camera projection.
+#[derive(Clone, Debug)]
+pub struct Orthographic<'a> {
+    /// The parent `Gltf` struct.
+    gltf: &'a Gltf,
 
-    /// Specifies whether the camera projection is perspective or orthographic.
-    kind: Kind,
+    /// The corresponding JSON struct.
+    json: &'a json::camera::Orthographic,
+}
+  
+/// Values for a perspective camera projection.
+#[derive(Clone, Debug)]
+pub struct Perspective<'a> {
+    /// The parent `Gltf` struct.
+    gltf: &'a Gltf,
+
+    /// The corresponding JSON struct.
+    json: &'a json::camera::Perspective,
 }
 
 impl<'a> Camera<'a> {
     /// Constructs a `Camera`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::camera::Camera) -> Self {
+    pub fn new(gltf: &'a Gltf, json: &'a json::camera::Camera) -> Self {
         Self {
             gltf: gltf,
             json: json,
-            kind: match json.type_.0.as_str() {
-                "orthographic" => Kind::Orthographic,
-                "perspective" => Kind::Perspective,
-                _ => unreachable!(),
-            },
         }
     }
 
@@ -48,39 +64,40 @@ impl<'a> Camera<'a> {
         self.json
     }
 
-    ///  Optional user-defined name for this object.
+    /// Optional user-defined name for this object.
     pub fn name(&self) -> Option<&str> {
         self.json.name.as_ref().map(String::as_str)
     }
 
-    ///  Specifies if the camera uses a perspective or orthographic projection.
-    pub fn kind(&self) -> Kind {
-        self.kind
-    }
-
-    ///  Extension specific data.
+    /// Returns the camera's projection.
+    pub fn projection(&self) -> Projection<'a> {
+        match self.json.type_.0.as_str() {
+            "orthographic" => {
+                let json = self.json.orthographic.as_ref().unwrap();
+                Projection::Orthographic(Orthographic::new(self.gltf, json))
+            },
+            "perspective" => {
+                let json = self.json.perspective.as_ref().unwrap();
+                Projection::Perspective(Perspective::new(self.gltf, json))
+            },
+            _ => unreachable!(),
+        }
+    } 
+    
+    /// Extension specific data.
     pub fn extensions(&self) -> &json::camera::CameraExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
-    ///  Optional application specific data.
+    /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
-}
-
-///  Values for an orthographic camera.
-pub struct Orthographic<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
-
-    /// The corresponding JSON struct.
-    json: &'a json::camera::Orthographic,
 }
 
 impl<'a> Orthographic<'a> {
-    /// Constructs a `Orthographic`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::camera::Orthographic) -> Self {
+    /// Constructs a `Orthographic` camera projection.
+    pub fn new(gltf: &'a Gltf, json: &'a json::camera::Orthographic) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -94,46 +111,38 @@ impl<'a> Orthographic<'a> {
 
     ///  The horizontal magnification of the view.
     pub fn xmag(&self) -> f32 {
-        unimplemented!()
+        self.json.xmag
     }
 
     ///  The vertical magnification of the view.
     pub fn ymag(&self) -> f32 {
-        unimplemented!()
+        self.json.ymag
     }
 
     ///  The distance to the far clipping plane.
     pub fn zfar(&self) -> f32 {
-        unimplemented!()
+        self.json.zfar
     }
 
     ///  The distance to the near clipping plane.
     pub fn znear(&self) -> f32 {
-        unimplemented!()
+        self.json.znear
     }
 
     ///  Extension specific data.
     pub fn extensions(&self) -> &json::camera::OrthographicExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
     ///  Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
-}
-///  Values for a perspective camera.
-pub struct Perspective<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
-
-    /// The corresponding JSON struct.
-    json: &'a json::camera::Perspective,
 }
 
 impl<'a> Perspective<'a> {
-    /// Constructs a `Perspective`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::camera::Perspective) -> Self {
+    /// Constructs a `Perspective` camera projection.
+    pub fn new(gltf: &'a Gltf, json: &'a json::camera::Perspective) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -141,37 +150,37 @@ impl<'a> Perspective<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::camera::Perspective {
+    pub fn as_json(&self) -> &json::camera::Perspective {
         self.json
     }
 
     ///  Aspect ratio of the field of view.
     pub fn aspect_ratio(&self) -> Option<f32> {
-        unimplemented!()
+        self.json.aspect_ratio
     }
 
     ///  The vertical field of view in radians.
     pub fn yfov(&self) -> f32 {
-        unimplemented!()
+        self.json.yfov
     }
 
     ///  The distance to the far clipping plane.
     pub fn zfar(&self) -> Option<f32> {
-        unimplemented!()
+        self.json.zfar
     }
 
     ///  The distance to the near clipping plane.
     pub fn znear(&self) -> f32 {
-        unimplemented!()
+        self.json.znear
     }
 
     ///  Extension specific data.
     pub fn extensions(&self) -> &json::camera::PerspectiveExtensions {
-        unimplemented!()
+        &self.json.extensions
     }
 
     ///  Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
-        unimplemented!()
+        &self.json.extras
     }
 }

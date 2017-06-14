@@ -21,7 +21,7 @@ use v2::{camera, json, mesh, skin};
 /// `matrix` will not be present..
 pub struct Node<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    gltf: &'a Gltf,
 
     /// The corresponding JSON struct.
     json: &'a json::scene::Node,
@@ -29,7 +29,7 @@ pub struct Node<'a> {
 
 impl<'a> Node<'a> {
     /// Constructs a `Node`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::scene::Node) -> Self {
+    pub fn new(gltf: &'a Gltf, json: &'a json::scene::Node) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -113,7 +113,8 @@ impl<'a> Node<'a> {
 ///  The root `Node`s of a scene.
 pub struct Scene<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    #[allow(dead_code)]
+    gltf: &'a Gltf,
 
     /// The corresponding JSON struct.
     json: &'a json::scene::Scene,
@@ -121,7 +122,7 @@ pub struct Scene<'a> {
 
 impl<'a> Scene<'a> {
     /// Constructs a `Scene`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::scene::Scene) -> Self {
+    pub fn new(gltf: &'a Gltf, json: &'a json::scene::Scene) -> Self {
         Self {
             gltf: gltf,
             json: json,

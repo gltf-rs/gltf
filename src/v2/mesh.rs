@@ -37,7 +37,8 @@ pub enum Mode {
 ///  A set of primitives to be rendered.  A node can contain one or more meshes and its transform places the meshes in the scene.
 pub struct Mesh<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    #[allow(dead_code)]
+    gltf: &'a Gltf,
 
     /// The corresponding JSON struct.
     json: &'a json::mesh::Mesh,
@@ -45,7 +46,7 @@ pub struct Mesh<'a> {
 
 impl<'a> Mesh<'a> {
     /// Constructs a `Mesh`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::mesh::Mesh) -> Self {
+    pub fn new(gltf: &'a Gltf, json: &'a json::mesh::Mesh) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -86,7 +87,7 @@ impl<'a> Mesh<'a> {
 ///  Geometry to be rendered with the given material.
 pub struct Primitive<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    gltf: &'a Gltf,
 
     /// The corresponding JSON struct.
     json: &'a json::mesh::Primitive,
@@ -94,7 +95,7 @@ pub struct Primitive<'a> {
 
 impl<'a> Primitive<'a> {
     /// Constructs a `Primitive`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::mesh::Primitive) -> Self {
+    pub fn new(gltf: &'a Gltf, json: &'a json::mesh::Primitive) -> Self {
         Self {
             gltf: gltf,
             json: json,

@@ -21,8 +21,12 @@ pub enum Target {
 
 ///  A buffer points to binary data representing geometry, animations, or skins.
 pub struct Buffer<'a> {
+    /// The corresponding buffer data.
+    data: &'a [u8],
+    
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    #[allow(dead_code)]
+    gltf: &'a Gltf,
 
     /// The corresponding JSON struct.
     json: &'a json::buffer::Buffer,
@@ -30,8 +34,9 @@ pub struct Buffer<'a> {
 
 impl<'a> Buffer<'a> {
     /// Constructs a `Buffer`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::buffer::Buffer) -> Self {
+    pub fn new(gltf: &'a Gltf, json: &'a json::buffer::Buffer, data: &'a [u8]) -> Self {
         Self {
+            data: data,
             gltf: gltf,
             json: json,
         }
@@ -42,36 +47,38 @@ impl<'a> Buffer<'a> {
         self.json
     }
 
-    ///  The length of the buffer in bytes.
-    pub fn byte_length(&self) -> u32 {
+    /// The length of the buffer in bytes.
+    pub fn length(&self) -> u32 {
         self.json.byte_length
     }
 
-    ///  Optional user-defined name for this object.
+    /// The buffer data.
+    pub fn data(&self) -> &[u8] {
+        self.data
+    }
+    
+    /// Optional user-defined name for this object.
     pub fn name(&self) -> Option<&str> {
         self.json.name.as_ref().map(String::as_str)
     }
 
-    ///  The uri of the buffer. Relative paths are relative to the .gltf file.
-    /// Instead of referencing an external file, the uri can also be a data-uri.
-    pub fn uri(&self) -> Option<&str> {
-        self.json.uri.as_ref().map(String::as_str)
-    }
-
-    ///  Extension specific data.
+    /// Extension specific data.
     pub fn extensions(&self) -> &json::buffer::BufferExtensions {
         &self.json.extensions
     }
 
-    ///  Optional application specific data.
+    /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
     }
 }
 ///  A view into a buffer generally representing a subset of the buffer.
 pub struct View<'a> {
+    /// The corresponding buffer view data.
+    data: &'a [u8],
+    
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    gltf: &'a Gltf,
 
     /// The corresponding JSON struct.
     json: &'a json::buffer::View,
@@ -79,8 +86,13 @@ pub struct View<'a> {
 
 impl<'a> View<'a> {
     /// Constructs a `View`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::buffer::View) -> Self {
+    pub fn new(
+        gltf: &'a Gltf,
+        json: &'a json::buffer::View,
+        data: &'a [u8],
+    ) -> Self {
         Self {
+            data: data,
             gltf: gltf,
             json: json,
         }
@@ -91,33 +103,38 @@ impl<'a> View<'a> {
         self.json
     }
 
-    ///  The parent `Buffer`.
+    /// Returns the parent `Buffer`.
     pub fn buffer(&self) -> Buffer<'a> {
-        Buffer::new(self.gltf, self.gltf.as_json().get(&self.json.buffer))
+        self.gltf.iter_buffers().nth(self.json.buffer.value() as usize).unwrap()
     }
 
-    ///  The length of the `BufferView` in bytes.
-    pub fn byte_length(&self) -> u32 {
+    /// Returns the length of the buffer view in bytes.
+    pub fn length(&self) -> u32 {
         self.json.byte_length
     }
 
-    ///  Offset into the parent buffer in bytes.
-    pub fn byte_offset(&self) -> u32 {
+    /// Returns the offset into the parent buffer in bytes.
+    pub fn offset(&self) -> u32 {
         self.json.byte_offset
     }
 
-    ///  The stride in bytes between vertex attributes or other interleavable data.
-    /// When zero, data is assumed to be tightly packed.
-    pub fn byte_stride(&self) -> Option<u32> {
+    /// Returns the stride in bytes between vertex attributes or other interleavable
+    /// data. When `None`, data is assumed to be tightly packed.
+    pub fn stride(&self) -> Option<u32> {
         self.json.byte_stride.map(|x| x.0)
     }
 
-    ///  Optional user-defined name for this object.
+    /// Returns the buffer view data.
+    pub fn data(&self) -> &[u8] {
+        self.data
+    }
+    
+    /// Optional user-defined name for this object.
     pub fn name(&self) -> Option<&str> {
         self.json.name.as_ref().map(String::as_str)
     }
 
-    ///  Optional target the buffer should be bound to.
+    /// Optional target the buffer should be bound to.
     pub fn target(&self) -> Option<Target> {
         self.json.target.map(|x| match x.0 {
             json::buffer::ARRAY_BUFFER => Target::ArrayBuffer,
@@ -126,12 +143,12 @@ impl<'a> View<'a> {
         })
     }
 
-    ///  Extension specific data.
+    /// Extension specific data.
     pub fn extensions(&self) -> &json::buffer::ViewExtensions {
         &self.json.extensions
     }
 
-    ///  Optional application specific data.
+    /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
     }

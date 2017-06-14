@@ -7,10 +7,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::Gltf;
-use v2::{accessor, json, scene};
+use std::slice::Iter as SliceIter;
+use v2::{accessor, json, scene, Gltf};
 
 /// The interpolation algorithm.
+#[derive(Clone, Debug)]
 pub enum InterpolationAlgorithm {
     CatmullRomSpline,
     CubicSpline,
@@ -20,6 +21,7 @@ pub enum InterpolationAlgorithm {
 
 /// The name of the node's TRS property to modify or the 'weights' of the
 /// morph targets it instantiates.
+#[derive(Clone, Debug)]
 pub enum TrsProperty {
     Rotation,
     Scale,
@@ -27,18 +29,39 @@ pub enum TrsProperty {
     Weights,
 }
 
-///  A keyframe animation.
+/// A keyframe animation.
+#[derive(Clone, Debug)]
 pub struct Animation<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    gltf: &'a Gltf,
 
     /// The corresponding JSON struct.
     json: &'a json::animation::Animation,
 }
 
+/// An `Iterator` that visits the channels of an animation.
+#[derive(Clone, Debug)]
+pub struct IterChannels<'a> {
+    /// The parent `Animation` struct.
+    anim: Animation<'a>,
+
+    /// The internal channel iterator.
+    iter: SliceIter<'a, json::animation::Channel>,
+}
+
+/// An `Iterator` that visits the samplers of an animation.
+#[derive(Clone, Debug)]
+pub struct IterSamplers<'a> {
+    /// The parent `Channel` struct.
+    anim: Animation<'a>,
+
+    /// The internal channel iterator.
+    iter: SliceIter<'a, json::animation::Sampler>,
+}
+
 impl<'a> Animation<'a> {
     /// Constructs an `Animation`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::animation::Animation) -> Self {
+    pub fn new(gltf: &'a Gltf, json: &'a json::animation::Animation) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -50,38 +73,46 @@ impl<'a> Animation<'a> {
         self.json
     }
 
-    ///  Extension specific data.
+    /// Extension specific data.
     pub fn extensions(&self) -> &json::animation::AnimationExtensions {
         &self.json.extensions
     }
 
-    ///  Optional application specific data.
+    /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
     }
 
-    ///  An array of channels, each of which targets an animation's sampler at a
+    /// An array of channels, each of which targets an animation's sampler at a
     /// node's property.  Different channels of the same animation must not have
     /// equal targets.
-    pub fn channels(&self) -> ! {
-        unimplemented!()
+    pub fn iter_channels(&self) -> IterChannels<'a> {
+        IterChannels {
+            anim: self.clone(),
+            iter: self.json.channels.iter(),
+        }
     }
 
-    ///  Optional user-defined name for this object.
+    /// Optional user-defined name for this object.
     pub fn name(&self) -> Option<&str> {
         self.json.name.as_ref().map(String::as_str)
     }
 
-    ///  An array of samplers that combine input and output accessors with an interpolation algorithm to define a keyframe graph (but not its target).
-    pub fn samplers(&self) -> ! {
-        unimplemented!()
+    /// An array of samplers that combine input and output accessors with an
+    /// interpolation algorithm to define a keyframe graph (but not its target).
+    pub fn iter_samplers(&self) -> IterSamplers<'a> {
+        IterSamplers {
+            anim: self.clone(),
+            iter: self.json.samplers.iter(),
+        }
     }
 }
 
 ///  Targets an animation's sampler at a node's property.
+#[derive(Clone, Debug)]
 pub struct Channel<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    /// The parent `Animation` struct.
+    anim: Animation<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::animation::Channel,
@@ -89,42 +120,50 @@ pub struct Channel<'a> {
 
 impl<'a> Channel<'a> {
     /// Constructs a `Channel`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::animation::Channel) -> Self {
+    pub fn new(anim: Animation<'a>, json: &'a json::animation::Channel) -> Self {
         Self {
-            gltf: gltf,
+            anim: anim,
             json: json,
         }
     }
 
+    /// Returns the parent `Animation` struct.
+    pub fn animation(&self) -> Animation<'a> {
+        self.anim.clone()
+    }
+    
     /// Returns the internal JSON item.
     pub fn as_json(&self) ->  &json::animation::Channel {
         self.json
     }
 
-    ///  The index of a sampler in this animation used to compute the value for the target.
+    /// Returns the sampler in this animation used to compute the value for the
+    /// target.
     pub fn sampler(&self) -> Sampler<'a> {
-        unimplemented!()
+        self.anim.iter_samplers().nth(self.json.sampler.value() as usize).unwrap()
     }
 
-    ///  The index of the node and TRS property to target.
-    pub fn target(&self) -> ! {
-        unimplemented!()
+    /// Returns the node and TRS property to target.
+    pub fn target(&self) -> Target<'a> {
+        Target::new(self.anim.clone(), &self.json.target)
     }
 
-    ///  Extension specific data.
+    /// Extension specific data.
     pub fn extensions(&self) -> &json::animation::ChannelExtensions {
         &self.json.extensions
     }
 
-    ///  Optional application specific data.
+    /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
     }
 }
-///  The index of the node and TRS property that an animation channel targets.
+
+/// The node and TRS property that an animation channel targets.
+#[derive(Clone, Debug)]
 pub struct Target<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    /// The parent `Animation` struct.
+    anim: Animation<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::animation::Target,
@@ -132,11 +171,16 @@ pub struct Target<'a> {
 
 impl<'a> Target<'a> {
     /// Constructs a `Target`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::animation::Target) -> Self {
+    pub fn new(anim: Animation<'a>, json: &'a json::animation::Target) -> Self {
         Self {
-            gltf: gltf,
+            anim: anim,
             json: json,
         }
+    }
+
+    /// Returns the parent `Animation` struct.
+    pub fn animation(&self) -> Animation<'a> {
+        self.anim.clone()
     }
 
     /// Returns the internal JSON item.
@@ -144,30 +188,34 @@ impl<'a> Target<'a> {
         self.json
     }
 
-    ///  Extension specific data.
+    /// Extension specific data.
     pub fn extensions(&self) -> &json::animation::TargetExtensions {
         &self.json.extensions
     }
 
-    ///  Optional application specific data.
+    /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
     }
 
-    ///  The index of the node to target.
-    pub fn node(&self) -> &scene::Node<'a> {
-        unimplemented!()
+    /// The node to target.
+    pub fn node(&self) -> scene::Node<'a> {
+        self.anim.gltf.iter_nodes().nth(self.json.node.value() as usize).unwrap()
     }
 
-    ///  The name of the node's TRS property to modify or the 'weights' of the morph targets it instantiates.
+    /// The name of the node's TRS property to modify or the 'weights' of the morph
+    /// targets it instantiates.
     pub fn path(&self) -> TrsProperty {
+        // TODO: Not sure how to implement this.
         unimplemented!()
     }
 }
+
 ///  Defines a keyframe graph but not its target.
+#[derive(Clone, Debug)]
 pub struct Sampler<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    /// The parent `Animation` struct.
+    anim: Animation<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::animation::Sampler,
@@ -175,11 +223,16 @@ pub struct Sampler<'a> {
 
 impl<'a> Sampler<'a> {
     /// Constructs a `Sampler`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::animation::Sampler) -> Self {
+    pub fn new(anim: Animation<'a>, json: &'a json::animation::Sampler) -> Self {
         Self {
-            gltf: gltf,
+            anim: anim,
             json: json,
         }
+    }
+
+    /// Returns the parent `Animation` struct.
+    pub fn animation(&self) -> Animation<'a> {
+        self.anim.clone()
     }
 
     /// Returns the internal JSON item.
@@ -199,7 +252,7 @@ impl<'a> Sampler<'a> {
 
     ///  The index of an accessor containing keyframe input values, e.g., time.
     pub fn input(&self) -> accessor::Accessor<'a> {
-        accessor::Accessor::new(self.gltf, self.gltf.as_json().get(&self.json.input))
+        self.anim.gltf.iter_accessors().nth(self.json.input.value() as usize).unwrap()
     }
 
     ///  The interpolation algorithm.
@@ -216,6 +269,20 @@ impl<'a> Sampler<'a> {
 
     ///  The index of an accessor containing keyframe output values.
     pub fn output(&self) -> accessor::Accessor<'a> {
-        accessor::Accessor::new(self.gltf, self.gltf.as_json().get(&self.json.output))
+        self.anim.gltf.iter_accessors().nth(self.json.output.value() as usize).unwrap()
+    }
+}
+
+impl<'a> Iterator for IterChannels<'a> {
+    type Item = Channel<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next().map(|json| Channel::new(self.anim.clone(), json))
+    }
+}
+
+impl<'a> Iterator for IterSamplers<'a> {
+    type Item = Sampler<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next().map(|json| Sampler::new(self.anim.clone(), json))
     }
 }
