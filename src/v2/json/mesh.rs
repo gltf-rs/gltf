@@ -88,7 +88,7 @@ pub struct Mesh {
 pub struct Primitive {
     /// Maps attribute semantic names to the `Accessor`s containing the
     /// corresponding attribute data.
-    pub attributes: HashMap<String, Index<accessor::Accessor>>,
+    pub attributes: Attributes,
     
     /// Extension specific data.
     #[serde(default)]
@@ -108,7 +108,9 @@ pub struct Primitive {
     #[serde(default)]
     pub mode: Mode,
     
-    /// An array of Morph Targets, each  Morph Target is a dictionary mapping attributes (only `POSITION`, `NORMAL`, and `TANGENT` supported) to their deviations in the Morph Target.
+    /// An array of Morph Targets, each  Morph Target is a dictionary mapping
+    /// attributes (only `POSITION`, `NORMAL`, and `TANGENT` supported) to their
+    /// deviations in the Morph Target.
     pub targets: Option<Vec<MorphTargets>>,
 }
 
@@ -119,13 +121,33 @@ pub struct PrimitiveExtensions {
     _allow_unknown_fields: (),
 }
 
+/// Map of attribute semantic names to the `Accessor`s containing the
+/// corresponding attribute data.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Attributes(pub HashMap<Semantic, Index<accessor::Accessor>>);
+
+/// Vertex attribute semantic name.
+#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub struct Semantic(pub String);
+
 /// The type of primitives to render.
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct Mode(pub u32);
 
 /// A dictionary mapping attributes to their deviations in the Morph Target.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct MorphTargets(pub HashMap<String, Index<accessor::Accessor>>);
+pub struct MorphTargets(pub HashMap<Semantic, Index<accessor::Accessor>>);
+
+impl Validate for Attributes {
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        for (semantic, index) in self.0.iter() {
+            index.validate(root, || path().key(semantic.as_str()), report);
+            semantic.validate(root, || path(), report);
+        }
+    }
+}
 
 impl Default for Mode {
     fn default() -> Mode {
@@ -148,9 +170,39 @@ impl Validate for MorphTargets {
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         for attr in self.0.keys() {
-            if !VALID_MORPH_TARGETS.contains(&attr.as_str()) {
-                report(Error::invalid_value(path().key(attr), attr.clone()));
+            let name = attr.0.as_str();
+            if !VALID_MORPH_TARGETS.contains(&name) {
+                report(Error::invalid_value(path().key(name), name.to_string()));
             }
+        }
+    }
+}
+
+impl Semantic {
+    fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+impl Validate for Semantic {
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        let name = self.0.as_str();
+        let set = |name: &str, prefix: &str| name[prefix.len()..].parse::<u32>();
+        for prefix in &["COLOR_", "TEXCOORD_", "JOINTS_", "WEIGHTS_"] {
+            if name.starts_with(prefix) {
+                if set(name, prefix).is_err() {
+                    // Set index is not a number
+                    report(Error::invalid_semantic_name(path(), self.0.clone()));
+                }
+                return;
+            }
+        }
+        match name {
+            "NORMAL" | "POSITION" | "TANGENT" => {},
+            _ if name.starts_with("_") => {},
+            _ => report(Error::invalid_semantic_name(path(), self.0.clone())),
         }
     }
 }

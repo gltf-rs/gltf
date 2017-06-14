@@ -48,6 +48,9 @@ pub mod error {
         /// An invalid enumeration constant was identified.
         InvalidEnum(serde_json::Value),
 
+        /// An invalid semantic name was identified.
+        InvalidSemanticName(String),
+
         /// An invalid value was identified.
         InvalidValue(serde_json::Value),
 
@@ -74,6 +77,14 @@ pub mod error {
             }
         }
 
+        /// Returns an `InvalidSemanticName` error.
+        pub fn invalid_semantic_name(path: JsonPath, name: String) -> Error {
+            Error {
+                kind: Kind::InvalidSemanticName(name),
+                path: path,
+            }
+        }
+        
         /// Returns an `InvalidValue` error.
         pub fn invalid_value<V>(path: JsonPath, value: V) -> Error
             where V: Into<serde_json::Value>
@@ -98,6 +109,7 @@ pub mod error {
             match &self.kind {
                 &Kind::IndexOutOfBounds => "Index out of bounds",
                 &Kind::InvalidEnum(_) => "Invalid enumeration constant",
+                &Kind::InvalidSemanticName(_) => "Invalid semantic name",
                 &Kind::InvalidValue(_) => "Invalid value",
                 &Kind::MissingData(_) => "Missing data",
             }
@@ -113,6 +125,9 @@ pub mod error {
                 },
                 &Kind::InvalidEnum(ref value) => {
                     write!(f, "{}: {} ({})", self.path, value, self.description())
+                },
+                &Kind::InvalidSemanticName(ref name) => {
+                    write!(f, "{}: \"{}\" ({})", self.path, name, self.description())
                 },
                 &Kind::InvalidValue(ref value) => {
                     write!(f, "{}: {} ({})", self.path, value, self.description())
@@ -212,7 +227,7 @@ impl<T: Validate> Validate for HashMap<String, T> {
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         for (key, value) in self.iter() {
-            value.validate(root, || path().key(key), report);
+            value.validate(root, || path().key(key.as_ref()), report);
         }
     }
 }
