@@ -206,8 +206,14 @@ impl<'a> Target<'a> {
     /// The name of the node's TRS property to modify or the 'weights' of the morph
     /// targets it instantiates.
     pub fn path(&self) -> TrsProperty {
-        // TODO: Not sure how to implement this.
-        unimplemented!()
+        use self::TrsProperty::*;
+        match self.json.path.0.as_str() {
+            "translation" => Translation,
+            "rotation" => Rotation,
+            "scale" => Scale,
+            "weights" => Weights,
+            _ => unreachable!(),
+        }
     }
 }
 
