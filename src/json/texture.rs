@@ -7,8 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{image, Extras, Index, Root};
-use v2::validation::{Error, JsonPath, Validate};
+use json::{image, Extras, Index, Root};
+use validation::{Error, JsonPath, Validate};
 
 /// Corresponds to `GL_LINEAR`.
 pub const LINEAR: u32 = 9729;

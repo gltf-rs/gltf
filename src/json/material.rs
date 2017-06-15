@@ -7,8 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{texture, Extras, Index, Root};
-use v2::validation::{Error, JsonPath, Validate};
+use json::{texture, Extras, Index, Root};
+use validation::{Error, JsonPath, Validate};
 
 /// All valid alpha modes.
 pub const VALID_ALPHA_MODES: &'static [&'static str] = &[

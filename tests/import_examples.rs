@@ -12,7 +12,7 @@ extern crate gltf;
 use std::{fs, io, path};
 
 fn try_import(path: &path::Path) {
-    let _ = gltf::v2::import(&path).map_err(|err| {
+    let _ = gltf::import(&path).map_err(|err| {
         println!("{:?}: {:#?}", path, err);
         panic!();
     });
@@ -26,11 +26,6 @@ fn run() -> io::Result<()> {
         if metadata.is_dir() {
             let entry_path = entry.path();
             if let Some(file_name) = entry_path.file_name() {
-                if file_name.to_string_lossy() == "MetalRoughSpheres" {
-                    // TODO: Remove once this model has been fixed.
-                    // See https://github.com/KhronosGroup/glTF-Sample-Models/issues/68 for details.
-                    continue;
-                }
                 let mut gltf_path = entry_path.join("glTF").join(file_name);
                 gltf_path.set_extension("gltf");
                 try_import(&gltf_path);
@@ -41,7 +36,7 @@ fn run() -> io::Result<()> {
 }
 
 #[test]
-fn import_v2() {
+fn import() {
     // Import all 'standard' glTF in the glTF-Sample-Models/2.0 directory.
     run().expect("No I/O errors");
 

@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::Extras;
+use json::Extras;
 
 /// Metadata about the glTF asset.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]

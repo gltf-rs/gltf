@@ -7,8 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{accessor, scene, Extras, Index, Root};
-use v2::validation::{Error, JsonPath, Validate};
+use json::{accessor, scene, Extras, Index, Root};
+use validation::{Error, JsonPath, Validate};
 
 /// All valid interpolation algorithms.
 pub const VALID_INTERPOLATION_ALGORITHMS: &'static [&'static str] = &[

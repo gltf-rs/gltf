@@ -10,7 +10,7 @@
 use serde_json;
 use std;
 use std::collections::HashMap;
-use v2::json::*;
+use json::*;
 
 pub use self::error::Error;
 
@@ -152,7 +152,7 @@ impl JsonPath {
     /// Basic usage:
     ///
     /// ```
-    /// # use gltf::v2::validation::JsonPath;
+    /// # use gltf::validation::JsonPath;
     /// let path = JsonPath::new();
     /// assert_eq!("", path.as_str());
     /// ```
@@ -167,7 +167,7 @@ impl JsonPath {
     /// Basic usage:
     ///
     /// ```
-    /// # use gltf::v2::validation::JsonPath;
+    /// # use gltf::validation::JsonPath;
     /// let path = JsonPath::new().field("foo");
     /// assert_eq!("foo", path.as_str());
     /// assert_eq!("foo.bar", path.field("bar").as_str());
@@ -187,7 +187,7 @@ impl JsonPath {
     /// Basic usage:
     ///
     /// ```
-    /// # use gltf::v2::validation::JsonPath;
+    /// # use gltf::validation::JsonPath;
     /// let path = JsonPath::new().field("foo");
     /// assert_eq!("foo[123]", path.index(123).as_str());
     /// ```
@@ -202,7 +202,7 @@ impl JsonPath {
     /// Basic usage:
     ///
     /// ```
-    /// # use gltf::v2::validation::JsonPath;
+    /// # use gltf::validation::JsonPath;
     /// let path = JsonPath::new().field("foo");
     /// assert_eq!("foo[\"bar\"]", path.key("bar").as_str());
     /// ```
