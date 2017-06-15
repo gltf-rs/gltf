@@ -7,8 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use Gltf;
-use json;
+use {json, Gltf};
 
 /// Specifies the target a GPU buffer should be bound to. 
 pub enum Target {
