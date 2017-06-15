@@ -7,8 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use Gltf;
-use {camera, json, mesh, skin};
+use std::slice;
+use {camera, json, mesh, skin, Gltf};
 
 ///  A node in the node hierarchy. When the node contains `skin`, all
 /// `mesh.primitives` must contain `JOINTS_0` and `WEIGHTS_0` attributes. A node can
@@ -18,7 +18,8 @@ use {camera, json, mesh, skin};
 /// applied to the vertices, then the rotation, and then the translation. If none are
 /// provided, the transform is the identity. When a node is targeted for animation
 /// (referenced by an animation.channel.target), only TRS properties may be present;
-/// `matrix` will not be present..
+/// `matrix` will not be present.
+#[derive(Clone, Debug)]
 pub struct Node<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
@@ -49,8 +50,13 @@ impl<'a> Node<'a> {
     }
 
     /// The indices of this node's children.
-    pub fn children(&self) -> ! {
-        unimplemented!()
+    pub fn children(&self) -> Option<IterChildNodes<'a>> {
+        self.json.children.as_ref().map(|children| {
+            IterChildNodes {
+                parent: self.clone(),
+                iter: children.iter(),
+            }
+        })
     }
 
     /// Extension specific data.
@@ -110,7 +116,8 @@ impl<'a> Node<'a> {
     }
 }
 
-///  The root `Node`s of a scene.
+/// The root `Node`s of a scene.
+#[derive(Clone, Debug)]
 pub struct Scene<'a> {
     /// The parent `Gltf` struct.
     #[allow(dead_code)]
@@ -118,6 +125,26 @@ pub struct Scene<'a> {
 
     /// The corresponding JSON struct.
     json: &'a json::scene::Scene,
+}
+
+/// An `Iterator` that visits the nodes in a scene.
+#[derive(Clone, Debug)]
+pub struct IterNodes<'a> {
+    /// The parent `Gltf` struct.
+    gltf: &'a Gltf,
+
+    /// The internal node index iterator.
+    iter: slice::Iter<'a, json::Index<json::scene::Node>>,
+}
+
+/// An `Iterator` that visits the children of a node.
+#[derive(Clone, Debug)]
+pub struct IterChildNodes<'a> {
+    /// The parent `Node` struct.
+    parent: Node<'a>,
+
+    /// The internal node index iterator.
+    iter: slice::Iter<'a, json::Index<json::scene::Node>>,
 }
 
 impl<'a> Scene<'a> {
@@ -150,7 +177,30 @@ impl<'a> Scene<'a> {
     }
 
     /// The indices of each root node.
-    pub fn nodes(&self) -> ! {
-        unimplemented!()
+    pub fn nodes(&self) -> IterNodes {
+        IterNodes {
+            gltf: self.gltf,
+            iter: self.json.nodes.iter(),
+        }
     }
 }
+
+impl<'a> Iterator for IterNodes<'a> {
+    type Item = Node<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter
+            .next()
+            .map(|index| self.gltf.iter_nodes().nth(index.value()).unwrap())
+    }
+}
+
+impl<'a> Iterator for IterChildNodes<'a> {
+    type Item = Node<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter
+            .next()
+            .map(|index| self.parent.gltf.iter_nodes().nth(index.value()).unwrap())
+    }
+}
+
+
