@@ -10,21 +10,15 @@ This crate is intended to load [glTF 2.0](https://www.khronos.org/gltf), a file 
 
 ### [Documentation](https://docs.rs/gltf)
 
-### Usage
+### Example Usage
 
-Add `gltf` to the dependencies section of `Cargo.toml`.
-
-```toml
-[dependencies]
-gltf = "0.6"
-```
-Import some glTF 2.0.
+#### Importing some glTF 2.0
 
 ```rust
 extern crate gltf;
 
 fn main() {
-    match gltf::v2::import("glTF-Sample-Models/2.0/Box/glTF/Box.gltf") {
+    match gltf::import("Example.gltf") {
         Ok(root) => println!("glTF 2.0: {:#?}", root),
         Err(err) => println!("{:?}", err),
     }
