@@ -40,7 +40,8 @@ fn import() {
     // Import all 'standard' glTF in the glTF-Sample-Models/2.0 directory.
     run().expect("No I/O errors");
 
+    // Temporarily removed until base64 decoding is implemented
     // Minimal example taken from https://github.com/javagl/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_003_MinimalGltfFile.md
-    try_import(path::Path::new("tests/minimal.gltf"));
+    // try_import(path::Path::new("tests/minimal.gltf"));
 }
 

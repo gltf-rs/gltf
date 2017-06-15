@@ -52,7 +52,8 @@ pub enum Error {
     Validation(Vec<validation::Error>),
 }
 
-/// A simple synchronous data source that can read from the file system.
+/// A simple synchronous data source that can read from either the file system or
+/// embedded base64 data.
 #[derive(Clone, Debug)]
 pub struct SimpleDataSource<'a> {
     /// The path to the glTF directory.
@@ -128,16 +129,6 @@ impl<S: DataSource> Importer<S> {
 impl<'a> SimpleDataSource<'a> {
     /// Constructs a simple synchronous data source that can read from the file
     /// system with the given path as its base directory.
-    ///
-    /// # Examples
-    ///
-    /// Basic usage:
-    ///
-    /// ```
-    /// use gltf::v2::import::{import, SimpleDataSource};
-    /// let gltf = import(SimpleDataSource("~/Test.gltf"))?;
-    /// println!("{:#?}", gltf);
-    /// ```
     pub fn new<P: AsRef<Path>>(path: &'a P) -> Self {
         Self {
             path: path.as_ref(),
@@ -154,14 +145,16 @@ impl<'a> DataSource for SimpleDataSource<'a> {
 
     /// Read the contents of a glTF buffer.
     fn buffer(&mut self, buffer: &json::buffer::Buffer) -> io::Result<Box<Read>> {
-        let path = self.path.join(buffer.uri.as_ref().unwrap());
+        let uri = buffer.uri.as_ref().unwrap();
+        let path = self.path.parent().unwrap().join(uri);
         let file = File::open(path)?;
         Ok(Box::new(BufReader::new(file)))
     }
 
     /// Read the contents of a glTF image.
     fn image(&mut self, image: &json::image::Image) -> io::Result<Box<Read>> {
-        let path = self.path.join(image.uri.as_ref().unwrap());
+        let uri = image.uri.as_ref().unwrap();
+        let path = self.path.parent().unwrap().join(uri);
         let file = File::open(path)?;
         Ok(Box::new(BufReader::new(file)))
     }

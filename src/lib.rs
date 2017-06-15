@@ -9,7 +9,6 @@
 
 #[macro_use]
 extern crate gltf_derive;
-extern crate inflections;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
