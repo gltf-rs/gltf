@@ -7,8 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{Extras, Index, Root};
-use v2::validation::{Error, JsonPath, Validate};
+use json::{Extras, Index, Root};
+use validation::{Error, JsonPath, Validate};
 
 /// Corresponds to `GL_ARRAY_BUFFER`.
 pub const ARRAY_BUFFER: u32 = 34962;

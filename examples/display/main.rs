@@ -8,25 +8,7 @@
 
 extern crate gltf;
 
-use gltf::{v1, v2};
-
 fn main() {
     let path = std::env::args().nth(1).unwrap();
-    match v1::import(&path) {
-        Ok(root) => {
-            println!("glTF version 1.0");
-            println!("{:#?}", root);
-        }
-        Err(_) => {
-            match v2::import(&path) {
-                Ok(root) => {
-                    println!("glTF version 2.0");
-                    println!("{:#?}", root);
-                }
-                Err(err) => {
-                    println!("Error: {:#?}", err);
-                }
-            }
-        }
-    }
+    println!("{:#?}", gltf::import(&path));
 }

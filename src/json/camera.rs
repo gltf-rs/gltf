@@ -7,8 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::json::{Extras, Root};
-use v2::validation::{Error, JsonPath, Validate};
+use json::{Extras, Root};
+use validation::{Error, JsonPath, Validate};
 
 /// All valid camera types.
 pub const VALID_CAMERA_TYPES: &'static [&'static str] = &[

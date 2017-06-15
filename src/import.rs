@@ -10,8 +10,8 @@
 use serde_json;
 use std;
 use std::path::Path;
-use v2::json::Root;
-use v2::validation;
+use json::Root;
+use validation;
 
 /// Error encountered when importing a glTF 2.0 asset.
 #[derive(Debug)]

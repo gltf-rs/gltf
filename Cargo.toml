@@ -1,6 +1,6 @@
 [package]
 name = "gltf"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["alteous <alteous@outlook.com>"]
 description = "glTF asset loader"
 documentation = "https://docs.rs/gltf"
@@ -24,7 +24,6 @@ gltf_derive = { path = "./gltf_derive" }
 [features]
 default = []
 extras = []
-KHR_binary_glTF = []
 
 [[example]]
 name = "gltf_display"
