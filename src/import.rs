@@ -9,9 +9,26 @@
 
 use serde_json;
 use std;
+use std::boxed::Box;
+use std::fs::File;
+use std::io::{self, BufReader, Read};
 use std::path::Path;
-use json::Root;
+use json;
+use gltf::{BufferData, ImageData, Gltf};
+use root::Root;
 use validation;
+
+/// A trait for representing sources of glTF data that may be read by an importer.
+pub trait DataSource {
+    /// Read the contents of a .gltf or .glb file.
+    fn gltf(&mut self) -> io::Result<Box<Read>>;
+    
+    /// Read the contents of a glTF buffer.
+    fn buffer(&mut self, buffer: &json::buffer::Buffer) -> io::Result<Box<Read>>;
+
+    /// Read the contents of a glTF image.
+    fn image(&mut self, image: &json::image::Image) -> io::Result<Box<Read>>;
+}
 
 /// Error encountered when importing a glTF 2.0 asset.
 #[derive(Debug)]
@@ -25,50 +42,129 @@ pub enum Error {
     /// A glTF extension required by the asset is not supported by the library.
     ExtensionUnsupported(String),
     
+    /// The glTF version of the asset is incompatible with the importer.
+    IncompatibleVersion(String),
+    
+    /// Data source error.
+    Io(io::Error),
+
     /// The .gltf data is invalid.
     Validation(Vec<validation::Error>),
-    
-    /// Standard input / output error.
-    Io(std::io::Error),
-    
-    /// The glTF version of the asset is incompatible with this function.
-    IncompatibleVersion(String),
 }
 
-/// Imports a standard (plain text JSON) glTF 2.0 asset.
-fn import_standard_gltf(data: Vec<u8>) -> Result<Root, Error> {
-    let root: Root = serde_json::from_slice(&data)?;
-    Ok(root)
+/// A simple synchronous data source that can read from the file system.
+#[derive(Clone, Debug)]
+pub struct SimpleDataSource<'a> {
+    /// The path to the glTF directory.
+    path: &'a Path,
 }
 
-fn import_impl(path: &Path) -> Result<Root, Error> {
-    use std::io::Read;
-    use self::Error::*;
-    use self::validation::{JsonPath, Validate};
+/// Imports glTF 2.0.
+#[derive(Clone)]
+pub struct Importer<S: DataSource> {
+    /// The data source.
+    source: S,
+}
+
+/// Convenience function for importing glTF under the default configuration.
+pub fn import<P: AsRef<Path>>(path: &P) -> Result<Gltf, Error> {
+    Importer::new(SimpleDataSource::new(path)).import()
+}
+
+impl<S: DataSource> Importer<S> {
+    /// Constructs an `Importer`.
+    pub fn new(source: S) -> Self {
+        Self {
+            source: source,
+        }
+    }
     
-    let mut file = std::fs::File::open(path)?;
-    let mut buffer = Vec::new();
-    file.read_to_end(&mut buffer)?;
+    /// Import some glTF 2.0.
+    pub fn import(mut self) -> Result<Gltf, Error> {
+        use std::io::Read;
+        use self::Error::*;
+        use self::validation::{JsonPath, Validate};
 
-    let root: Root = if buffer.starts_with(b"glTF") {
-        return Err(ExtensionUnsupported("KHR_binary_glTF".to_string()));
-    } else {
-        file.read_to_end(&mut buffer)?;
-        import_standard_gltf(buffer)?
-    };
+        // Read .gltf / .glb file
+        let mut buffer = vec![];
+        let _ = self.source.gltf()?.read_to_end(&mut buffer)?;
+        if buffer.starts_with(b"glTF") {
+            return Err(ExtensionUnsupported("KHR_binary_glTF".to_string()));
+        }
 
-    let mut errs = Vec::new();
-    root.validate(&root, || JsonPath::new(), &mut |err| errs.push(err));
-    if errs.is_empty() {
-        Ok(root)
-    } else {
-        Err(Validation(errs))
+        // Parse and validate the .gltf JSON data
+        let json: json::Root = serde_json::from_slice(&buffer)?;
+        let mut errs = Vec::new();
+        json.validate(&json, || JsonPath::new(), &mut |err| errs.push(err));
+        if !errs.is_empty() {
+            return Err(Validation(errs));
+        }
+
+        // Read the glTF buffer data
+        let mut buffers = vec![];
+        for entry in &json.buffers {
+            let mut data = vec![];
+            let _ = self.source.buffer(entry)?.read_to_end(&mut data)?;
+            buffers.push(BufferData(data));
+        }
+
+        // Read the glTF image data
+        let mut images = vec![];
+        for entry in &json.images {
+            let image = if let Some(buffer_view) = entry.buffer_view.as_ref() {
+                ImageData::Borrowed(buffer_view.value())
+            } else {
+                let mut buffer = vec![];
+                let _ = self.source.image(entry)?.read_to_end(&mut buffer)?;
+                ImageData::Owned(buffer)
+            };
+            images.push(image);
+        }
+
+        Ok(Gltf::new(Root::new(json), buffers, images))
     }
 }
 
-/// Imports a glTF 2.0 asset.
-pub fn import<P: AsRef<Path>>(path: P) -> Result<Root, Error> {
-    import_impl(path.as_ref())
+impl<'a> SimpleDataSource<'a> {
+    /// Constructs a simple synchronous data source that can read from the file
+    /// system with the given path as its base directory.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use gltf::v2::import::{import, SimpleDataSource};
+    /// let gltf = import(SimpleDataSource("~/Test.gltf"))?;
+    /// println!("{:#?}", gltf);
+    /// ```
+    pub fn new<P: AsRef<Path>>(path: &'a P) -> Self {
+        Self {
+            path: path.as_ref(),
+        }
+    }
+}
+
+impl<'a> DataSource for SimpleDataSource<'a> {
+    /// Read the contents of a .gltf or .glb file.
+    fn gltf(&mut self) -> io::Result<Box<Read>> {
+        let file = File::open(self.path)?;
+        Ok(Box::new(BufReader::new(file)))
+    }
+
+    /// Read the contents of a glTF buffer.
+    fn buffer(&mut self, buffer: &json::buffer::Buffer) -> io::Result<Box<Read>> {
+        let path = self.path.join(buffer.uri.as_ref().unwrap());
+        let file = File::open(path)?;
+        Ok(Box::new(BufReader::new(file)))
+    }
+
+    /// Read the contents of a glTF image.
+    fn image(&mut self, image: &json::image::Image) -> io::Result<Box<Read>> {
+        let path = self.path.join(image.uri.as_ref().unwrap());
+        let file = File::open(path)?;
+        Ok(Box::new(BufReader::new(file)))
+    }
 }
 
 impl From<serde_json::Error> for Error {

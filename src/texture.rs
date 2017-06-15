@@ -7,8 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::Gltf;
-use v2::{image, json};
+use std::ops::Deref;
+use {image, json, Gltf};
 
 /// Magnification filter.
 pub enum MagFilter {
@@ -55,7 +55,8 @@ pub enum WrappingMode {
 ///  Texture sampler properties for filtering and wrapping modes.
 pub struct Sampler<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    #[allow(dead_code)]
+    gltf: &'a Gltf,
 
     /// The corresponding JSON struct.
     json: &'a json::texture::Sampler,
@@ -63,7 +64,7 @@ pub struct Sampler<'a> {
 
 impl<'a> Sampler<'a> {
     /// Constructs a `Sampler`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::texture::Sampler) -> Self {
+    pub fn new(gltf: &'a Gltf, json: &'a json::texture::Sampler) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -139,7 +140,7 @@ impl<'a> Sampler<'a> {
 /// A texture and its sampler.
 pub struct Texture<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    gltf: &'a Gltf,
 
     /// The corresponding JSON struct.
     json: &'a json::texture::Texture,
@@ -147,7 +148,7 @@ pub struct Texture<'a> {
 
 impl<'a> Texture<'a> {
     /// Constructs a `Texture`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::texture::Texture) -> Self {
+    pub fn new(gltf: &'a Gltf, json: &'a json::texture::Texture) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -167,13 +168,13 @@ impl<'a> Texture<'a> {
     /// The index of the sampler used by this texture.
     pub fn sampler(&self) -> Option<Sampler<'a>> {
         self.json.sampler.as_ref().map(|index| {
-            Sampler::new(self.gltf, self.gltf.as_json().get(index))
+            self.gltf.iter_samplers().nth(index.value() as usize).unwrap()
         })
     }
 
     /// The index of the image used by this texture.
     pub fn source(&self) -> image::Image<'a> {
-        image::Image::new(self.gltf, self.gltf.as_json().get(&self.json.source))
+        self.gltf.iter_images().nth(self.json.source.value() as usize).unwrap()
     }
 
     /// Extension specific data.
@@ -186,20 +187,20 @@ impl<'a> Texture<'a> {
         &self.json.extras
     }
 }
-///  Reference to a `Texture`.
+/// A reference to a `Texture`.
 pub struct Info<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    /// The parent `Texture` struct.
+    texture: Texture<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::texture::Info,
 }
 
 impl<'a> Info<'a> {
-    /// Constructs a `Info`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::texture::Info) -> Self {
+    /// Constructs a reference to a `Texture`.
+    pub fn new(texture: Texture<'a>, json: &'a json::texture::Info) -> Self {
         Self {
-            gltf: gltf,
+            texture: texture,
             json: json,
         }
     }
@@ -207,12 +208,6 @@ impl<'a> Info<'a> {
     /// Returns the internal JSON item.
     pub fn as_json(&self) ->  &json::texture::Info {
         self.json
-    }
-
-    /// The index of the texture.
-    pub fn index(&self) -> ! {
-        // TODO: `Deref` into `Texture<'a>`?
-        unimplemented!()
     }
 
     /// The set index of the texture's `TEXCOORD` attribute.
@@ -228,5 +223,12 @@ impl<'a> Info<'a> {
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
+    }
+}
+
+impl<'a> Deref for Info<'a> {
+    type Target = Texture<'a>;
+    fn deref(&self) -> &Self::Target {
+        &self.texture
     }
 }

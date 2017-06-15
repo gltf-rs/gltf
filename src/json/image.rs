@@ -20,7 +20,8 @@ pub const VALID_MIME_TYPES: &'static [&'static str] = &[
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Image {
-    /// The index of the buffer view that contains the image. Use this instead of the image's uri property.
+    /// The index of the buffer view that contains the image. Use this instead of
+    /// the image's uri property.
     #[serde(rename = "bufferView")]
     pub buffer_view: Option<Index<buffer::View>>,
 

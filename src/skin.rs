@@ -7,13 +7,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::Gltf;
-use v2::{accessor, json, scene};
+use Gltf;
+use {accessor, json, scene};
 
 ///  Joints and matrices defining a skin.
 pub struct Skin<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    gltf: &'a Gltf,
 
     /// The corresponding JSON struct.
     json: &'a json::skin::Skin,
@@ -21,7 +21,7 @@ pub struct Skin<'a> {
 
 impl<'a> Skin<'a> {
     /// Constructs a `Skin`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::skin::Skin) -> Self {
+    pub fn new(gltf: &'a Gltf, json: &'a json::skin::Skin) -> Self {
         Self {
             gltf: gltf,
             json: json,

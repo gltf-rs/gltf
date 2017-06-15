@@ -7,8 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use v2::Gltf;
-use v2::{json, texture};
+use std::ops::Deref;
+use {json, texture, Gltf};
 
 /// The alpha rendering mode of a material.
 pub enum AlphaMode {
@@ -20,7 +20,7 @@ pub enum AlphaMode {
 ///  The material appearance of a primitive.
 pub struct Material<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    gltf: &'a Gltf,
 
     /// The corresponding JSON struct.
     json: &'a json::material::Material,
@@ -28,7 +28,7 @@ pub struct Material<'a> {
 
 impl<'a> Material<'a> {
     /// Constructs a `Material`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::material::Material) -> Self {
+    pub fn new(gltf: &'a Gltf, json: &'a json::material::Material) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -94,7 +94,8 @@ impl<'a> Material<'a> {
     /// viewer.
     pub fn normal_texture(&self) -> Option<NormalTexture<'a>> {
         self.json.normal_texture.as_ref().map(|json| {
-            NormalTexture::new(self.gltf, json)
+            let texture = self.gltf.iter_textures().nth(json.index.value()).unwrap();
+            NormalTexture::new(texture, json)
         })
     }
 
@@ -105,7 +106,8 @@ impl<'a> Material<'a> {
     /// calculations.
     pub fn occlusion_texture(&self) -> Option<OcclusionTexture<'a>> {
         self.json.occlusion_texture.as_ref().map(|json| {
-            OcclusionTexture::new(self.gltf, json)
+            let texture = self.gltf.iter_textures().nth(json.index.value()).unwrap();
+            OcclusionTexture::new(texture, json)
         })
     }
 
@@ -114,7 +116,8 @@ impl<'a> Material<'a> {
     /// a fourth component (A) is present, it is ignored.
     pub fn emissive_texture(&self) -> Option<texture::Info<'a>> {
         self.json.emissive_texture.as_ref().map(|json| {
-            texture::Info::new(self.gltf, json)
+            let texture = self.gltf.iter_textures().nth(json.index.value()).unwrap();
+            texture::Info::new(texture, json)
         })
     }
 
@@ -137,7 +140,7 @@ impl<'a> Material<'a> {
 /// material model from Physically-Based Rendering (PBR) methodology.
 pub struct PbrMetallicRoughness<'a> {
     /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    gltf: &'a Gltf,
 
     /// The corresponding JSON struct.
     json: &'a json::material::PbrMetallicRoughness,
@@ -146,7 +149,7 @@ pub struct PbrMetallicRoughness<'a> {
 impl<'a> PbrMetallicRoughness<'a> {
     /// Constructs a `PbrMetallicRoughness`.
     pub fn new(
-        gltf: &'a Gltf<'a>,
+        gltf: &'a Gltf,
         json: &'a json::material::PbrMetallicRoughness,
     ) -> Self {
         Self {
@@ -168,7 +171,8 @@ impl<'a> PbrMetallicRoughness<'a> {
     ///  The base color texture.
     pub fn base_color_texture(&self) -> Option<texture::Info<'a>> {
         self.json.base_color_texture.as_ref().map(|json| {
-            texture::Info::new(self.gltf, json)
+            let texture = self.gltf.iter_textures().nth(json.index.value()).unwrap();
+            texture::Info::new(texture, json)
         })
     }
 
@@ -190,16 +194,17 @@ impl<'a> PbrMetallicRoughness<'a> {
     /// ignored.
     pub fn metallic_roughness_texture(&self) -> Option<texture::Info<'a>> {
         self.json.metallic_roughness_texture.as_ref().map(|json| {
-            texture::Info::new(self.gltf, json)
+            let texture = self.gltf.iter_textures().nth(json.index.value()).unwrap();
+            texture::Info::new(texture, json)
         })
     }
 
-    ///  Extension specific data.
+    /// Extension specific data.
     pub fn extensions(&self) -> &json::material::PbrMetallicRoughnessExtensions {
         &self.json.extensions
     }
 
-    ///  Optional application specific data.
+    /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
     }
@@ -207,8 +212,8 @@ impl<'a> PbrMetallicRoughness<'a> {
 
 ///  Defines the normal texture of a material.
 pub struct NormalTexture<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    /// The parent `Texture` struct.
+    texture: texture::Texture<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::material::NormalTexture,
@@ -216,9 +221,12 @@ pub struct NormalTexture<'a> {
 
 impl<'a> NormalTexture<'a> {
     /// Constructs a `NormalTexture`.
-    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::material::NormalTexture) -> Self {
+    pub fn new(
+        texture: texture::Texture<'a>,
+        json: &'a json::material::NormalTexture,
+    ) -> Self {
         Self {
-            gltf: gltf,
+            texture: texture,
             json: json,
         }
     }
@@ -226,12 +234,6 @@ impl<'a> NormalTexture<'a> {
     /// Returns the internal JSON item.
     pub fn as_json(&self) ->  &json::material::NormalTexture {
         self.json
-    }
-
-    /// The index of the texture.
-    pub fn index(&self) -> texture::Texture<'a> {
-        // TODO: Make this `Deref` into `Texture<'a>`?
-        unimplemented!()
     }
 
     /// The scalar multiplier applied to each normal vector of the texture.
@@ -257,8 +259,8 @@ impl<'a> NormalTexture<'a> {
 }
 ///  Defines the occlusion texture of a material.
 pub struct OcclusionTexture<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf<'a>,
+    /// The parent `Texture` struct.
+    texture: texture::Texture<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::material::OcclusionTexture,
@@ -267,11 +269,11 @@ pub struct OcclusionTexture<'a> {
 impl<'a> OcclusionTexture<'a> {
     /// Constructs a `OcclusionTexture`.
     pub fn new(
-        gltf: &'a Gltf<'a>,
+        texture: texture::Texture<'a>,
         json: &'a json::material::OcclusionTexture,
     ) -> Self {
         Self {
-            gltf: gltf,
+            texture: texture,
             json: json,
         }
     }
@@ -279,12 +281,6 @@ impl<'a> OcclusionTexture<'a> {
     /// Returns the internal JSON item.
     pub fn as_json(&self) ->  &json::material::OcclusionTexture {
         self.json
-    }
-
-    /// The index of the texture.
-    pub fn index(&self) -> texture::Texture<'a> {
-        // TODO: Make this `Deref` into `Texture<'a>`?
-        unimplemented!()
     }
 
     /// The scalar multiplier controlling the amount of occlusion applied.
@@ -307,3 +303,19 @@ impl<'a> OcclusionTexture<'a> {
         &self.json.extras
     }
 }
+
+impl<'a> Deref for NormalTexture<'a> {
+    type Target = texture::Texture<'a>;
+    fn deref(&self) -> &Self::Target {
+        &self.texture
+    }
+}
+
+impl<'a> Deref for OcclusionTexture<'a> {
+    type Target = texture::Texture<'a>;
+    fn deref(&self) -> &Self::Target {
+        &self.texture
+    }
+}
+
+
