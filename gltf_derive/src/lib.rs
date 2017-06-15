@@ -45,9 +45,9 @@ fn expand(ast: &syn::MacroInput) -> quote::Tokens {
         .collect();
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
     quote!(
-        impl #impl_generics ::v2::validation::Validate for #ident #ty_generics #where_clause {
-            fn validate<P, R>(&self, root: &::v2::json::Root, path: P, report: &mut R)
-                where P: Fn() -> ::v2::validation::JsonPath, R: FnMut(::v2::validation::Error),
+        impl #impl_generics ::validation::Validate for #ident #ty_generics #where_clause {
+            fn validate<P, R>(&self, root: &::json::Root, path: P, report: &mut R)
+                where P: Fn() -> ::validation::JsonPath, R: FnMut(::validation::Error),
             {
                 #(
                     #validations;

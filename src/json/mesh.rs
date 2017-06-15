@@ -8,8 +8,8 @@
 // except according to those terms.
 
 use std::collections::HashMap;
-use v2::json::{accessor, material, Extras, Index, Root};
-use v2::validation::{Error, JsonPath, Validate};
+use json::{accessor, material, Extras, Index, Root};
+use validation::{Error, JsonPath, Validate};
 
 /// Corresponds to `GL_POINTS`.
 pub const POINTS: u32 = 0;

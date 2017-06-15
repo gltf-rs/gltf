@@ -9,8 +9,8 @@
 
 use std;
 use std::fmt;
-use v2::json::*;
-use v2::validation::{Error, JsonPath, Validate};
+use json::*;
+use validation::{Error, JsonPath, Validate};
 
 /// Helper trait for retrieving top-level objects by a universal identifier.
 pub trait Get<T> {

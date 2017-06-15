@@ -12,7 +12,7 @@ extern crate gltf;
 use std::{fs, io, path};
 
 fn try_import(path: &path::Path) {
-    let _ = gltf::v2::import(&path).map_err(|err| {
+    let _ = gltf::import(&path).map_err(|err| {
         println!("{:?}: {:#?}", path, err);
         panic!();
     });
@@ -41,7 +41,7 @@ fn run() -> io::Result<()> {
 }
 
 #[test]
-fn import_v2() {
+fn import() {
     // Import all 'standard' glTF in the glTF-Sample-Models/2.0 directory.
     run().expect("No I/O errors");
 

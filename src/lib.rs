@@ -15,11 +15,13 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
-#[macro_use]
-mod macros;
+/// Contains (de)serializable data structures that represent the glTF JSON data.
+pub mod json;
 
-/// Contains data structures and functions for loading glTF 1.0.
-pub mod v1;
+/// Contains functions for importing glTF 2.0 assets.
+pub mod import;
 
-/// Contains data structures and functions for loading glTF 2.0.
-pub mod v2;
+/// Contains functions that validate glTF JSON data against the specification.
+pub mod validation;
+
+pub use self::import::import;
