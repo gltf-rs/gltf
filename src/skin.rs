@@ -11,6 +11,7 @@ use std::slice;
 use {accessor, json, scene, Gltf};
 
 /// Joints and matrices defining a skin.
+#[derive(Clone, Debug)]
 pub struct Skin<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
@@ -65,7 +66,7 @@ impl<'a> Skin<'a> {
     /// Indices of skeleton nodes used as joints in this skin.  The array length
     /// must be the same as the `count` property of the `inverse_bind_matrices`
     /// `Accessor` (when defined).
-    pub fn joints(&self) -> IterJoints<'a> {
+    pub fn iter_joints(&self) -> IterJoints<'a> {
         IterJoints {
             gltf: self.gltf,
             iter: self.json.joints.iter(),

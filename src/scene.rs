@@ -28,6 +28,37 @@ pub struct Node<'a> {
     json: &'a json::scene::Node,
 }
 
+/// The root `Node`s of a scene.
+#[derive(Clone, Debug)]
+pub struct Scene<'a> {
+    /// The parent `Gltf` struct.
+    #[allow(dead_code)]
+    gltf: &'a Gltf,
+
+    /// The corresponding JSON struct.
+    json: &'a json::scene::Scene,
+}
+
+/// An `Iterator` that visits the nodes in a scene.
+#[derive(Clone, Debug)]
+pub struct IterNodes<'a> {
+    /// The parent `Gltf` struct.
+    gltf: &'a Gltf,
+
+    /// The internal node index iterator.
+    iter: slice::Iter<'a, json::Index<json::scene::Node>>,
+}
+
+/// An `Iterator` that visits the children of a node.
+#[derive(Clone, Debug)]
+pub struct IterChildNodes<'a> {
+    /// The parent `Node` struct.
+    parent: Node<'a>,
+
+    /// The internal node index iterator.
+    iter: slice::Iter<'a, json::Index<json::scene::Node>>,
+}
+
 impl<'a> Node<'a> {
     /// Constructs a `Node`.
     pub fn new(gltf: &'a Gltf, json: &'a json::scene::Node) -> Self {
@@ -50,7 +81,7 @@ impl<'a> Node<'a> {
     }
 
     /// The indices of this node's children.
-    pub fn children(&self) -> Option<IterChildNodes<'a>> {
+    pub fn iter_child_nodes(&self) -> Option<IterChildNodes<'a>> {
         self.json.children.as_ref().map(|children| {
             IterChildNodes {
                 parent: self.clone(),
@@ -116,37 +147,6 @@ impl<'a> Node<'a> {
     }
 }
 
-/// The root `Node`s of a scene.
-#[derive(Clone, Debug)]
-pub struct Scene<'a> {
-    /// The parent `Gltf` struct.
-    #[allow(dead_code)]
-    gltf: &'a Gltf,
-
-    /// The corresponding JSON struct.
-    json: &'a json::scene::Scene,
-}
-
-/// An `Iterator` that visits the nodes in a scene.
-#[derive(Clone, Debug)]
-pub struct IterNodes<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
-
-    /// The internal node index iterator.
-    iter: slice::Iter<'a, json::Index<json::scene::Node>>,
-}
-
-/// An `Iterator` that visits the children of a node.
-#[derive(Clone, Debug)]
-pub struct IterChildNodes<'a> {
-    /// The parent `Node` struct.
-    parent: Node<'a>,
-
-    /// The internal node index iterator.
-    iter: slice::Iter<'a, json::Index<json::scene::Node>>,
-}
-
 impl<'a> Scene<'a> {
     /// Constructs a `Scene`.
     pub fn new(gltf: &'a Gltf, json: &'a json::scene::Scene) -> Self {
@@ -177,7 +177,7 @@ impl<'a> Scene<'a> {
     }
 
     /// The indices of each root node.
-    pub fn nodes(&self) -> IterNodes {
+    pub fn iter_nodes(&self) -> IterNodes {
         IterNodes {
             gltf: self.gltf,
             iter: self.json.nodes.iter(),

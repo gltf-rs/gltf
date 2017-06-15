@@ -7,8 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use Gltf;
-use {accessor, json, material};
+use std::collections::hash_map;
+use std::slice;
+use {accessor, json, material, Gltf};
 
 /// The type of primitives to render.
 pub enum Mode {
@@ -34,14 +35,45 @@ pub enum Mode {
     TriangleFan = 6,
 }
 
-///  A set of primitives to be rendered.  A node can contain one or more meshes and its transform places the meshes in the scene.
+/// A set of primitives to be rendered.  A node can contain one or more meshes and
+/// its transform places the meshes in the scene.
+#[derive(Clone, Debug)]
 pub struct Mesh<'a> {
     /// The parent `Gltf` struct.
-    #[allow(dead_code)]
     gltf: &'a Gltf,
 
     /// The corresponding JSON struct.
     json: &'a json::mesh::Mesh,
+}
+
+/// Geometry to be rendered with the given material.
+#[derive(Clone, Debug)]
+pub struct Primitive<'a> {
+    /// The parent `Gltf` struct.
+    gltf: &'a Gltf,
+
+    /// The corresponding JSON struct.
+    json: &'a json::mesh::Primitive,
+}
+
+/// An `Iterator` that visits the attributes of a `Primitive`.
+#[derive(Clone, Debug)]
+pub struct IterAttributes<'a> {
+    /// The parent `Primitive` struct.
+    prim: Primitive<'a>,
+
+    /// The internal attribute iterator.
+    iter: hash_map::Iter<'a, json::mesh::Semantic, json::Index<json::accessor::Accessor>>,
+}
+
+/// An `Iterator` that visits the primitives of a `Mesh`.
+#[derive(Clone, Debug)]
+pub struct IterPrimitives<'a> {
+    /// The parent `Mesh` struct.
+    mesh: Mesh<'a>,
+
+    /// The internal JSON primitive iterator.
+    iter: slice::Iter<'a, json::mesh::Primitive>,
 }
 
 impl<'a> Mesh<'a> {
@@ -58,39 +90,33 @@ impl<'a> Mesh<'a> {
         self.json
     }
 
-    ///  Extension specific data.
+    /// Extension specific data.
     pub fn extensions(&self) -> &json::mesh::MeshExtensions {
         &self.json.extensions
     }
 
-    ///  Optional application specific data.
+    /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
     }
 
-    ///  Optional user-defined name for this object.
+    /// Optional user-defined name for this object.
     pub fn name(&self) -> Option<&str> {
         self.json.name.as_ref().map(String::as_str)
     }
 
-    ///  Defines the geometry to be renderered with a material.
-    pub fn primitives(&self) -> ! {
-        unimplemented!()
+    /// Defines the geometry to be renderered with a material.
+    pub fn iter_primitives(&self) -> IterPrimitives<'a> {
+        IterPrimitives {
+            mesh: self.clone(),
+            iter: self.json.primitives.iter(),
+        }
     }
 
-    ///  Defines the weights to be applied to the morph targets.
+    /// Defines the weights to be applied to the morph targets.
     pub fn weights(&self) -> Option<&[f32]> {
         self.json.weights.as_ref().map(Vec::as_slice)
     }
-}
-
-///  Geometry to be rendered with the given material.
-pub struct Primitive<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
-
-    /// The corresponding JSON struct.
-    json: &'a json::mesh::Primitive,
 }
 
 impl<'a> Primitive<'a> {
@@ -107,37 +133,40 @@ impl<'a> Primitive<'a> {
         self.json
     }
 
-    ///  Maps attribute semantic names to the `Accessor`s containing the
+    /// Maps attribute semantic names to the `Accessor`s containing the
     /// corresponding attribute data.
-    pub fn attributes(&self) -> ! {
-        unimplemented!()
+    pub fn iter_attributes(&self) -> IterAttributes<'a> {
+        IterAttributes {
+            prim: self.clone(),
+            iter: self.json.attributes.0.iter(),
+        }
     }
 
-    ///  Extension specific data.
+    /// Extension specific data.
     pub fn extensions(&self) -> &json::mesh::PrimitiveExtensions {
         &self.json.extensions
     }
 
-    ///  Optional application specific data.
+    /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
     }
 
-    ///  The index of the accessor that contains the indices.
+    /// The index of the accessor that contains the indices.
     pub fn indices(&self) -> Option<accessor::Accessor<'a>> {
         self.json.indices.as_ref().map(|index| {
             accessor::Accessor::new(self.gltf, self.gltf.as_json().get(index))
         })
     }
 
-    ///  The index of the material to apply to this primitive when rendering
+    /// The index of the material to apply to this primitive when rendering
     pub fn material(&self) -> Option<material::Material<'a>> {
         self.json.material.as_ref().map(|index| {
             material::Material::new(self.gltf, self.gltf.as_json().get(index))
         })
     }
 
-    ///  The type of primitives to render.
+    /// The type of primitives to render.
     pub fn mode(&self) -> Mode {
         use self::Mode::*;
         match self.json.mode.0 {
@@ -152,10 +181,30 @@ impl<'a> Primitive<'a> {
         }
     }
 
-    ///  An array of Morph Targets, each Morph Target is a dictionary mapping
+    /// An array of Morph Targets, each Morph Target is a dictionary mapping
     /// attributes (only `POSITION`, `NORMAL`, and `TANGENT` supported) to their
     /// deviations in the Morph Target.
     pub fn targets(&self) -> ! {
         unimplemented!()
+    }
+}
+
+impl<'a> Iterator for IterAttributes<'a> {
+    type Item = (&'a json::mesh::Semantic, accessor::Accessor<'a>);
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next().map(|(semantic, index)| {
+            let accessor = self.prim.gltf
+                .iter_accessors()
+                .nth(index.value())
+                .unwrap();
+            (semantic, accessor)
+        })
+    }
+}
+
+impl<'a> Iterator for IterPrimitives<'a> {
+    type Item = Primitive<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next().map(|json| Primitive::new(self.mesh.gltf, json))
     }
 }
