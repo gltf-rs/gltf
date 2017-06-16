@@ -7,6 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::borrow::Cow;
 use {json, Gltf};
 
 ///  Image data used to create a texture.
@@ -14,17 +15,17 @@ pub struct Image<'a> {
     /// The corresponding image data.
     data: &'a [u8],
 
-    /// The parent `Gltf` struct.
+    /// The parent `Gltf<'a>` struct.
     #[allow(dead_code)]
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::image::Image,
+    json: &'a json::image::Image<'a>,
 }
 
 impl<'a> Image<'a> {
     /// Constructs an `Image` from owned data.
-    pub fn new(gltf: &'a Gltf, json: &'a json::image::Image, data: &'a [u8]) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::image::Image, data: &'a [u8]) -> Self {
         Self {
             data: data,
             gltf: gltf,
@@ -33,13 +34,13 @@ impl<'a> Image<'a> {
     }
     
     /// Returns the internal JSON item.
-    pub fn as_json(&self) -> &json::image::Image {
+    pub fn as_json(&self) -> &json::image::Image<'a> {
         self.json
     }
 
     /// Optional user-defined name for this object.
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_ref().map(Cow::as_ref)
     }
 
     /// Returns the image data.
@@ -48,12 +49,12 @@ impl<'a> Image<'a> {
     }
     
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::image::ImageExtensions {
+    pub fn extensions(&self) -> &json::image::ImageExtensions<'a> {
         &self.json.extensions
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 }

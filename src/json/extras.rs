@@ -8,31 +8,32 @@
 // except according to those terms.
 
 use std::fmt;
+use std::marker::PhantomData;
 
 pub use serde_json::Value;
 
 /// Data type of the `extras` attribute on all glTF objects.
 #[cfg(feature = "extras")]
-pub type Extras = Option<Value>;
+pub type Extras<'a> = Option<Value>;
 
 /// Data type of the `extras` attribute on all glTF objects.
 #[cfg(not(feature = "extras"))]
-pub type Extras = Void;
+pub type Extras<'a> = Void<'a>;
 
 /// Type representing no user-defined data.
 #[derive(Clone, Default, Deserialize, Serialize, Validate)]
-pub struct Void {
+pub struct Void<'a> {
     #[serde(default)]
-    _allow_unknown_fields: (),
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
-impl fmt::Debug for Void {
+impl<'a> fmt::Debug for Void<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{{}}")
     }
 }
 
-impl fmt::Display for Void {
+impl<'a> fmt::Display for Void<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{{}}")
     }

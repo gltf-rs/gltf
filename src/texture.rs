@@ -7,6 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::borrow::Cow;
 use std::ops::Deref;
 use {image, json, Gltf};
 
@@ -54,17 +55,17 @@ pub enum WrappingMode {
 
 ///  Texture sampler properties for filtering and wrapping modes.
 pub struct Sampler<'a> {
-    /// The parent `Gltf` struct.
+    /// The parent `Gltf<'a>` struct.
     #[allow(dead_code)]
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::texture::Sampler,
+    json: &'a json::texture::Sampler<'a>,
 }
 
 impl<'a> Sampler<'a> {
     /// Constructs a `Sampler`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::texture::Sampler) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::texture::Sampler<'a>) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -72,7 +73,7 @@ impl<'a> Sampler<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::texture::Sampler {
+    pub fn as_json(&self) ->  &json::texture::Sampler<'a> {
         self.json
     }
 
@@ -102,7 +103,7 @@ impl<'a> Sampler<'a> {
 
     /// Optional user-defined name for this object.
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_ref().map(Cow::as_ref)
     }
 
     /// `s` wrapping mode.
@@ -128,27 +129,27 @@ impl<'a> Sampler<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::texture::SamplerExtensions {
+    pub fn extensions(&self) -> &json::texture::SamplerExtensions<'a> {
         &self.json.extensions
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 }
 /// A texture and its sampler.
 pub struct Texture<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    /// The parent `Gltf<'a>` struct.
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::texture::Texture,
+    json: &'a json::texture::Texture<'a>,
 }
 
 impl<'a> Texture<'a> {
     /// Constructs a `Texture`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::texture::Texture) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::texture::Texture<'a>) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -156,13 +157,13 @@ impl<'a> Texture<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::texture::Texture {
+    pub fn as_json(&self) ->  &json::texture::Texture<'a> {
         self.json
     }
 
     /// Optional user-defined name for this object.
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_ref().map(Cow::as_ref)
     }
 
     /// The index of the sampler used by this texture.
@@ -178,12 +179,12 @@ impl<'a> Texture<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::texture::TextureExtensions {
+    pub fn extensions(&self) -> &json::texture::TextureExtensions<'a> {
         &self.json.extensions
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 }
@@ -193,12 +194,12 @@ pub struct Info<'a> {
     texture: Texture<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::texture::Info,
+    json: &'a json::texture::Info<'a>,
 }
 
 impl<'a> Info<'a> {
     /// Constructs a reference to a `Texture`.
-    pub fn new(texture: Texture<'a>, json: &'a json::texture::Info) -> Self {
+    pub fn new(texture: Texture<'a>, json: &'a json::texture::Info<'a>) -> Self {
         Self {
             texture: texture,
             json: json,
@@ -206,7 +207,7 @@ impl<'a> Info<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::texture::Info {
+    pub fn as_json(&self) ->  &json::texture::Info<'a> {
         self.json
     }
 
@@ -216,7 +217,7 @@ impl<'a> Info<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::texture::InfoExtensions {
+    pub fn extensions(&self) -> &json::texture::InfoExtensions<'a> {
         &self.json.extensions
     }
 

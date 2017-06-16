@@ -26,7 +26,7 @@ pub mod buffer;
 /// Contains `Camera` and other related data structures.
 pub mod camera;
 
-/// Contains `Gltf`, and other related data structures.
+/// Contains `Gltf<'a>`, and other related data structures.
 pub mod gltf;
 
 /// Contains `Image` and other related data structures.
@@ -60,4 +60,4 @@ pub mod texture;
 pub mod validation;
 
 pub use self::gltf::Gltf;
-pub use self::import::import;
+pub use self::import::Importer;

@@ -7,6 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::borrow::Cow;
 use {json, Gltf};
 
 /// A camera's projection.
@@ -23,36 +24,36 @@ pub enum Projection<'a> {
 /// place the camera in the scene.
 #[derive(Clone, Debug)]
 pub struct Camera<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    /// The parent `Gltf<'a>` struct.
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::camera::Camera,
+    json: &'a json::camera::Camera<'a>,
 }
   
 ///  Values for an orthographic camera projection.
 #[derive(Clone, Debug)]
 pub struct Orthographic<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    /// The parent `Gltf<'a>` struct.
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::camera::Orthographic,
+    json: &'a json::camera::Orthographic<'a>,
 }
   
 /// Values for a perspective camera projection.
 #[derive(Clone, Debug)]
 pub struct Perspective<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    /// The parent `Gltf<'a>` struct.
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::camera::Perspective,
+    json: &'a json::camera::Perspective<'a>,
 }
 
 impl<'a> Camera<'a> {
     /// Constructs a `Camera`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::camera::Camera) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::camera::Camera<'a>) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -60,18 +61,18 @@ impl<'a> Camera<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::camera::Camera {
+    pub fn as_json(&self) ->  &json::camera::Camera<'a> {
         self.json
     }
 
     /// Optional user-defined name for this object.
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_ref().map(Cow::as_ref)
     }
 
     /// Returns the camera's projection.
     pub fn projection(&self) -> Projection<'a> {
-        match self.json.type_.0.as_str() {
+        match self.json.type_.0.as_ref() {
             "orthographic" => {
                 let json = self.json.orthographic.as_ref().unwrap();
                 Projection::Orthographic(Orthographic::new(self.gltf, json))
@@ -85,19 +86,19 @@ impl<'a> Camera<'a> {
     } 
     
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::camera::CameraExtensions {
+    pub fn extensions(&self) -> &json::camera::CameraExtensions<'a> {
         &self.json.extensions
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 }
 
 impl<'a> Orthographic<'a> {
     /// Constructs a `Orthographic` camera projection.
-    pub fn new(gltf: &'a Gltf, json: &'a json::camera::Orthographic) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::camera::Orthographic<'a>) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -105,7 +106,7 @@ impl<'a> Orthographic<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::camera::Orthographic {
+    pub fn as_json(&self) ->  &json::camera::Orthographic<'a> {
         self.json
     }
 
@@ -130,7 +131,7 @@ impl<'a> Orthographic<'a> {
     }
 
     ///  Extension specific data.
-    pub fn extensions(&self) -> &json::camera::OrthographicExtensions {
+    pub fn extensions(&self) -> &json::camera::OrthographicExtensions<'a> {
         &self.json.extensions
     }
 
@@ -142,7 +143,7 @@ impl<'a> Orthographic<'a> {
 
 impl<'a> Perspective<'a> {
     /// Constructs a `Perspective` camera projection.
-    pub fn new(gltf: &'a Gltf, json: &'a json::camera::Perspective) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::camera::Perspective<'a>) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -150,7 +151,7 @@ impl<'a> Perspective<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) -> &json::camera::Perspective {
+    pub fn as_json(&self) -> &json::camera::Perspective<'a> {
         self.json
     }
 
@@ -175,12 +176,12 @@ impl<'a> Perspective<'a> {
     }
 
     ///  Extension specific data.
-    pub fn extensions(&self) -> &json::camera::PerspectiveExtensions {
+    pub fn extensions(&self) -> &json::camera::PerspectiveExtensions<'a> {
         &self.json.extensions
     }
 
     ///  Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 }

@@ -7,32 +7,33 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::borrow::Cow;
 use std::slice;
 use {accessor, json, scene, Gltf};
 
 /// Joints and matrices defining a skin.
 #[derive(Clone, Debug)]
 pub struct Skin<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    /// The parent `Gltf<'a>` struct.
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::skin::Skin,
+    json: &'a json::skin::Skin<'a>,
 }
 
 /// An `Iterator` that visits the joints of a `Skin`.
 #[derive(Clone, Debug)]
 pub struct IterJoints<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    /// The parent `Gltf<'a>` struct.
+    gltf: &'a Gltf<'a>,
 
     /// The internal node index iterator.
-    iter: slice::Iter<'a, json::Index<json::scene::Node>>,
+    iter: slice::Iter<'a, json::Index<json::scene::Node<'a>>>,
 }
 
 impl<'a> Skin<'a> {
     /// Constructs a `Skin`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::skin::Skin) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::skin::Skin<'a>) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -40,17 +41,17 @@ impl<'a> Skin<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::skin::Skin {
+    pub fn as_json(&self) ->  &json::skin::Skin<'a> {
         self.json
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::skin::SkinExtensions {
+    pub fn extensions(&self) -> &json::skin::SkinExtensions<'a> {
         &self.json.extensions
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 
@@ -75,7 +76,7 @@ impl<'a> Skin<'a> {
 
     /// Optional user-defined name for this object.
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_ref().map(Cow::as_ref)
     }
 
     /// The index of the node used as a skeleton root.  When `None`, joints

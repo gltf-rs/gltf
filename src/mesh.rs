@@ -7,6 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::borrow::Cow;
 use std::collections::hash_map;
 use std::slice;
 use {accessor, json, material, Gltf};
@@ -39,21 +40,21 @@ pub enum Mode {
 /// its transform places the meshes in the scene.
 #[derive(Clone, Debug)]
 pub struct Mesh<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    /// The parent `Gltf<'a>` struct.
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::mesh::Mesh,
+    json: &'a json::mesh::Mesh<'a>,
 }
 
 /// Geometry to be rendered with the given material.
 #[derive(Clone, Debug)]
 pub struct Primitive<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    /// The parent `Gltf<'a>` struct.
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::mesh::Primitive,
+    json: &'a json::mesh::Primitive<'a>,
 }
 
 /// An `Iterator` that visits the attributes of a `Primitive`.
@@ -63,7 +64,7 @@ pub struct IterAttributes<'a> {
     prim: Primitive<'a>,
 
     /// The internal attribute iterator.
-    iter: hash_map::Iter<'a, json::mesh::Semantic, json::Index<json::accessor::Accessor>>,
+    iter: hash_map::Iter<'a, json::mesh::Semantic<'a>, json::Index<json::accessor::Accessor<'a>>>,
 }
 
 /// An `Iterator` that visits the primitives of a `Mesh`.
@@ -73,12 +74,12 @@ pub struct IterPrimitives<'a> {
     mesh: Mesh<'a>,
 
     /// The internal JSON primitive iterator.
-    iter: slice::Iter<'a, json::mesh::Primitive>,
+    iter: slice::Iter<'a, json::mesh::Primitive<'a>>,
 }
 
 impl<'a> Mesh<'a> {
     /// Constructs a `Mesh`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::mesh::Mesh) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::mesh::Mesh<'a>) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -86,23 +87,23 @@ impl<'a> Mesh<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::mesh::Mesh {
+    pub fn as_json(&self) ->  &json::mesh::Mesh<'a> {
         self.json
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::mesh::MeshExtensions {
+    pub fn extensions(&self) -> &json::mesh::MeshExtensions<'a> {
         &self.json.extensions
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 
     /// Optional user-defined name for this object.
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_ref().map(Cow::as_ref)
     }
 
     /// Defines the geometry to be renderered with a material.
@@ -121,7 +122,7 @@ impl<'a> Mesh<'a> {
 
 impl<'a> Primitive<'a> {
     /// Constructs a `Primitive`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::mesh::Primitive) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::mesh::Primitive<'a>) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -129,7 +130,7 @@ impl<'a> Primitive<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::mesh::Primitive {
+    pub fn as_json(&self) ->  &json::mesh::Primitive<'a> {
         self.json
     }
 
@@ -143,12 +144,12 @@ impl<'a> Primitive<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::mesh::PrimitiveExtensions {
+    pub fn extensions(&self) -> &json::mesh::PrimitiveExtensions<'a> {
         &self.json.extensions
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 
@@ -190,7 +191,7 @@ impl<'a> Primitive<'a> {
 }
 
 impl<'a> Iterator for IterAttributes<'a> {
-    type Item = (&'a json::mesh::Semantic, accessor::Accessor<'a>);
+    type Item = (&'a json::mesh::Semantic<'a>, accessor::Accessor<'a>);
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(semantic, index)| {
             let accessor = self.prim.gltf

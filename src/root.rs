@@ -10,32 +10,34 @@
 use std::slice;
 use json;
 
+use std::borrow::Cow;
+
 /// Iterator over extension strings.
 #[derive(Clone, Debug)]
-pub struct ExtensionIter<'a>(slice::Iter<'a, String>);
+pub struct ExtensionIter<'a>(slice::Iter<'a, Cow<'a, str>>);
 
 /// The (immutable) root object for a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Root(json::root::Root);
+pub struct Root<'a>(json::root::Root<'a>);
 
-impl Root {
+impl<'a> Root<'a> {
     /// Constructs a `Camera`.
-    pub fn new(json: json::root::Root) -> Self {
+    pub fn new(json: json::root::Root<'a>) -> Self {
         Root(json)
     }
     
     /// Returns the internal JSON item.
-    pub fn as_json(&self) -> &json::root::Root {
+    pub fn as_json(&self) -> &json::root::Root<'a> {
         &self.0
     }
 
     /// Returns the extensions referenced in this .gltf file.
-    pub fn extensions_used<'a>(&'a self) -> ExtensionIter<'a> {
+    pub fn extensions_used(&'a self) -> ExtensionIter<'a> {
         ExtensionIter(self.0.extensions_used.iter())
     }
 
     /// Returns the extensions required to load and render this asset.
-    pub fn extensions_required<'a>(&'a self) -> ExtensionIter<'a> {
+    pub fn extensions_required(&'a self) -> ExtensionIter<'a> {
         ExtensionIter(self.0.extensions_required.iter())
     }
 }
@@ -43,6 +45,6 @@ impl Root {
 impl<'a> Iterator for ExtensionIter<'a> {
     type Item = &'a str;
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.next().map(String::as_ref)
+        self.0.next().map(Cow::as_ref)
     }
 }

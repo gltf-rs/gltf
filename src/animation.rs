@@ -7,6 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::borrow::Cow;
 use std::slice::Iter as SliceIter;
 use {accessor, json, scene, Gltf};
 
@@ -32,11 +33,11 @@ pub enum TrsProperty {
 /// A keyframe animation.
 #[derive(Clone, Debug)]
 pub struct Animation<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    /// The parent `Gltf<'a>` struct.
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::animation::Animation,
+    json: &'a json::animation::Animation<'a>,
 }
 
 /// An `Iterator` that visits the channels of an animation.
@@ -46,7 +47,7 @@ pub struct IterChannels<'a> {
     anim: Animation<'a>,
 
     /// The internal channel iterator.
-    iter: SliceIter<'a, json::animation::Channel>,
+    iter: SliceIter<'a, json::animation::Channel<'a>>,
 }
 
 /// An `Iterator` that visits the samplers of an animation.
@@ -56,12 +57,12 @@ pub struct IterSamplers<'a> {
     anim: Animation<'a>,
 
     /// The internal channel iterator.
-    iter: SliceIter<'a, json::animation::Sampler>,
+    iter: SliceIter<'a, json::animation::Sampler<'a>>,
 }
 
 impl<'a> Animation<'a> {
     /// Constructs an `Animation`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::animation::Animation) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::animation::Animation<'a>) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -69,17 +70,17 @@ impl<'a> Animation<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::animation::Animation {
+    pub fn as_json(&self) ->  &json::animation::Animation<'a> {
         self.json
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::animation::AnimationExtensions {
+    pub fn extensions(&self) -> &json::animation::AnimationExtensions<'a> {
         &self.json.extensions
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 
@@ -95,7 +96,7 @@ impl<'a> Animation<'a> {
 
     /// Optional user-defined name for this object.
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_ref().map(Cow::as_ref)
     }
 
     /// An array of samplers that combine input and output accessors with an
@@ -115,12 +116,12 @@ pub struct Channel<'a> {
     anim: Animation<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::animation::Channel,
+    json: &'a json::animation::Channel<'a>,
 }
 
 impl<'a> Channel<'a> {
     /// Constructs a `Channel`.
-    pub fn new(anim: Animation<'a>, json: &'a json::animation::Channel) -> Self {
+    pub fn new(anim: Animation<'a>, json: &'a json::animation::Channel<'a>) -> Self {
         Self {
             anim: anim,
             json: json,
@@ -133,7 +134,7 @@ impl<'a> Channel<'a> {
     }
     
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::animation::Channel {
+    pub fn as_json(&self) ->  &json::animation::Channel<'a> {
         self.json
     }
 
@@ -149,12 +150,12 @@ impl<'a> Channel<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::animation::ChannelExtensions {
+    pub fn extensions(&self) -> &json::animation::ChannelExtensions<'a> {
         &self.json.extensions
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 }
@@ -166,12 +167,12 @@ pub struct Target<'a> {
     anim: Animation<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::animation::Target,
+    json: &'a json::animation::Target<'a>,
 }
 
 impl<'a> Target<'a> {
     /// Constructs a `Target`.
-    pub fn new(anim: Animation<'a>, json: &'a json::animation::Target) -> Self {
+    pub fn new(anim: Animation<'a>, json: &'a json::animation::Target<'a>) -> Self {
         Self {
             anim: anim,
             json: json,
@@ -184,17 +185,17 @@ impl<'a> Target<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::animation::Target {
+    pub fn as_json(&self) ->  &json::animation::Target<'a> {
         self.json
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::animation::TargetExtensions {
+    pub fn extensions(&self) -> &json::animation::TargetExtensions<'a> {
         &self.json.extensions
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 
@@ -207,7 +208,7 @@ impl<'a> Target<'a> {
     /// targets it instantiates.
     pub fn path(&self) -> TrsProperty {
         use self::TrsProperty::*;
-        match self.json.path.0.as_str() {
+        match self.json.path.0.as_ref() {
             "translation" => Translation,
             "rotation" => Rotation,
             "scale" => Scale,
@@ -224,12 +225,12 @@ pub struct Sampler<'a> {
     anim: Animation<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::animation::Sampler,
+    json: &'a json::animation::Sampler<'a>,
 }
 
 impl<'a> Sampler<'a> {
     /// Constructs a `Sampler`.
-    pub fn new(anim: Animation<'a>, json: &'a json::animation::Sampler) -> Self {
+    pub fn new(anim: Animation<'a>, json: &'a json::animation::Sampler<'a>) -> Self {
         Self {
             anim: anim,
             json: json,
@@ -242,17 +243,17 @@ impl<'a> Sampler<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::animation::Sampler {
+    pub fn as_json(&self) ->  &json::animation::Sampler<'a> {
         self.json
     }
 
     ///  Extension specific data.
-    pub fn extensions(&self) -> &json::animation::SamplerExtensions {
+    pub fn extensions(&self) -> &json::animation::SamplerExtensions<'a> {
         &self.json.extensions
     }
 
     ///  Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 
@@ -264,7 +265,7 @@ impl<'a> Sampler<'a> {
     ///  The interpolation algorithm.
     pub fn interpolation(&self) -> InterpolationAlgorithm {
         use self::InterpolationAlgorithm::*;
-        match self.json.interpolation.0.as_str() {
+        match self.json.interpolation.0.as_ref() {
             "CATMULLROMSPLINE" => CatmullRomSpline,
             "CUBICSPLINE" => CubicSpline,
             "LINEAR" => Linear,

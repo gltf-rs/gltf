@@ -7,6 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::borrow::Cow;
 use std::ops::Deref;
 use {json, texture, Gltf};
 
@@ -19,16 +20,16 @@ pub enum AlphaMode {
 
 ///  The material appearance of a primitive.
 pub struct Material<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    /// The parent `Gltf<'a>` struct.
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::material::Material,
+    json: &'a json::material::Material<'a>,
 }
 
 impl<'a> Material<'a> {
     /// Constructs a `Material`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::material::Material) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::material::Material<'a>) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -36,7 +37,7 @@ impl<'a> Material<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::material::Material {
+    pub fn as_json(&self) ->  &json::material::Material<'a> {
         self.json
     }
 
@@ -74,7 +75,7 @@ impl<'a> Material<'a> {
 
     ///  Optional user-defined name for this object.
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_ref().map(Cow::as_ref)
     }
 
     ///  A set of parameter values that are used to define the metallic-roughness
@@ -127,30 +128,30 @@ impl<'a> Material<'a> {
     }
 
     ///  Extension specific data.
-    pub fn extensions(&self) -> &json::material::MaterialExtensions {
+    pub fn extensions(&self) -> &json::material::MaterialExtensions<'a> {
         &self.json.extensions
     }
 
     ///  Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 }
 ///  A set of parameter values that are used to define the metallic-roughness
 /// material model from Physically-Based Rendering (PBR) methodology.
 pub struct PbrMetallicRoughness<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    /// The parent `Gltf<'a>` struct.
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::material::PbrMetallicRoughness,
+    json: &'a json::material::PbrMetallicRoughness<'a>,
 }
 
 impl<'a> PbrMetallicRoughness<'a> {
     /// Constructs a `PbrMetallicRoughness`.
     pub fn new(
-        gltf: &'a Gltf,
-        json: &'a json::material::PbrMetallicRoughness,
+        gltf: &'a Gltf<'a>,
+        json: &'a json::material::PbrMetallicRoughness<'a>,
     ) -> Self {
         Self {
             gltf: gltf,
@@ -159,7 +160,7 @@ impl<'a> PbrMetallicRoughness<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::material::PbrMetallicRoughness {
+    pub fn as_json(&self) -> &json::material::PbrMetallicRoughness<'a> {
         self.json
     }
 
@@ -200,12 +201,12 @@ impl<'a> PbrMetallicRoughness<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::material::PbrMetallicRoughnessExtensions {
+    pub fn extensions(&self) -> &json::material::PbrMetallicRoughnessExtensions<'a> {
         &self.json.extensions
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 }
@@ -216,14 +217,14 @@ pub struct NormalTexture<'a> {
     texture: texture::Texture<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::material::NormalTexture,
+    json: &'a json::material::NormalTexture<'a>,
 }
 
 impl<'a> NormalTexture<'a> {
     /// Constructs a `NormalTexture`.
     pub fn new(
         texture: texture::Texture<'a>,
-        json: &'a json::material::NormalTexture,
+        json: &'a json::material::NormalTexture<'a>,
     ) -> Self {
         Self {
             texture: texture,
@@ -232,7 +233,7 @@ impl<'a> NormalTexture<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::material::NormalTexture {
+    pub fn as_json(&self) ->  &json::material::NormalTexture<'a> {
         self.json
     }
 
@@ -248,12 +249,12 @@ impl<'a> NormalTexture<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::material::NormalTextureExtensions {
+    pub fn extensions(&self) -> &json::material::NormalTextureExtensions<'a> {
         &self.json.extensions
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 }
@@ -263,14 +264,14 @@ pub struct OcclusionTexture<'a> {
     texture: texture::Texture<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::material::OcclusionTexture,
+    json: &'a json::material::OcclusionTexture<'a>,
 }
 
 impl<'a> OcclusionTexture<'a> {
     /// Constructs a `OcclusionTexture`.
     pub fn new(
         texture: texture::Texture<'a>,
-        json: &'a json::material::OcclusionTexture,
+        json: &'a json::material::OcclusionTexture<'a>,
     ) -> Self {
         Self {
             texture: texture,
@@ -279,7 +280,7 @@ impl<'a> OcclusionTexture<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::material::OcclusionTexture {
+    pub fn as_json(&self) ->  &json::material::OcclusionTexture<'a> {
         self.json
     }
 
@@ -294,12 +295,12 @@ impl<'a> OcclusionTexture<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::material::OcclusionTextureExtensions {
+    pub fn extensions(&self) -> &json::material::OcclusionTextureExtensions<'a> {
         &self.json.extensions
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 }

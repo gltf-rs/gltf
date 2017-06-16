@@ -7,21 +7,21 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use Gltf;
-use {buffer, json};
+use std::borrow::Cow;
+use {buffer, json, Gltf};
 
 ///  A typed view into a buffer view.
 pub struct Accessor<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    /// The parent `Gltf<'a>` struct.
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::accessor::Accessor,
+    json: &'a json::accessor::Accessor<'a>,
 }
 
 impl<'a> Accessor<'a> {
     /// Constructs an `Accessor`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::accessor::Accessor) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::accessor::Accessor<'a>) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -29,7 +29,7 @@ impl<'a> Accessor<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::accessor::Accessor {
+    pub fn as_json(&self) ->  &json::accessor::Accessor<'a> {
         self.json
     }
 
@@ -55,17 +55,17 @@ impl<'a> Accessor<'a> {
     }
 
     ///  Extension specific data.
-    pub fn extensions(&self) -> &json::accessor::AccessorExtensions {
+    pub fn extensions(&self) -> &json::accessor::AccessorExtensions<'a> {
         &self.json.extensions
     }
 
     ///  Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 
     ///  Specifies if the attribute is a scalar, vector, or matrix.
-    pub fn type_(&self) -> &json::accessor::Type {
+    pub fn type_(&self) -> &json::accessor::Type<'a> {
         unimplemented!()
     }
 
@@ -80,8 +80,8 @@ impl<'a> Accessor<'a> {
     }
 
     ///  Optional user-defined name for this object.
-    pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(String::as_str)
+    pub fn name(&self) -> Option<&'a str> {
+        self.json.name.as_ref().map(Cow::as_ref)
     }
 
     ///  Specifies whether integer data values should be normalized.
@@ -104,18 +104,18 @@ pub mod sparse {
     
     ///  Indices of those attributes that deviate from their initialization value.
     pub struct Indices<'a> {
-        /// The parent `Gltf` struct.
-        gltf: &'a Gltf,
+        /// The parent `Gltf<'a>` struct.
+        gltf: &'a Gltf<'a>,
 
         /// The corresponding JSON struct.
-        json: &'a json::accessor::sparse::Indices,
+        json: &'a json::accessor::sparse::Indices<'a>,
     }
 
     impl<'a> Indices<'a> {
         /// Constructs a `Indices`.
         pub fn new(
-            gltf: &'a Gltf,
-            json: &'a json::accessor::sparse::Indices,
+            gltf: &'a Gltf<'a>,
+            json: &'a json::accessor::sparse::Indices<'a>,
         ) -> Self {
             Self {
                 gltf: gltf,
@@ -124,7 +124,7 @@ pub mod sparse {
         }
 
         /// Returns the internal JSON item.
-        pub fn as_json(&self) ->  &json::accessor::sparse::Indices {
+        pub fn as_json(&self) ->  &json::accessor::sparse::Indices<'a> {
             self.json
         }
 
@@ -146,29 +146,29 @@ pub mod sparse {
         }
 
         /// Extension specific data.
-        pub fn extensions(&self) -> &json::accessor::sparse::IndicesExtensions {
+        pub fn extensions(&self) -> &json::accessor::sparse::IndicesExtensions<'a> {
             &self.json.extensions
         }
 
         /// Optional application specific data.
-        pub fn extras(&self) -> &json::Extras {
+        pub fn extras(&self) -> &json::Extras<'a> {
             &self.json.extras
         }
     }
     ///Sparse storage of attributes that deviate from their initialization value.
     pub struct Sparse<'a> {
-        /// The parent `Gltf` struct.
-        gltf: &'a Gltf,
+        /// The parent `Gltf<'a>` struct.
+        gltf: &'a Gltf<'a>,
 
         /// The corresponding JSON struct.
-        json: &'a json::accessor::sparse::Sparse,
+        json: &'a json::accessor::sparse::Sparse<'a>,
     }
 
     impl<'a> Sparse<'a> {
         /// Constructs a `Sparse`.
         pub fn new(
-            gltf: &'a Gltf,
-            json: &'a json::accessor::sparse::Sparse,
+            gltf: &'a Gltf<'a>,
+            json: &'a json::accessor::sparse::Sparse<'a>,
         ) -> Self {
             Self {
                 gltf: gltf,
@@ -177,7 +177,7 @@ pub mod sparse {
         }
 
         /// Returns the internal JSON item.
-        pub fn as_json(&self) -> &json::accessor::sparse::Sparse {
+        pub fn as_json(&self) -> &json::accessor::sparse::Sparse<'a> {
             self.json
         }
 
@@ -202,12 +202,12 @@ pub mod sparse {
         }
 
         ///  Extension specific data.
-        pub fn extensions(&self) -> &json::accessor::sparse::StorageExtensions {
+        pub fn extensions(&self) -> &json::accessor::sparse::StorageExtensions<'a> {
             &self.json.extensions
         }
 
         ///  Optional application specific data.
-        pub fn extras(&self) -> &json::Extras {
+        pub fn extras(&self) -> &json::Extras<'a> {
             &self.json.extras
         }
     }
@@ -215,18 +215,18 @@ pub mod sparse {
     ///  Array of size `count * number_of_components` storing the displaced accessor
     /// attributes pointed by `accessor::sparse::Indices`.
     pub struct Values<'a> {
-        /// The parent `Gltf` struct.
-        gltf: &'a Gltf,
+        /// The parent `Gltf<'a>` struct.
+        gltf: &'a Gltf<'a>,
 
         /// The corresponding JSON struct.
-        json: &'a json::accessor::sparse::Values,
+        json: &'a json::accessor::sparse::Values<'a>,
     }
 
     impl<'a> Values<'a> {
         /// Constructs a `Values`.
         pub fn new(
-            gltf: &'a Gltf,
-            json: &'a json::accessor::sparse::Values,
+            gltf: &'a Gltf<'a>,
+            json: &'a json::accessor::sparse::Values<'a>,
         ) -> Self {
             Self {
                 gltf: gltf,
@@ -235,7 +235,7 @@ pub mod sparse {
         }
 
         /// Returns the internal JSON item.
-        pub fn as_json(&self) ->  &json::accessor::sparse::Values {
+        pub fn as_json(&self) ->  &json::accessor::sparse::Values<'a> {
             self.json
         }
 
@@ -252,12 +252,12 @@ pub mod sparse {
         }
 
         /// Extension specific data.
-        pub fn extensions(&self) -> &json::accessor::sparse::ValuesExtensions {
+        pub fn extensions(&self) -> &json::accessor::sparse::ValuesExtensions<'a> {
             &self.json.extensions
         }
 
         /// Optional application specific data.
-        pub fn extras(&self) -> &json::Extras {
+        pub fn extras(&self) -> &json::Extras<'a> {
             &self.json.extras
         }
     }

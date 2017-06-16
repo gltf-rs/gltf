@@ -7,6 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::borrow::Cow;
+use std::marker::PhantomData;
+
 use json::{texture, Extras, Index, Root};
 use validation::{Error, JsonPath, Validate};
 
@@ -20,7 +23,7 @@ pub const VALID_ALPHA_MODES: &'static [&'static str] = &[
 /// The material appearance of a primitive.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
-pub struct Material {
+pub struct Material<'a> {
     /// The alpha cutoff value of the material.
     #[serde(default, rename = "alphaCutoff")]
     pub alpha_cutoff: AlphaCutoff,
@@ -42,7 +45,7 @@ pub struct Material {
     ///   background using the normal painting operation (i.e. the Porter and
     ///   Duff over operator).
     #[serde(default, rename = "alphaMode")]
-    pub alpha_mode: AlphaMode,
+    pub alpha_mode: AlphaMode<'a>,
 
     /// Specifies whether the material is double-sided.
     ///
@@ -57,13 +60,13 @@ pub struct Material {
     pub double_sided: bool,
 
     /// Optional user-defined name for this object.
-    pub name: Option<String>,
+    pub name: Option<Cow<'a, str>>,
 
     /// A set of parameter values that are used to define the metallic-roughness
     /// material model from Physically-Based Rendering (PBR) methodology. When not
     /// specified, all the default values of `pbrMetallicRoughness` apply.
     #[serde(rename = "pbrMetallicRoughness")]
-    pub pbr_metallic_roughness: Option<PbrMetallicRoughness>,
+    pub pbr_metallic_roughness: Option<PbrMetallicRoughness<'a>>,
 
     /// A tangent space normal map. The texture contains RGB components in linear
     /// space. Each texel represents the XYZ components of a normal vector in
@@ -72,7 +75,7 @@ pub struct Material {
     /// OpenGL conventions where +X is right and +Y is up. +Z points toward the
     /// viewer.
     #[serde(rename = "normalTexture")]
-    pub normal_texture: Option<NormalTexture>,
+    pub normal_texture: Option<NormalTexture<'a>>,
 
     /// The occlusion map texture. The occlusion values are sampled from the R
     /// channel. Higher values indicate areas that should receive full indirect
@@ -80,13 +83,13 @@ pub struct Material {
     /// linear. If other channels are present (GBA), they are ignored for occlusion
     /// calculations.
     #[serde(rename = "occlusionTexture")]
-    pub occlusion_texture: Option<OcclusionTexture>,
+    pub occlusion_texture: Option<OcclusionTexture<'a>>,
 
     /// The emissive map controls the color and intensity of the light being emitted
     /// by the material. This texture contains RGB components in sRGB color space.
     /// If a fourth component (A) is present, it is ignored.
     #[serde(rename = "emissiveTexture")]
-    pub emissive_texture: Option<texture::Info>,
+    pub emissive_texture: Option<texture::Info<'a>>,
 
     /// The emissive color of the material.
     #[serde(default, rename = "emissiveFactor")]
@@ -94,32 +97,32 @@ pub struct Material {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: MaterialExtensions,
+    pub extensions: MaterialExtensions<'a>,
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: Extras,
+    pub extras: Extras<'a>,
 }
 
 /// Extension specific data for `Material`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct MaterialExtensions {
+pub struct MaterialExtensions<'a> {
     #[serde(default)]
-    _allow_unknown_fields: (),
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
 /// A set of parameter values that are used to define the metallic-roughness
 /// material model from Physically-Based Rendering (PBR) methodology.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
-pub struct PbrMetallicRoughness {
+pub struct PbrMetallicRoughness<'a> {
     /// The material's base color factor.
     #[serde(default, rename = "baseColorFactor")]
     pub base_color_factor: PbrBaseColorFactor,
 
     /// The base color texture.
     #[serde(rename = "baseColorTexture")]
-    pub base_color_texture: Option<texture::Info>,
+    pub base_color_texture: Option<texture::Info<'a>>,
 
     /// The metalness of the material.
     #[serde(default, rename = "metallicFactor")]
@@ -141,30 +144,30 @@ pub struct PbrMetallicRoughness {
     /// * If the third component (B) and/or the fourth component (A) are present
     ///   then they are ignored.
     #[serde(rename = "metallicRoughnessTexture")]
-    pub metallic_roughness_texture: Option<texture::Info>,
+    pub metallic_roughness_texture: Option<texture::Info<'a>>,
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: PbrMetallicRoughnessExtensions,
+    pub extensions: PbrMetallicRoughnessExtensions<'a>,
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: Extras,
+    pub extras: Extras<'a>,
 }
 
 /// Extension specific data for `PbrMetallicRoughness`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct PbrMetallicRoughnessExtensions {
+pub struct PbrMetallicRoughnessExtensions<'a> {
     #[serde(default)]
-    _allow_unknown_fields: (),
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
 /// Defines the normal texture of a material.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
-pub struct NormalTexture {
+pub struct NormalTexture<'a> {
     /// The index of the texture.
-    pub index: Index<texture::Texture>,
+    pub index: Index<texture::Texture<'a>>,
 
     /// The scalar multiplier applied to each normal vector of the texture.
     ///
@@ -178,18 +181,18 @@ pub struct NormalTexture {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: NormalTextureExtensions,
+    pub extensions: NormalTextureExtensions<'a>,
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: Extras,
+    pub extras: Extras<'a>,
 }
 
 /// Extension specific data for `NormalTexture`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct NormalTextureExtensions {
+pub struct NormalTextureExtensions<'a> {
     #[serde(default)]
-    _allow_unknown_fields: (),
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
 fn material_normal_texture_scale_default() -> f32 {
@@ -199,9 +202,9 @@ fn material_normal_texture_scale_default() -> f32 {
 /// Defines the occlusion texture of a material.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
-pub struct OcclusionTexture {
+pub struct OcclusionTexture<'a> {
     /// The index of the texture.
-    pub index: Index<texture::Texture>,
+    pub index: Index<texture::Texture<'a>>,
 
     /// The scalar multiplier controlling the amount of occlusion applied.
     #[serde(default)]
@@ -213,18 +216,18 @@ pub struct OcclusionTexture {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: OcclusionTextureExtensions,
+    pub extensions: OcclusionTextureExtensions<'a>,
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: Extras,
+    pub extras: Extras<'a>,
 }
 
 /// Extension specific data for `OcclusionTexture`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct OcclusionTextureExtensions {
+pub struct OcclusionTextureExtensions<'a> {
     #[serde(default)]
-    _allow_unknown_fields: (),
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
 /// The alpha cutoff value of a material.
@@ -233,7 +236,7 @@ pub struct AlphaCutoff(pub f32);
 
 /// The alpha rendering mode of a material.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct AlphaMode(pub String);
+pub struct AlphaMode<'a>(pub Cow<'a, str>);
 
 /// The emissive color of a material.
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
@@ -253,14 +256,14 @@ impl Default for AlphaCutoff {
     }
 }
 
-impl Default for AlphaMode {
+impl<'a> Default for AlphaMode<'a> {
     fn default() -> Self {
-        AlphaMode("OPAQUE".to_string())
+        AlphaMode(Cow::from("OPAQUE"))
     }
 }
 
-impl Validate for AlphaCutoff {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for AlphaCutoff {
+    fn validate<P, R>(&self, _: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if self.0 < 0.0 {
@@ -269,18 +272,18 @@ impl Validate for AlphaCutoff {
     }
 }
 
-impl Validate for AlphaMode {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for AlphaMode<'a> {
+    fn validate<P, R>(&self, _: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
-        if !VALID_ALPHA_MODES.contains(&self.0.as_str()) {
+        if !VALID_ALPHA_MODES.contains(&self.0.as_ref()) {
             report(Error::invalid_enum(path(), self.0.clone()));
         }
     }
 }
 
-impl Validate for EmissiveFactor {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for EmissiveFactor {
+    fn validate<P, R>(&self, _: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         for x in &self.0 {
@@ -299,8 +302,8 @@ impl Default for PbrBaseColorFactor {
     }
 }
 
-impl Validate for PbrBaseColorFactor {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for PbrBaseColorFactor {
+    fn validate<P, R>(&self, _: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         for x in &self.0 {
@@ -319,8 +322,8 @@ impl Default for StrengthFactor {
     }
 }
 
-impl Validate for StrengthFactor {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for StrengthFactor {
+    fn validate<P, R>(&self, _: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if self.0 < 0.0 || self.0 > 1.0 {

@@ -7,6 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::borrow::Cow;
 use std::slice;
 use {camera, json, mesh, skin, Gltf};
 
@@ -21,32 +22,32 @@ use {camera, json, mesh, skin, Gltf};
 /// `matrix` will not be present.
 #[derive(Clone, Debug)]
 pub struct Node<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    /// The parent `Gltf<'a>` struct.
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::scene::Node,
+    json: &'a json::scene::Node<'a>,
 }
 
 /// The root `Node`s of a scene.
 #[derive(Clone, Debug)]
 pub struct Scene<'a> {
-    /// The parent `Gltf` struct.
+    /// The parent `Gltf<'a>` struct.
     #[allow(dead_code)]
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::scene::Scene,
+    json: &'a json::scene::Scene<'a>,
 }
 
 /// An `Iterator` that visits the nodes in a scene.
 #[derive(Clone, Debug)]
 pub struct IterNodes<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    /// The parent `Gltf<'a>` struct.
+    gltf: &'a Gltf<'a>,
 
     /// The internal node index iterator.
-    iter: slice::Iter<'a, json::Index<json::scene::Node>>,
+    iter: slice::Iter<'a, json::Index<json::scene::Node<'a>>>,
 }
 
 /// An `Iterator` that visits the children of a node.
@@ -56,12 +57,12 @@ pub struct IterChildNodes<'a> {
     parent: Node<'a>,
 
     /// The internal node index iterator.
-    iter: slice::Iter<'a, json::Index<json::scene::Node>>,
+    iter: slice::Iter<'a, json::Index<json::scene::Node<'a>>>,
 }
 
 impl<'a> Node<'a> {
     /// Constructs a `Node`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::scene::Node) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::scene::Node<'a>) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -69,7 +70,7 @@ impl<'a> Node<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::scene::Node {
+    pub fn as_json(&self) ->  &json::scene::Node<'a> {
         self.json
     }
 
@@ -91,12 +92,12 @@ impl<'a> Node<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::scene::NodeExtensions {
+    pub fn extensions(&self) -> &json::scene::NodeExtensions<'a> {
         &self.json.extensions
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 
@@ -114,7 +115,7 @@ impl<'a> Node<'a> {
 
     /// Optional user-defined name for this object.
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_ref().map(Cow::as_ref)
     }
 
     /// The node's unit quaternion rotation in the order (x, y, z, w), where w is
@@ -149,7 +150,7 @@ impl<'a> Node<'a> {
 
 impl<'a> Scene<'a> {
     /// Constructs a `Scene`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::scene::Scene) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::scene::Scene<'a>) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -157,27 +158,27 @@ impl<'a> Scene<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::scene::Scene {
+    pub fn as_json(&self) ->  &json::scene::Scene<'a> {
         self.json
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::scene::SceneExtensions {
+    pub fn extensions(&self) -> &json::scene::SceneExtensions<'a> {
         &self.json.extensions
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a>{
         &self.json.extras
     }
 
     /// Optional user-defined name for this object.
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_ref().map(Cow::as_ref)
     }
 
     /// The indices of each root node.
-    pub fn iter_nodes(&self) -> IterNodes {
+    pub fn iter_nodes(&self) -> IterNodes<'a>  {
         IterNodes {
             gltf: self.gltf,
             iter: self.json.nodes.iter(),

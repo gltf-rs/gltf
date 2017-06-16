@@ -7,6 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::borrow::Cow;
 use {json, Gltf};
 
 /// Specifies the target a GPU buffer should be bound to. 
@@ -23,17 +24,17 @@ pub struct Buffer<'a> {
     /// The corresponding buffer data.
     data: &'a [u8],
     
-    /// The parent `Gltf` struct.
+    /// The parent `Gltf<'a>` struct.
     #[allow(dead_code)]
-    gltf: &'a Gltf,
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::buffer::Buffer,
+    json: &'a json::buffer::Buffer<'a>,
 }
 
 impl<'a> Buffer<'a> {
     /// Constructs a `Buffer`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::buffer::Buffer, data: &'a [u8]) -> Self {
+    pub fn new(gltf: &'a Gltf<'a>, json: &'a json::buffer::Buffer<'a>, data: &'a [u8]) -> Self {
         Self {
             data: data,
             gltf: gltf,
@@ -42,7 +43,7 @@ impl<'a> Buffer<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::buffer::Buffer {
+    pub fn as_json(&self) ->  &json::buffer::Buffer<'a> {
         self.json
     }
 
@@ -58,16 +59,16 @@ impl<'a> Buffer<'a> {
     
     /// Optional user-defined name for this object.
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_ref().map(Cow::as_ref)
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::buffer::BufferExtensions {
+    pub fn extensions(&self) -> &json::buffer::BufferExtensions<'a> {
         &self.json.extensions
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 }
@@ -76,18 +77,18 @@ pub struct View<'a> {
     /// The corresponding buffer view data.
     data: &'a [u8],
     
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    /// The parent `Gltf<'a>` struct.
+    gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
-    json: &'a json::buffer::View,
+    json: &'a json::buffer::View<'a>,
 }
 
 impl<'a> View<'a> {
     /// Constructs a `View`.
     pub fn new(
-        gltf: &'a Gltf,
-        json: &'a json::buffer::View,
+        gltf: &'a Gltf<'a>,
+        json: &'a json::buffer::View<'a>,
         data: &'a [u8],
     ) -> Self {
         Self {
@@ -98,7 +99,7 @@ impl<'a> View<'a> {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::buffer::View {
+    pub fn as_json(&self) ->  &json::buffer::View<'a> {
         self.json
     }
 
@@ -130,7 +131,7 @@ impl<'a> View<'a> {
     
     /// Optional user-defined name for this object.
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_ref().map(Cow::as_ref)
     }
 
     /// Optional target the buffer should be bound to.
@@ -143,12 +144,12 @@ impl<'a> View<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::buffer::ViewExtensions {
+    pub fn extensions(&self) -> &json::buffer::ViewExtensions<'a> {
         &self.json.extensions
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 }

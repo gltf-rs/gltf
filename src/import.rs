@@ -12,14 +12,17 @@ use std;
 use std::boxed::Box;
 use std::fs::File;
 use std::io::{self, BufReader, Read};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use json;
-use gltf::{BufferData, ImageData, Gltf};
+use gltf::Gltf;
 use root::Root;
 use validation;
 
+/// Return type of `Importer::import_*`.
+pub type Result<'a> = std::result::Result<Gltf<'a>, Error>;
+
 /// A trait for representing sources of glTF data that may be read by an importer.
-pub trait DataSource {
+pub trait Source {
     /// Read the contents of a .gltf or .glb file.
     fn gltf(&mut self) -> io::Result<Box<Read>>;
     
@@ -55,46 +58,71 @@ pub enum Error {
 /// A simple synchronous data source that can read from either the file system or
 /// embedded base64 data.
 #[derive(Clone, Debug)]
-pub struct SimpleDataSource<'a> {
+pub struct FromPath {
     /// The path to the glTF directory.
-    path: &'a Path,
+    path: PathBuf,
+}
+
+/// Describes image data required to render a single glTF asset.
+#[derive(Clone, Debug)]
+pub enum ImageData {
+    /// The image data is borrowed from a buffer.
+    Borrowed(usize),
+
+    /// The image data is owned.
+    Owned(Vec<u8>),
 }
 
 /// Imports glTF 2.0.
 #[derive(Clone)]
-pub struct Importer<S: DataSource> {
-    /// The data source.
-    source: S,
+pub struct Importer {
+    /// The glTF JSON data.
+    gltf: Vec<u8>,
+
+    /// The imported glTF buffers.
+    buffers: Vec<Vec<u8>>,
+
+    /// The imported glTF images.
+    images: Vec<ImageData>,
 }
 
-/// Convenience function for importing glTF under the default configuration.
-pub fn import<P: AsRef<Path>>(path: &P) -> Result<Gltf, Error> {
-    Importer::new(SimpleDataSource::new(path)).import()
-}
-
-impl<S: DataSource> Importer<S> {
+impl Importer {
     /// Constructs an `Importer`.
-    pub fn new(source: S) -> Self {
+    pub fn new() -> Self {
         Self {
-            source: source,
+            buffers: vec![],
+            images: vec![],
+            gltf: vec![],
         }
     }
-    
-    /// Import some glTF 2.0.
-    pub fn import(mut self) -> Result<Gltf, Error> {
+
+    /// Clears any data held by the importer.
+    /// Must be called at the beginning of each import call.
+    fn clear(&mut self) {
+        self.buffers.clear();
+        self.images.clear();
+        self.gltf.clear();
+    }
+
+    /// Imports some glTF from the given custom source.
+    pub fn import_from_source<'a, S>(&'a mut self, mut source: S) -> Result<'a>
+        where S: Source
+    {
         use std::io::Read;
         use self::Error::*;
         use self::validation::{JsonPath, Validate};
 
+        // Cleanup from the last import call
+        self.clear();
+        
         // Read .gltf / .glb file
-        let mut buffer = vec![];
-        let _ = self.source.gltf()?.read_to_end(&mut buffer)?;
-        if buffer.starts_with(b"glTF") {
+        let _ = source.gltf()?.read_to_end(&mut self.gltf)?;
+        if self.gltf.starts_with(b"glTF") {
             return Err(ExtensionUnsupported("KHR_binary_glTF".to_string()));
         }
 
         // Parse and validate the .gltf JSON data
-        let json: json::Root = serde_json::from_slice(&buffer)?;
+        let json: json::Root = serde_json::from_slice(&self.gltf)?;
         let mut errs = Vec::new();
         json.validate(&json, || JsonPath::new(), &mut |err| errs.push(err));
         if !errs.is_empty() {
@@ -102,58 +130,70 @@ impl<S: DataSource> Importer<S> {
         }
 
         // Read the glTF buffer data
-        let mut buffers = vec![];
         for entry in &json.buffers {
             let mut data = vec![];
-            let _ = self.source.buffer(entry)?.read_to_end(&mut data)?;
-            buffers.push(BufferData(data));
+            let _ = source.buffer(entry)?.read_to_end(&mut data)?;
+            self.buffers.push(data);
         }
 
         // Read the glTF image data
-        let mut images = vec![];
         for entry in &json.images {
             let image = if let Some(buffer_view) = entry.buffer_view.as_ref() {
                 ImageData::Borrowed(buffer_view.value())
             } else {
                 let mut buffer = vec![];
-                let _ = self.source.image(entry)?.read_to_end(&mut buffer)?;
+                let _ = source.image(entry)?.read_to_end(&mut buffer)?;
                 ImageData::Owned(buffer)
             };
-            images.push(image);
+            self.images.push(image);
         }
 
-        Ok(Gltf::new(Root::new(json), buffers, images))
+        let buffer_data: Vec<_>  = self.buffers.iter().map(Vec::as_slice).collect();
+        let mut image_data = vec![];
+        for entry in &self.images {
+            let slice = match entry {
+                &ImageData::Borrowed(index) => self.buffers[index].as_slice(),
+                &ImageData::Owned(ref data) => data.as_slice(),
+            };
+            image_data.push(slice);
+        }
+        Ok(Gltf::new(Root::new(json), buffer_data, image_data))
+
+    }
+    
+    /// Import some glTF 2.0 from the file system.
+    pub fn import_from_path<'a, P>(&'a mut self, path: P) -> Result<'a>
+        where P: AsRef<Path>
+    {
+        self.import_from_source(FromPath::new(path))
     }
 }
 
-impl<'a> SimpleDataSource<'a> {
+impl FromPath {
     /// Constructs a simple synchronous data source that can read from the file
-    /// system with the given path as its base directory.
-    pub fn new<P: AsRef<Path>>(path: &'a P) -> Self {
+    /// system.
+    pub fn new<P: AsRef<Path>>(path: P) -> Self {
         Self {
-            path: path.as_ref(),
+            path: path.as_ref().to_path_buf(),
         }
     }
 }
 
-impl<'a> DataSource for SimpleDataSource<'a> {
-    /// Read the contents of a .gltf or .glb file.
+impl Source for FromPath {
     fn gltf(&mut self) -> io::Result<Box<Read>> {
-        let file = File::open(self.path)?;
+        let file = File::open(&self.path)?;
         Ok(Box::new(BufReader::new(file)))
     }
 
-    /// Read the contents of a glTF buffer.
     fn buffer(&mut self, buffer: &json::buffer::Buffer) -> io::Result<Box<Read>> {
-        let uri = buffer.uri.as_ref().unwrap();
+        let uri = buffer.uri.as_ref().unwrap().as_ref();
         let path = self.path.parent().unwrap().join(uri);
         let file = File::open(path)?;
         Ok(Box::new(BufReader::new(file)))
     }
 
-    /// Read the contents of a glTF image.
     fn image(&mut self, image: &json::image::Image) -> io::Result<Box<Read>> {
-        let uri = image.uri.as_ref().unwrap();
+        let uri = image.uri.as_ref().unwrap().as_ref();
         let path = self.path.parent().unwrap().join(uri);
         let file = File::open(path)?;
         Ok(Box::new(BufReader::new(file)))

@@ -12,7 +12,8 @@ extern crate gltf;
 use std::{fs, io, path};
 
 fn try_import(path: &path::Path) {
-    let _ = gltf::import(&path).map_err(|err| {
+    let mut importer = gltf::Importer::new();
+    let _ = importer.import_from_path(path).map_err(|err| {
         println!("{:?}: {:#?}", path, err);
         panic!();
     });

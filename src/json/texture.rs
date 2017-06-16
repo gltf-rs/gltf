@@ -7,6 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::borrow::Cow;
+use std::marker::PhantomData;
+
 use json::{image, Extras, Index, Root};
 use validation::{Error, JsonPath, Validate};
 
@@ -63,7 +66,7 @@ pub const VALID_WRAPPING_MODES: &'static [u32] = &[
 /// Texture sampler properties for filtering and wrapping modes.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
-pub struct Sampler {
+pub struct Sampler<'a> {
     /// Magnification filter.
     #[serde(rename = "magFilter")]
     pub mag_filter: Option<MagFilter>,
@@ -73,7 +76,7 @@ pub struct Sampler {
     pub min_filter: Option<MinFilter>,
 
     /// Optional user-defined name for this object.
-    pub name: Option<String>,
+    pub name: Option<Cow<'a, str>>,
 
     /// `s` wrapping mode.
     #[serde(default, rename = "wrapS")]
@@ -85,55 +88,55 @@ pub struct Sampler {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: SamplerExtensions,
+    pub extensions: SamplerExtensions<'a>,
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: Extras,
+    pub extras: Extras<'a>,
 }
 
 /// Extension specific data for `Sampler`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct SamplerExtensions {
+pub struct SamplerExtensions<'a> {
     #[serde(default)]
-    _allow_unknown_fields: (),
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
 /// A texture and its sampler.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
-pub struct Texture {
+pub struct Texture<'a> {
     /// Optional user-defined name for this object.
-    pub name: Option<String>,
+    pub name: Option<Cow<'a, str>>,
 
     /// The index of the sampler used by this texture.
-    pub sampler: Option<Index<Sampler>>,
+    pub sampler: Option<Index<Sampler<'a>>>,
 
     /// The index of the image used by this texture.
-    pub source: Index<image::Image>,
+    pub source: Index<image::Image<'a>>,
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: TextureExtensions,
+    pub extensions: TextureExtensions<'a>,
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: Extras,
+    pub extras: Extras<'a>,
 }
 
 /// Extension specific data for `Texture`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct TextureExtensions {
+pub struct TextureExtensions<'a> {
     #[serde(default)]
-    _allow_unknown_fields: (),
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
 /// Reference to a `Texture`.
-pub struct Info {
+pub struct Info<'a> {
     /// The index of the texture.
-    pub index: Index<Texture>,
+    pub index: Index<Texture<'a>>,
 
     /// The set index of the texture's `TEXCOORD` attribute.
     #[serde(default, rename = "texCoord")]
@@ -141,18 +144,18 @@ pub struct Info {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: InfoExtensions,
+    pub extensions: InfoExtensions<'a>,
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: Extras,
+    pub extras: Extras<'a>,
 }
 
 /// Extension specific data for `Info`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct InfoExtensions {
+pub struct InfoExtensions<'a> {
     #[serde(default)]
-    _allow_unknown_fields: (),
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
 /// Magnification filter.
@@ -167,8 +170,8 @@ pub struct MinFilter(pub u32);
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct WrappingMode(pub u32);
 
-impl Validate for MagFilter {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for MagFilter {
+    fn validate<P, R>(&self, _: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_MAG_FILTERS.contains(&self.0) {
@@ -177,8 +180,8 @@ impl Validate for MagFilter {
     }
 }
 
-impl Validate for MinFilter {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for MinFilter {
+    fn validate<P, R>(&self, _: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_MIN_FILTERS.contains(&self.0) {
@@ -193,8 +196,8 @@ impl Default for WrappingMode {
     }
 }
 
-impl Validate for WrappingMode {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for WrappingMode {
+    fn validate<P, R>(&self, _: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_WRAPPING_MODES.contains(&self.0) {

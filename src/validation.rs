@@ -9,15 +9,18 @@
 
 use serde_json;
 use std;
+
+use std::borrow::Cow;
 use std::collections::HashMap;
+use std::marker::PhantomData;
 use json::*;
 
 pub use self::error::Error;
 
 /// Trait for validating glTF JSON data against the 2.0 specification.
-pub trait Validate {
+pub trait Validate<'a> {
     /// Validates the data against the glTF 2.0 specification.
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+    fn validate<P, R>(&self, root: &Root<'a>, path: P, report: &mut R)
         where
             P: Fn() -> JsonPath,
             R: FnMut(Error);
@@ -222,8 +225,8 @@ impl std::fmt::Display for JsonPath {
     }
 }
 
-impl<T: Validate> Validate for HashMap<String, T> {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+impl<'a, T: Validate<'a>> Validate<'a> for HashMap<String, T> {
+    fn validate<P, R>(&self, root: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         for (key, value) in self.iter() {
@@ -232,8 +235,8 @@ impl<T: Validate> Validate for HashMap<String, T> {
     }
 }
 
-impl<T: Validate> Validate for Option<T> {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+impl<'a, T: Validate<'a>> Validate<'a> for Option<T> {
+    fn validate<P, R>(&self, root: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if let Some(value) = self.as_ref() {
@@ -242,8 +245,8 @@ impl<T: Validate> Validate for Option<T> {
     }
 }
 
-impl<T: Validate> Validate for Vec<T> {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+impl<'a, T: Validate<'a>> Validate<'a> for Vec<T> {
+    fn validate<P, R>(&self, root: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         for (index, value) in self.iter().enumerate() {
@@ -252,80 +255,96 @@ impl<T: Validate> Validate for Vec<T> {
     }
 }
 
-impl Validate for bool {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for bool {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Validate for u32 {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for u32 {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Validate for i32 {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for i32 {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Validate for f32 {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for f32 {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Validate for [f32; 3] {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for [f32; 3] {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Validate for [f32; 4] {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for [f32; 4] {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Validate for [f32; 16] {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for [f32; 16] {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Validate for () {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for () {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Validate for String {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for String {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Validate for serde_json::Value {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for Cow<'a, str> {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        // nop
+    }
+}
+
+impl<'a> Validate<'a> for PhantomData<&'a ()> {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        // nop
+    }
+}
+
+impl<'a> Validate<'a> for serde_json::Value {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
