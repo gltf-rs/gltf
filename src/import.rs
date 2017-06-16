@@ -55,10 +55,9 @@ pub enum Error {
     Validation(Vec<validation::Error>),
 }
 
-/// A simple synchronous data source that can read from either the file system or
-/// embedded base64 data.
+/// A simple synchronous data source that can read from the file system.
 #[derive(Clone, Debug)]
-pub struct FromPath {
+struct FromPath {
     /// The path to the glTF directory.
     path: PathBuf,
 }
