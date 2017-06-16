@@ -205,7 +205,7 @@ impl<'a> Semantic<'a> {
         R: FnMut(Error)
     {
         // Validate the correctness of the semantic name
-        let set = |name: &str, prefix: &str| name[prefix.len()..].parse::<u8>();
+        let set = |name: &str, prefix: &str| name[prefix.len()..].parse::<u32>();
         let name = self.as_str();
         match name {
             "NORMAL" | "POSITION" | "TANGENT" => {},
