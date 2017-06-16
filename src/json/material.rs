@@ -267,7 +267,8 @@ impl<'a> Validate<'a> for AlphaCutoff {
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if self.0 < 0.0 {
-            report(Error::invalid_value(path(), self.0));
+            let reason = format!("must be greater than zero");
+            report(Error::invalid_value(path(), self.0, reason));
         }
     }
 }
@@ -288,7 +289,8 @@ impl<'a> Validate<'a> for EmissiveFactor {
     {
         for x in &self.0 {
             if *x < 0.0 || *x > 1.0 {
-                report(Error::invalid_value(path(), self.0.to_vec()));
+                let reason = format!("outside of permitted range [0.0, 1.0]");
+                report(Error::invalid_value(path(), self.0.to_vec(), reason));
                 // Only report once
                 break;
             }
@@ -308,7 +310,8 @@ impl<'a> Validate<'a> for PbrBaseColorFactor {
     {
         for x in &self.0 {
             if *x < 0.0 || *x > 1.0 {
-                report(Error::invalid_value(path(), self.0.to_vec()));
+                let reason = format!("outside of permitted range [0.0, 1.0]");
+                report(Error::invalid_value(path(), self.0.to_vec(), reason));
                 // Only report once
                 break;
             }
@@ -327,7 +330,8 @@ impl<'a> Validate<'a> for StrengthFactor {
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if self.0 < 0.0 || self.0 > 1.0 {
-            report(Error::invalid_value(path(), self.0));
+            let reason = format!("outside of permitted range [0.0, 1.0]");
+            report(Error::invalid_value(path(), self.0, reason));
         }
     }
 }

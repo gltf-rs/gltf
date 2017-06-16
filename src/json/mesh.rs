@@ -11,8 +11,10 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
-use json::{accessor, material, Extras, Index, Root};
+use json::{self, accessor, material, Extras, Index, Root};
 use validation::{Error, JsonPath, Validate};
+
+use self::accessor::{FLOAT, UNSIGNED_BYTE, UNSIGNED_SHORT};
 
 /// Corresponds to `GL_POINTS`.
 pub const POINTS: u32 = 0;
@@ -146,8 +148,14 @@ impl<'a> Validate<'a> for Attributes<'a> {
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         for (semantic, index) in self.0.iter() {
-            index.validate(root, || path().key(semantic.as_str()), report);
-            semantic.validate(root, || path(), report);
+            let path = || path().key(semantic.as_str());
+            let attribute = if let Ok(accessor) = root.try_get(index) {
+                accessor
+            } else {
+                report(Error::index_out_of_bounds(path()));
+                return;
+            };
+            semantic.validate_against_attribute(attribute, path, report);
         }
     }
 }
@@ -163,49 +171,170 @@ impl<'a> Validate<'a> for Mode {
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_MODES.contains(&self.0) {
-            report(Error::invalid_value(path(), self.0));
+            report(Error::invalid_enum(path(), self.0));
         }
     }
 }
 
 impl<'a> Validate<'a> for MorphTargets<'a> {
-    fn validate<P, R>(&self, _: &Root<'a>, path: P, report: &mut R)
+    fn validate<P, R>(&self, root: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
-        for attr in self.0.keys() {
-            let name = attr.0.as_ref();
-            if !VALID_MORPH_TARGETS.contains(&name) {
-                report(Error::invalid_value(path().key(name), name.to_string()));
-            }
+        for (semantic, index) in &self.0 {
+            let path = || path().key(semantic.as_str());
+            let target = if let Ok(accessor) = root.try_get(index) {
+                accessor
+            } else {
+                report(Error::index_out_of_bounds(path()));
+                return;
+            };
+            semantic.validate_against_morph_target(target, path, report);
         }
     }
 }
 
 impl<'a> Semantic<'a> {
-    fn as_str(&self) -> &str {
-        self.0.as_ref()
-    }
-}
-
-impl<'a> Validate<'a> for Semantic<'a> {
-    fn validate<P, R>(&self, _: &Root<'a>, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    /// Validates a semantic name against an accessor describing a vertex attribute.
+    pub fn validate_against_attribute<P, R>(
+        &self,
+        accessor: &json::accessor::Accessor<'a>,
+        path: P,
+        report: &mut R,
+    ) where
+        P: Fn() -> JsonPath,
+        R: FnMut(Error)
     {
+        // Validate the correctness of the semantic name
+        let set = |name: &str, prefix: &str| name[prefix.len()..].parse::<u8>();
         let name = self.as_str();
-        let set = |name: &str, prefix: &str| name[prefix.len()..].parse::<u32>();
-        for prefix in &["COLOR_", "TEXCOORD_", "JOINTS_", "WEIGHTS_"] {
-            if name.starts_with(prefix) {
-                if set(name, prefix).is_err() {
-                    // Set index is not a number
-                    report(Error::invalid_semantic_name(path(), name.to_string()));
-                }
-                return;
-            }
-        }
         match name {
             "NORMAL" | "POSITION" | "TANGENT" => {},
-            _ if name.starts_with("_") => {},
-            _ => report(Error::invalid_semantic_name(path(), name.to_string())),
+            _ if name.starts_with("_") => {
+                // There are no requirements on user accessors
+                return;
+            },
+            _ => {
+                let mut valid = false;
+                for prefix in &["COLOR_", "TEXCOORD_", "JOINTS_", "WEIGHTS_"] {
+                    if name.starts_with(prefix) {
+                        if set(name, prefix).is_ok() {
+                            valid = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if !valid {
+                    report(Error::invalid_semantic_name(path(), name.to_string()));
+                    // Don't validate an accessor against an invalid semantic
+                    return;
+                }
+            },
         }
+        
+        // Validate the correctness of the accessor type against the semantic name
+        let semantic_discriminant = &name[..2];
+        let accessor_kind = (
+            accessor.type_.0.as_ref(),
+            accessor.component_type.0,
+            accessor.normalized,
+        );
+        let analysis = match semantic_discriminant {
+            // Position
+            "PO" => match accessor_kind {
+                ("VEC3", FLOAT, false) => Ok(()),
+                _ => Err("must be `VEC3` of `FLOAT`"),
+            },
+            // Normal
+            "NO" =>  match accessor_kind {
+                ("VEC3", FLOAT, false) => Ok(()),
+                _ => Err("must be `VEC3` of `FLOAT`"),
+            },
+            // Tangent
+            "TA" => match accessor_kind {
+                ("VEC4", FLOAT, false) => Ok(()),
+                _ => Err("must be `VEC4` of `FLOAT`"),
+            },
+            // Color
+            "CO" => match accessor_kind {
+                ("VEC3", FLOAT, false) => Ok(()),
+                ("VEC4", FLOAT, false) => Ok(()),
+                ("VEC3", UNSIGNED_BYTE, true) => Ok(()),
+                ("VEC4", UNSIGNED_BYTE, true) => Ok(()),
+                ("VEC3", UNSIGNED_SHORT, true) => Ok(()),
+                ("VEC4", UNSIGNED_SHORT, true) => Ok(()),
+                _ => Err("must be `VEC3` or `VEC4` of `FLOAT`, normalized `UNSIGNED_BYTE`, or normalized `UNSIGNED_SHORT`"),
+            },
+            // Texture co-ordinate
+            "TE" => match accessor_kind {
+                ("VEC2", FLOAT, false) => Ok(()),
+                ("VEC2", UNSIGNED_BYTE, true) => Ok(()),
+                ("VEC2", UNSIGNED_SHORT, true) => Ok(()),
+                _ => Err("must be `VEC2` of `FLOAT`, normalized `UNSIGNED_BYTE`, or normalized `UNSIGNED_SHORT`"),
+            },
+            // Joint indices
+            "JO" => match accessor_kind {
+                ("VEC4", UNSIGNED_BYTE, false) => Ok(()),
+                ("VEC4", UNSIGNED_SHORT, false) => Ok(()),
+                _ => Err("must be `VEC4` of `UNSIGNED_BYTE` or `UNSIGNED_SHORT`"),
+            },
+            // Joint weights
+            "WE" => match accessor_kind {
+                ("VEC4", FLOAT, false) => Ok(()),
+                ("VEC4", UNSIGNED_BYTE, true) => Ok(()),
+                ("VEC4", UNSIGNED_SHORT, true) => Ok(()),
+                _ => Err("must be `VEC4` of `FLOAT`, normalized `UNSIGNED_BYTE`, or normalized `UNSIGNED_SHORT`"),
+            },
+            _ => unreachable!(),
+        };
+        match analysis {
+            Ok(()) => {},
+            Err(reason) => report(
+                Error::invalid_value(
+                    path(),
+                    name.to_string(),
+                    reason.to_string(),
+                )
+            ),
+        }
+    }
+    
+    /// Validates a semantic name against an accessor describing a Morph target.
+    pub fn validate_against_morph_target<P, R>(
+        &self,
+        accessor: &json::accessor::Accessor<'a>,
+        path: P,
+        report: &mut R,
+    ) where
+        P: Fn() -> JsonPath,
+        R: FnMut(Error)
+    {
+        let name = self.as_str();
+        let valid = match (
+            name,
+            accessor.type_.0.as_ref(),
+            accessor.component_type.0,
+            accessor.normalized,
+        ) {
+            ("POSITION", "VEC3", FLOAT, false) => true,
+            ("NORMAL", "VEC3", FLOAT, false) => true,
+            ("TANGENT", "VEC3", FLOAT, false) => true,
+            _ => false,
+        };
+
+        if !valid {
+            report(
+                Error::invalid_value(
+                    path(),
+                    name.to_string(),
+                    format!("must be `VEC3` of `FLOAT` and only `POSITION`, `NORMAL`, and `TANGENT` are supported"),
+                )
+            )
+        }
+    }
+
+    /// Returns the internal representation.
+    pub fn as_str(&self) -> &str {
+        self.0.as_ref()
     }
 }

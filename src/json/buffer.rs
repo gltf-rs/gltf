@@ -117,12 +117,17 @@ impl<'a> Validate<'a> for ByteStride {
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if self.0 % 4 != 0 {
-            // Not a multiple of 4
-            report(Error::invalid_value(path(), self.0));
+            let reason = format!("byteStride must be a multiple of 4");
+            report(Error::invalid_value(path(), self.0, reason));
         }
 
         if self.0 < MIN_BYTE_STRIDE || self.0 > MAX_BYTE_STRIDE {
-            report(Error::invalid_value(path(), self.0));
+            let reason = format!(
+                "byteString must be between {} and {}",
+                MIN_BYTE_STRIDE,
+                MAX_BYTE_STRIDE,
+            );
+            report(Error::invalid_value(path(), self.0, reason));
         }
     }
 }

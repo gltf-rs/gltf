@@ -122,7 +122,8 @@ impl<'a> Validate<'a> for UnitQuaternion {
     {
         for x in &self.0 {
             if *x < -1.0 || *x > 1.0 {
-                report(Error::invalid_value(path(), self.0.to_vec()));
+                let reason = format!("outside of permitted range [-1.0, 1.0]");
+                report(Error::invalid_value(path(), self.0.to_vec(), reason));
                 // Only report once
                 break;
             }

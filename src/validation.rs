@@ -55,7 +55,7 @@ pub mod error {
         InvalidSemanticName(String),
 
         /// An invalid value was identified.
-        InvalidValue(serde_json::Value),
+        InvalidValue(serde_json::Value, String),
 
         /// Some required data has been omitted.
         MissingData(String),
@@ -89,11 +89,11 @@ pub mod error {
         }
         
         /// Returns an `InvalidValue` error.
-        pub fn invalid_value<V>(path: JsonPath, value: V) -> Error
+        pub fn invalid_value<V>(path: JsonPath, value: V, reason: String) -> Error
             where V: Into<serde_json::Value>
         {
             Error {
-                kind: Kind::InvalidValue(value.into()),
+                kind: Kind::InvalidValue(value.into(), reason),
                 path: path,
             }
         }
@@ -113,7 +113,7 @@ pub mod error {
                 &Kind::IndexOutOfBounds => "Index out of bounds",
                 &Kind::InvalidEnum(_) => "Invalid enumeration constant",
                 &Kind::InvalidSemanticName(_) => "Invalid semantic name",
-                &Kind::InvalidValue(_) => "Invalid value",
+                &Kind::InvalidValue(_, _) => "Invalid value",
                 &Kind::MissingData(_) => "Missing data",
             }
         }
@@ -132,8 +132,8 @@ pub mod error {
                 &Kind::InvalidSemanticName(ref name) => {
                     write!(f, "{}: \"{}\" ({})", self.path, name, self.description())
                 },
-                &Kind::InvalidValue(ref value) => {
-                    write!(f, "{}: {} ({})", self.path, value, self.description())
+                &Kind::InvalidValue(ref value, ref reason) => {
+                    write!(f, "{}: Invalid value {} ({})", self.path, value, reason)
                 },
                 &Kind::MissingData(ref reason) => {
                     write!(f, "{}: {} ({})", self.path, self.description(), reason)

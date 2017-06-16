@@ -57,6 +57,32 @@ pub struct Primitive<'a> {
     json: &'a json::mesh::Primitive<'a>,
 }
 
+/// Vertex attribute semantic name.
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub enum Semantic {
+    /// XYZ vertex positions.
+    Position,
+
+    /// XYZ vertex normals.
+    Normal,
+
+    /// XYZW vertex tangents where the `w` component is a sign value indicating the
+    /// handedness of the tangent basis.
+    Tangent,
+
+    /// RGB or RGBA vertex color.
+    Color(u8),
+
+    /// UV texture co-ordinates.
+    TexCoord(u8),
+
+    /// Joint indices.
+    Joints(u8),
+
+    /// Joint weights.
+    Weights(u8),
+}
+
 /// An `Iterator` that visits the attributes of a `Primitive`.
 #[derive(Clone, Debug)]
 pub struct IterAttributes<'a> {
@@ -134,6 +160,19 @@ impl<'a> Primitive<'a> {
         self.json
     }
 
+    /// Returns the attribute with the given semantic value.
+    fn find_attribute_with_semantic(
+        &self,
+        semantic: Semantic,
+    ) -> Option<accessor::Accessor<'a>> {
+        for (json, index) in self.json.attributes.0.iter() {
+            if Semantic::from_str(json.as_str()) == semantic {
+                return Some(self.gltf.iter_accessors().nth(index.value()).unwrap());
+            }
+        }
+        None
+    }
+    
     /// Maps attribute semantic names to the `Accessor`s containing the
     /// corresponding attribute data.
     pub fn iter_attributes(&self) -> IterAttributes<'a> {
@@ -190,15 +229,31 @@ impl<'a> Primitive<'a> {
     }
 }
 
+impl Semantic {
+    fn from_str(name: &str) -> Self {
+        use self::Semantic::*;
+        match &name[..1] {
+            "NO" => Normal,
+            "PO" => Position,
+            "TA" => Tangent,
+            "CO" => Color(name["COLOR_".len()..].parse().unwrap()),
+            "TE" => TexCoord(name["TEXCOORD_".len()..].parse().unwrap()),
+            "JO" => Joints(name["JOINTS_".len()..].parse().unwrap()),
+            "WE" => Weights(name["WEIGHTS_".len()..].parse().unwrap()),
+            _ => unreachable!(),
+        }
+    }
+}
+
 impl<'a> Iterator for IterAttributes<'a> {
-    type Item = (&'a json::mesh::Semantic<'a>, accessor::Accessor<'a>);
+    type Item = (Semantic, accessor::Accessor<'a>);
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|(semantic, index)| {
+        self.iter.next().map(|(json, index)| {
             let accessor = self.prim.gltf
                 .iter_accessors()
                 .nth(index.value())
                 .unwrap();
-            (semantic, accessor)
+            (Semantic::from_str(json.as_str()), accessor)
         })
     }
 }

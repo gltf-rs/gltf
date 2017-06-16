@@ -148,11 +148,13 @@ impl<'a> Validate<'a> for Orthographic<'a> {
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if self.znear < 0.0 {
-            report(Error::invalid_value(path(), self.znear));
+            let reason = format!("must be greater than or equal to zero");
+            report(Error::invalid_value(path(), self.znear, reason));
         }
  
-        if self.zfar < 0.0  || self.zfar < self.znear {
-            report(Error::invalid_value(path(), self.zfar));
+        if self.zfar <= self.znear {
+            let reason = format!("must be greater than `znear`");
+            report(Error::invalid_value(path(), self.zfar, reason));
         }
 
         self.extensions.validate(root, || path().field("extensions"), report);
@@ -165,22 +167,26 @@ impl<'a> Validate<'a> for Perspective<'a> {
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         self.aspect_ratio.map(|aspect_ratio| {
-            if aspect_ratio < 0.0 {
-                report(Error::invalid_value(path(), aspect_ratio));
+            if aspect_ratio <= 0.0 {
+                let reason = format!("must be greater than zero");
+                report(Error::invalid_value(path(), aspect_ratio, reason));
             }
         });
 
-        if self.yfov < 0.0 {
-            report(Error::invalid_value(path(), self.yfov));
+        if self.yfov <= 0.0 {
+            let reason = format!("must be greater than zero");
+            report(Error::invalid_value(path(), self.yfov, reason));
         }
 
-        if self.znear < 0.0 {
-            report(Error::invalid_value(path(), self.znear));
+        if self.znear <= 0.0 {
+            let reason = format!("must be greater than zero");
+            report(Error::invalid_value(path(), self.znear, reason));
         }
 
         self.zfar.map(|zfar| {
-            if zfar < 0.0 || zfar < self.znear {
-                report(Error::invalid_value(path(), zfar));
+            let reason = format!("must be greater than `znear`");
+            if zfar < self.znear {
+                report(Error::invalid_value(path(), zfar, reason));
             }
         });
 

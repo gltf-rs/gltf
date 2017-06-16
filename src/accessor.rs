@@ -8,15 +8,81 @@
 // except according to those terms.
 
 use std::borrow::Cow;
+use std::marker::PhantomData;
+use std::mem::{size_of, transmute_copy};
 use {buffer, json, Gltf};
 
-///  A typed view into a buffer view.
+/// The component data type.
+#[derive(Clone, Copy, Debug)]
+pub enum DataType {
+    /// Corresponds to `GL_BYTE`.
+    I8 = 5120,
+
+    /// Corresponds to `GL_UNSIGNED_BYTE`.
+    U8 = 5121,
+
+    /// Corresponds to `GL_SHORT`.
+    I16 = 5122,
+
+    /// Corresponds to `GL_UNSIGNED_SHORT`.
+    U16 = 5123,
+
+    /// Corresponds to `GL_UNSIGNED_INT`.
+    U32 = 5125,
+
+    /// Corresponds to `GL_FLOAT`.
+    F32 = 5126,
+}
+
+/// Specifies whether an attribute, vector, or matrix.
+#[derive(Clone, Copy, Debug)]
+pub enum Dimensions {
+    /// Scalar quantity.
+    Scalar,
+
+    /// 2D vector.
+    Vec2,
+
+    /// 3D vector.
+    Vec3,
+
+    /// 4D vector.
+    Vec4,
+
+    /// 2x2 matrix.
+    Mat2,
+
+    /// 3x3 matrix.
+    Mat3,
+
+    /// 4x4 matrix.
+    Mat4,
+}
+
+/// A typed view into a buffer view.
+#[derive(Clone, Debug)]
 pub struct Accessor<'a> {
     /// The parent `Gltf<'a>` struct.
     gltf: &'a Gltf<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::accessor::Accessor<'a>,
+}
+
+/// An `Iterator` that iterates over the members of an accessor.
+#[derive(Clone, Debug)]
+pub struct Iter<'a, T: 'a> {
+    /// Number of iterations left.
+    count: u32,
+
+    /// The address of the value yielded from the last iteration.
+    ptr: *const u8,
+
+    /// The number of bytes to advance `ptr` by per iteration.
+    stride: u32,
+
+    /// Consumes the data type we're iterating over.
+    _mk: PhantomData<&'a T>,
 }
 
 impl<'a> Accessor<'a> {
@@ -28,45 +94,92 @@ impl<'a> Accessor<'a> {
         }
     }
 
+    /// Returns the size of each component that this accessor describes.
+    fn size(&self) -> usize {
+        self.data_type().size() * self.dimensions().multiplicity()
+    }
+    
+    /// Returns an `Iterator` that interprets the data pointed to by the accessor
+    /// as the given type.
+    /// 
+    /// The data referenced by the accessor is guaranteed to be appropriately
+    /// aligned for any standard Rust type.
+    ///
+    /// # Panics
+    ///
+    /// If the size of an individual `T` does not match the accessor component size.
+    pub unsafe fn iter<T>(&self) -> Iter<'a, T> {
+        assert!(self.size() == size_of::<T>());
+        let view = self.view();
+        let data = view.data();
+        let ptr = data.as_ptr().offset(self.json.byte_offset as isize);
+        Iter {
+            count: self.json.count,
+            ptr: ptr,
+            stride: view.stride().unwrap_or(size_of::<T>() as u32),
+            _mk: PhantomData,
+        }
+    }
+
     /// Returns the internal JSON item.
     pub fn as_json(&self) ->  &json::accessor::Accessor<'a> {
         self.json
     }
 
-    ///  The parent buffer view this accessor reads from.
+    /// The parent buffer view this accessor reads from.
     pub fn view(&self) -> buffer::View<'a> {
         self.gltf.iter_views().nth(self.json.buffer_view.value() as usize).unwrap()
     }
 
-    ///  The offset relative to the start of the parent buffer view in bytes.
+    /// The offset relative to the start of the parent buffer view in bytes.
     pub fn offset(&self) -> u32 {
         self.json.byte_offset
     }
 
-    ///  The number of components within the buffer view - not to be confused with
+    /// The number of components within the buffer view - not to be confused with
     /// the number of bytes in the buffer view.
     pub fn count(&self) -> u32 {
         self.json.count
     }
 
-    ///  The data type of components in the attribute.
-    pub fn component_type(&self) -> ! {
-        unimplemented!()
+    /// The data type of components in the attribute.
+    pub fn data_type(&self) -> DataType {
+        use self::DataType::*;
+        use json::accessor::*;
+        match self.json.component_type.0 {
+            BYTE => I8,
+            UNSIGNED_BYTE => U8,
+            SHORT => I16,
+            UNSIGNED_SHORT => U16,
+            UNSIGNED_INT => U32,
+            FLOAT => F32,
+            _ => unreachable!(),
+        }
     }
 
-    ///  Extension specific data.
+    /// Extension specific data.
     pub fn extensions(&self) -> &json::accessor::AccessorExtensions<'a> {
         &self.json.extensions
     }
 
-    ///  Optional application specific data.
+    /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 
-    ///  Specifies if the attribute is a scalar, vector, or matrix.
-    pub fn type_(&self) -> &json::accessor::Type<'a> {
-        unimplemented!()
+    /// Specifies if the attribute is a scalar, vector, or matrix.
+    pub fn dimensions(&self) -> Dimensions {
+        use self::Dimensions::*;
+        match self.json.type_.0.as_ref() {
+            "SCALAR" => Scalar,
+            "VEC2" => Vec2,
+            "VEC3" => Vec3,
+            "VEC4" => Vec4,
+            "MAT2" => Mat2,
+            "MAT3" => Mat3,
+            "MAT4" => Mat4,
+            _ => unreachable!(),
+        }
     }
 
     ///  Minimum value of each component in this attribute.
@@ -97,10 +210,74 @@ impl<'a> Accessor<'a> {
     }
 }
 
+impl DataType {
+    /// Returns the number of bytes this value represents.
+    pub fn size(&self) -> usize {
+        use self::DataType::*;
+        match *self {
+            I8 | U8 => 1,
+            I16 | U16 => 2,
+            F32 | U32 => 4,
+        }
+    }
+}
+
+impl Dimensions {
+    /// Returns the equivalent number of scalar quantities this dimension represents.
+    pub fn multiplicity(&self) -> usize {
+        use self::Dimensions::*;
+        match *self {
+            Scalar => 1,
+            Vec2 => 2,
+            Vec3 => 3,
+            Vec4 => 4,
+            Mat2 => 4,
+            Mat3 => 9,
+            Mat4 => 16,
+        }
+    }
+}
+
+impl<'a, T: 'a> ExactSizeIterator for Iter<'a, T> {}
+impl<'a, T: 'a> Iterator for Iter<'a, T> {
+    type Item = T;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.count > 0 {
+            let value: T = unsafe {
+                transmute_copy(&*self.ptr)
+            };
+            self.count -= 1;
+            unsafe {
+                self.ptr = self.ptr.offset(self.stride as isize);
+            }
+            Some(value)
+        } else {
+            None
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.count as usize, Some(self.count as usize))
+    }
+}
+
 /// Contains data structures for sparse storage.
 pub mod sparse {
     use Gltf;
     use {buffer, json};
+
+    /// The index data type.
+    #[derive(Clone, Debug)]
+    pub enum IndexType {
+        /// Corresponds to `GL_UNSIGNED_BYTE`.
+        U8 = 5121,
+
+        /// Corresponds to `GL_UNSIGNED_SHORT`.
+        U16 = 5123,
+
+        /// Corresponds to `GL_UNSIGNED_INT`.
+        U32 = 5125,
+    }
     
     ///  Indices of those attributes that deviate from their initialization value.
     pub struct Indices<'a> {
@@ -132,7 +309,7 @@ pub mod sparse {
         /// buffer view must not have `ARRAY_BUFFER` nor `ELEMENT_ARRAY_BUFFER` as
         /// its target.
         pub fn view(&self) -> buffer::View<'a> {
-            self.gltf.iter_views().nth(self.json.buffer_view.value() as usize).unwrap()
+            self.gltf.iter_views().nth(self.json.buffer_view.value()).unwrap()
         }
 
         /// The offset relative to the start of the parent buffer view in bytes.
@@ -141,8 +318,15 @@ pub mod sparse {
         }
 
         /// The data type of each index.
-        pub fn component_type(&self) -> ! {
-            unimplemented!()
+        pub fn index_type(&self) -> IndexType {
+            use self::IndexType::*;
+            use json::accessor::*;
+            match self.json.component_type.0 {
+                UNSIGNED_BYTE => U8,
+                UNSIGNED_SHORT => U16,
+                UNSIGNED_INT => U32,
+                _ => unreachable!(),
+            }
         }
 
         /// Extension specific data.
@@ -243,7 +427,7 @@ pub mod sparse {
         /// buffer view must not have `ARRAY_BUFFER` nor `ELEMENT_ARRAY_BUFFER` as
         /// its target.
         pub fn view(&self) -> buffer::View<'a> {
-            self.gltf.iter_views().nth(self.json.buffer_view.value() as usize).unwrap()
+            self.gltf.iter_views().nth(self.json.buffer_view.value()).unwrap()
         }
 
         /// The offset relative to the start of the parent buffer view in bytes.
@@ -259,6 +443,18 @@ pub mod sparse {
         /// Optional application specific data.
         pub fn extras(&self) -> &json::Extras<'a> {
             &self.json.extras
+        }
+    }
+
+    impl IndexType {
+        /// Returns the number of bytes this value represents.
+        pub fn size(&self) -> usize {
+            use self::IndexType::*;
+            match *self {
+                U8 => 1,
+                U16 => 2,
+                U32 => 4,
+            }
         }
     }
 }
