@@ -141,7 +141,7 @@ impl<'a> Channel<'a> {
     /// Returns the sampler in this animation used to compute the value for the
     /// target.
     pub fn sampler(&self) -> Sampler<'a> {
-        self.anim.iter_samplers().nth(self.json.sampler.value() as usize).unwrap()
+        self.anim.iter_samplers().nth(self.json.sampler.value()).unwrap()
     }
 
     /// Returns the node and TRS property to target.
@@ -201,7 +201,7 @@ impl<'a> Target<'a> {
 
     /// The node to target.
     pub fn node(&self) -> scene::Node<'a> {
-        self.anim.gltf.iter_nodes().nth(self.json.node.value() as usize).unwrap()
+        self.anim.gltf.iter_nodes().nth(self.json.node.value()).unwrap()
     }
 
     /// The name of the node's TRS property to modify or the 'weights' of the morph
@@ -218,7 +218,7 @@ impl<'a> Target<'a> {
     }
 }
 
-///  Defines a keyframe graph but not its target.
+/// Defines a keyframe graph but not its target.
 #[derive(Clone, Debug)]
 pub struct Sampler<'a> {
     /// The parent `Animation` struct.
@@ -247,22 +247,22 @@ impl<'a> Sampler<'a> {
         self.json
     }
 
-    ///  Extension specific data.
+    /// Extension specific data.
     pub fn extensions(&self) -> &json::animation::SamplerExtensions<'a> {
         &self.json.extensions
     }
 
-    ///  Optional application specific data.
+    /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras<'a> {
         &self.json.extras
     }
 
-    ///  The index of an accessor containing keyframe input values, e.g., time.
+    /// The index of an accessor containing keyframe input values, e.g., time.
     pub fn input(&self) -> accessor::Accessor<'a> {
-        self.anim.gltf.iter_accessors().nth(self.json.input.value() as usize).unwrap()
+        self.anim.gltf.iter_accessors().nth(self.json.input.value()).unwrap()
     }
 
-    ///  The interpolation algorithm.
+    /// The interpolation algorithm.
     pub fn interpolation(&self) -> InterpolationAlgorithm {
         use self::InterpolationAlgorithm::*;
         match self.json.interpolation.0.as_ref() {
@@ -274,9 +274,9 @@ impl<'a> Sampler<'a> {
         }
     }
 
-    ///  The index of an accessor containing keyframe output values.
+    /// The index of an accessor containing keyframe output values.
     pub fn output(&self) -> accessor::Accessor<'a> {
-        self.anim.gltf.iter_accessors().nth(self.json.output.value() as usize).unwrap()
+        self.anim.gltf.iter_accessors().nth(self.json.output.value()).unwrap()
     }
 }
 

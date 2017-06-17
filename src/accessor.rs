@@ -128,7 +128,7 @@ impl<'a> Accessor<'a> {
 
     /// The parent buffer view this accessor reads from.
     pub fn view(&self) -> buffer::View<'a> {
-        self.gltf.iter_views().nth(self.json.buffer_view.value() as usize).unwrap()
+        self.gltf.iter_views().nth(self.json.buffer_view.value()).unwrap()
     }
 
     /// The offset relative to the start of the parent buffer view in bytes.

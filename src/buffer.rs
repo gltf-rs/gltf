@@ -105,7 +105,7 @@ impl<'a> View<'a> {
 
     /// Returns the parent `Buffer`.
     pub fn buffer(&self) -> Buffer<'a> {
-        self.gltf.iter_buffers().nth(self.json.buffer.value() as usize).unwrap()
+        self.gltf.iter_buffers().nth(self.json.buffer.value()).unwrap()
     }
 
     /// Returns the length of the buffer view in bytes.

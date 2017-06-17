@@ -151,7 +151,7 @@ impl Importer {
         let mut image_data = vec![];
         for entry in &self.images {
             let slice = match entry {
-                &ImageData::Borrowed(index) => self.buffers[index].as_slice(),
+                &ImageData::Borrowed(index) => buffer_data[index],
                 &ImageData::Owned(ref data) => data.as_slice(),
             };
             image_data.push(slice);
