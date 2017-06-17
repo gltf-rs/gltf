@@ -169,13 +169,13 @@ impl<'a> Texture<'a> {
     /// The index of the sampler used by this texture.
     pub fn sampler(&self) -> Option<Sampler<'a>> {
         self.json.sampler.as_ref().map(|index| {
-            self.gltf.iter_samplers().nth(index.value() as usize).unwrap()
+            self.gltf.samplers().nth(index.value() as usize).unwrap()
         })
     }
 
     /// The index of the image used by this texture.
     pub fn source(&self) -> image::Image<'a> {
-        self.gltf.iter_images().nth(self.json.source.value() as usize).unwrap()
+        self.gltf.images().nth(self.json.source.value() as usize).unwrap()
     }
 
     /// Extension specific data.

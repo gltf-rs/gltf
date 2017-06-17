@@ -23,11 +23,11 @@ pub struct Skin<'a> {
 
 /// An `Iterator` that visits the joints of a `Skin`.
 #[derive(Clone, Debug)]
-pub struct IterJoints<'a> {
+pub struct Joints<'a> {
     /// The parent `Gltf<'a>` struct.
     gltf: &'a Gltf<'a>,
 
-    /// The internal node index iterator.
+    /// The internal node index iterIterator.
     iter: slice::Iter<'a, json::Index<json::scene::Node<'a>>>,
 }
 
@@ -67,8 +67,8 @@ impl<'a> Skin<'a> {
     /// Indices of skeleton nodes used as joints in this skin.  The array length
     /// must be the same as the `count` property of the `inverse_bind_matrices`
     /// `Accessor` (when defined).
-    pub fn iter_joints(&self) -> IterJoints<'a> {
-        IterJoints {
+    pub fn joints(&self) -> Joints<'a> {
+        Joints {
             gltf: self.gltf,
             iter: self.json.joints.iter(),
         }
@@ -88,12 +88,12 @@ impl<'a> Skin<'a> {
     }
 }
 
-impl<'a> Iterator for IterJoints<'a> {
+impl<'a> Iterator for Joints<'a> {
     type Item = scene::Node<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
-            .map(|index| self.gltf.iter_nodes().nth(index.value()).unwrap())
+            .map(|index| self.gltf.nodes().nth(index.value()).unwrap())
     }
 }
 

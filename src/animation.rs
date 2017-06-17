@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use std::borrow::Cow;
-use std::slice::Iter as SliceIter;
+use std::slice;
 use {accessor, json, scene, Gltf};
 
 /// The interpolation algorithm.
@@ -42,22 +42,22 @@ pub struct Animation<'a> {
 
 /// An `Iterator` that visits the channels of an animation.
 #[derive(Clone, Debug)]
-pub struct IterChannels<'a> {
+pub struct Channels<'a> {
     /// The parent `Animation` struct.
     anim: Animation<'a>,
 
-    /// The internal channel iterator.
-    iter: SliceIter<'a, json::animation::Channel<'a>>,
+    /// The internal channel iterIterator.
+    iter: slice::Iter<'a, json::animation::Channel<'a>>,
 }
 
 /// An `Iterator` that visits the samplers of an animation.
 #[derive(Clone, Debug)]
-pub struct IterSamplers<'a> {
+pub struct Samplers<'a> {
     /// The parent `Channel` struct.
     anim: Animation<'a>,
 
-    /// The internal channel iterator.
-    iter: SliceIter<'a, json::animation::Sampler<'a>>,
+    /// The internal channel iterIterator.
+    iter: slice::Iter<'a, json::animation::Sampler<'a>>,
 }
 
 impl<'a> Animation<'a> {
@@ -87,8 +87,8 @@ impl<'a> Animation<'a> {
     /// An array of channels, each of which targets an animation's sampler at a
     /// node's property.  Different channels of the same animation must not have
     /// equal targets.
-    pub fn iter_channels(&self) -> IterChannels<'a> {
-        IterChannels {
+    pub fn channels(&self) -> Channels<'a> {
+        Channels {
             anim: self.clone(),
             iter: self.json.channels.iter(),
         }
@@ -101,8 +101,8 @@ impl<'a> Animation<'a> {
 
     /// An array of samplers that combine input and output accessors with an
     /// interpolation algorithm to define a keyframe graph (but not its target).
-    pub fn iter_samplers(&self) -> IterSamplers<'a> {
-        IterSamplers {
+    pub fn samplers(&self) -> Samplers<'a> {
+        Samplers {
             anim: self.clone(),
             iter: self.json.samplers.iter(),
         }
@@ -141,7 +141,7 @@ impl<'a> Channel<'a> {
     /// Returns the sampler in this animation used to compute the value for the
     /// target.
     pub fn sampler(&self) -> Sampler<'a> {
-        self.anim.iter_samplers().nth(self.json.sampler.value()).unwrap()
+        self.anim.samplers().nth(self.json.sampler.value()).unwrap()
     }
 
     /// Returns the node and TRS property to target.
@@ -201,7 +201,7 @@ impl<'a> Target<'a> {
 
     /// The node to target.
     pub fn node(&self) -> scene::Node<'a> {
-        self.anim.gltf.iter_nodes().nth(self.json.node.value()).unwrap()
+        self.anim.gltf.nodes().nth(self.json.node.value()).unwrap()
     }
 
     /// The name of the node's TRS property to modify or the 'weights' of the morph
@@ -259,7 +259,7 @@ impl<'a> Sampler<'a> {
 
     /// The index of an accessor containing keyframe input values, e.g., time.
     pub fn input(&self) -> accessor::Accessor<'a> {
-        self.anim.gltf.iter_accessors().nth(self.json.input.value()).unwrap()
+        self.anim.gltf.accessors().nth(self.json.input.value()).unwrap()
     }
 
     /// The interpolation algorithm.
@@ -276,18 +276,18 @@ impl<'a> Sampler<'a> {
 
     /// The index of an accessor containing keyframe output values.
     pub fn output(&self) -> accessor::Accessor<'a> {
-        self.anim.gltf.iter_accessors().nth(self.json.output.value()).unwrap()
+        self.anim.gltf.accessors().nth(self.json.output.value()).unwrap()
     }
 }
 
-impl<'a> Iterator for IterChannels<'a> {
+impl<'a> Iterator for Channels<'a> {
     type Item = Channel<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|json| Channel::new(self.anim.clone(), json))
     }
 }
 
-impl<'a> Iterator for IterSamplers<'a> {
+impl<'a> Iterator for Samplers<'a> {
     type Item = Sampler<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|json| Sampler::new(self.anim.clone(), json))

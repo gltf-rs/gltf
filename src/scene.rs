@@ -42,21 +42,21 @@ pub struct Scene<'a> {
 
 /// An `Iterator` that visits the nodes in a scene.
 #[derive(Clone, Debug)]
-pub struct IterNodes<'a> {
+pub struct Nodes<'a> {
     /// The parent `Gltf<'a>` struct.
     gltf: &'a Gltf<'a>,
 
-    /// The internal node index iterator.
+    /// The internal node index iterIterator.
     iter: slice::Iter<'a, json::Index<json::scene::Node<'a>>>,
 }
 
 /// An `Iterator` that visits the children of a node.
 #[derive(Clone, Debug)]
-pub struct IterChildNodes<'a> {
+pub struct ChildNodes<'a> {
     /// The parent `Node` struct.
     parent: Node<'a>,
 
-    /// The internal node index iterator.
+    /// The internal node index iterIterator.
     iter: slice::Iter<'a, json::Index<json::scene::Node<'a>>>,
 }
 
@@ -82,9 +82,9 @@ impl<'a> Node<'a> {
     }
 
     /// The indices of this node's children.
-    pub fn iter_child_nodes(&self) -> Option<IterChildNodes<'a>> {
+    pub fn child_nodes(&self) -> Option<ChildNodes<'a>> {
         self.json.children.as_ref().map(|children| {
-            IterChildNodes {
+            ChildNodes {
                 parent: self.clone(),
                 iter: children.iter(),
             }
@@ -178,29 +178,29 @@ impl<'a> Scene<'a> {
     }
 
     /// The indices of each root node.
-    pub fn iter_nodes(&self) -> IterNodes<'a>  {
-        IterNodes {
+    pub fn nodes(&self) -> Nodes<'a>  {
+        Nodes {
             gltf: self.gltf,
             iter: self.json.nodes.iter(),
         }
     }
 }
 
-impl<'a> Iterator for IterNodes<'a> {
+impl<'a> Iterator for Nodes<'a> {
     type Item = Node<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
-            .map(|index| self.gltf.iter_nodes().nth(index.value()).unwrap())
+            .map(|index| self.gltf.nodes().nth(index.value()).unwrap())
     }
 }
 
-impl<'a> Iterator for IterChildNodes<'a> {
+impl<'a> Iterator for ChildNodes<'a> {
     type Item = Node<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
-            .map(|index| self.parent.gltf.iter_nodes().nth(index.value()).unwrap())
+            .map(|index| self.parent.gltf.nodes().nth(index.value()).unwrap())
     }
 }
 

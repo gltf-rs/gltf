@@ -54,7 +54,7 @@ impl<'a> Material<'a> {
     /// value and the specified alpha cutoff value.  * In `Blend` mode, the alpha
     /// value is used to composite the source and destination areas and the rendered
     /// output is combined with the background using the normal painting operation
-    /// (i.e. the Porter and Duff over operator).
+    /// (i.e. the Porter and Duff over operIterator).
     pub fn alpha_mode(&self) -> AlphaMode {
         use self::AlphaMode::*;
         match self.json.alpha_mode.0.as_ref() {
@@ -95,7 +95,7 @@ impl<'a> Material<'a> {
     /// viewer.
     pub fn normal_texture(&self) -> Option<NormalTexture<'a>> {
         self.json.normal_texture.as_ref().map(|json| {
-            let texture = self.gltf.iter_textures().nth(json.index.value()).unwrap();
+            let texture = self.gltf.textures().nth(json.index.value()).unwrap();
             NormalTexture::new(texture, json)
         })
     }
@@ -107,7 +107,7 @@ impl<'a> Material<'a> {
     /// calculations.
     pub fn occlusion_texture(&self) -> Option<OcclusionTexture<'a>> {
         self.json.occlusion_texture.as_ref().map(|json| {
-            let texture = self.gltf.iter_textures().nth(json.index.value()).unwrap();
+            let texture = self.gltf.textures().nth(json.index.value()).unwrap();
             OcclusionTexture::new(texture, json)
         })
     }
@@ -117,7 +117,7 @@ impl<'a> Material<'a> {
     /// a fourth component (A) is present, it is ignored.
     pub fn emissive_texture(&self) -> Option<texture::Info<'a>> {
         self.json.emissive_texture.as_ref().map(|json| {
-            let texture = self.gltf.iter_textures().nth(json.index.value()).unwrap();
+            let texture = self.gltf.textures().nth(json.index.value()).unwrap();
             texture::Info::new(texture, json)
         })
     }
@@ -172,7 +172,7 @@ impl<'a> PbrMetallicRoughness<'a> {
     ///  The base color texture.
     pub fn base_color_texture(&self) -> Option<texture::Info<'a>> {
         self.json.base_color_texture.as_ref().map(|json| {
-            let texture = self.gltf.iter_textures().nth(json.index.value()).unwrap();
+            let texture = self.gltf.textures().nth(json.index.value()).unwrap();
             texture::Info::new(texture, json)
         })
     }
@@ -195,7 +195,7 @@ impl<'a> PbrMetallicRoughness<'a> {
     /// ignored.
     pub fn metallic_roughness_texture(&self) -> Option<texture::Info<'a>> {
         self.json.metallic_roughness_texture.as_ref().map(|json| {
-            let texture = self.gltf.iter_textures().nth(json.index.value()).unwrap();
+            let texture = self.gltf.textures().nth(json.index.value()).unwrap();
             texture::Info::new(texture, json)
         })
     }

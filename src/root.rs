@@ -14,7 +14,7 @@ use std::borrow::Cow;
 
 /// Iterator over extension strings.
 #[derive(Clone, Debug)]
-pub struct ExtensionIter<'a>(slice::Iter<'a, Cow<'a, str>>);
+pub struct Extension<'a>(slice::Iter<'a, Cow<'a, str>>);
 
 /// The (immutable) root object for a glTF asset.
 #[derive(Clone, Debug)]
@@ -32,17 +32,17 @@ impl<'a> Root<'a> {
     }
 
     /// Returns the extensions referenced in this .gltf file.
-    pub fn extensions_used(&'a self) -> ExtensionIter<'a> {
-        ExtensionIter(self.0.extensions_used.iter())
+    pub fn extensions_used(&'a self) -> Extension<'a> {
+        Extension(self.0.extensions_used.iter())
     }
 
     /// Returns the extensions required to load and render this asset.
-    pub fn extensions_required(&'a self) -> ExtensionIter<'a> {
-        ExtensionIter(self.0.extensions_required.iter())
+    pub fn extensions_required(&'a self) -> Extension<'a> {
+        Extension(self.0.extensions_required.iter())
     }
 }
 
-impl<'a> Iterator for ExtensionIter<'a> {
+impl<'a> Iterator for Extension<'a> {
     type Item = &'a str;
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next().map(Cow::as_ref)

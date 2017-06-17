@@ -131,7 +131,7 @@ pub enum Attribute<'a> {
 }
 
 /// Morph targets.
-pub struct MorphTargets<'a> {
+pub struct MorphTarget<'a> {
     /// XYZ vertex position displacements.
     position: Option<Iter<'a, [f32; 3]>>,
 
@@ -215,31 +215,31 @@ pub struct Primitive<'a> {
 
 /// An `Iterator` that visits the attributes of a `Primitive`.
 #[derive(Clone, Debug)]
-pub struct IterAttributes<'a> {
+pub struct Attributes<'a> {
     /// The parent `Primitive` struct.
     prim: Primitive<'a>,
 
-    /// The internal attribute iterator.
+    /// The internal attribute iterIterator.
     iter: hash_map::Iter<'a, json::mesh::Semantic<'a>, json::Index<json::accessor::Accessor<'a>>>,
 }
 
 /// An `Iterator` that visits the primitives of a `Mesh`.
 #[derive(Clone, Debug)]
-pub struct IterPrimitives<'a> {
+pub struct Primitives<'a> {
     /// The parent `Mesh` struct.
     mesh: Mesh<'a>,
 
-    /// The internal JSON primitive iterator.
+    /// The internal JSON primitive iterIterator.
     iter: slice::Iter<'a, json::mesh::Primitive<'a>>,
 }
 
 /// An `Iterator` that visits the Morph targets of a `Primitive`.
 #[derive(Clone, Debug)]
-pub struct IterMorphTargets<'a> {
+pub struct MorphTargets<'a> {
     /// The parent `Primitive` struct.
     prim: &'a Primitive<'a>,
 
-    /// The internal Morph target iterator.
+    /// The internal Morph target iterIterator.
     iter: slice::Iter<'a, json::mesh::MorphTargets<'a>>,
 }
 
@@ -273,8 +273,8 @@ impl<'a> Mesh<'a> {
     }
 
     /// Defines the geometry to be renderered with a material.
-    pub fn iter_primitives(&self) -> IterPrimitives<'a> {
-        IterPrimitives {
+    pub fn primitives(&self) -> Primitives<'a> {
+        Primitives {
             mesh: self.clone(),
             iter: self.json.primitives.iter(),
         }
@@ -286,7 +286,7 @@ impl<'a> Mesh<'a> {
     }
 }
 
-impl<'a> MorphTargets<'a> {
+impl<'a> MorphTarget<'a> {
     /// Returns the XYZ position displacements.
     pub fn position(&self) -> Option<Iter<'a, [f32; 3]>> {
         self.position.clone()
@@ -477,7 +477,7 @@ impl<'a> Primitive<'a> {
     /// Returns the primitive indices.
     pub fn indices(&'a self) -> Option<Indices<'a>> {
         self.json.indices.as_ref().map(|index| {
-            let accessor = self.gltf.iter_accessors().nth(index.value()).unwrap();
+            let accessor = self.gltf.accessors().nth(index.value()).unwrap();
             Indices::from_accessor(accessor)
         })
     }
@@ -519,7 +519,7 @@ impl<'a> Primitive<'a> {
     ) -> Option<accessor::Accessor<'a>> {
         for (json, index) in self.json.attributes.0.iter() {
             if Semantic::from_str(json.as_str()) == semantic {
-                return Some(self.gltf.iter_accessors().nth(index.value()).unwrap());
+                return Some(self.gltf.accessors().nth(index.value()).unwrap());
             }
         }
         None
@@ -527,8 +527,8 @@ impl<'a> Primitive<'a> {
     
     /// Maps attribute semantic names to the `Accessor`s containing the
     /// corresponding attribute data.
-    pub fn iter_attributes(&self) -> IterAttributes<'a> {
-        IterAttributes {
+    pub fn attributes(&self) -> Attributes<'a> {
+        Attributes {
             prim: self.clone(),
             iter: self.json.attributes.0.iter(),
         }
@@ -566,10 +566,10 @@ impl<'a> Primitive<'a> {
         }
     }
 
-    /// Returns an iterator over the primitive Morph Targets.
-    pub fn iter_morph_targets(&'a self) -> Option<IterMorphTargets<'a>> {
+    /// Returns an iterIterator over the primitive Morph Targets.
+    pub fn morph_targets(&'a self) -> Option<MorphTargets<'a>> {
         self.json.targets.as_ref().map(|targets| {
-            IterMorphTargets {
+            MorphTargets {
                 prim: self,
                 iter: targets.iter(),
             }
@@ -593,14 +593,14 @@ impl Semantic {
     }
 }
 
-impl<'a> Iterator for IterAttributes<'a> {
+impl<'a> Iterator for Attributes<'a> {
     type Item = (Semantic, Attribute<'a>);
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(json, index)| {
             use self::*;
             let semantic = Semantic::from_str(json.as_str());
             let accessor = self.prim.gltf
-                .iter_accessors()
+                .accessors()
                 .nth(index.value())
                 .unwrap();
             let attribute = match semantic {
@@ -637,21 +637,21 @@ impl<'a> Iterator for IterAttributes<'a> {
     }
 }
 
-impl<'a> Iterator for IterPrimitives<'a> {
+impl<'a> Iterator for Primitives<'a> {
     type Item = Primitive<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|json| Primitive::new(self.mesh.gltf, json))
     }
 }
 
-impl<'a> Iterator for IterMorphTargets<'a> {
-    type Item = MorphTargets<'a>;
+impl<'a> Iterator for MorphTargets<'a> {
+    type Item = MorphTarget<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|targets| {
             let semantic = |name| json::mesh::Semantic(Cow::from(name));
             let position = targets.0.get(&semantic("POSITION")).map(|index| {
                 let accessor = self.prim.gltf
-                    .iter_accessors()
+                    .accessors()
                     .nth(index.value())
                     .unwrap();
                 unsafe {
@@ -660,7 +660,7 @@ impl<'a> Iterator for IterMorphTargets<'a> {
             });
             let normal = targets.0.get(&semantic("NORMAL")).map(|index| {
                 let accessor = self.prim.gltf
-                    .iter_accessors()
+                    .accessors()
                     .nth(index.value())
                     .unwrap();
                 unsafe {
@@ -669,14 +669,14 @@ impl<'a> Iterator for IterMorphTargets<'a> {
             });
             let tangent = targets.0.get(&semantic("TANGENT")).map(|index| {
                 let accessor = self.prim.gltf
-                    .iter_accessors()
+                    .accessors()
                     .nth(index.value())
                     .unwrap();
                 unsafe {
                     accessor.iter()
                 }
             });
-            MorphTargets {
+            MorphTarget {
                 position: position,
                 normal: normal,
                 tangent: tangent,
