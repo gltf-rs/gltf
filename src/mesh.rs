@@ -130,6 +130,18 @@ pub enum Attribute<'a> {
     Weights(u32, Weights<'a>),
 }
 
+/// Morph targets.
+pub struct MorphTargets<'a> {
+    /// XYZ vertex position displacements.
+    position: Option<Iter<'a, [f32; 3]>>,
+
+    /// XYZ vertex normal displacements.
+    normal: Option<Iter<'a, [f32; 3]>>,
+
+    /// XYZ vertex tangent displacements.
+    tangent: Option<Iter<'a, [f32; 3]>>,
+}
+
 /// The type of primitives to render.
 pub enum Mode {
     /// Corresponds to `GL_POINTS`.
@@ -221,6 +233,16 @@ pub struct IterPrimitives<'a> {
     iter: slice::Iter<'a, json::mesh::Primitive<'a>>,
 }
 
+/// An `Iterator` that visits the Morph targets of a `Primitive`.
+#[derive(Clone, Debug)]
+pub struct IterMorphTargets<'a> {
+    /// The parent `Primitive` struct.
+    prim: &'a Primitive<'a>,
+
+    /// The internal Morph target iterator.
+    iter: slice::Iter<'a, json::mesh::MorphTargets<'a>>,
+}
+
 impl<'a> Mesh<'a> {
     /// Constructs a `Mesh`.
     pub fn new(gltf: &'a Gltf<'a>, json: &'a json::mesh::Mesh<'a>) -> Self {
@@ -261,6 +283,23 @@ impl<'a> Mesh<'a> {
     /// Defines the weights to be applied to the morph targets.
     pub fn weights(&self) -> Option<&[f32]> {
         self.json.weights.as_ref().map(Vec::as_slice)
+    }
+}
+
+impl<'a> MorphTargets<'a> {
+    /// Returns the XYZ position displacements.
+    pub fn position(&self) -> Option<Iter<'a, [f32; 3]>> {
+        self.position.clone()
+    }
+
+    /// Returns the XYZ normal displacements.
+    pub fn normal(&self) -> Option<Iter<'a, [f32; 3]>> {
+        self.normal.clone()
+    }
+
+    /// Returns the XYZ tangent displacements.
+    pub fn tangent(&self) -> Option<Iter<'a, [f32; 3]>> {
+        self.tangent.clone()
     }
 }
 
@@ -527,11 +566,14 @@ impl<'a> Primitive<'a> {
         }
     }
 
-    /// An array of Morph Targets, each Morph Target is a dictionary mapping
-    /// attributes (only `POSITION`, `NORMAL`, and `TANGENT` supported) to their
-    /// deviations in the Morph Target.
-    pub fn targets(&self) -> ! {
-        unimplemented!()
+    /// Returns an iterator over the primitive Morph Targets.
+    pub fn iter_morph_targets(&'a self) -> Option<IterMorphTargets<'a>> {
+        self.json.targets.as_ref().map(|targets| {
+            IterMorphTargets {
+                prim: self,
+                iter: targets.iter(),
+            }
+        })
     }
 }
 
@@ -599,5 +641,46 @@ impl<'a> Iterator for IterPrimitives<'a> {
     type Item = Primitive<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|json| Primitive::new(self.mesh.gltf, json))
+    }
+}
+
+impl<'a> Iterator for IterMorphTargets<'a> {
+    type Item = MorphTargets<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next().map(|targets| {
+            let semantic = |name| json::mesh::Semantic(Cow::from(name));
+            let position = targets.0.get(&semantic("POSITION")).map(|index| {
+                let accessor = self.prim.gltf
+                    .iter_accessors()
+                    .nth(index.value())
+                    .unwrap();
+                unsafe {
+                    accessor.iter()
+                }
+            });
+            let normal = targets.0.get(&semantic("NORMAL")).map(|index| {
+                let accessor = self.prim.gltf
+                    .iter_accessors()
+                    .nth(index.value())
+                    .unwrap();
+                unsafe {
+                    accessor.iter()
+                }
+            });
+            let tangent = targets.0.get(&semantic("TANGENT")).map(|index| {
+                let accessor = self.prim.gltf
+                    .iter_accessors()
+                    .nth(index.value())
+                    .unwrap();
+                unsafe {
+                    accessor.iter()
+                }
+            });
+            MorphTargets {
+                position: position,
+                normal: normal,
+                tangent: tangent,
+            }
+        })
     }
 }
