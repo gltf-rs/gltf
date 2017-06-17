@@ -54,7 +54,7 @@ pub struct Nodes<'a> {
 #[derive(Clone, Debug)]
 pub struct Children<'a> {
     /// The parent `Node` struct.
-    parent: Node<'a>,
+    parent: &'a Node<'a>,
 
     /// The internal node index iterIterator.
     iter: slice::Iter<'a, json::Index<json::scene::Node<'a>>>,
@@ -82,13 +82,11 @@ impl<'a> Node<'a> {
     }
 
     /// The indices of this node's children.
-    pub fn children(&self) -> Option<Children<'a>> {
-        self.json.children.as_ref().map(|children| {
-            Children {
-                parent: self.clone(),
-                iter: children.iter(),
-            }
-        })
+    pub fn children(&'a self) -> Children<'a> {
+        Children {
+            parent: self,
+            iter: self.json.children.as_ref().map_or([].iter(), |x| x.iter()),
+        }
     }
 
     /// Extension specific data.
