@@ -52,7 +52,7 @@ pub struct Nodes<'a> {
 
 /// An `Iterator` that visits the children of a node.
 #[derive(Clone, Debug)]
-pub struct ChildNodes<'a> {
+pub struct Children<'a> {
     /// The parent `Node` struct.
     parent: Node<'a>,
 
@@ -82,9 +82,9 @@ impl<'a> Node<'a> {
     }
 
     /// The indices of this node's children.
-    pub fn child_nodes(&self) -> Option<ChildNodes<'a>> {
+    pub fn children(&self) -> Option<Children<'a>> {
         self.json.children.as_ref().map(|children| {
-            ChildNodes {
+            Children {
                 parent: self.clone(),
                 iter: children.iter(),
             }
@@ -195,7 +195,7 @@ impl<'a> Iterator for Nodes<'a> {
     }
 }
 
-impl<'a> Iterator for ChildNodes<'a> {
+impl<'a> Iterator for Children<'a> {
     type Item = Node<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
