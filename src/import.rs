@@ -10,6 +10,7 @@
 use serde_json;
 use std;
 use std::boxed::Box;
+use std::fmt;
 use std::fs::File;
 use std::io::{self, BufReader, Read};
 use std::path::{Path, PathBuf};
@@ -214,5 +215,35 @@ impl From<std::io::Error> for Error {
 impl From<Vec<validation::Error>> for Error {
     fn from(errs: Vec<validation::Error>) -> Error {
         Error::Validation(errs)
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use std::error::Error;
+        write!(f, "{}", self.description())
+    }
+}
+
+impl std::error::Error for Error {
+    fn description(&self) -> &str {
+        use self::Error::*;
+        match self {
+            &Deserialize(_) => "Malformed .gltf / .glb file",
+            &ExtensionDisabled(_) => "Asset requires a disabled extension",
+            &ExtensionUnsupported(_) => "Assets requires an unsupported extension",
+            &IncompatibleVersion(_) => "Asset is not glTF version 2.0",
+            &Io(_) => "I/O error",
+            &Validation(_) => "Asset failed validation tests",
+        }
+    }
+
+    fn cause(&self) -> Option<&std::error::Error> {
+        use self::Error::*;
+        match self {
+            &Deserialize(ref err) => Some(err),
+            &Io(ref err) => Some(err),
+            _ => None,
+        }
     }
 }
