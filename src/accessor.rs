@@ -182,27 +182,27 @@ impl<'a> Accessor<'a> {
         }
     }
 
-    ///  Minimum value of each component in this attribute.
+    /// Minimum value of each component in this attribute.
     pub fn min(&self) -> &[f32] {
         &self.json.min
     }
 
-    ///  Maximum value of each component in this attribute.
+    /// Maximum value of each component in this attribute.
     pub fn max(&self) -> &[f32] {
         &self.json.max
     }
 
-    ///  Optional user-defined name for this object.
+    /// Optional user-defined name for this object.
     pub fn name(&self) -> Option<&'a str> {
         self.json.name.as_ref().map(Cow::as_ref)
     }
 
-    ///  Specifies whether integer data values should be normalized.
+    /// Specifies whether integer data values should be normalized.
     pub fn normalized(&self) -> bool {
         self.json.normalized
     }
 
-    ///  Sparse storage of attributes that deviate from their initialization value.
+    /// Sparse storage of attributes that deviate from their initialization value.
     pub fn sparse(&self) -> Option<sparse::Sparse<'a>> {
         self.json.sparse.as_ref().map(|json| {
             sparse::Sparse::new(self.gltf, json)
@@ -339,7 +339,8 @@ pub mod sparse {
             &self.json.extras
         }
     }
-    ///Sparse storage of attributes that deviate from their initialization value.
+    
+    /// Sparse storage of attributes that deviate from their initialization value.
     pub struct Sparse<'a> {
         /// The parent `Gltf<'a>` struct.
         gltf: &'a Gltf<'a>,
@@ -365,7 +366,7 @@ pub mod sparse {
             self.json
         }
 
-        ///The number of attributes encoded in this sparse accessor.
+        /// The number of attributes encoded in this sparse accessor.
         pub fn count(&self) -> u32 {
             self.json.count
         }
@@ -396,7 +397,7 @@ pub mod sparse {
         }
     }
 
-    ///  Array of size `count * number_of_components` storing the displaced accessor
+    /// Array of size `count * number_of_components` storing the displaced accessor
     /// attributes pointed by `accessor::sparse::Indices`.
     pub struct Values<'a> {
         /// The parent `Gltf<'a>` struct.
