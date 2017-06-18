@@ -15,14 +15,14 @@ use {accessor, json, material, Gltf};
 use self::accessor::{Accessor, DataType, Dimensions, Iter};
 
 /// XYZ vertex normals of type `[f32; 3]`.
-pub type Normal<'a> = Iter<'a, [f32; 3]>;
+pub struct Normal<'a>(Iter<'a, [f32; 3]>);
 
 /// XYZ vertex positions of type `[f32; 3]`.
-pub type Position<'a> = Iter<'a, [f32; 3]>;
+pub struct Position<'a>(Iter<'a, [f32; 3]>);
 
 /// XYZW vertex tangents of type `[f32; 4]` where the `w` component is a
 /// sign value (-1 or +1) indicating the handedness of the tangent basis.
-pub type Tangent<'a> = Iter<'a, [f32; 4]>;
+pub struct Tangent<'a>(Iter<'a, [f32; 4]>);
 
 /// Vertex colors.
 #[derive(Clone, Debug)]
@@ -486,9 +486,9 @@ impl<'a> Primitive<'a> {
     pub fn position(&'a self) -> Option<Position<'a>> {
         self.find_accessor_with_semantic(Semantic::Position)
             .map(|accessor| {
-                unsafe {
+                Position(unsafe {
                     accessor.iter()
-                }
+                })
             })
     }
 
@@ -496,9 +496,9 @@ impl<'a> Primitive<'a> {
     pub fn normal(&'a self) -> Option<Normal<'a>> {
         self.find_accessor_with_semantic(Semantic::Normal)
             .map(|accessor| {
-                unsafe {
+                Normal(unsafe {
                     accessor.iter()
-                }
+                })
             })
     }
 
@@ -506,9 +506,9 @@ impl<'a> Primitive<'a> {
     pub fn tangent(&'a self) -> Option<Tangent<'a>> {
         self.find_accessor_with_semantic(Semantic::Tangent)
             .map(|accessor| {
-                unsafe {
+                Tangent(unsafe {
                     accessor.iter()
-                }
+                })
             })
     }
 
@@ -606,17 +606,17 @@ impl<'a> Iterator for Attributes<'a> {
             let attribute = match semantic {
                 Semantic::Position => {
                     Attribute::Position(unsafe {
-                        accessor.iter()
+                        Position(accessor.iter())
                     })
                 },
                 Semantic::Normal => {
                     Attribute::Normal(unsafe {
-                        accessor.iter()
+                        Normal(accessor.iter())
                     })
                 },
                 Semantic::Tangent => {
                     Attribute::Tangent(unsafe {
-                        accessor.iter()
+                        Tangent(accessor.iter())
                     })
                 },
                 Semantic::Color(set) => {
@@ -634,6 +634,27 @@ impl<'a> Iterator for Attributes<'a> {
             };
             (semantic, attribute)
         })
+    }
+}
+
+impl<'a> Iterator for Position<'a> {
+    type Item = [f32; 3];
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+}
+
+impl<'a> Iterator for Normal<'a> {
+    type Item = [f32; 3];
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+}
+
+impl<'a> Iterator for Tangent<'a> {
+    type Item = [f32; 4];
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
     }
 }
 
