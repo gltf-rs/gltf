@@ -33,9 +33,10 @@ pub mod gltf;
 pub mod image;
 
 /// Contains functions for importing glTF 2.0 assets.
+#[cfg(not(feature = "no-importer"))]
 pub mod import;
 
-/// Contains (de)serializable data structures that represent the glTF JSON data.
+/// Contains (de)serializable data structures that match the glTF JSON text.
 pub mod json;
 
 /// Contains `Material` and other related data structures.

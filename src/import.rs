@@ -7,6 +7,57 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+//!
+//! glTF JSON, buffers, and images often come from a wide range of external sources,
+//! so customization is an important design goal of the import module. The `Source`
+//! trait is provided to facilitate the user customization of the importer data
+//! loading process.
+//!
+//! For convenience, the library contains one implementation of the `Source` trait
+//! which allows for reading from the file system. This implemenation may be used as
+//! reference for other schemes.
+//!
+//! ```
+//! use gltf::json;
+//! use std::path::Path;
+//! use std::io::{BufReader, Read, Result};
+//! use std::fs::File;
+//!
+//! /// A simple synchronous data source that can read from the file system.
+//! struct SimpleSource<'a>(&'a Path);
+//!
+//! impl<'a> gltf::import::Source for SimpleSource<'a> {
+//!     fn gltf(&mut self) -> Result<Box<Read>> {
+//!         let file = File::open(&self.0)?;
+//!         Ok(Box::new(BufReader::new(file)))
+//!     }
+//!
+//!     fn buffer(&mut self, buffer: &json::buffer::Buffer) -> Result<Box<Read>>{
+//!         let uri = buffer.uri.as_ref().unwrap().as_ref();
+//!         let path = self.0.parent().unwrap().join(uri);
+//!         let file = File::open(path)?;
+//!         Ok(Box::new(BufReader::new(file)))
+//!     }
+//!
+//!     fn image(&mut self, image: &json::image::Image) -> Result<Box<Read>> {
+//!         let uri = image.uri.as_ref().unwrap().as_ref();
+//!         let path = self.0.parent().unwrap().join(uri);
+//!         let file = File::open(path)?;
+//!         Ok(Box::new(BufReader::new(file)))
+//!     }
+//! }
+//!
+//! fn main() {
+//!     let mut importer = gltf::Importer::new();
+//!     let path = Path::new("glTF-Sample-Models/2.0/Box/glTF/Box.gltf");
+//!     let source = SimpleSource(&path);
+//!     match importer.import_from_source(source) {
+//!         Ok(gltf) => println!("{:#?}", gltf.as_json()),
+//!         Err(err) => println!("error: {:?}", err),
+//!     }
+//! }
+//! ```
+
 use serde_json;
 use std;
 use std::boxed::Box;
