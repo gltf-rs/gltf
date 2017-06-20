@@ -77,7 +77,7 @@ pub type Result<'a> = std::result::Result<Gltf<'a>, Error>;
 pub trait Source {
     /// Read the contents of a .gltf or .glb file.
     fn gltf(&mut self) -> io::Result<Box<Read>>;
-    
+
     /// Read the contents of a glTF buffer.
     fn buffer(&mut self, buffer: &json::buffer::Buffer) -> io::Result<Box<Read>>;
 
@@ -90,16 +90,16 @@ pub trait Source {
 pub enum Error {
     /// Failure when deserializing a .gltf metadata file.
     Deserialize(serde_json::error::Error),
-    
+
     /// A glTF extension required by the asset has not been enabled by the user.
     ExtensionDisabled(String),
-    
+
     /// A glTF extension required by the asset is not supported by the library.
     ExtensionUnsupported(String),
-    
+
     /// The glTF version of the asset is incompatible with the importer.
     IncompatibleVersion(String),
-    
+
     /// Data source error.
     Io(io::Error),
 
@@ -127,9 +127,6 @@ pub enum ImageData {
 /// Imports glTF 2.0.
 #[derive(Clone)]
 pub struct Importer {
-    /// The glTF JSON data.
-    gltf: Vec<u8>,
-
     /// The imported glTF buffers.
     buffers: Vec<Vec<u8>>,
 
@@ -143,7 +140,6 @@ impl Importer {
         Self {
             buffers: vec![],
             images: vec![],
-            gltf: vec![],
         }
     }
 
@@ -152,7 +148,6 @@ impl Importer {
     fn clear(&mut self) {
         self.buffers.clear();
         self.images.clear();
-        self.gltf.clear();
     }
 
     /// Imports some glTF from the given custom source.
@@ -165,15 +160,19 @@ impl Importer {
 
         // Cleanup from the last import call
         self.clear();
-        
+
         // Read .gltf / .glb file
-        let _ = source.gltf()?.read_to_end(&mut self.gltf)?;
-        if self.gltf.starts_with(b"glTF") {
-            return Err(ExtensionUnsupported("KHR_binary_glTF".to_string()));
-        }
+        let mut gltf = source.gltf()?;
+        let mut magic = [0; 4];
+        gltf.read_exact(&mut magic)?;
+
+        let json: json::Root = if &magic == b"glTF" {
+            return Err(ExtensionUnsupported("KHR_binary_glTF".to_string()))
+        } else {
+            serde_json::from_reader(magic.chain(gltf))?
+        };
 
         // Parse and validate the .gltf JSON data
-        let json: json::Root = serde_json::from_slice(&self.gltf)?;
         let mut errs = Vec::new();
         json.validate(&json, || JsonPath::new(), &mut |err| errs.push(err));
         if !errs.is_empty() {
@@ -209,9 +208,8 @@ impl Importer {
             image_data.push(slice);
         }
         Ok(Gltf::new(Root::new(json), buffer_data, image_data))
-
     }
-    
+
     /// Import some glTF 2.0 from the file system.
     pub fn import_from_path<'a, P>(&'a mut self, path: P) -> Result<'a>
         where P: AsRef<Path>
