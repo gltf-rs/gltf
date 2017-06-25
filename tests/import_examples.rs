@@ -13,10 +13,13 @@ use std::{fs, io, path};
 
 fn try_import(path: &path::Path) {
     let mut importer = gltf::Importer::new();
-    let _ = importer.import_from_path(path).map_err(|err| {
-        println!("{:?}: {:#?}", path, err);
-        panic!();
-    });
+    match importer.import_from_path(path) {
+        Ok(_) => println!("Ok: {:?}", path),
+        Err(err) => {
+            println!("Err: {:?} ({:#?})", path, err);
+            panic!();
+        },
+    }
 }
 
 fn run() -> io::Result<()> {
@@ -26,10 +29,20 @@ fn run() -> io::Result<()> {
         let metadata = entry.metadata()?;
         if metadata.is_dir() {
             let entry_path = entry.path();
-            if let Some(file_name) = entry_path.file_name() {
-                let mut gltf_path = entry_path.join("glTF").join(file_name);
-                gltf_path.set_extension("gltf");
+            let file_name = entry_path.file_name().unwrap();
+
+            // Import .gltf
+            let mut gltf_path = entry_path.join("glTF").join(file_name);
+            gltf_path.set_extension("gltf");
+            if gltf_path.exists() {
                 try_import(&gltf_path);
+            }
+
+            // Import corresponding .glb
+            let mut glb_path = entry_path.join("glTF-Binary").join(file_name);
+            glb_path.set_extension("glb");
+            if glb_path.exists() {
+                try_import(&glb_path);
             }
         }
     }

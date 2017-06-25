@@ -7,6 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+extern crate jpeg_decoder;
+extern crate png;
 #[macro_use]
 extern crate gltf_derive;
 extern crate serde;
@@ -26,14 +28,13 @@ pub mod buffer;
 /// Contains `Camera` and other related data structures.
 pub mod camera;
 
-/// Contains `Gltf<'a>`, and other related data structures.
+/// Contains `Gltf`, and other related data structures.
 pub mod gltf;
 
 /// Contains `Image` and other related data structures.
 pub mod image;
 
 /// Contains functions for importing glTF 2.0 assets.
-#[cfg(not(feature = "no-importer"))]
 pub mod import;
 
 /// Contains (de)serializable data structures that match the glTF JSON text.
