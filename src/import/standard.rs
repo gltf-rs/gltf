@@ -14,15 +14,94 @@ use root::Root;
 use std::io::Read;
 use Gltf;
 
-/// Imports standard glTF.
+/// Imports standard glTF using static deserialization.
 #[derive(Clone)]
-pub struct Importer {
+pub struct StaticImporter;
+
+/// Imports standard glTF using zero-copy deserialization.
+#[derive(Clone)]
+pub struct ZeroCopyImporter {
     /// The glTF JSON data.
     gltf: Vec<u8>,
 }
 
-impl Importer {
-    /// Constructs an `Importer`.
+fn make_wrapper<'a, S: Source>(
+    root: json::Root<'a>,
+    source: S,
+) -> Result<Gltf<'a>, Error<S>> {
+    use self::Error::*;
+    use std::io::Read;
+    use validation::{Error as Oops, JsonPath, Validate};
+
+    // Parse and validate the .gltf JSON data
+    let mut errs = Vec::new();
+    root.validate(&root, || JsonPath::new(), &mut |err| errs.push(err));
+    for (index, buffer) in root.buffers.iter().enumerate() {
+        if buffer.uri.is_none() {
+            let path = JsonPath::new().field("buffers").index(index);
+            let reason = format!("uri is `undefined`");
+            errs.push(Oops::missing_data(path, reason));
+        }
+    }
+    if !errs.is_empty() {
+        return Err(Validation(errs));
+    }
+
+    // Preload the external glTF buffer data.
+    let mut buffers = vec![];
+    for entry in &root.buffers {
+        let mut buffer = vec![];
+        let _ = source
+            .read_external_data(entry.uri.as_ref().unwrap().as_ref())
+            .map_err(Source)?
+        .read_to_end(&mut buffer)?;
+        buffers.push(BufferData::Owned(buffer.into_boxed_slice()));
+    }
+
+    // Preload the glTF image data.
+    let mut images = vec![];
+    for entry in &root.images {
+        images.push(if let Some(index) = entry.buffer_view.as_ref() {
+            ImageData::Borrowed(index.value())
+        } else if let Some(uri) = entry.uri.as_ref() {
+            // Read the external glTF image data.
+            let mut buffer = vec![];
+            let _ = source
+                .read_external_data(uri)
+                .map_err(Source)?
+            .read_to_end(&mut buffer)?;
+            ImageData::Owned(buffer.into_boxed_slice())
+        } else {
+            unreachable!()
+        });
+    }
+
+    Ok(Gltf::new(Root::new(root), buffers, images))
+}   
+
+impl StaticImporter {
+    /// Constructs a `StaticImporter`.
+    pub fn new() -> Self {
+        StaticImporter
+    }
+
+    pub fn import<R, S>(
+        &self,
+        reader: R,
+        source: S,
+    ) -> Result<Gltf<'static>, Error<S>>
+    where
+        R: Read,
+        S: Source,
+    {
+        let root = json::from_reader(reader)?;
+        let gltf = make_wrapper(root, source)?;
+        Ok(gltf)
+    }
+}
+
+impl ZeroCopyImporter {
+    /// Constructs a `ZeroCopyImporter`.
     pub fn new() -> Self {
         Self {
             gltf: vec![],
@@ -45,61 +124,13 @@ impl Importer {
         R: Read,
         S: Source,
     {
-        use self::Error::*;
-        use std::io::Read;
-        use validation::{Error as Oops, JsonPath, Validate};
-
         // Cleanup from the last import call.
         self.clear();
-
-        // Read .gltf file.
         let _ = reader.read_to_end(&mut self.gltf)?;
         debug_assert!(!self.gltf.starts_with(b"glTF"));
-
-        // Parse and validate the .gltf JSON data
-        let root: json::Root = json::from_slice(&self.gltf)?;
-        let mut errs = Vec::new();
-        root.validate(&root, || JsonPath::new(), &mut |err| errs.push(err));
-        for (index, buffer) in root.buffers.iter().enumerate() {
-            if buffer.uri.is_none() {
-                let path = JsonPath::new().field("buffers").index(index);
-                let reason = format!("uri is `undefined`");
-                errs.push(Oops::missing_data(path, reason));
-            }
-        }
-        if !errs.is_empty() {
-            return Err(Validation(errs));
-        }
-
-        // Preload the external glTF buffer data.
-        let mut buffers = vec![];
-        for entry in &root.buffers {
-            let mut buffer = vec![];
-            let _ = source
-                .read_external_data(entry.uri.as_ref().unwrap().as_ref())
-                .map_err(Source)?
-                .read_to_end(&mut buffer)?;
-            buffers.push(BufferData::Owned(buffer.into_boxed_slice()));
-        }
-
-        // Preload the glTF image data.
-        let mut images = vec![];
-        for entry in &root.images {
-            images.push(if let Some(index) = entry.buffer_view.as_ref() {
-                ImageData::Borrowed(index.value())
-            } else if let Some(uri) = entry.uri.as_ref() {
-                // Read the external glTF image data.
-                let mut buffer = vec![];
-                let _ = source
-                    .read_external_data(uri)
-                    .map_err(Source)?
-                    .read_to_end(&mut buffer)?;
-                ImageData::Owned(buffer.into_boxed_slice())
-            } else {
-                unreachable!()
-            });
-        }
-
-        Ok(Gltf::new(Root::new(root), buffers, images))
+        let root: json::Root<'a> = json::from_slice(&self.gltf)?;
+        let gltf = make_wrapper(root, source)?;
+        Ok(gltf)
     }
 }
+

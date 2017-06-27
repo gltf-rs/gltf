@@ -42,7 +42,8 @@
 //! }
 //!
 //! fn main() {
-//!     let mut importer = gltf::Importer::new();
+//!     type Importer = gltf::ZeroCopyImporter; // or `gltf::StaticImporter`
+//!     let mut importer = Importer::new();
 //!     let path = Path::new("glTF-Sample-Models/2.0/Box/glTF/Box.gltf");
 //!     let source = SimpleSource(&path);
 //!     match importer.import_from_source(source) {
@@ -62,6 +63,7 @@ use std::path::Path;
 mod binary;
 mod standard;
 
+/// Contains the `Source` trait and its reference implementation.
 pub mod source;
 
 pub use self::source::Source;
@@ -106,22 +108,65 @@ pub enum Image {
     Owned(Vec<u8>),
 }
 
-/// Imports glTF 2.0.
+/// Imports glTF 2.0 using static deserialization.
 #[derive(Clone)]
-pub struct Importer {
+pub struct StaticImporter {
     /// The binary glTF importer.
-    binary: binary::Importer,
+    binary: binary::StaticImporter,
 
     /// The standard glTF importer.
-    standard: standard::Importer,
+    standard: standard::StaticImporter,
 }
 
-impl Importer {
-    /// Constructs an `Importer`.
+/// Imports glTF 2.0 using zero-copy deserialization.
+#[derive(Clone)]
+pub struct ZeroCopyImporter {
+    /// The binary glTF importer.
+    binary: binary::ZeroCopyImporter,
+
+    /// The standard glTF importer.
+    standard: standard::ZeroCopyImporter,
+}
+
+impl StaticImporter {
+    /// Constructs a `StaticImporter`.
     pub fn new() -> Self {
         Self {
-            binary: binary::Importer::new(),
-            standard: standard::Importer::new(),
+            binary: binary::StaticImporter::new(),
+            standard: standard::StaticImporter::new(),
+        }
+    }
+
+    /// Imports some glTF from the given custom source.
+    pub fn import_from_source<S>(&self, source: S) -> Result<Gltf<'static>, Error<S>>
+        where S: Source
+    {
+        use std::io::Read;
+
+        let mut stream = source.read_gltf().map_err(Error::Source)?;
+        let mut buffer = [0u8; 4];
+        let _ = stream.read_exact(&mut buffer)?;
+        if &buffer == b"glTF" {
+            self.binary.import(buffer.chain(stream), source)
+        } else {
+            self.standard.import(buffer.chain(stream), source)
+        }
+    }
+    
+    /// Import some glTF 2.0 from the file system.
+    pub fn import_from_path<P>(&self, path: P) -> Result<Gltf<'static>, Error<FromPath>>
+        where P: AsRef<Path>
+    {
+        self.import_from_source(FromPath::new(path))
+    }
+}
+
+impl ZeroCopyImporter {
+    /// Constructs a `ZeroCopyImporter`.
+    pub fn new() -> Self {
+        Self {
+            binary: binary::ZeroCopyImporter::new(),
+            standard: standard::ZeroCopyImporter::new(),
         }
     }
 

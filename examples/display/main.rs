@@ -9,7 +9,7 @@
 extern crate gltf;
 
 fn main() {
-    let mut importer = gltf::Importer::new();
+    let mut importer = gltf::ZeroCopyImporter::new();
     let path = std::env::args().nth(1).unwrap();
     println!("{:#?}", importer.import_from_path(path));
 }

@@ -27,6 +27,7 @@ pub trait Source: fmt::Debug {
     fn read_external_data(&self, uri: &str) -> Result<Box<Read>, Self::Err>;
 }
 
+/// Contains the reference `Source` implementation.
 pub mod from_path {
     use super::*;
     use std::{self, fmt};

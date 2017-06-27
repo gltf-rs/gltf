@@ -11,8 +11,17 @@ extern crate gltf;
 
 use std::{fs, io, path};
 
-fn try_import(path: &path::Path) {
-    let mut importer = gltf::Importer::new();
+fn try_static_import(importer: &gltf::StaticImporter, path: &path::Path) {
+    match importer.import_from_path(path) {
+        Ok(_) => println!("Ok: {:?}", path),
+        Err(err) => {
+            println!("Err: {:?} ({:#?})", path, err);
+            panic!();
+        },
+    }
+}
+
+fn try_zero_copy_import(importer: &mut gltf::ZeroCopyImporter, path: &path::Path) {
     match importer.import_from_path(path) {
         Ok(_) => println!("Ok: {:?}", path),
         Err(err) => {
@@ -23,6 +32,8 @@ fn try_import(path: &path::Path) {
 }
 
 fn run() -> io::Result<()> {
+    let static_importer = gltf::StaticImporter::new();
+    let mut zero_copy_importer = gltf::ZeroCopyImporter::new();
     let sample_dir_path = path::Path::new("./glTF-Sample-Models/2.0");
     for entry in fs::read_dir(&sample_dir_path)? {
         let entry = entry?;
@@ -35,14 +46,16 @@ fn run() -> io::Result<()> {
             let mut gltf_path = entry_path.join("glTF").join(file_name);
             gltf_path.set_extension("gltf");
             if gltf_path.exists() {
-                try_import(&gltf_path);
+                try_static_import(&static_importer, &gltf_path);
+                try_zero_copy_import(&mut zero_copy_importer, &gltf_path);
             }
 
             // Import corresponding .glb
             let mut glb_path = entry_path.join("glTF-Binary").join(file_name);
             glb_path.set_extension("glb");
             if glb_path.exists() {
-                try_import(&glb_path);
+                try_static_import(&static_importer, &glb_path);
+                try_zero_copy_import(&mut zero_copy_importer, &gltf_path);
             }
         }
     }

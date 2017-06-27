@@ -11,8 +11,20 @@ use gltf::{BufferData, ImageData};
 use import::{Error, Source};
 use json;
 use root::Root;
+use std;
 use std::io::Read;
 use Gltf;
+
+/// Imports binary glTF (GLB) using static deserialization.
+#[derive(Clone, Debug)]
+pub struct StaticImporter;
+
+/// Imports binary glTF (GLB) using zero-copy deserialization.
+#[derive(Clone, Debug)]
+pub struct ZeroCopyImporter {
+    /// The loaded contents of a .glb file.
+    glb: Glb,
+}
 
 /// The contents of a .glb file.
 #[derive(Clone, Debug)]
@@ -55,17 +67,88 @@ struct Slice {
     length: usize,
 }
 
-/// Imports binary glTF (GLB).
-#[derive(Clone, Debug)]
-pub struct Importer {
-    /// The loaded contents of a .glb file.
-    glb: Glb,
-}
-
 /// The header, JSON, and BIN sections of a .glb file, respectively.
 type Split = (Header, Slice, Option<Slice>);
 
+fn make_wrapper<'a, S: Source>(
+    root: json::Root<'a>,
+    blob: Option<Vec<u8>>,
+    source: S,
+) -> Result<Gltf<'a>, Error<S>> {
+    use validation::{Error as Oops, JsonPath, Validate};
+
+    // Validate the JSON data.
+    let mut errs = vec![];
+    root.validate(&root, || JsonPath::new(), &mut |err| errs.push(err));
+    for (index, buffer) in root.buffers.iter().enumerate() {
+        let path = || JsonPath::new().field("buffers").index(index).field("uri");
+        match index {
+            0 if blob.is_some() => if buffer.uri.is_some() {
+                let reason = format!("must be `undefined` when BIN is provided");
+                let uri = buffer.uri.as_ref().unwrap().as_ref();
+                errs.push(Oops::invalid_value(path(), uri, reason));
+            },
+            _ if buffer.uri.is_none() => {
+                let reason = format!("must be defined");
+                errs.push(Oops::missing_data(path(), reason));
+            },
+            _ => {},
+        }
+    }
+
+    if !errs.is_empty() {
+        return Err(Error::Validation(errs));
+    }
+
+    // Preload the glTF buffer data.
+    let mut buffers = vec![];
+    {
+        // When provided, the internal GLB buffer data is the first in the array.
+        let mut buffer_iter = root.buffers.iter();
+        if let Some(data) = blob {
+            let _ = buffer_iter.next();
+            buffers.push(BufferData::Owned(data.into_boxed_slice()));
+        }
+
+        // Read any other external GLB buffers.
+        for entry in buffer_iter {
+            let uri = entry.uri.as_ref().unwrap(); 
+            let mut data = vec![];
+            let _ = source
+                .read_external_data(uri)
+                .map_err(Error::Source)?
+                .read_to_end(&mut data)?;
+            buffers.push(BufferData::Owned(data.into_boxed_slice()));
+        }
+    }
+
+    // Preload the glTF image data.
+    let mut images = vec![];
+    for entry in &root.images {
+        images.push(if let Some(index) = entry.buffer_view.as_ref() {
+            ImageData::Borrowed(index.value())
+        } else {
+            // Read the external GLB image data.
+            let mut data = vec![];
+            let _ = source
+                .read_external_data(entry.uri.as_ref().unwrap())
+                .map_err(Error::Source)?
+            .read_to_end(&mut data)?;
+            ImageData::Owned(data.into_boxed_slice())
+        });
+    }
+
+    Ok(Gltf::new(Root::new(root), buffers, images))
+}
+
 impl Glb {
+    /// Obtains a slice of the GLB data.
+    fn slice(&self, slice: Slice) -> &[u8] {
+        let begin = slice.offset;
+        let end = begin + slice.length;
+        &self.0[begin..end]
+    }
+
     /// Splits loaded GLB into its three chunks.
     ///
     /// * Mandatory GLB header.
@@ -137,8 +220,43 @@ impl Glb {
     }
 }
 
-impl Importer {
-    /// Constructs an `Importer`.
+impl StaticImporter {
+    /// Constructs a `StaticImporter`.
+    pub fn new() -> Self {
+        StaticImporter
+    }
+
+    /// Imports some glTF from the given data source.
+    pub fn import<R, S>(
+        &self,
+        mut reader: R,
+        source: S,
+    ) -> Result<Gltf<'static>, Error<S>>
+    where
+        R: Read,
+        S: Source,
+    {
+        let glb = {
+            let mut buffer = vec![];
+            let _ = reader.read_to_end(&mut buffer)?;
+            Glb(buffer)
+        };
+        debug_assert!(glb.0.starts_with(b"glTF"));
+        let (_header, json_chunk, blob_chunk) = glb.split()?;
+        let root = {
+            let begin = json_chunk.offset;
+            let end = begin + json_chunk.length;
+            let json = &glb.0[begin..end];
+            json::from_reader(std::io::Cursor::new(json))?
+        };
+        let blob = blob_chunk.map(|chunk| glb.slice(chunk).to_vec());
+        let gltf = make_wrapper(root, blob, source)?;
+        Ok(gltf)
+    }
+}
+
+impl ZeroCopyImporter {
+    /// Constructs a `ZeroCopyImporter`.
     pub fn new() -> Self {
         Self {
             glb: Glb(vec![]),
@@ -151,11 +269,6 @@ impl Importer {
         self.glb.0.clear();
     }
 
-    /// Obtains a slice of the GLB blob.
-    fn slice(&self, slice: Slice) -> &[u8] {
-        &self.glb.0[slice.offset..(slice.offset + slice.length)]
-    }
-    
     /// Imports some glTF from the given data source.
     pub fn import<'a, R, S>(
         &'a mut self,
@@ -166,86 +279,15 @@ impl Importer {
         R: Read,
         S: Source,
     {
-        use validation::{Error as Oops, JsonPath, Validate};
-
         // Cleanup from last import call.
         self.clear();
 
-        // Read .glb file.
         let _ = reader.read_to_end(&mut self.glb.0)?;
         debug_assert!(self.glb.0.starts_with(b"glTF"));
-
-        // Split the GLB into its three chunks.
         let (_header, json_chunk, blob_chunk) = self.glb.split()?;
-        let root: json::Root = json::from_slice(self.slice(json_chunk))?;
-
-        // Validate the JSON data.
-        let mut errs = vec![];
-        root.validate(&root, || JsonPath::new(), &mut |err| errs.push(err));
-        for (index, buffer) in root.buffers.iter().enumerate() {
-            let path = || JsonPath::new().field("buffers").index(index).field("uri");
-            match index {
-                0 if blob_chunk.is_some() => if buffer.uri.is_some() {
-                    let reason = format!("must be `undefined` when BIN is provided");
-                    let uri = buffer.uri.as_ref().unwrap().as_ref();
-                    errs.push(Oops::invalid_value(path(), uri, reason));
-                },
-                _ if buffer.uri.is_none() => {
-                    let reason = format!("must be defined");
-                    errs.push(Oops::missing_data(path(), reason));
-                },
-                _ => {},
-            }
-        }
-
-        if !errs.is_empty() {
-            return Err(Error::Validation(errs));
-        }
-
-        // Preload the glTF buffer data.
-        let mut buffers = vec![];
-        {
-            // When provided, the internal GLB buffer data is the first in the array.
-            let mut buffer_iter = root.buffers.iter();
-            if let Some(chunk) = blob_chunk {
-                let _ = buffer_iter.next();
-                let slice = self.slice(chunk);
-                // TODO: Avoid making a copy of this data.
-                //
-                // This could be achieved by reading the BIN chunk of a .glb file
-                // into its own `Vec`.
-                let data = slice.to_vec();
-                buffers.push(BufferData::Owned(data.into_boxed_slice()));
-            }
-
-            // Read any other external GLB buffers.
-            for entry in buffer_iter {
-                let uri = entry.uri.as_ref().unwrap(); 
-                let mut data = vec![];
-                let _ = source
-                    .read_external_data(uri)
-                    .map_err(Error::Source)?
-                .read_to_end(&mut data)?;
-                buffers.push(BufferData::Owned(data.into_boxed_slice()));
-            }
-        }
-
-        // Preload the glTF image data.
-        let mut images = vec![];
-        for entry in &root.images {
-            images.push(if let Some(index) = entry.buffer_view.as_ref() {
-                ImageData::Borrowed(index.value())
-            } else {
-                // Read the external GLB image data.
-                let mut data = vec![];
-                let _ = source
-                    .read_external_data(entry.uri.as_ref().unwrap())
-                    .map_err(Error::Source)?
-                    .read_to_end(&mut data)?;
-                ImageData::Owned(data.into_boxed_slice())
-            });
-        }
-
-        Ok(Gltf::new(Root::new(root), buffers, images))
+        let root: json::Root = json::from_slice(self.glb.slice(json_chunk))?;
+        let blob = blob_chunk.map(|chunk| self.glb.slice(chunk).to_vec());
+        let gltf = make_wrapper(root, blob, source)?;
+        Ok(gltf)
     }
 }
