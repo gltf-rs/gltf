@@ -2,6 +2,7 @@ language: rust
 
 rust:
     - stable
+    - 1.15
     - beta
     - nightly
 
@@ -10,11 +11,6 @@ sudo: false
 script:
     - cargo build --verbose --all-features
     - cargo test --verbose --all-features
-
-addons:
-    apt:
-        packages:
-            - libgl1-mesa-dev
 
 os:
     - linux
