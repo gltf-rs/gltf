@@ -7,6 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::borrow::Cow;
+use std::marker::PhantomData;
+
 use json::{Extras, Index, Root};
 use validation::{Error, JsonPath, Validate};
 
@@ -31,39 +34,39 @@ pub const VALID_TARGETS: &'static [u32] = &[
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
-pub struct Buffer {
+pub struct Buffer<'a> {
     /// The length of the buffer in bytes.
     #[serde(default, rename = "byteLength")]
     pub byte_length: u32,
 
     /// Optional user-defined name for this object.
-    pub name: Option<String>,
+    pub name: Option<Cow<'a, str>>,
 
     /// The uri of the buffer.  Relative paths are relative to the .gltf file.  Instead of referencing an external file, the uri can also be a data-uri.
-    pub uri: Option<String>,
+    pub uri: Option<Cow<'a, str>>,
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: BufferExtensions,
+    pub extensions: BufferExtensions<'a>,
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: Extras,
+    pub extras: Extras<'a>,
 }
 
 /// Extension specific data for `Buffer`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct BufferExtensions {
+pub struct BufferExtensions<'a> {
     #[serde(default)]
-    _allow_unknown_fields: (),
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
 /// A view into a buffer generally representing a subset of the buffer.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
-pub struct View {
+pub struct View<'a> {
     /// The parent `Buffer`.
-    pub buffer: Index<Buffer>,
+    pub buffer: Index<Buffer<'a>>,
 
     /// The length of the `BufferView` in bytes.
     #[serde(rename = "byteLength")]
@@ -80,25 +83,25 @@ pub struct View {
     pub byte_stride: Option<ByteStride>,
 
     /// Optional user-defined name for this object.
-    pub name: Option<String>,
+    pub name: Option<Cow<'a, str>>,
 
     /// Optional target the buffer should be bound to.
     pub target: Option<Target>,
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: ViewExtensions,
+    pub extensions: ViewExtensions<'a>,
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: Extras,
+    pub extras: Extras<'a>,
 }
 
 /// Extension specific data for `View`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct ViewExtensions {
+pub struct ViewExtensions<'a> {
     #[serde(default)]
-    _allow_unknown_fields: (),
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
 /// The stride, in bytes, between vertex attributes.
@@ -109,23 +112,28 @@ pub struct ByteStride(pub u32);
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct Target(pub u32);
 
-impl Validate for ByteStride {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for ByteStride {
+    fn validate<P, R>(&self, _: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if self.0 % 4 != 0 {
-            // Not a multiple of 4
-            report(Error::invalid_value(path(), self.0));
+            let reason = format!("byteStride must be a multiple of 4");
+            report(Error::invalid_value(path(), self.0, reason));
         }
 
         if self.0 < MIN_BYTE_STRIDE || self.0 > MAX_BYTE_STRIDE {
-            report(Error::invalid_value(path(), self.0));
+            let reason = format!(
+                "byteString must be between {} and {}",
+                MIN_BYTE_STRIDE,
+                MAX_BYTE_STRIDE,
+            );
+            report(Error::invalid_value(path(), self.0, reason));
         }
     }
 }
 
-impl Validate for Target {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for Target {
+    fn validate<P, R>(&self, _: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_TARGETS.contains(&self.0) {

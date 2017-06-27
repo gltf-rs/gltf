@@ -7,6 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::borrow::Cow;
+use std::marker::PhantomData;
+
 use json::{buffer, Extras, Index, Root};
 use validation::{Error, JsonPath, Validate};
 
@@ -62,20 +65,20 @@ pub mod sparse {
     
     /// Extension specific data for `Indices`.
     #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-    pub struct IndicesExtensions {
+    pub struct IndicesExtensions<'a> {
         #[serde(default)]
-        _allow_unknown_fields: (),
+        _allow_unknown_fields: PhantomData<&'a ()>,
     }
 
     /// Indices of those attributes that deviate from their initialization value.
     #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
-    pub struct Indices {
+    pub struct Indices<'a> {
         /// The parent buffer view containing the sparse indices.
         ///
         /// The referenced buffer view must not have `ARRAY_BUFFER` nor
         /// `ELEMENT_ARRAY_BUFFER` as its target.
         #[serde(rename = "bufferView")]
-        pub buffer_view: Index<buffer::View>,
+        pub buffer_view: Index<buffer::View<'a>>,
 
         /// The offset relative to the start of the parent `BufferView` in bytes.
         #[serde(default, rename = "byteOffset")]
@@ -86,23 +89,23 @@ pub mod sparse {
         pub component_type: IndexComponentType,
 
         /// Extension specific data.
-        pub extensions: IndicesExtensions,
+        pub extensions: IndicesExtensions<'a>,
 
         /// Optional application specific data.
-        pub extras: Extras,
+        pub extras: Extras<'a>,
     }
 
     /// Extension specific data for `Storage`.
     #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-    pub struct StorageExtensions {
+    pub struct StorageExtensions<'a> {
         #[serde(default)]
-        _allow_unknown_fields: (),
+        _allow_unknown_fields: PhantomData<&'a ()>,
     }
 
     /// Sparse storage of attributes that deviate from their initialization value.
     #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     #[serde(deny_unknown_fields)]
-    pub struct Sparse {
+    pub struct Sparse<'a> {
         /// The number of attributes encoded in this sparse accessor.
         pub count: u32,
 
@@ -110,67 +113,67 @@ pub mod sparse {
         /// that deviate from their initialization value.
         ///
         /// Indices must strictly increase.
-        pub indices: Indices,
+        pub indices: Indices<'a>,
 
         /// Array of size `count * number_of_components` storing the displaced
         /// accessor attributes pointed by `indices`.
         ///
         /// Substituted values must have the same `component_type` and number of
         /// components as the base `Accessor`.
-        pub values: Values,
+        pub values: Values<'a>,
 
         /// Extension specific data.
-        pub extensions: StorageExtensions,
+        pub extensions: StorageExtensions<'a>,
 
         /// Optional application specific data.
-        pub extras: Extras,
+        pub extras: Extras<'a>,
     }
 
     /// Extension specific data for `Values`.
     #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-    pub struct ValuesExtensions {
+    pub struct ValuesExtensions<'a> {
         #[serde(default)]
-        _allow_unknown_fields: (),
+        _allow_unknown_fields: PhantomData<&'a ()>,
     }
 
     /// Array of size `count * number_of_components` storing the displaced
     /// accessor attributes pointed by `accessor::sparse::Indices`.
     #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     #[serde(deny_unknown_fields)]
-    pub struct Values {
+    pub struct Values<'a> {
         /// The parent buffer view containing the sparse indices.
         ///
         /// The referenced buffer view must not have `ARRAY_BUFFER` nor
         /// `ELEMENT_ARRAY_BUFFER` as its target.
         #[serde(rename = "bufferView")]
-        pub buffer_view: Index<buffer::View>,
+        pub buffer_view: Index<buffer::View<'a>>,
 
         /// The offset relative to the start of the parent buffer view in bytes.
         #[serde(default, rename = "byteOffset")]
         pub byte_offset: u32,
 
         /// Extension specific data.
-        pub extensions: ValuesExtensions,
+        pub extensions: ValuesExtensions<'a>,
 
         /// Optional application specific data.
-        pub extras: Extras,
+        pub extras: Extras<'a>,
     }
 }
 
 /// Extension specific data for an `Accessor`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct AccessorExtensions {
+pub struct AccessorExtensions<'a> {
     #[serde(default)]
-    _allow_unknown_fields: (),
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
 /// A typed view into a buffer view.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
-pub struct Accessor {
+pub struct Accessor<'a> {
     /// The parent buffer view this accessor reads from.
     #[serde(rename = "bufferView")]
-    pub buffer_view: Index<buffer::View>,
+    pub buffer_view: Index<buffer::View<'a>>,
     
     /// The offset relative to the start of the parent `BufferView` in bytes.
     #[serde(default, rename = "byteOffset")]
@@ -186,15 +189,15 @@ pub struct Accessor {
     
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: AccessorExtensions,
+    pub extensions: AccessorExtensions<'a>,
     
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: Extras,
+    pub extras: Extras<'a>,
     
     /// Specifies if the attribute is a scalar, vector, or matrix.
     #[serde(rename = "type")]
-    pub type_: Type,
+    pub type_: Type<'a>,
     
     /// Minimum value of each component in this attribute.
     pub min: Vec<f32>,
@@ -203,7 +206,7 @@ pub struct Accessor {
     pub max: Vec<f32>,
 
     /// Optional user-defined name for this object.
-    pub name: Option<String>,
+    pub name: Option<Cow<'a, str>>,
 
     /// Specifies whether integer data values should be normalized.
     #[serde(default)]
@@ -211,7 +214,7 @@ pub struct Accessor {
     
     /// Sparse storage of attributes that deviate from their initialization
     /// value.
-    pub sparse: Option<sparse::Sparse>,
+    pub sparse: Option<sparse::Sparse<'a>>,
 }
 
 /// The data type of an index.
@@ -224,10 +227,10 @@ pub struct GenericComponentType(pub u32);
 
 /// Specifies if an attribute is a scalar, vector, or matrix.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Type(pub String);
+pub struct Type<'a>(pub Cow<'a, str>);
 
-impl Validate for IndexComponentType {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for IndexComponentType {
+    fn validate<P, R>(&self, _: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_INDEX_COMPONENT_TYPES.contains(&self.0) {
@@ -236,8 +239,8 @@ impl Validate for IndexComponentType {
     }
 }
 
-impl Validate for GenericComponentType {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for GenericComponentType {
+    fn validate<P, R>(&self, _: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_GENERIC_ATTRIBUTE_COMPONENT_TYPES.contains(&self.0) {
@@ -246,11 +249,11 @@ impl Validate for GenericComponentType {
     }
 }
 
-impl Validate for Type {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for Type<'a> {
+    fn validate<P, R>(&self, _: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
-        if !VALID_ACCESSOR_TYPES.contains(&self.0.as_str()) {
+        if !VALID_ACCESSOR_TYPES.contains(&self.0.as_ref()) {
             report(Error::invalid_enum(path(), self.0.clone()));
         }
     }

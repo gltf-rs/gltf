@@ -7,6 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::borrow::Cow;
+use std::marker::PhantomData;
+
 use json::{accessor, scene, Extras, Index, Root};
 use validation::{Error, JsonPath, Validate};
 
@@ -29,129 +32,129 @@ pub const VALID_TRS_PROPERTIES: &'static [&'static str] = &[
 /// A keyframe animation.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Animation {
+pub struct Animation<'a> {
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: AnimationExtensions,
+    pub extensions: AnimationExtensions<'a>,
     
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: Extras,
+    pub extras: Extras<'a>,
     
     /// An array of channels, each of which targets an animation's sampler at a
     /// node's property.
     ///
     /// Different channels of the same animation must not have equal targets.
-    pub channels: Vec<Channel>,
+    pub channels: Vec<Channel<'a>>,
     
     /// Optional user-defined name for this object.
-    pub name: Option<String>,
+    pub name: Option<Cow<'a, str>>,
     
     /// An array of samplers that combine input and output accessors with an
     /// interpolation algorithm to define a keyframe graph (but not its target).
-    pub samplers: Vec<Sampler>,
+    pub samplers: Vec<Sampler<'a>>,
 }
 
 /// Extension specific data for `Animation`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct AnimationExtensions {
+pub struct AnimationExtensions<'a> {
     #[serde(default)]
-    _allow_unknown_fields: (),
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
 /// Targets an animation's sampler at a node's property.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Channel {
+pub struct Channel<'a> {
     /// The index of a sampler in this animation used to compute the value for the target.
-    pub sampler: Index<Sampler>,
+    pub sampler: Index<Sampler<'a>>,
     
     /// The index of the node and TRS property to target.
-    pub target: Target,
+    pub target: Target<'a>,
     
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: ChannelExtensions,
+    pub extensions: ChannelExtensions<'a>,
     
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: Extras,
+    pub extras: Extras<'a>,
 }
 
 /// Extension specific data for `Channel`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct ChannelExtensions {
+pub struct ChannelExtensions<'a> {
     #[serde(default)]
-    _allow_unknown_fields: (),
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
 /// The index of the node and TRS property that an animation channel targets.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
-pub struct Target {
+pub struct Target<'a> {
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: TargetExtensions,
+    pub extensions: TargetExtensions<'a>,
     
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: Extras,
+    pub extras: Extras<'a>,
     
     /// The index of the node to target.
-    pub node: Index<scene::Node>,
+    pub node: Index<scene::Node<'a>>,
     
     /// The name of the node's TRS property to modify or the 'weights' of the
     /// morph targets it instantiates.
-    pub path: TrsProperty,
+    pub path: TrsProperty<'a>,
 }
 
 /// Extension specific data for `Target`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct TargetExtensions {
+pub struct TargetExtensions<'a> {
     #[serde(default)]
-    _allow_unknown_fields: (),
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
 /// Defines a keyframe graph but not its target.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
-pub struct Sampler {
+pub struct Sampler<'a> {
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: SamplerExtensions,
+    pub extensions: SamplerExtensions<'a>,
     
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: Extras,
+    pub extras: Extras<'a>,
     
     /// The index of an accessor containing keyframe input values, e.g., time.
-    pub input: Index<accessor::Accessor>,
+    pub input: Index<accessor::Accessor<'a>>,
     
     /// The interpolation algorithm.
     #[serde(default)]
-    pub interpolation: InterpolationAlgorithm,
+    pub interpolation: InterpolationAlgorithm<'a>,
     
     /// The index of an accessor containing keyframe output values.
-    pub output: Index<accessor::Accessor>,
+    pub output: Index<accessor::Accessor<'a>>,
 }
 
 /// Extension specific data for `Sampler`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct SamplerExtensions {
+pub struct SamplerExtensions<'a> {
     #[serde(default)]
-    _allow_unknown_fields: (),
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
 /// Specifies an interpolation algorithm.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct InterpolationAlgorithm(pub String);
+pub struct InterpolationAlgorithm<'a>(pub Cow<'a, str>);
 
 /// Specifies a TRS property.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct TrsProperty(pub String);
+pub struct TrsProperty<'a>(pub Cow<'a, str>);
 
-impl Validate for Animation {
-    fn validate<P, R>(&self, root: &Root, path: P, mut report: &mut R)
+impl<'a> Validate<'a> for Animation<'a> {
+    fn validate<P, R>(&self, root: &Root<'a>, path: P, mut report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         self.samplers.validate(root, || path().field("samplers"), report);
@@ -165,22 +168,22 @@ impl Validate for Animation {
     }
 }
 
-impl Validate for Channel {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for Channel<'a> {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Default for InterpolationAlgorithm {
+impl<'a> Default for InterpolationAlgorithm<'a> {
     fn default() -> Self {
-        InterpolationAlgorithm("LINEAR".to_string())
+        InterpolationAlgorithm(Cow::from("LINEAR"))
     }
 }
 
-impl Validate for InterpolationAlgorithm {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for InterpolationAlgorithm<'a> {
+    fn validate<P, R>(&self, _: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_INTERPOLATION_ALGORITHMS.contains(&self.0.as_ref()) {
@@ -189,8 +192,8 @@ impl Validate for InterpolationAlgorithm {
     }
 }
 
-impl Validate for TrsProperty {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for TrsProperty<'a> {
+    fn validate<P, R>(&self, _: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_TRS_PROPERTIES.contains(&self.0.as_ref()) {

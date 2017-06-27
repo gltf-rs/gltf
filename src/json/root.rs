@@ -9,17 +9,19 @@
 
 use std;
 use std::fmt;
+use std::borrow::Cow;
+use std::marker::PhantomData;
+
 use json::*;
 use validation::{Error, JsonPath, Validate};
 
-/// Helper trait for retrieving top-level objects by a universal identifier.
+/// Helper trait for retrieving top-level objects by index.
 pub trait Get<T> {
     /// Retrieves a single value at the given index.
     fn get(&self, id: &Index<T>) -> &T;
 }
 
-/// Helper trait for attempting to retrieve top-level objects by a universal
-/// identifier.
+/// Helper trait for attempting to retrieve top-level objects by index.
 pub trait TryGet<T> {
     /// Attempts to retrieve a single value at the given index.
     fn try_get(&self, id: &Index<T>) -> Result<&T, ()>;
@@ -32,157 +34,92 @@ pub struct Index<T>(u32, std::marker::PhantomData<T>);
 /// The root object of a glTF 2.0 asset.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 #[serde(deny_unknown_fields)]
-pub struct Root {
+pub struct Root<'a> {
     /// An array of accessors.
     #[serde(default)]
-    pub accessors: Vec<accessor::Accessor>,
+    pub accessors: Vec<accessor::Accessor<'a>>,
     
     /// An array of keyframe animations.
     #[serde(default)]
-    pub animations: Vec<animation::Animation>,
+    pub animations: Vec<animation::Animation<'a>>,
 
     /// Metadata about the glTF asset.
-    pub asset: asset::Asset,
+    pub asset: asset::Asset<'a>,
     
     /// An array of buffers.
     #[serde(default)]
-    pub buffers: Vec<buffer::Buffer>,
+    pub buffers: Vec<buffer::Buffer<'a>>,
     
     /// An array of buffer views.
     #[serde(default, rename = "bufferViews")]
-    pub buffer_views: Vec<buffer::View>,
+    pub buffer_views: Vec<buffer::View<'a>>,
 
     /// The default scene.
-    pub scene: Option<Index<scene::Scene>>,
+    pub scene: Option<Index<scene::Scene<'a>>>,
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: RootExtensions,
+    pub extensions: RootExtensions<'a>,
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: Extras,
+    pub extras: Extras<'a>,
     
     /// Names of glTF extensions used somewhere in this asset.
     #[serde(default, rename = "extensionsUsed")]
-    pub extensions_used: Vec<String>,
+    pub extensions_used: Vec<Cow<'a, str>>,
 
     /// Names of glTF extensions required to properly load this asset.
     #[serde(default, rename = "extensionsRequired")]
-    pub extensions_required: Vec<String>,
+    pub extensions_required: Vec<Cow<'a, str>>,
     
     /// An array of cameras.
     #[serde(default)]
-    pub cameras: Vec<camera::Camera>,
+    pub cameras: Vec<camera::Camera<'a>>,
     
     /// An array of images.
     #[serde(default)]
-    pub images: Vec<image::Image>,
+    pub images: Vec<image::Image<'a>>,
     
     /// An array of materials.
     #[serde(default)]
-    pub materials: Vec<material::Material>,
+    pub materials: Vec<material::Material<'a>>,
     
     /// An array of meshes.
     #[serde(default)]
-    pub meshes: Vec<mesh::Mesh>,
+    pub meshes: Vec<mesh::Mesh<'a>>,
     
     /// An array of nodes.
     #[serde(default)]
-    pub nodes: Vec<scene::Node>,
+    pub nodes: Vec<scene::Node<'a>>,
     
     /// An array of samplers.
     #[serde(default)]
-    pub samplers: Vec<texture::Sampler>,
+    pub samplers: Vec<texture::Sampler<'a>>,
     
     /// An array of scenes.
     #[serde(default)]
-    pub scenes: Vec<scene::Scene>,
+    pub scenes: Vec<scene::Scene<'a>>,
     
     /// An array of skins.
     #[serde(default)]
-    pub skins: Vec<skin::Skin>,
+    pub skins: Vec<skin::Skin<'a>>,
     
     /// An array of textures.
     #[serde(default)]
-    pub textures: Vec<texture::Texture>,
+    pub textures: Vec<texture::Texture<'a>>,
 }
 
 /// Extension specific data for `Root`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct RootExtensions {
-    _allow_unknown_fields: (),
+pub struct RootExtensions<'a> {
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
-impl Root {
-    /// Returns the accessor at the given index.
-    pub fn accessor(&self, index: Index<accessor::Accessor>) -> &accessor::Accessor {
-        &self.accessors[index.0 as usize]
-    }
-
-    /// Returns all accessors as a slice.
-    pub fn accessors(&self) -> &[accessor::Accessor] {
-        &self.accessors
-    }
-
-    /// Returns the animation at the given index.
-    pub fn animation(&self, index: Index<animation::Animation>) -> &animation::Animation {
-        &self.animations[index.0 as usize]
-    }
-
-    /// Returns all animations as a slice.
-    pub fn animations(&self) -> &[animation::Animation] {
-        &self.animations
-    }
-
-    /// Returns the metadata included with this asset.
-    pub fn asset(&self) -> &asset::Asset {
-        &self.asset
-    }
-
-    /// Returns the buffer at the given index.
-    pub fn buffer(&self, index: Index<buffer::Buffer>) -> &buffer::Buffer {
-        &self.buffers[index.0 as usize]
-    }
-
-    /// Returns all buffers as a slice.
-    pub fn buffers(&self) -> &[buffer::Buffer] {
-        &self.buffers
-    }
-
-    /// Returns the buffer view at the given index.
-    pub fn buffer_view(&self, index: Index<buffer::View>) -> &buffer::View {
-        &self.buffer_views[index.0 as usize]
-    }
-
-    /// Returns all buffer views as a slice.
-    pub fn buffer_views(&self) -> &[buffer::View] {
-        &self.buffer_views
-    }
-
-    /// Returns the camera at the given index.
-    pub fn camera(&self, index: Index<camera::Camera>) -> &camera::Camera {
-        &self.cameras[index.0 as usize]
-    }
-
-    /// Returns all cameras as a slice.
-    pub fn cameras(&self) -> &[camera::Camera] {
-        &self.cameras
-    }
-
+impl<'a> Root<'a> {
     /// Returns the default scene.
-    pub fn default_scene(&self) -> Option<&scene::Scene> {
+    pub fn default_scene(&self) -> Option<&scene::Scene<'a>> {
         self.scene.as_ref().map(|s| self.get(s))
-    }
-
-    /// Returns the extensions referenced in this .gltf file.
-    pub fn extensions_used(&self) -> &[String] {
-        &self.extensions_used
-    }
-
-    /// Returns the extensions required to load and render this asset.
-    pub fn extensions_required(&self) -> &[String] {
-        &self.extensions_required
     }
 
     /// Returns a single item from the root object.
@@ -193,93 +130,10 @@ impl Root {
     }
 
     /// Returns a single item from the root object if the index is in range.
-    // N.B. this is hidden from the docs because it's only necessary for
-    // validation during `import()`.
-    #[doc(hidden)]
     pub fn try_get<T>(&self, index: &Index<T>) -> Result<&T, ()>
         where Self: TryGet<T>
     {
         (self as &TryGet<T>).try_get(index)
-    }
-
-    /// Returns the image at the given index.
-    pub fn image(&self, index: Index<image::Image>) -> &image::Image {
-        &self.images[index.0 as usize]
-    }
-
-    /// Returns all images as a slice.
-    pub fn images(&self) -> &[image::Image] {
-        &self.images
-    }
-
-    /// Returns the material at the given index.
-    pub fn material(&self, index: Index<material::Material>) -> &material::Material {
-        &self.materials[index.0 as usize]
-    }
-
-    /// Returns all materials as a slice.
-    pub fn materials(&self) -> &[material::Material] {
-        &self.materials
-    }
-
-    /// Returns the mesh at the given index.
-    pub fn mesh(&self, index: Index<mesh::Mesh>) -> &mesh::Mesh {
-        &self.meshes[index.0 as usize]
-    }
-
-    /// Returns all meshes as a slice.
-    pub fn meshes(&self) -> &[mesh::Mesh] {
-        &self.meshes
-    }
-
-    /// Returns the node at the given index.
-    pub fn node(&self, index: Index<scene::Node>) -> &scene::Node {
-        &self.nodes[index.0 as usize]
-    }
-
-    /// Returns all nodes as a slice.
-    pub fn nodes(&self) -> &[scene::Node] {
-        &self.nodes
-    }
-
-    /// Returns the sampler at the given index.
-    pub fn sampler(&self, index: Index<texture::Sampler>) -> &texture::Sampler {
-        &self.samplers[index.0 as usize]
-    }
-
-    /// Returns all samplers as a slice.
-    pub fn samplers(&self) -> &[texture::Sampler] {
-        &self.samplers
-    }
-
-    /// Returns the scene at the given index.
-    pub fn scene(&self, index: Index<scene::Scene>) -> &scene::Scene {
-        &self.scenes[index.0 as usize]
-    }
-
-    /// Returns all scenes as a slice.
-    pub fn scenes(&self) -> &[scene::Scene] {
-        &self.scenes
-    }
-
-    /// Returns the skin at the given index.
-    pub fn skin(&self, index: Index<skin::Skin>) -> &skin::Skin {
-        &self.skins[index.0 as usize]
-    }
-
-    /// Returns all skins as a slice.
-    pub fn skins(&self) -> &[skin::Skin] {
-        &self.skins
-    }
-
-    /// Returns the texture at the given index.
-    pub fn texture(&self, index: Index<texture::Texture>) -> &texture::Texture {
-        &self.textures[index.0 as usize]
-    }
-
-    /// Returns all textures as a slice.
-    pub fn textures(&self) -> &[texture::Texture] {
-        &self.textures
     }
 }
 
@@ -290,8 +144,8 @@ impl<T> Index<T> {
     }
 
     /// Returns the internal offset value.
-    pub fn value(&self) -> u32 {
-        self.0
+    pub fn value(&self) -> usize {
+        self.0 as usize
     }
 }
 
@@ -337,10 +191,10 @@ impl<T> fmt::Display for Index<T> {
     }
 }
 
-impl<T: Validate> Validate for Index<T>
-    where Root: TryGet<T>
+impl<'a, T: Validate<'a>> Validate<'a> for Index<T>
+    where Root<'a>: TryGet<T>
 {
-    fn validate<P, R>(&self, root: &Root, path: P, mut report: &mut R)
+    fn validate<P, R>(&self, root: &Root<'a>, path: P, mut report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if root.try_get(self).is_err() {
@@ -351,7 +205,7 @@ impl<T: Validate> Validate for Index<T>
 
 macro_rules! impl_get {
     ($ty:ty, $field:ident) => {
-        impl<'a> Get<$ty> for Root {
+        impl<'a> Get<$ty> for Root<'a> {
             fn get(&self, index: &Index<$ty>) -> &$ty {
                 &self.$field[index.value() as usize]
             }
@@ -362,7 +216,7 @@ macro_rules! impl_get {
 macro_rules! impl_try_get {
     ($ty:ty, $field:ident) => {
         #[doc(hidden)]
-        impl<'a> TryGet<$ty> for Root {
+        impl<'a> TryGet<$ty> for Root<'a> {
             fn try_get(&self, index: &Index<$ty>) -> Result<&$ty, ()> {
                 self.$field.get(index.value() as usize).ok_or(())
             }
@@ -370,30 +224,30 @@ macro_rules! impl_try_get {
     }
 }
 
-impl_get!(accessor::Accessor, accessors);
-impl_get!(animation::Animation, animations);
-impl_get!(buffer::Buffer, buffers);
-impl_get!(buffer::View, buffer_views);
-impl_get!(camera::Camera, cameras);
-impl_get!(image::Image, images);
-impl_get!(material::Material, materials);
-impl_get!(mesh::Mesh, meshes);
-impl_get!(scene::Node, nodes);
-impl_get!(texture::Sampler, samplers);
-impl_get!(scene::Scene, scenes);
-impl_get!(skin::Skin, skins);
-impl_get!(texture::Texture, textures);
+impl_get!(accessor::Accessor<'a>, accessors);
+impl_get!(animation::Animation<'a>, animations);
+impl_get!(buffer::Buffer<'a>, buffers);
+impl_get!(buffer::View<'a>, buffer_views);
+impl_get!(camera::Camera<'a>, cameras);
+impl_get!(image::Image<'a>, images);
+impl_get!(material::Material<'a>, materials);
+impl_get!(mesh::Mesh<'a>, meshes);
+impl_get!(scene::Node<'a>, nodes);
+impl_get!(texture::Sampler<'a>, samplers);
+impl_get!(scene::Scene<'a>, scenes);
+impl_get!(skin::Skin<'a>, skins);
+impl_get!(texture::Texture<'a>, textures);
 
-impl_try_get!(accessor::Accessor, accessors);
-impl_try_get!(animation::Animation, animations);
-impl_try_get!(buffer::Buffer, buffers);
-impl_try_get!(buffer::View, buffer_views);
-impl_try_get!(camera::Camera, cameras);
-impl_try_get!(image::Image, images);
-impl_try_get!(material::Material, materials);
-impl_try_get!(mesh::Mesh, meshes);
-impl_try_get!(scene::Node, nodes);
-impl_try_get!(texture::Sampler, samplers);
-impl_try_get!(scene::Scene, scenes);
-impl_try_get!(skin::Skin, skins);
-impl_try_get!(texture::Texture, textures);
+impl_try_get!(accessor::Accessor<'a>, accessors);
+impl_try_get!(animation::Animation<'a>, animations);
+impl_try_get!(buffer::Buffer<'a>, buffers);
+impl_try_get!(buffer::View<'a>, buffer_views);
+impl_try_get!(camera::Camera<'a>, cameras);
+impl_try_get!(image::Image<'a>, images);
+impl_try_get!(material::Material<'a>, materials);
+impl_try_get!(mesh::Mesh<'a>, meshes);
+impl_try_get!(scene::Node<'a>, nodes);
+impl_try_get!(texture::Sampler<'a>, samplers);
+impl_try_get!(scene::Scene<'a>, scenes);
+impl_try_get!(skin::Skin<'a>, skins);
+impl_try_get!(texture::Texture<'a>, textures);

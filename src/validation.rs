@@ -9,15 +9,18 @@
 
 use serde_json;
 use std;
+
+use std::borrow::Cow;
 use std::collections::HashMap;
+use std::marker::PhantomData;
 use json::*;
 
 pub use self::error::Error;
 
 /// Trait for validating glTF JSON data against the 2.0 specification.
-pub trait Validate {
+pub trait Validate<'a> {
     /// Validates the data against the glTF 2.0 specification.
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+    fn validate<P, R>(&self, root: &Root<'a>, path: P, report: &mut R)
         where
             P: Fn() -> JsonPath,
             R: FnMut(Error);
@@ -48,8 +51,11 @@ pub mod error {
         /// An invalid enumeration constant was identified.
         InvalidEnum(serde_json::Value),
 
+        /// An invalid semantic name was identified.
+        InvalidSemanticName(String),
+
         /// An invalid value was identified.
-        InvalidValue(serde_json::Value),
+        InvalidValue(serde_json::Value, String),
 
         /// Some required data has been omitted.
         MissingData(String),
@@ -74,12 +80,20 @@ pub mod error {
             }
         }
 
+        /// Returns an `InvalidSemanticName` error.
+        pub fn invalid_semantic_name(path: JsonPath, name: String) -> Error {
+            Error {
+                kind: Kind::InvalidSemanticName(name),
+                path: path,
+            }
+        }
+        
         /// Returns an `InvalidValue` error.
-        pub fn invalid_value<V>(path: JsonPath, value: V) -> Error
+        pub fn invalid_value<V>(path: JsonPath, value: V, reason: String) -> Error
             where V: Into<serde_json::Value>
         {
             Error {
-                kind: Kind::InvalidValue(value.into()),
+                kind: Kind::InvalidValue(value.into(), reason),
                 path: path,
             }
         }
@@ -98,7 +112,8 @@ pub mod error {
             match &self.kind {
                 &Kind::IndexOutOfBounds => "Index out of bounds",
                 &Kind::InvalidEnum(_) => "Invalid enumeration constant",
-                &Kind::InvalidValue(_) => "Invalid value",
+                &Kind::InvalidSemanticName(_) => "Invalid semantic name",
+                &Kind::InvalidValue(_, _) => "Invalid value",
                 &Kind::MissingData(_) => "Missing data",
             }
         }
@@ -114,8 +129,11 @@ pub mod error {
                 &Kind::InvalidEnum(ref value) => {
                     write!(f, "{}: {} ({})", self.path, value, self.description())
                 },
-                &Kind::InvalidValue(ref value) => {
-                    write!(f, "{}: {} ({})", self.path, value, self.description())
+                &Kind::InvalidSemanticName(ref name) => {
+                    write!(f, "{}: \"{}\" ({})", self.path, name, self.description())
+                },
+                &Kind::InvalidValue(ref value, ref reason) => {
+                    write!(f, "{}: Invalid value {} ({})", self.path, value, reason)
                 },
                 &Kind::MissingData(ref reason) => {
                     write!(f, "{}: {} ({})", self.path, self.description(), reason)
@@ -207,18 +225,18 @@ impl std::fmt::Display for JsonPath {
     }
 }
 
-impl<T: Validate> Validate for HashMap<String, T> {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+impl<'a, T: Validate<'a>> Validate<'a> for HashMap<String, T> {
+    fn validate<P, R>(&self, root: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         for (key, value) in self.iter() {
-            value.validate(root, || path().key(key), report);
+            value.validate(root, || path().key(key.as_ref()), report);
         }
     }
 }
 
-impl<T: Validate> Validate for Option<T> {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+impl<'a, T: Validate<'a>> Validate<'a> for Option<T> {
+    fn validate<P, R>(&self, root: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if let Some(value) = self.as_ref() {
@@ -227,8 +245,8 @@ impl<T: Validate> Validate for Option<T> {
     }
 }
 
-impl<T: Validate> Validate for Vec<T> {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+impl<'a, T: Validate<'a>> Validate<'a> for Vec<T> {
+    fn validate<P, R>(&self, root: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         for (index, value) in self.iter().enumerate() {
@@ -237,80 +255,96 @@ impl<T: Validate> Validate for Vec<T> {
     }
 }
 
-impl Validate for bool {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for bool {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Validate for u32 {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for u32 {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Validate for i32 {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for i32 {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Validate for f32 {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for f32 {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Validate for [f32; 3] {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for [f32; 3] {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Validate for [f32; 4] {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for [f32; 4] {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Validate for [f32; 16] {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for [f32; 16] {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Validate for () {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for () {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Validate for String {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for String {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop
     }
 }
 
-impl Validate for serde_json::Value {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+impl<'a> Validate<'a> for Cow<'a, str> {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        // nop
+    }
+}
+
+impl<'a> Validate<'a> for PhantomData<&'a ()> {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(Error)
+    {
+        // nop
+    }
+}
+
+impl<'a> Validate<'a> for serde_json::Value {
+    fn validate<P, R>(&self, _root: &Root<'a>, _path: P, _report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         // nop

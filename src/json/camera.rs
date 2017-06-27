@@ -7,6 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::borrow::Cow;
+use std::marker::PhantomData;
+
 use json::{Extras, Root};
 use validation::{Error, JsonPath, Validate};
 
@@ -22,42 +25,42 @@ pub const VALID_CAMERA_TYPES: &'static [&'static str] = &[
 /// scene.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Camera {
+pub struct Camera<'a> {
     /// Optional user-defined name for this object.
-    pub name: Option<String>,
+    pub name: Option<Cow<'a, str>>,
 
     /// An orthographic camera containing properties to create an orthographic
     /// projection matrix.
-    pub orthographic: Option<Orthographic>,
+    pub orthographic: Option<Orthographic<'a>>,
 
     /// A perspective camera containing properties to create a perspective
     /// projection matrix.
-    pub perspective: Option<Perspective>,
+    pub perspective: Option<Perspective<'a>>,
 
     /// Specifies if the camera uses a perspective or orthographic projection.
     #[serde(rename = "type")]
-    pub type_: Type,
+    pub type_: Type<'a>,
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: CameraExtensions,
+    pub extensions: CameraExtensions<'a>,
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: Extras,
+    pub extras: Extras<'a>,
 }
 
 /// Extension specific data for `Camera`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct CameraExtensions {
+pub struct CameraExtensions<'a> {
     #[serde(default)]
-    _allow_unknown_fields: (),
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
 /// Values for an orthographic camera.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Orthographic {
+pub struct Orthographic<'a> {
     /// The horizontal magnification of the view.
     pub xmag: f32,
 
@@ -72,24 +75,24 @@ pub struct Orthographic {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: OrthographicExtensions,
+    pub extensions: OrthographicExtensions<'a>,
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: Extras,
+    pub extras: Extras<'a>,
 }
 
 /// Extension specific data for `Orthographic`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct OrthographicExtensions {
+pub struct OrthographicExtensions<'a> {
     #[serde(default)]
-    _allow_unknown_fields: (),
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
 /// Values for a perspective camera.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Perspective {
+pub struct Perspective<'a> {
     /// Aspect ratio of the field of view.
     #[serde(rename = "aspectRatio")]
     pub aspect_ratio: Option<f32>,
@@ -105,26 +108,26 @@ pub struct Perspective {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: PerspectiveExtensions,
+    pub extensions: PerspectiveExtensions<'a>,
 
     /// Optional application specific data.
     #[serde(default)]
-    pub extras: Extras,
+    pub extras: Extras<'a>,
 }
 
 /// Extension specific data for `Perspective`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct PerspectiveExtensions {
+pub struct PerspectiveExtensions<'a> {
     #[serde(default)]
-    _allow_unknown_fields: (),
+    _allow_unknown_fields: PhantomData<&'a ()>,
 }
 
 /// Specifies the camera type.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Type(pub String);
+pub struct Type<'a>(pub Cow<'a, str>);
 
-impl Validate for Camera {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for Camera<'a> {
+    fn validate<P, R>(&self, root: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if self.orthographic.is_none() && self.perspective.is_none() {
@@ -140,16 +143,18 @@ impl Validate for Camera {
     }
 }
 
-impl Validate for Orthographic {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for Orthographic<'a> {
+    fn validate<P, R>(&self, root: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if self.znear < 0.0 {
-            report(Error::invalid_value(path(), self.znear));
+            let reason = format!("must be greater than or equal to zero");
+            report(Error::invalid_value(path(), self.znear, reason));
         }
  
-        if self.zfar < 0.0  || self.zfar < self.znear {
-            report(Error::invalid_value(path(), self.zfar));
+        if self.zfar <= self.znear {
+            let reason = format!("must be greater than `znear`");
+            report(Error::invalid_value(path(), self.zfar, reason));
         }
 
         self.extensions.validate(root, || path().field("extensions"), report);
@@ -157,27 +162,31 @@ impl Validate for Orthographic {
     }
 }
 
-impl Validate for Perspective {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for Perspective<'a> {
+    fn validate<P, R>(&self, root: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         self.aspect_ratio.map(|aspect_ratio| {
-            if aspect_ratio < 0.0 {
-                report(Error::invalid_value(path(), aspect_ratio));
+            if aspect_ratio <= 0.0 {
+                let reason = format!("must be greater than zero");
+                report(Error::invalid_value(path(), aspect_ratio, reason));
             }
         });
 
-        if self.yfov < 0.0 {
-            report(Error::invalid_value(path(), self.yfov));
+        if self.yfov <= 0.0 {
+            let reason = format!("must be greater than zero");
+            report(Error::invalid_value(path(), self.yfov, reason));
         }
 
-        if self.znear < 0.0 {
-            report(Error::invalid_value(path(), self.znear));
+        if self.znear <= 0.0 {
+            let reason = format!("must be greater than zero");
+            report(Error::invalid_value(path(), self.znear, reason));
         }
 
         self.zfar.map(|zfar| {
-            if zfar < 0.0 || zfar < self.znear {
-                report(Error::invalid_value(path(), zfar));
+            let reason = format!("must be greater than `znear`");
+            if zfar < self.znear {
+                report(Error::invalid_value(path(), zfar, reason));
             }
         });
 
@@ -186,8 +195,8 @@ impl Validate for Perspective {
     }
 }
 
-impl Validate for Type {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+impl<'a> Validate<'a> for Type<'a> {
+    fn validate<P, R>(&self, _: &Root<'a>, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(Error)
     {
         if !VALID_CAMERA_TYPES.contains(&self.0.as_ref()) {
