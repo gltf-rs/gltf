@@ -7,64 +7,42 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use gltf::{BufferData, ImageData};
 use import::{Error, Source};
 use json;
 use root::Root;
 use std::io::Read;
 use Gltf;
 
-/// Describes buffer data required to render a single glTF asset.
-#[derive(Clone, Debug)]
-enum Buffer {
-    /// The buffer data is borrowed from the GLB.
-    Internal(Slice),
-
-    /// The buffer data is from an external source and hence owned.
-    External(Vec<u8>),
-}
-
-/// Describes image data required to render a single glTF asset.
-#[derive(Clone, Debug)]
-enum Image {
-    /// The image data is borrowed from the indexed buffer view.
-    Borrowed(usize),
-
-    /// The image data is owned.
-    Owned(Vec<u8>),
-}
-
 /// The contents of a .glb file.
 #[derive(Clone, Debug)]
 struct Glb(Vec<u8>);
 
-/// GLB application binary interface.
-mod abi {
-    /// The header section of a .glb file.
-    #[derive(Copy, Clone, Debug)]
-    #[repr(C)]
-    pub struct Header {
-        /// Must be `b"glTF"`.
-        pub magic: [u8; 4],
+/// The header section of a .glb file.
+#[derive(Copy, Clone, Debug)]
+#[repr(C)]
+struct Header {
+    /// Must be `b"glTF"`.
+    magic: [u8; 4],
 
-        /// Must be `2`.
-        pub version: u32,
+    /// Must be `2`.
+    version: u32,
 
-        /// Must match the length of the parent .glb file.
-        pub length: u32,
-    }
+    /// Must match the length of the parent .glb file.
+    length: u32,
+}
 
-    /// The header of the JSON or BIN section of a .glb file.
-    #[derive(Copy, Clone, Debug)]
-    #[repr(C)]
-    pub struct ChunkInfo {
-        /// The length of the chunk data in byte excluding the header.
-        pub length: u32,
+/// The header of the JSON or BIN section of a .glb file.
+#[derive(Copy, Clone, Debug)]
+#[repr(C)]
+struct ChunkInfo {
+    /// The length of the chunk data in byte excluding the header.
+    length: u32,
 
-        /// Either `b"JSON"` or `b"BIN\0"`.
-        pub kind: [u8; 4],
+    /// Either `b"JSON"` or `b"BIN\0"`.
+    kind: [u8; 4],
 
-        // Data follows... 
-    }
+    // Data follows... 
 }
 
 /// Represents a subset of `Importer::glb`.
@@ -80,55 +58,54 @@ struct Slice {
 /// Imports binary glTF (GLB).
 #[derive(Clone, Debug)]
 pub struct Importer {
-    /// The entire GLB binary blob.
+    /// The loaded contents of a .glb file.
     glb: Glb,
-
-    /// The imported glTF buffers.
-    buffers: Vec<Buffer>,
-
-    /// The imported glTF images.
-    images: Vec<Image>,
 }
 
 /// The header, JSON, and BIN sections of a .glb file, respectively.
-type Split = (abi::Header, Slice, Option<Slice>);
+type Split = (Header, Slice, Option<Slice>);
 
 impl Glb {
-    fn split(&self) -> Result<Split, &'static str> {
+    /// Splits loaded GLB into its three chunks.
+    ///
+    /// * Mandatory GLB header.
+    /// * Mandatory JSON chunk.
+    /// * Optional BIN chunk.
+    fn split<S: Source>(&self) -> Result<Split, Error<S>> {
         use std::mem::{size_of, transmute};
-
+        let err = |reason: &str| Err(Error::MalformedGlb(reason.to_string()));
         let glb = self.0.as_slice();
         let glb_ptr = glb.as_ptr();
-        if glb.len() < size_of::<abi::Header>() + size_of::<abi::ChunkInfo>() {
-            return Err("GLB missing header");
+        if glb.len() < size_of::<Header>() + size_of::<ChunkInfo>() {
+            return err("GLB missing header");
         }
 
         // Offset in bytes into `glb`.
         let mut offset = 0isize;
 
         let header = unsafe {
-            let x: *const abi::Header = transmute(glb_ptr.offset(offset));
+            let x: *const Header = transmute(glb_ptr.offset(offset));
             if &(*x).magic != b"glTF" {
-                return Err("GLB does not start with `glTF`");
+                return err("GLB does not start with `glTF`");
             }
             if (*x).length as usize != glb.len() {
-                return Err("length does not match length of data");
+                return err("length does not match length of data");
             }
             if (*x).version != 2 {
-                return Err("Not GLB version 2.0");
+                return err("Not GLB version 2.0");
             }
             *x
         };
 
-        offset += size_of::<abi::Header>() as isize;
+        offset += size_of::<Header>() as isize;
         let json_chunk = unsafe {
-            let x: *const abi::ChunkInfo = transmute(glb_ptr.offset(offset));
-            offset += size_of::<abi::ChunkInfo>() as isize;
+            let x: *const ChunkInfo = transmute(glb_ptr.offset(offset));
+            offset += size_of::<ChunkInfo>() as isize;
             if (*x).length as usize > (glb.len() as isize - offset) as usize {
-                return Err("JSON chunkLength exceeds length of data");
+                return err("JSON chunkLength exceeds length of data");
             }
             if &(*x).kind != b"JSON" {
-                return Err("JSON chunkType is not `JSON`");
+                return err("JSON chunkType is not `JSON`");
             }
             Slice {
                 offset: offset as usize,
@@ -141,13 +118,13 @@ impl Glb {
             None
         } else {
             unsafe {
-                let x: *const abi::ChunkInfo = transmute(glb_ptr.offset(offset));
-                offset += size_of::<abi::ChunkInfo>() as isize;
+                let x: *const ChunkInfo = transmute(glb_ptr.offset(offset));
+                offset += size_of::<ChunkInfo>() as isize;
                 if (*x).length as usize > (glb.len() as isize - offset) as usize {
-                    return Err("BIN chunkLength exceeds length of data");
+                    return err("BIN chunkLength exceeds length of data");
                 }
                 if &(*x).kind != b"BIN\0" {
-                    return Err("BIN chunkType is not `BIN\0`");
+                    return err("BIN chunkType is not `BIN\0`");
                 }
                 Some(Slice {
                     offset: offset as usize,
@@ -164,8 +141,6 @@ impl Importer {
     /// Constructs an `Importer`.
     pub fn new() -> Self {
         Self {
-            buffers: vec![],
-            images: vec![],
             glb: Glb(vec![]),
         }
     }
@@ -173,8 +148,6 @@ impl Importer {
     /// Clears any data held by the importer.
     /// Must be called at the beginning of each import call.
     fn clear(&mut self) {
-        self.buffers.clear();
-        self.images.clear();
         self.glb.0.clear();
     }
 
@@ -198,10 +171,12 @@ impl Importer {
         // Cleanup from last import call.
         self.clear();
 
-        // Read GLB contents.
+        // Read .glb file.
         let _ = reader.read_to_end(&mut self.glb.0)?;
-        // TODO: Remove unwrap().
-        let (_header, json_chunk, blob_chunk) = self.glb.split().unwrap();
+        debug_assert!(self.glb.0.starts_with(b"glTF"));
+
+        // Split the GLB into its three chunks.
+        let (_header, json_chunk, blob_chunk) = self.glb.split()?;
         let root: json::Root = json::from_slice(self.slice(json_chunk))?;
 
         // Validate the JSON data.
@@ -227,13 +202,22 @@ impl Importer {
             return Err(Error::Validation(errs));
         }
 
-        // When provided, the internal GLB buffer data is the first in the array.
+        // Preload the glTF buffer data.
+        let mut buffers = vec![];
         {
+            // When provided, the internal GLB buffer data is the first in the array.
             let mut buffer_iter = root.buffers.iter();
-            if let Some(chunk) = blob_chunk.as_ref() {
+            if let Some(chunk) = blob_chunk {
                 let _ = buffer_iter.next();
-                self.buffers.push(Buffer::Internal(*chunk));
+                let slice = self.slice(chunk);
+                // TODO: Avoid making a copy of this data.
+                //
+                // This could be achieved by reading the BIN chunk of a .glb file
+                // into its own `Vec`.
+                let data = slice.to_vec();
+                buffers.push(BufferData::Owned(data.into_boxed_slice()));
             }
+
             // Read any other external GLB buffers.
             for entry in buffer_iter {
                 let uri = entry.uri.as_ref().unwrap(); 
@@ -241,47 +225,27 @@ impl Importer {
                 let _ = source
                     .read_external_data(uri)
                     .map_err(Error::Source)?
-                    .read_to_end(&mut data)?;
-                self.buffers.push(Buffer::External(data));
+                .read_to_end(&mut data)?;
+                buffers.push(BufferData::Owned(data.into_boxed_slice()));
             }
         }
 
-        // Read the external GLB image data.
+        // Preload the glTF image data.
+        let mut images = vec![];
         for entry in &root.images {
-            let image = if let Some(index) = entry.buffer_view.as_ref() {
-                Image::Borrowed(index.value())
+            images.push(if let Some(index) = entry.buffer_view.as_ref() {
+                ImageData::Borrowed(index.value())
             } else {
+                // Read the external GLB image data.
                 let mut data = vec![];
                 let _ = source
                     .read_external_data(entry.uri.as_ref().unwrap())
                     .map_err(Error::Source)?
-                .read_to_end(&mut data)?;
-                Image::Owned(data)
-            };
-            self.images.push(image);
-        }
-
-        // Prepare references for wrapper interface.
-        let mut buffer_data = vec![];
-        for entry in &self.buffers {
-            buffer_data.push(match entry {
-                &Buffer::Internal(ref slice) => self.slice(*slice),
-                &Buffer::External(ref vec) => vec.as_slice(),
-            });
-        }
-        let mut image_data = vec![];
-        for entry in &self.images {
-            image_data.push(match entry {
-                &Image::Borrowed(index) => {
-                    let ref view = root.buffer_views[index];
-                    let begin = view.byte_offset as usize;
-                    let end = begin + view.byte_length as usize;
-                    &buffer_data[view.buffer.value()][begin..end]
-                },
-                &Image::Owned(ref data) => data.as_slice(),
+                    .read_to_end(&mut data)?;
+                ImageData::Owned(data.into_boxed_slice())
             });
         }
 
-        Ok(Gltf::new(Root::new(root), buffer_data, image_data))
+        Ok(Gltf::new(Root::new(root), buffers, images))
     }
 }

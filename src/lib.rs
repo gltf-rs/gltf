@@ -61,5 +61,5 @@ pub mod texture;
 /// Contains functions that validate glTF JSON data against the specification.
 pub mod validation;
 
-pub use self::gltf::Gltf;
+pub use self::gltf::{BufferData, Gltf, ImageData};
 pub use self::import::Importer;

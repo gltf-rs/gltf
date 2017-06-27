@@ -40,34 +40,28 @@
 //! # let file = File::open(path)?;
 //! # let json: gltf::json::Root<'static> = gltf::json::from_reader(file)?;
 //! #
-//! use gltf::Gltf;
+//! use gltf::{BufferData, Gltf, ImageData};
 //! use gltf::root::Root;
 //!
 //! /// Loads the glTF buffers in the order they occur in the glTF JSON text.
-//! fn load_buffers(_: &gltf::json::Root) -> Vec<Vec<u8>> {
+//! fn load_buffers(_: &gltf::json::Root) -> Vec<BufferData> {
 //!     // Your implementation here
 //!     vec![]
 //! }
 //!
 //! /// Loads the glTF images in the order they occur in the glTF JSON text.
-//! fn load_images(_: &gltf::json::Root) -> Vec<Vec<u8>> {
+//! fn load_images(_: &gltf::json::Root) -> Vec<ImageData> {
 //!     // Your implementation here
 //!     vec![]
 //! }
-//!
-//! let buffers = load_buffers(&json);
-//! let images = load_images(&json);
 //!
 //! // The wrapper interface requires slices of the buffer and image data.
 //! // The ordering of these buffer / image slices must match the ordering of the
 //! // buffers / images in the glTF JSON text and contain the corresponding
 //! // buffer / image data.
-//! let gltf = Gltf::new(
-//!     Root::new(json),
-//!     buffers.iter().map(Vec::as_slice).collect(),
-//!     images.iter().map(Vec::as_slice).collect(),
-//! );
-//! 
+//! let buffers = load_buffers(&json);
+//! let images = load_images(&json);
+//! let gltf = Gltf::new(Root::new(json), buffers, images);
 //! # let _ = gltf;
 //! # Ok(())
 //! # }

@@ -7,6 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use gltf::{BufferData, ImageData};
 use import::{Error, Source};
 use json;
 use root::Root;
@@ -18,30 +19,12 @@ use Gltf;
 pub struct Importer {
     /// The glTF JSON data.
     gltf: Vec<u8>,
-
-    /// The imported glTF buffers.
-    buffers: Vec<Vec<u8>>,
-
-    /// The imported glTF images.
-    images: Vec<Image>,
-}
-
-/// Describes image data required to render a single glTF asset.
-#[derive(Clone, Debug)]
-enum Image {
-    /// The image data is borrowed from the indexed buffer view.
-    Borrowed(usize),
-
-    /// The image data is owned.
-    Owned(Vec<u8>),
 }
 
 impl Importer {
     /// Constructs an `Importer`.
     pub fn new() -> Self {
         Self {
-            buffers: vec![],
-            images: vec![],
             gltf: vec![],
         }
     }
@@ -49,8 +32,6 @@ impl Importer {
     /// Clears any data held by the importer.
     /// Must be called at the beginning of each import call.
     fn clear(&mut self) {
-        self.buffers.clear();
-        self.images.clear();
         self.gltf.clear();
     }
 
@@ -71,11 +52,9 @@ impl Importer {
         // Cleanup from the last import call.
         self.clear();
 
-        // Read .gltf / .glb file.
+        // Read .gltf file.
         let _ = reader.read_to_end(&mut self.gltf)?;
-        if self.gltf.starts_with(b"glTF") {
-            unreachable!()
-        }
+        debug_assert!(!self.gltf.starts_with(b"glTF"));
 
         // Parse and validate the .gltf JSON data
         let root: json::Root = json::from_slice(&self.gltf)?;
@@ -92,47 +71,35 @@ impl Importer {
             return Err(Validation(errs));
         }
 
-        // Read the glTF buffer data
+        // Preload the external glTF buffer data.
+        let mut buffers = vec![];
         for entry in &root.buffers {
             let mut buffer = vec![];
             let _ = source
                 .read_external_data(entry.uri.as_ref().unwrap().as_ref())
                 .map_err(Source)?
                 .read_to_end(&mut buffer)?;
-            self.buffers.push(buffer);
+            buffers.push(BufferData::Owned(buffer.into_boxed_slice()));
         }
 
-        // Read the glTF image data
+        // Preload the glTF image data.
+        let mut images = vec![];
         for entry in &root.images {
-            let image = if let Some(index) = entry.buffer_view.as_ref() {
-                Image::Borrowed(index.value())
+            images.push(if let Some(index) = entry.buffer_view.as_ref() {
+                ImageData::Borrowed(index.value())
             } else if let Some(uri) = entry.uri.as_ref() {
+                // Read the external glTF image data.
                 let mut buffer = vec![];
                 let _ = source
                     .read_external_data(uri)
                     .map_err(Source)?
                     .read_to_end(&mut buffer)?;
-                Image::Owned(buffer)
+                ImageData::Owned(buffer.into_boxed_slice())
             } else {
                 unreachable!()
-            };
-            self.images.push(image);
-        }
-
-        let buffer_data: Vec<_>  = self.buffers.iter().map(Vec::as_slice).collect();
-        let mut image_data = vec![];
-        for entry in &self.images {
-            image_data.push(match entry {
-                &Image::Borrowed(index) => {
-                    let ref view = root.buffer_views[index];
-                    let begin = view.byte_offset as usize;
-                    let end = begin + view.byte_length as usize;
-                    &buffer_data[view.buffer.value()][begin..end]
-                },
-                &Image::Owned(ref data) => data.as_slice(),
             });
         }
 
-        Ok(Gltf::new(Root::new(root), buffer_data, image_data))
+        Ok(Gltf::new(Root::new(root), buffers, images))
     }
 }

@@ -71,9 +71,6 @@ use self::source::FromPath;
 /// Error encountered when importing a glTF 2.0 asset.
 #[derive(Debug)]
 pub enum Error<S: Source> {
-    /// Failure when deserializing a .gltf metadata file.
-    Deserialize(serde_json::error::Error),
-    
     /// A glTF extension required by the asset has not been enabled by the user.
     ExtensionDisabled(String),
     
@@ -85,6 +82,12 @@ pub enum Error<S: Source> {
 
     /// I/O error.
     Io(std::io::Error),
+
+    /// Failure when parsing a .glb file.
+    MalformedGlb(String),
+
+    /// Failure when deserializing .gltf or .glb JSON.
+    MalformedJson(serde_json::error::Error),
     
     /// Data source error.
     Source(S::Err),
@@ -152,15 +155,15 @@ impl Importer {
     }
 }
 
-impl<S: Source> From<serde_json::Error> for Error<S> {
-    fn from(err: serde_json::Error) -> Error<S> {
-        Error::Deserialize(err)
-    }
-}
-
 impl<S: Source> From<std::io::Error> for Error<S> {
     fn from(err: std::io::Error) -> Error<S> {
         Error::Io(err)
+    }
+}
+
+impl<S: Source> From<serde_json::Error> for Error<S> {
+    fn from(err: serde_json::Error) -> Error<S> {
+        Error::MalformedJson(err)
     }
 }
 
@@ -181,11 +184,12 @@ impl<S: Source> std::error::Error for Error<S> {
     fn description(&self) -> &str {
         use self::Error::*;
         match self {
-            &Deserialize(_) => "Malformed .gltf / .glb file",
             &ExtensionDisabled(_) => "Asset requires a disabled extension",
             &ExtensionUnsupported(_) => "Assets requires an unsupported extension",
             &IncompatibleVersion(_) => "Asset is not glTF version 2.0",
             &Io(_) => "I/O error",
+            &MalformedGlb(_) => "Malformed .glb file",
+            &MalformedJson(_) => "Malformed .gltf / .glb JSON",
             &Source(_) => "Data source error",
             &Validation(_) => "Asset failed validation tests",
         }
@@ -194,7 +198,7 @@ impl<S: Source> std::error::Error for Error<S> {
     fn cause(&self) -> Option<&std::error::Error> {
         use self::Error::*;
         match self {
-            &Deserialize(ref err) => Some(err),
+            &MalformedJson(ref err) => Some(err),
             &Io(ref err) => Some(err),
             &Source(ref err) => Some(err),
             _ => None,
