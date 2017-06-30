@@ -1,14 +1,24 @@
+
+<p align="center">
+   <a href="https://travis-ci.org/alteous/gltf">
+      <img src="https://travis-ci.org/alteous/gltf.svg?branch=master" alt="travis">
+   </a>
+   <a href="https://crates.io/crates/gltf">
+      <img src="https://img.shields.io/crates/v/gltf.svg" alt="crates.io">
+   </a>
+   <a href="https://docs.rs/gltf">
+      <img src="https://docs.rs/gltf/badge.svg" alt="docs.rs">
+   </a>
+   <a href="https://gitter.im/alteous/gltf">
+      <img src="https://img.shields.io/gitter/room/alteous/gltf.svg" alt="gitter">
+   </a>
+</p>
+
 # gltf
 
 This crate is intended to load [glTF](https://www.khronos.org/gltf), a file format designed for the efficient transmission of 3D assets.
 
 `rustc` version 1.15 or above is required.
-
-[![Build Status](https://travis-ci.org/alteous/gltf.svg?branch=master)](https://travis-ci.org/alteous/gltf)
-[![crates.io](https://img.shields.io/crates/v/gltf.svg)](https://crates.io/crates/gltf)
-[![docs.rs](https://docs.rs/gltf/badge.svg)](https://docs.rs/gltf)
-
-### [Documentation](https://docs.rs/gltf)
 
 ### Usage
 
