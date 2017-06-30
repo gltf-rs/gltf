@@ -15,6 +15,10 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
+/// Contains the `try_validate` macro.
+#[macro_use]
+mod macros;
+
 /// Contains (de)serializable data structures that represent the glTF JSON data.
 pub mod json;
 

@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use json::{camera, mesh, scene, skin, Extras, Index, Root};
-use validation::{Error, JsonPath, Validate};
+use validation::{Action, Error, JsonPath, Validate};
 
 /// A node in the node hierarchy.  When the node contains `skin`, all `mesh.primitives` must contain `JOINTS_0` and `WEIGHTS_0` attributes.  A node can have either a `matrix` or any combination of `translation`/`rotation`/`scale` (TRS) properties. TRS properties are converted to matrices and postmultiplied in the `T * R * S` order to compose the transformation matrix; first the scale is applied to the vertices, then the rotation, and then the translation. If none are provided, the transform is the identity. When a node is targeted for animation (referenced by an animation.channel.target), only TRS properties may be present; `matrix` will not be present..
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
@@ -112,15 +112,17 @@ impl Default for UnitQuaternion {
 }
 
 impl Validate for UnitQuaternion {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         for x in &self.0 {
             if *x < -1.0 || *x > 1.0 {
-                report(Error::invalid_value(path(), self.0.to_vec()));
-                // Only report once
-                break;
+                try_action!(
+                    report(Error::invalid_value(path(), self.0.to_vec()))
+                );
             }
         }
+
+        Action::Continue
     }
 }

@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use json::{Extras, Root};
-use validation::{Error, JsonPath, Validate};
+use validation::{Action, Error, JsonPath, Validate};
 
 /// All valid camera types.
 pub const VALID_CAMERA_TYPES: &'static [&'static str] = &[
@@ -124,74 +124,84 @@ pub struct PerspectiveExtensions {
 pub struct Type(pub String);
 
 impl Validate for Camera {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         if self.orthographic.is_none() && self.perspective.is_none() {
             let reason = "one of `orthographic` or `perspective` is required";
-            report(Error::missing_data(path().clone(), reason.to_string()));
+            try_action!(
+                report(Error::missing_data(path().clone(), reason.to_string()))
+            );
         }
 
-        self.orthographic.validate(root, || path().field("orthographic"), report);
-        self.perspective.validate(root, || path().field("perspective"), report);
-        self.type_.validate(root, || path().field("type"), report);
-        self.extensions.validate(root, || path().field("extensions"), report);
-        self.extras.validate(root, || path().field("extras"), report);
+        try_validate!(self.orthographic, root, || path().field("orthographic"), report);
+        try_validate!(self.perspective, root, || path().field("perspective"), report);
+        try_validate!(self.type_, root, || path().field("type"), report);
+        try_validate!(self.extensions, root, || path().field("extensions"), report);
+        try_validate!(self.extras, root, || path().field("extras"), report);
+
+        Action::Continue
     }
 }
 
 impl Validate for Orthographic {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         if self.znear < 0.0 {
-            report(Error::invalid_value(path(), self.znear));
+            try_action!(report(Error::invalid_value(path(), self.znear)));
         }
  
         if self.zfar < 0.0  || self.zfar < self.znear {
-            report(Error::invalid_value(path(), self.zfar));
+            try_action!(report(Error::invalid_value(path(), self.zfar)));
         }
 
-        self.extensions.validate(root, || path().field("extensions"), report);
-        self.extras.validate(root, || path().field("extras"), report);
+        try_validate!(self.extensions, root, || path().field("extensions"), report);
+        try_validate!(self.extras, root, || path().field("extras"), report);
+
+        Action::Continue
     }
 }
 
 impl Validate for Perspective {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
-        self.aspect_ratio.map(|aspect_ratio| {
+        if let Some(aspect_ratio) = self.aspect_ratio {
             if aspect_ratio < 0.0 {
-                report(Error::invalid_value(path(), aspect_ratio));
+                try_action!(report(Error::invalid_value(path(), aspect_ratio)));
             }
-        });
+        }
 
         if self.yfov < 0.0 {
-            report(Error::invalid_value(path(), self.yfov));
+            try_action!(report(Error::invalid_value(path(), self.yfov)));
         }
 
         if self.znear < 0.0 {
-            report(Error::invalid_value(path(), self.znear));
+            try_action!(report(Error::invalid_value(path(), self.znear)));
         }
 
-        self.zfar.map(|zfar| {
+        if let Some(zfar) = self.zfar {
             if zfar < 0.0 || zfar < self.znear {
-                report(Error::invalid_value(path(), zfar));
+                try_action!(report(Error::invalid_value(path(), zfar)));
             }
-        });
+        }
 
-        self.extensions.validate(root, || path().field("extensions"), report);
-        self.extras.validate(root, || path().field("extras"), report);
+        try_validate!(self.extensions, root, || path().field("extensions"), report);
+        try_validate!(self.extras, root, || path().field("extras"), report);
+
+        Action::Continue
     }
 }
 
 impl Validate for Type {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
-        if !VALID_CAMERA_TYPES.contains(&self.0.as_ref()) {
-            report(Error::invalid_enum(path(), self.0.clone()));
+        if VALID_CAMERA_TYPES.contains(&self.0.as_ref()) {
+            Action::Continue
+        } else {
+            report(Error::invalid_enum(path(), self.0.clone()))
         }
     }
 }

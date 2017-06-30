@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use json::{accessor, scene, Extras, Index, Root};
-use validation::{Error, JsonPath, Validate};
+use validation::{Action, Error, JsonPath, Validate};
 
 /// All valid interpolation algorithms.
 pub const VALID_INTERPOLATION_ALGORITHMS: &'static [&'static str] = &[
@@ -151,25 +151,29 @@ pub struct InterpolationAlgorithm(pub String);
 pub struct TrsProperty(pub String);
 
 impl Validate for Animation {
-    fn validate<P, R>(&self, root: &Root, path: P, mut report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, root: &Root, path: P, mut report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
-        self.samplers.validate(root, || path().field("samplers"), report);
-        self.channels.validate(root, || path().field("channels"), report);
+        try_validate!(self.samplers, root, || path().field("samplers"), report);
+        try_validate!(self.channels, root, || path().field("channels"), report);
         for (index, channel) in self.channels.iter().enumerate() {
             if channel.sampler.value() as usize >= self.samplers.len() {
                 let field = format!("channels[{}].sampler", index);
-                report(Error::index_out_of_bounds(path().field(&field)));
+                try_action!(
+                    report(Error::index_out_of_bounds(path().field(&field)))
+                );
             }
         }
+
+        Action::Continue
     }
 }
 
 impl Validate for Channel {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
-        // nop
+        Action::Continue
     }
 }
 
@@ -180,21 +184,25 @@ impl Default for InterpolationAlgorithm {
 }
 
 impl Validate for InterpolationAlgorithm {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
-        if !VALID_INTERPOLATION_ALGORITHMS.contains(&self.0.as_ref()) {
-            report(Error::invalid_enum(path(), self.0.clone()));
+        if VALID_INTERPOLATION_ALGORITHMS.contains(&self.0.as_ref()) {
+            Action::Continue
+        } else {
+            report(Error::invalid_enum(path(), self.0.clone()))
         }
     }
 }
 
 impl Validate for TrsProperty {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
-        if !VALID_TRS_PROPERTIES.contains(&self.0.as_ref()) {
-            report(Error::invalid_enum(path(), self.0.clone()));
+        if VALID_TRS_PROPERTIES.contains(&self.0.as_ref()) {
+            Action::Continue
+        } else {
+            report(Error::invalid_enum(path(), self.0.clone()))
         }
     }
 }

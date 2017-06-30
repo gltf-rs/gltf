@@ -38,20 +38,28 @@ fn expand(ast: &syn::MacroInput) -> quote::Tokens {
     let validations: Vec<quote::Tokens> = fields.iter()
         .map(|f| f.ident.as_ref().unwrap())
         .map(|ident| {
-                 use inflections::Inflect;
-                 let field = ident.as_ref().to_camel_case();
-                 quote!(self.#ident.validate(root, || path().field(#field), report))
-             })
+            use inflections::Inflect;
+            let field = ident.as_ref().to_camel_case();
+            quote!(
+                if {
+                    self.#ident.validate(root, || path().field(#field), report)
+                } == ::validation::Action::Stop {
+                    return ::validation::Action::Stop;
+                }
+            )
+        })
         .collect();
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
     quote!(
         impl #impl_generics ::validation::Validate for #ident #ty_generics #where_clause {
-            fn validate<P, R>(&self, root: &::json::Root, path: P, report: &mut R)
-                where P: Fn() -> ::validation::JsonPath, R: FnMut(::validation::Error),
+            fn validate<P, R>(&self, root: &::json::Root, path: P, report: &mut R) -> ::validation::Action
+                where P: Fn() -> ::validation::JsonPath, R: FnMut(::validation::Error) -> ::validation::Action,
             {
                 #(
                     #validations;
                 )*
+
+                ::validation::Action::Continue
             }
         }
     )

@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use json::{buffer, Extras, Index, Root};
-use validation::{Error, JsonPath, Validate};
+use validation::{Action, Error, JsonPath, Validate};
 
 /// All valid MIME types.
 pub const VALID_MIME_TYPES: &'static [&'static str] = &[
@@ -55,11 +55,13 @@ pub struct ImageExtensions {
 pub struct MimeType(pub String);
 
 impl Validate for MimeType {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
-        if !VALID_MIME_TYPES.contains(&self.0.as_str()) {
-            report(Error::invalid_enum(path(), self.0.clone()));
+        if VALID_MIME_TYPES.contains(&self.0.as_str()) {
+            Action::Continue
+        } else {
+            report(Error::invalid_enum(path(), self.0.clone()))
         }
     }
 }
