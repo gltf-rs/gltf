@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use json::{Extras, Root};
-use validation::{Error, JsonPath, Validate};
+use validation::{Action, Error, JsonPath, Validate};
 
 /// All valid camera types.
 pub const VALID_CAMERA_TYPES: &'static [&'static str] = &[
@@ -124,8 +124,8 @@ pub struct PerspectiveExtensions {
 pub struct Type(pub String);
 
 impl Validate for Camera {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         if self.orthographic.is_none() && self.perspective.is_none() {
             let reason = "one of `orthographic` or `perspective` is required";
@@ -141,8 +141,8 @@ impl Validate for Camera {
 }
 
 impl Validate for Orthographic {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         if self.znear < 0.0 {
             report(Error::invalid_value(path(), self.znear));
@@ -158,8 +158,8 @@ impl Validate for Orthographic {
 }
 
 impl Validate for Perspective {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         self.aspect_ratio.map(|aspect_ratio| {
             if aspect_ratio < 0.0 {
@@ -188,7 +188,7 @@ impl Validate for Perspective {
 
 impl Validate for Type {
     fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         if !VALID_CAMERA_TYPES.contains(&self.0.as_ref()) {
             report(Error::invalid_enum(path(), self.0.clone()));

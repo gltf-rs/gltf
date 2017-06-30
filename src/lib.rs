@@ -21,6 +21,10 @@ pub mod json;
 /// Contains functions for importing glTF 2.0 assets.
 pub mod import;
 
+/// Contains the `try_validate` macro.
+#[macro_use]
+pub mod macros;
+
 /// Contains functions that validate glTF JSON data against the specification.
 pub mod validation;
 

@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use json::{image, Extras, Index, Root};
-use validation::{Error, JsonPath, Validate};
+use validation::{Action, Error, JsonPath, Validate};
 
 /// Corresponds to `GL_NEAREST`.
 pub const NEAREST: u32 = 9728;
@@ -169,7 +169,7 @@ pub struct WrappingMode(pub u32);
 
 impl Validate for MagFilter {
     fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         if !VALID_MAG_FILTERS.contains(&self.0) {
             report(Error::invalid_enum(path(), self.0));
@@ -179,7 +179,7 @@ impl Validate for MagFilter {
 
 impl Validate for MinFilter {
     fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         if !VALID_MIN_FILTERS.contains(&self.0) {
             report(Error::invalid_enum(path(), self.0));
@@ -195,7 +195,7 @@ impl Default for WrappingMode {
 
 impl Validate for WrappingMode {
     fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         if !VALID_WRAPPING_MODES.contains(&self.0) {
             report(Error::invalid_enum(path(), self.0));

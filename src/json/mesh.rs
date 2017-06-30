@@ -9,7 +9,7 @@
 
 use std::collections::HashMap;
 use json::{accessor, material, Extras, Index, Root};
-use validation::{Error, JsonPath, Validate};
+use validation::{Action, Error, JsonPath, Validate};
 
 /// Corresponds to `GL_POINTS`.
 pub const POINTS: u32 = 0;
@@ -135,7 +135,7 @@ impl Default for Mode {
 
 impl Validate for Mode {
     fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         if !VALID_MODES.contains(&self.0) {
             report(Error::invalid_value(path(), self.0));
@@ -145,7 +145,7 @@ impl Validate for Mode {
 
 impl Validate for MorphTargets {
     fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         for attr in self.0.keys() {
             if !VALID_MORPH_TARGETS.contains(&attr.as_str()) {

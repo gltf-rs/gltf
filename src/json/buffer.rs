@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use json::{Extras, Index, Root};
-use validation::{Error, JsonPath, Validate};
+use validation::{Action, Error, JsonPath, Validate};
 
 /// Corresponds to `GL_ARRAY_BUFFER`.
 pub const ARRAY_BUFFER: u32 = 34962;
@@ -111,7 +111,7 @@ pub struct Target(pub u32);
 
 impl Validate for ByteStride {
     fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         if self.0 % 4 != 0 {
             // Not a multiple of 4
@@ -126,7 +126,7 @@ impl Validate for ByteStride {
 
 impl Validate for Target {
     fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         if !VALID_TARGETS.contains(&self.0) {
             report(Error::invalid_enum(path(), self.0));
