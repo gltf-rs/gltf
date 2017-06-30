@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use json::{buffer, Extras, Index, Root};
-use validation::{Error, JsonPath, Validate};
+use validation::{Action, Error, JsonPath, Validate};
 
 /// Corresponds to `GL_BYTE`.
 pub const BYTE: u32 = 5120;
@@ -227,31 +227,37 @@ pub struct GenericComponentType(pub u32);
 pub struct Type(pub String);
 
 impl Validate for IndexComponentType {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
-        if !VALID_INDEX_COMPONENT_TYPES.contains(&self.0) {
-            report(Error::invalid_enum(path(), self.0));
+        if VALID_INDEX_COMPONENT_TYPES.contains(&self.0) {
+            Action::Continue
+        } else {
+            report(Error::invalid_enum(path(), self.0))
         }
     }
 }
 
 impl Validate for GenericComponentType {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
-        if !VALID_GENERIC_ATTRIBUTE_COMPONENT_TYPES.contains(&self.0) {
-            report(Error::invalid_enum(path(), self.0));
+        if VALID_GENERIC_ATTRIBUTE_COMPONENT_TYPES.contains(&self.0) {
+            Action::Continue
+        } else {
+            report(Error::invalid_enum(path(), self.0))
         }
     }
 }
 
 impl Validate for Type {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
-        if !VALID_ACCESSOR_TYPES.contains(&self.0.as_str()) {
-            report(Error::invalid_enum(path(), self.0.clone()));
+        if VALID_ACCESSOR_TYPES.contains(&self.0.as_str()) {
+            Action::Continue
+        } else {
+            report(Error::invalid_enum(path(), self.0.clone()))
         }
     }
 }

@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use json::{texture, Extras, Index, Root};
-use validation::{Error, JsonPath, Validate};
+use validation::{Action, Error, JsonPath, Validate};
 
 /// All valid alpha modes.
 pub const VALID_ALPHA_MODES: &'static [&'static str] = &[
@@ -247,36 +247,42 @@ impl Default for AlphaMode {
 }
 
 impl Validate for AlphaCutoff {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         if self.0 < 0.0 {
-            report(Error::invalid_value(path(), self.0));
+            report(Error::invalid_value(path(), self.0))
+        } else {
+            Action::Continue
         }
     }
 }
 
 impl Validate for AlphaMode {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
-        if !VALID_ALPHA_MODES.contains(&self.0.as_str()) {
-            report(Error::invalid_enum(path(), self.0.clone()));
+        if VALID_ALPHA_MODES.contains(&self.0.as_str()) {
+            Action::Continue
+        } else {
+            report(Error::invalid_enum(path(), self.0.clone()))
         }
     }
 }
 
 impl Validate for EmissiveFactor {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         for x in &self.0 {
             if *x < 0.0 || *x > 1.0 {
-                report(Error::invalid_value(path(), self.0.to_vec()));
-                // Only report once
-                break;
+                try_action!(
+                    report(Error::invalid_value(path(), self.0.to_vec()))
+                );
             }
         }
+
+        Action::Continue
     }
 }
 
@@ -287,16 +293,18 @@ impl Default for PbrBaseColorFactor {
 }
 
 impl Validate for PbrBaseColorFactor {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         for x in &self.0 {
             if *x < 0.0 || *x > 1.0 {
-                report(Error::invalid_value(path(), self.0.to_vec()));
-                // Only report once
-                break;
+                try_action!(
+                    report(Error::invalid_value(path(), self.0.to_vec()))
+                );
             }
         }
+
+        Action::Continue
     }
 }
 
@@ -307,12 +315,16 @@ impl Default for StrengthFactor {
 }
 
 impl Validate for StrengthFactor {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         if self.0 < 0.0 || self.0 > 1.0 {
-            report(Error::invalid_value(path(), self.0));
+            try_action!(
+                report(Error::invalid_value(path(), self.0))
+            );
         }
+
+        Action::Continue
     }
 }
 

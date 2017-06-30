@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use json::{Extras, Index, Root};
-use validation::{Error, JsonPath, Validate};
+use validation::{Action, Error, JsonPath, Validate};
 
 /// Corresponds to `GL_ARRAY_BUFFER`.
 pub const ARRAY_BUFFER: u32 = 34962;
@@ -110,26 +110,30 @@ pub struct ByteStride(pub u32);
 pub struct Target(pub u32);
 
 impl Validate for ByteStride {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         if self.0 % 4 != 0 {
             // Not a multiple of 4
-            report(Error::invalid_value(path(), self.0));
+            try_action!(report(Error::invalid_value(path(), self.0)));
         }
 
         if self.0 < MIN_BYTE_STRIDE || self.0 > MAX_BYTE_STRIDE {
-            report(Error::invalid_value(path(), self.0));
+            try_action!(report(Error::invalid_value(path(), self.0)));
         }
+
+        Action::Continue
     }
 }
 
 impl Validate for Target {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R) -> Action
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
-        if !VALID_TARGETS.contains(&self.0) {
-            report(Error::invalid_enum(path(), self.0));
+        if VALID_TARGETS.contains(&self.0) {
+            Action::Continue
+        } else {
+            report(Error::invalid_enum(path(), self.0))
         }
     }
 }
