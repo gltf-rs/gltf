@@ -1,4 +1,7 @@
 
+<h1 align="center">
+    gltf
+</h1>
 <p align="center">
    <a href="https://travis-ci.org/alteous/gltf">
       <img src="https://travis-ci.org/alteous/gltf.svg?branch=master" alt="travis">
@@ -13,8 +16,7 @@
       <img src="https://img.shields.io/gitter/room/alteous/gltf.svg" alt="gitter">
    </a>
 </p>
-
-# gltf
+<hr>
 
 This crate is intended to load [glTF](https://www.khronos.org/gltf), a file format designed for the efficient transmission of 3D assets.
 
