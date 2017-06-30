@@ -10,7 +10,7 @@
 use std;
 use std::fmt;
 use json::*;
-use validation::{Error, JsonPath, Validate};
+use validation::{Action, Error, JsonPath, Validate};
 
 /// Helper trait for retrieving top-level objects by a universal identifier.
 pub trait Get<T> {
@@ -341,7 +341,7 @@ impl<T: Validate> Validate for Index<T>
     where Root: TryGet<T>
 {
     fn validate<P, R>(&self, root: &Root, path: P, mut report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(Error) -> Action
     {
         if root.try_get(self).is_err() {
             report(Error::index_out_of_bounds(path()));

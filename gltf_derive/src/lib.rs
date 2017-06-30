@@ -40,7 +40,9 @@ fn expand(ast: &syn::MacroInput) -> quote::Tokens {
         .map(|ident| {
                  use inflections::Inflect;
                  let field = ident.as_ref().to_camel_case();
-                 quote!(self.#ident.validate(root, || path().field(#field), report))
+            quote!(if self.#ident.validate(root, || path().field(#field), report) == ::validation::Action::Stop {
+                return ::validation::Action::Stop;
+            })
              })
         .collect();
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
