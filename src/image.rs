@@ -7,14 +7,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::borrow::Cow;
 use {json, Gltf};
 
-///  Image data used to create a texture.
-pub struct Image {
-    /// The corresponding image data.
-    data: &'a [u8],
-
+/// Image data used to create a texture.
+pub struct Image<'a> {
     /// The parent `Gltf` struct.
     #[allow(dead_code)]
     gltf: &'a Gltf,
@@ -23,11 +19,10 @@ pub struct Image {
     json: &'a json::image::Image,
 }
 
-impl Image {
+impl<'a> Image<'a> {
     /// Constructs an `Image` from owned data.
-    pub fn new(gltf: &'a Gltf, json: &'a json::image::Image, data: &'a [u8]) -> Self {
+    pub fn new(gltf: &'a Gltf, json: &'a json::image::Image) -> Self {
         Self {
-            data: data,
             gltf: gltf,
             json: json,
         }
@@ -39,15 +34,16 @@ impl Image {
     }
 
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(Cow::as_ref)
+        self.json.name.as_ref().map(String::as_str)
     }
 
     /// Returns the image data.
     pub fn data(&self) -> &[u8] {
-        self.data
+        unimplemented!()
     }
-    
+
     /// Extension specific data.
     pub fn extensions(&self) -> &json::image::ImageExtensions {
         &self.json.extensions

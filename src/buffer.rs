@@ -7,23 +7,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::borrow::Cow;
 use {json, Gltf};
 
-/// Specifies the target a GPU buffer should be bound to. 
-pub enum Target {
-    /// Corresponds to `GL_ARRAY_BUFFER`.
-    ArrayBuffer = 34962,
-
-    /// Corresponds to `GL_ELEMENT_ARRAY_BUFFER`.
-    ElementArrayBuffer = 34963,
-}
+pub use json::buffer::Target;
 
 ///  A buffer points to binary data representing geometry, animations, or skins.
-pub struct Buffer {
-    /// The corresponding buffer data.
-    data: &'a [u8],
-    
+pub struct Buffer<'a> {
     /// The parent `Gltf` struct.
     #[allow(dead_code)]
     gltf: &'a Gltf,
@@ -32,11 +21,19 @@ pub struct Buffer {
     json: &'a json::buffer::Buffer,
 }
 
-impl Buffer {
+///  A view into a buffer generally representing a subset of the buffer.
+pub struct View<'a> {
+    /// The parent `Gltf` struct.
+    gltf: &'a Gltf,
+
+    /// The corresponding JSON struct.
+    json: &'a json::buffer::View,
+}
+
+impl<'a> Buffer<'a> {
     /// Constructs a `Buffer`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::buffer::Buffer, data: &'a [u8]) -> Self {
+    pub fn new(gltf: &'a Gltf, json: &'a json::buffer::Buffer) -> Self {
         Self {
-            data: data,
             gltf: gltf,
             json: json,
         }
@@ -54,12 +51,13 @@ impl Buffer {
 
     /// The buffer data.
     pub fn data(&self) -> &[u8] {
-        self.data
+        unimplemented!()
     }
     
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(Cow::as_ref)
+        self.json.name.as_ref().map(String::as_str)
     }
 
     /// Extension specific data.
@@ -72,27 +70,11 @@ impl Buffer {
         &self.json.extras
     }
 }
-///  A view into a buffer generally representing a subset of the buffer.
-pub struct View {
-    /// The corresponding buffer view data.
-    data: &'a [u8],
-    
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
 
-    /// The corresponding JSON struct.
-    json: &'a json::buffer::View,
-}
-
-impl View {
+impl<'a> View<'a> {
     /// Constructs a `View`.
-    pub fn new(
-        gltf: &'a Gltf,
-        json: &'a json::buffer::View,
-        data: &'a [u8],
-    ) -> Self {
+    pub fn new(gltf: &'a Gltf, json: &'a json::buffer::View) -> Self {
         Self {
-            data: data,
             gltf: gltf,
             json: json,
         }
@@ -104,7 +86,7 @@ impl View {
     }
 
     /// Returns the parent `Buffer`.
-    pub fn buffer(&self) -> Buffer {
+    pub fn buffer(&self) -> Buffer<'a> {
         self.gltf.buffers().nth(self.json.buffer.value()).unwrap()
     }
 
@@ -126,21 +108,18 @@ impl View {
 
     /// Returns the buffer view data.
     pub fn data(&self) -> &[u8] {
-        self.data
+        unimplemented!()
     }
     
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(Cow::as_ref)
+        self.json.name.as_ref().map(String::as_str)
     }
 
     /// Optional target the buffer should be bound to.
     pub fn target(&self) -> Option<Target> {
-        self.json.target.map(|x| match x.0 {
-            json::buffer::ARRAY_BUFFER => Target::ArrayBuffer,
-            json::buffer::ELEMENT_ARRAY_BUFFER => Target::ElementArrayBuffer,
-            _ => unreachable!(),
-        })
+        self.json.target.map(|target| target.unwrap())
     }
 
     /// Extension specific data.

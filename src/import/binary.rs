@@ -11,7 +11,6 @@ use gltf::{BufferData, ImageData};
 use import::{Error, Source};
 use json;
 use root::Root;
-use serde_json;
 use std;
 use std::io::Read;
 use Gltf;
@@ -65,26 +64,28 @@ struct Slice {
 type Split = (Header, Slice, Option<Slice>);
 
 fn make_wrapper<'a, S: Source>(
-    root: json::Root<'a>,
+    root: json::Root,
     blob: Option<Vec<u8>>,
     source: S,
-) -> Result<Gltf<'a>, Error<S>> {
-    use validation::{Error as Oops, JsonPath, Validate};
+) -> Result<Gltf, Error<S>> {
+    use validation::{Error as Reason, JsonPath, Validate};
 
     // Validate the JSON data.
     let mut errs = vec![];
-    root.validate(&root, || JsonPath::new(), &mut |err| errs.push(err));
+    root.validate(&root, || JsonPath::new(), &mut |path, err| {
+        errs.push((path(), err));
+    });
     for (index, buffer) in root.buffers.iter().enumerate() {
         let path = || JsonPath::new().field("buffers").index(index).field("uri");
         match index {
             0 if blob.is_some() => if buffer.uri.is_some() {
-                let reason = format!("must be `undefined` when BIN is provided");
-                let uri = buffer.uri.as_ref().unwrap().as_ref();
-                errs.push(Oops::invalid_value(path(), uri, reason));
+                // let reason = format!("must be `undefined` when BIN is provided");
+                // let uri = buffer.uri.as_ref().unwrap().as_ref();
+                errs.push((path(), Reason::Missing));
             },
             _ if buffer.uri.is_none() => {
-                let reason = format!("must be defined");
-                errs.push(Oops::missing_data(path(), reason));
+                // let reason = format!("must be defined");
+                errs.push((path(), Reason::Missing));
             },
             _ => {},
         }
@@ -225,7 +226,7 @@ impl StaticImporter {
         &self,
         mut reader: R,
         source: S,
-    ) -> Result<Gltf<'static>, Error<S>>
+    ) -> Result<Gltf, Error<S>>
     where
         R: Read,
         S: Source,

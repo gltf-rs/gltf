@@ -11,7 +11,6 @@ use json::Extras;
 
 /// Metadata about the glTF asset.
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct Asset {
     /// A copyright message suitable for display to credit the content creator.
     pub copyright: Option<String>,

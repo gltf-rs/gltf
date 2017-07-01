@@ -109,7 +109,6 @@ pub enum WrappingMode {
 
 /// Texture sampler properties for filtering and wrapping modes.
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct Sampler {
     /// Magnification filter.
     #[serde(rename = "magFilter")]
@@ -120,6 +119,7 @@ pub struct Sampler {
     pub min_filter: Option<Checked<MinFilter>>,
 
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub name: Option<String>,
 
     /// `s` wrapping mode.
@@ -148,9 +148,9 @@ pub struct SamplerExtensions {
 
 /// A texture and its sampler.
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct Texture {
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub name: Option<String>,
 
     /// The index of the sampler used by this texture.
@@ -176,7 +176,6 @@ pub struct TextureExtensions {
 }
 
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 /// Reference to a `Texture`.
 pub struct Info {
     /// The index of the texture.

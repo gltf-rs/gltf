@@ -7,7 +7,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::borrow::Cow;
 use std::slice;
 use {camera, json, mesh, skin, Gltf};
 
@@ -21,7 +20,7 @@ use {camera, json, mesh, skin, Gltf};
 /// (referenced by an animation.channel.target), only TRS properties may be present;
 /// `matrix` will not be present.
 #[derive(Clone, Debug)]
-pub struct Node {
+pub struct Node<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
@@ -31,7 +30,7 @@ pub struct Node {
 
 /// The root `Node`s of a scene.
 #[derive(Clone, Debug)]
-pub struct Scene {
+pub struct Scene<'a> {
     /// The parent `Gltf` struct.
     #[allow(dead_code)]
     gltf: &'a Gltf,
@@ -42,7 +41,7 @@ pub struct Scene {
 
 /// An `Iterator` that visits the nodes in a scene.
 #[derive(Clone, Debug)]
-pub struct Nodes {
+pub struct Nodes<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
@@ -52,15 +51,15 @@ pub struct Nodes {
 
 /// An `Iterator` that visits the children of a node.
 #[derive(Clone, Debug)]
-pub struct Children {
+pub struct Children<'a> {
     /// The parent `Node` struct.
-    parent: &'a Node,
+    parent: &'a Node<'a>,
 
     /// The internal node index iterIterator.
     iter: slice::Iter<'a, json::Index<json::scene::Node>>,
 }
 
-impl Node {
+impl<'a> Node<'a> {
     /// Constructs a `Node`.
     pub fn new(gltf: &'a Gltf, json: &'a json::scene::Node) -> Self {
         Self {
@@ -82,7 +81,7 @@ impl Node {
     }
 
     /// The indices of this node's children.
-    pub fn children(&'a self) -> Children {
+    pub fn children(&'a self) -> Children<'a> {
         Children {
             parent: self,
             iter: self.json.children.as_ref().map_or([].iter(), |x| x.iter()),
@@ -105,15 +104,16 @@ impl Node {
     }
 
     /// The index of the mesh in this node.
-    pub fn mesh(&self) -> Option<mesh::Mesh> {
+    pub fn mesh(&self) -> Option<mesh::Mesh<'a>> {
         self.json.mesh.as_ref().map(|index| {
             mesh::Mesh::new(self.gltf, self.gltf.as_json().get(index))
         })
     }
 
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(Cow::as_ref)
+        self.json.name.as_ref().map(String::as_str)
     }
 
     /// The node's unit quaternion rotation in the order (x, y, z, w), where w is
@@ -133,7 +133,7 @@ impl Node {
     }
 
     /// The index of the skin referenced by this node.
-    pub fn skin(&self) -> Option<skin::Skin> {
+    pub fn skin(&self) -> Option<skin::Skin<'a>> {
         self.json.skin.as_ref().map(|index| {
             skin::Skin::new(self.gltf, self.gltf.as_json().get(index))
         })
@@ -146,7 +146,7 @@ impl Node {
     }
 }
 
-impl Scene {
+impl<'a> Scene<'a> {
     /// Constructs a `Scene`.
     pub fn new(gltf: &'a Gltf, json: &'a json::scene::Scene) -> Self {
         Self {
@@ -171,12 +171,13 @@ impl Scene {
     }
 
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(Cow::as_ref)
+        self.json.name.as_ref().map(String::as_str)
     }
 
     /// The indices of each root node.
-    pub fn nodes(&self) -> Nodes  {
+    pub fn nodes(&self) -> Nodes<'a> {
         Nodes {
             gltf: self.gltf,
             iter: self.json.nodes.iter(),
@@ -184,8 +185,8 @@ impl Scene {
     }
 }
 
-impl Iterator for Nodes {
-    type Item = Node;
+impl<'a> Iterator for Nodes<'a> {
+    type Item = Node<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
@@ -193,8 +194,8 @@ impl Iterator for Nodes {
     }
 }
 
-impl Iterator for Children {
-    type Item = Node;
+impl<'a> Iterator for Children<'a> {
+    type Item = Node<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()

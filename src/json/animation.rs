@@ -48,7 +48,6 @@ pub enum TrsProperty {
 
 /// A keyframe animation.
 #[derive(Clone, Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct Animation {
     /// Extension specific data.
     #[serde(default)]
@@ -65,6 +64,7 @@ pub struct Animation {
     pub channels: Vec<Channel>,
     
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub name: Option<String>,
     
     /// An array of samplers that combine input and output accessors with an
@@ -81,7 +81,6 @@ pub struct AnimationExtensions {
 
 /// Targets an animation's sampler at a node's property.
 #[derive(Clone, Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct Channel {
     /// The index of a sampler in this animation used to compute the value for the
     /// target.
@@ -108,7 +107,6 @@ pub struct ChannelExtensions {
 
 /// The index of the node and TRS property that an animation channel targets.
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct Target {
     /// Extension specific data.
     #[serde(default)]
@@ -135,7 +133,6 @@ pub struct TargetExtensions {
 
 /// Defines a keyframe graph but not its target.
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct Sampler {
     /// Extension specific data.
     #[serde(default)]

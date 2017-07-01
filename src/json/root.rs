@@ -7,6 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use serde;
 use std;
 use std::fmt;
 use json::*;
@@ -31,7 +32,6 @@ pub struct Index<T>(u32, std::marker::PhantomData<T>);
 
 /// The root object of a glTF 2.0 asset.
 #[derive(Clone, Debug, Default, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct Root {
     /// An array of accessors.
     #[serde(default)]
@@ -290,8 +290,8 @@ impl<T> Index<T> {
     }
 
     /// Returns the internal offset value.
-    pub fn value(&self) -> u32 {
-        self.0
+    pub fn value(&self) -> usize {
+        self.0 as usize
     }
 }
 

@@ -11,7 +11,6 @@ use json::{accessor, scene, Extras, Index};
 
 /// Joints and matrices defining a skin.
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct Skin {
     /// Extension specific data.
     #[serde(default)]
@@ -35,6 +34,7 @@ pub struct Skin {
     pub joints: Vec<Index<scene::Node>>,
     
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub name: Option<String>,
     
     /// The index of the node used as a skeleton root.

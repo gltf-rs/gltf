@@ -18,7 +18,6 @@ pub const VALID_MIME_TYPES: &'static [&'static str] = &[
 
 /// Image data used to create a texture.
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct Image {
     /// The index of the buffer view that contains the image. Use this instead of
     /// the image's uri property.
@@ -30,6 +29,7 @@ pub struct Image {
     pub mime_type: Option<MimeType>,
 
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub name: Option<String>,
 
     /// The uri of the image.  Relative paths are relative to the .gltf file.

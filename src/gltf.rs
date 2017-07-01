@@ -56,132 +56,132 @@ pub struct Gltf {
 
 /// An `Iterator` that visits every accessor in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Accessors<'b> {
+pub struct Accessors<'a> {
     /// Internal accessor iterator.
-    iter: slice::Iter<'b, json::accessor::Accessor<'b>>,
+    iter: slice::Iter<'a, json::accessor::Accessor>,
 
     /// The internal root glTF object.
-    gltf: &'b Gltf<'b>,
+    gltf: &'a Gltf,
 }
 
 /// An `Iterator` that visits every animation in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Animations<'b> {
+pub struct Animations<'a> {
     /// Internal animation iterator.
-    iter: slice::Iter<'b, json::animation::Animation<'b>>,
+    iter: slice::Iter<'a, json::animation::Animation>,
 
     /// The internal root glTF object.
-    gltf: &'b Gltf<'b>,
+    gltf: &'a Gltf,
 }
 
 /// An `Iterator` that visits every pre-loaded buffer in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Buffers<'b> {
+pub struct Buffers<'a> {
     /// Internal buffer iterator.
-    iter: Enumerate<slice::Iter<'b, json::buffer::Buffer<'b>>>,
+    iter: Enumerate<slice::Iter<'a, json::buffer::Buffer>>,
 
     /// The internal root glTF object.
-    gltf: &'b Gltf<'b>,
+    gltf: &'a Gltf,
 }
 
 /// An `Iterator` that visits every pre-loaded buffer view in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Views<'b> {
+pub struct Views<'a> {
     /// Internal buffer view iterator.
-    iter: slice::Iter<'b, json::buffer::View<'b>>,
+    iter: slice::Iter<'a, json::buffer::View>,
 
     /// The internal root glTF object.
-    gltf: &'b Gltf<'b>,
+    gltf: &'a Gltf,
 }
 
 /// An `Iterator` that visits every camera in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Cameras<'b> {
+pub struct Cameras<'a> {
     /// Internal buffer view iterator.
-    iter: slice::Iter<'b, json::camera::Camera<'b>>,
+    iter: slice::Iter<'a, json::camera::Camera>,
 
     /// The internal root glTF object.
-    gltf: &'b Gltf<'b>,
+    gltf: &'a Gltf,
 }
 
 /// An `Iterator` that visits every pre-loaded image in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Images<'b> {
+pub struct Images<'a> {
     /// Internal image iterator.
-    iter: Enumerate<slice::Iter<'b, json::image::Image<'b>>>,
+    iter: Enumerate<slice::Iter<'a, json::image::Image>>,
 
     /// The internal root glTF object.
-    gltf: &'b Gltf<'b>,
+    gltf: &'a Gltf,
 }
 
 /// An `Iterator` that visits every material in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Materials<'b> {
+pub struct Materials<'a> {
     /// Internal material iterator.
-    iter: slice::Iter<'b, json::material::Material<'b>>,
+    iter: slice::Iter<'a, json::material::Material>,
 
     /// The internal root glTF object.
-    gltf: &'b Gltf<'b>,
+    gltf: &'a Gltf,
 }
 
 /// An `Iterator` that visits every mesh in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Meshes<'b> {
+pub struct Meshes<'a> {
     /// Internal mesh iterator.
-    iter: slice::Iter<'b, json::mesh::Mesh<'b>>,
+    iter: slice::Iter<'a, json::mesh::Mesh>,
 
     /// The internal root glTF object.
-    gltf: &'b Gltf<'b>,
+    gltf: &'a Gltf,
 }
 
 /// An `Iterator` that visits every node in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Nodes<'b> {
+pub struct Nodes<'a> {
     /// Internal node iterator.
-    iter: slice::Iter<'b, json::scene::Node<'b>>,
+    iter: slice::Iter<'a, json::scene::Node>,
 
     /// The internal root glTF object.
-    gltf: &'b Gltf<'b>,
+    gltf: &'a Gltf,
 }
 
 /// An `Iterator` that visits every sampler in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Samplers<'b> {
+pub struct Samplers<'a> {
     /// Internal sampler iterator.
-    iter: slice::Iter<'b, json::texture::Sampler<'b>>,
+    iter: slice::Iter<'a, json::texture::Sampler>,
 
     /// The internal root glTF object.
-    gltf: &'b Gltf<'b>,
+    gltf: &'a Gltf,
 }
 
 /// An `Iterator` that visits every scene in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Scenes<'b> {
+pub struct Scenes<'a> {
     /// Internal scene iterator.
-    iter: slice::Iter<'b, json::scene::Scene<'b>>,
+    iter: slice::Iter<'a, json::scene::Scene>,
 
     /// The internal root glTF object.
-    gltf: &'b Gltf<'b>,
+    gltf: &'a Gltf,
 }
 
 /// An `Iterator` that visits every skin in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Skins<'b> {
+pub struct Skins<'a> {
     /// Internal skin iterator.
-    iter: slice::Iter<'b, json::skin::Skin<'b>>,
+    iter: slice::Iter<'a, json::skin::Skin>,
 
     /// The internal root glTF object.
-    gltf: &'b Gltf<'b>,
+    gltf: &'a Gltf,
 }
 
 /// An `Iterator` that visits every texture in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Textures<'b> {
+pub struct Textures<'a> {
     /// Internal texture iterator.
-    iter: slice::Iter<'b, json::texture::Texture<'b>>,
+    iter: slice::Iter<'a, json::texture::Texture>,
 
     /// The internal root glTF object.
-    gltf: &'b Gltf<'b>,
+    gltf: &'a Gltf,
 }
 
 impl Gltf {
@@ -224,7 +224,7 @@ impl Gltf {
     }
 
     /// Returns an `Iterator` that visits the accessors of the glTF asset.
-    pub fn accessors<'b>(&'b self) -> Accessors<'b> {
+    pub fn accessors<'a>(&'a self) -> Accessors<'a> {
         Accessors {
             iter: self.as_json().accessors.iter(),
             gltf: self,
@@ -232,7 +232,7 @@ impl Gltf {
     }
 
     /// Returns an `Iterator` that visits the animations of the glTF asset.
-    pub fn animations<'b>(&'b self) -> Animations<'b> {
+    pub fn animations<'a>(&'a self) -> Animations<'a> {
         Animations {
             iter: self.as_json().animations.iter(),
             gltf: self,
@@ -240,7 +240,7 @@ impl Gltf {
     }
 
     /// Returns an `Iterator` that visits the pre-loaded buffers of the glTF asset.
-    pub fn buffers<'b>(&'b self) -> Buffers<'b> {
+    pub fn buffers<'a>(&'a self) -> Buffers<'a> {
         Buffers {
             iter: self.as_json().buffers.iter().enumerate(),
             gltf: self,
@@ -249,7 +249,7 @@ impl Gltf {
 
     /// Returns an `Iterator` that visits the pre-loaded buffer views of the glTF
     /// asset.
-    pub fn views<'b>(&'b self) -> Views<'b> {
+    pub fn views<'a>(&'a self) -> Views<'a> {
         Views {
             iter: self.as_json().buffer_views.iter(),
             gltf: self,
@@ -257,7 +257,7 @@ impl Gltf {
     }
 
     /// Returns an `Iterator` that visits the cameras of the glTF asset.
-    pub fn cameras<'b>(&'b self) -> Cameras<'b> {
+    pub fn cameras<'a>(&'a self) -> Cameras<'a> {
         Cameras {
             iter: self.as_json().cameras.iter(),
             gltf: self,
@@ -265,7 +265,7 @@ impl Gltf {
     }
 
     /// Returns an `Iterator` that visits the pre-loaded images of the glTF asset.
-    pub fn images<'b>(&'b self) -> Images<'b> {
+    pub fn images<'a>(&'a self) -> Images<'a> {
         Images {
             iter: self.as_json().images.iter().enumerate(),
             gltf: self,
@@ -273,7 +273,7 @@ impl Gltf {
     }
 
     /// Returns an `Iterator` that visits the materials of the glTF asset.
-    pub fn materials<'b>(&'b self) -> Materials<'b> {
+    pub fn materials<'a>(&'a self) -> Materials<'a> {
         Materials {
             iter: self.as_json().materials.iter(),
             gltf: self,
@@ -281,7 +281,7 @@ impl Gltf {
     }
 
     /// Returns an `Iterator` that visits the meshes of the glTF asset.
-    pub fn meshes<'b>(&'b self) -> Meshes<'b> {
+    pub fn meshes<'a>(&'a self) -> Meshes<'a> {
         Meshes {
             iter: self.as_json().meshes.iter(),
             gltf: self,
@@ -289,7 +289,7 @@ impl Gltf {
     }
     
     /// Returns an `Iterator` that visits the nodes of the glTF asset.
-    pub fn nodes<'b>(&'b self) -> Nodes<'b> {
+    pub fn nodes<'a>(&'a self) -> Nodes<'a> {
         Nodes {
             iter: self.as_json().nodes.iter(),
             gltf: self,
@@ -297,7 +297,7 @@ impl Gltf {
     }
 
     /// Returns an `Iterator` that visits the scenes of the glTF asset.
-    pub fn samplers<'b>(&'b self) -> Samplers<'b> {
+    pub fn samplers<'a>(&'a self) -> Samplers<'a> {
         Samplers {
             iter: self.as_json().samplers.iter(),
             gltf: self,
@@ -305,7 +305,7 @@ impl Gltf {
     }
 
     /// Returns an `Iterator` that visits the samplers of the glTF asset.
-    pub fn scenes<'b>(&'b self) -> Scenes<'b> {
+    pub fn scenes<'a>(&'a self) -> Scenes<'a> {
         Scenes {
             iter: self.as_json().scenes.iter(),
             gltf: self,
@@ -313,7 +313,7 @@ impl Gltf {
     }
 
     /// Returns an `Iterator` that visits the skins of the glTF asset.
-    pub fn skins<'b>(&'b self) -> Skins<'b> {
+    pub fn skins<'a>(&'a self) -> Skins<'a> {
         Skins {
             iter: self.as_json().skins.iter(),
             gltf: self,
@@ -321,7 +321,7 @@ impl Gltf {
     }
 
     /// Returns an `Iterator` that visits the textures of the glTF asset.
-    pub fn textures<'b>(&'b self) -> Textures<'b> {
+    pub fn textures<'a>(&'a self) -> Textures<'a> {
         Textures {
             iter: self.as_json().textures.iter(),
             gltf: self,
@@ -336,103 +336,92 @@ impl Deref for Gltf {
     }
 }
 
-impl Iterator for Accessors {
-    type Item = Accessor;
+impl<'a> Iterator for Accessors<'a> {
+    type Item = Accessor<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|json| Accessor::new(self.gltf, json))
     }
 }
 
-impl Iterator for Animations {
-    type Item = Animation;
+impl<'a> Iterator for Animations<'a> {
+    type Item = Animation<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|json| Animation::new(self.gltf, json))
     }
 }
 
-impl Iterator for Buffers {
-    type Item = Buffer;
+impl<'a> Iterator for Buffers<'a> {
+    type Item = Buffer<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|(index, json)| {
-            Buffer::new(self.gltf, json, &self.gltf.buffer_data(index))
-        })
+        self.iter.next().map(|(index, json)| Buffer::new(self.gltf, json))
     }
 }
 
-impl Iterator for Views {
-    type Item = View;
+impl<'a> Iterator for Views<'a> {
+    type Item = View<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter
-            .next()
-            .map(|json| {
-                let buffer_data = self.gltf.buffer_data(json.buffer.value());
-                let begin = json.byte_offset as usize;
-                let end = begin + json.byte_length as usize;
-                View::new(self.gltf, json, &buffer_data[begin..end])
-            })
+        self.iter.next().map(|json| View::new(self.gltf, json))
     }
 }
 
-impl<'b> Iterator for Cameras<'b> {
-    type Item = Camera<'b>;
+impl<'a> Iterator for Cameras<'a> {
+    type Item = Camera<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|json| Camera::new(self.gltf, json))
     }
 }
 
-impl<'b> Iterator for Images<'b> {
-    type Item = Image<'b>;
+impl<'a> Iterator for Images<'a> {
+    type Item = Image<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|(index, json)| {
-            Image::new(self.gltf, json, &self.gltf.image_data(index))
-        })
+        self.iter.next().map(|(index, json)| Image::new(self.gltf, json))
     }
 }
 
-impl<'b> Iterator for Materials<'b> {
-    type Item = Material<'b>;
+impl<'a> Iterator for Materials<'a> {
+    type Item = Material<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|json| Material::new(self.gltf, json))
     }
 }
 
-impl<'b> Iterator for Meshes<'b> {
-    type Item = Mesh<'b>;
+impl<'a> Iterator for Meshes<'a> {
+    type Item = Mesh<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|json| Mesh::new(self.gltf, json))
     }
 }
 
-impl<'b> Iterator for Nodes<'b> {
-    type Item = Node<'b>;
+impl<'a> Iterator for Nodes<'a> {
+    type Item = Node<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|json| Node::new(self.gltf, json))
     }
 }
 
-impl<'b> Iterator for Samplers<'b> {
-    type Item = Sampler<'b>;
+impl<'a> Iterator for Samplers<'a> {
+    type Item = Sampler<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|json| Sampler::new(self.gltf, json))
     }
 }
 
-impl<'b> Iterator for Scenes<'b> {
-    type Item = Scene<'b>;
+impl<'a> Iterator for Scenes<'a> {
+    type Item = Scene<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|json| Scene::new(self.gltf, json))
     }
 }
 
-impl<'b> Iterator for Skins<'b> {
-    type Item = Skin<'b>;
+impl<'a> Iterator for Skins<'a> {
+    type Item = Skin<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|json| Skin::new(self.gltf, json))
     }
 }
 
-impl<'b> Iterator for Textures<'b> {
-    type Item = Texture<'b>;
+impl<'a> Iterator for Textures<'a> {
+    type Item = Texture<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|json| Texture::new(self.gltf, json))
     }

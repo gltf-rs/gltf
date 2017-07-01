@@ -21,7 +21,6 @@ use validation::{Error, JsonPath, Validate};
 /// animation.channel.target), only TRS properties may be present; `matrix` will not
 /// be present.
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct Node {
     /// The index of the camera referenced by this node.
     pub camera: Option<Index<camera::Camera>>,
@@ -45,6 +44,7 @@ pub struct Node {
     pub mesh: Option<Index<mesh::Mesh>>,
     
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub name: Option<String>,
     
     /// The node's unit quaternion rotation in the order (x, y, z, w), where w is
@@ -88,7 +88,6 @@ fn node_scale_default() -> [f32; 3] {
 
 /// The root `Node`s of a scene.
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct Scene {
     /// Extension specific data.
     #[serde(default)]
@@ -99,6 +98,7 @@ pub struct Scene {
     pub extras: Extras,
     
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub name: Option<String>,
 
     /// The indices of each root node.

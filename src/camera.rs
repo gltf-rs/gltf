@@ -7,23 +7,22 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::borrow::Cow;
 use {json, Gltf};
 
 /// A camera's projection.
 #[derive(Clone, Debug)]
-pub enum Projection {
+pub enum Projection<'a> {
     /// Describes an orthographic projection.
-    Orthographic(Orthographic),
+    Orthographic(Orthographic<'a>),
 
     /// Describes a perspective projection.
-    Perspective(Perspective),
+    Perspective(Perspective<'a>),
 }
 
 /// A camera's projection.  A node can reference a camera to apply a transform to
 /// place the camera in the scene.
 #[derive(Clone, Debug)]
-pub struct Camera {
+pub struct Camera<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
@@ -33,7 +32,7 @@ pub struct Camera {
   
 ///  Values for an orthographic camera projection.
 #[derive(Clone, Debug)]
-pub struct Orthographic {
+pub struct Orthographic<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
@@ -43,7 +42,7 @@ pub struct Orthographic {
   
 /// Values for a perspective camera projection.
 #[derive(Clone, Debug)]
-pub struct Perspective {
+pub struct Perspective<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
@@ -51,7 +50,7 @@ pub struct Perspective {
     json: &'a json::camera::Perspective,
 }
 
-impl Camera {
+impl<'a> Camera<'a> {
     /// Constructs a `Camera`.
     pub fn new(gltf: &'a Gltf, json: &'a json::camera::Camera) -> Self {
         Self {
@@ -66,25 +65,25 @@ impl Camera {
     }
 
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(Cow::as_ref)
+        self.json.name.as_ref().map(String::as_str)
     }
 
     /// Returns the camera's projection.
     pub fn projection(&self) -> Projection {
-        match self.json.type_.0.as_ref() {
-            "orthographic" => {
+        match self.json.type_.unwrap() {
+            json::camera::Type::Orthographic => {
                 let json = self.json.orthographic.as_ref().unwrap();
                 Projection::Orthographic(Orthographic::new(self.gltf, json))
             },
-            "perspective" => {
+            json::camera::Type::Perspective => {
                 let json = self.json.perspective.as_ref().unwrap();
                 Projection::Perspective(Perspective::new(self.gltf, json))
             },
-            _ => unreachable!(),
         }
     } 
-    
+
     /// Extension specific data.
     pub fn extensions(&self) -> &json::camera::CameraExtensions {
         &self.json.extensions
@@ -96,7 +95,7 @@ impl Camera {
     }
 }
 
-impl Orthographic {
+impl<'a> Orthographic<'a> {
     /// Constructs a `Orthographic` camera projection.
     pub fn new(gltf: &'a Gltf, json: &'a json::camera::Orthographic) -> Self {
         Self {
@@ -141,7 +140,7 @@ impl Orthographic {
     }
 }
 
-impl Perspective {
+impl<'a> Perspective<'a> {
     /// Constructs a `Perspective` camera projection.
     pub fn new(gltf: &'a Gltf, json: &'a json::camera::Perspective) -> Self {
         Self {

@@ -7,61 +7,16 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::borrow::Cow;
 use std::marker::PhantomData;
 use std::mem::{size_of, transmute_copy};
 use {buffer, json, Gltf};
 
-/// The component data type.
-#[derive(Clone, Copy, Debug)]
-pub enum DataType {
-    /// Corresponds to `GL_BYTE`.
-    I8 = 5120,
-
-    /// Corresponds to `GL_UNSIGNED_BYTE`.
-    U8 = 5121,
-
-    /// Corresponds to `GL_SHORT`.
-    I16 = 5122,
-
-    /// Corresponds to `GL_UNSIGNED_SHORT`.
-    U16 = 5123,
-
-    /// Corresponds to `GL_UNSIGNED_INT`.
-    U32 = 5125,
-
-    /// Corresponds to `GL_FLOAT`.
-    F32 = 5126,
-}
-
-/// Specifies whether an attribute, vector, or matrix.
-#[derive(Clone, Copy, Debug)]
-pub enum Dimensions {
-    /// Scalar quantity.
-    Scalar,
-
-    /// 2D vector.
-    Vec2,
-
-    /// 3D vector.
-    Vec3,
-
-    /// 4D vector.
-    Vec4,
-
-    /// 2x2 matrix.
-    Mat2,
-
-    /// 3x3 matrix.
-    Mat3,
-
-    /// 4x4 matrix.
-    Mat4,
-}
+pub use json::accessor::ComponentType as DataType;
+pub use json::accessor::Type as Dimensions;
 
 /// A typed view into a buffer view.
 #[derive(Clone, Debug)]
-pub struct Accessor {
+pub struct Accessor<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
@@ -85,7 +40,7 @@ pub struct Iter<'a, T: 'a> {
     _mk: PhantomData<&'a T>,
 }
 
-impl Accessor {
+impl<'a> Accessor<'a> {
     /// Constructs an `Accessor`.
     pub fn new(gltf: &'a Gltf, json: &'a json::accessor::Accessor) -> Self {
         Self {
@@ -98,7 +53,7 @@ impl Accessor {
     fn size(&self) -> usize {
         self.data_type().size() * self.dimensions().multiplicity()
     }
-    
+
     /// Returns an `Iterator` that interprets the data pointed to by the accessor
     /// as the given type.
     /// 
@@ -122,12 +77,12 @@ impl Accessor {
     }
 
     /// Returns the internal JSON item.
-    pub fn as_json(&self) ->  &json::accessor::Accessor {
+    pub fn as_json(&self) -> &json::accessor::Accessor {
         self.json
     }
 
     /// The parent buffer view this accessor reads from.
-    pub fn view(&self) -> buffer::View {
+    pub fn view(&self) -> buffer::View<'a> {
         self.gltf.views().nth(self.json.buffer_view.value()).unwrap()
     }
 
@@ -144,17 +99,7 @@ impl Accessor {
 
     /// The data type of components in the attribute.
     pub fn data_type(&self) -> DataType {
-        use self::DataType::*;
-        use json::accessor::*;
-        match self.json.component_type.0 {
-            BYTE => I8,
-            UNSIGNED_BYTE => U8,
-            SHORT => I16,
-            UNSIGNED_SHORT => U16,
-            UNSIGNED_INT => U32,
-            FLOAT => F32,
-            _ => unreachable!(),
-        }
+        self.json.component_type.unwrap().0
     }
 
     /// Extension specific data.
@@ -169,17 +114,7 @@ impl Accessor {
 
     /// Specifies if the attribute is a scalar, vector, or matrix.
     pub fn dimensions(&self) -> Dimensions {
-        use self::Dimensions::*;
-        match self.json.type_.0.as_ref() {
-            "SCALAR" => Scalar,
-            "VEC2" => Vec2,
-            "VEC3" => Vec3,
-            "VEC4" => Vec4,
-            "MAT2" => Mat2,
-            "MAT3" => Mat3,
-            "MAT4" => Mat4,
-            _ => unreachable!(),
-        }
+        self.json.type_.unwrap()
     }
 
     /// Minimum value of each component in this attribute.
@@ -193,8 +128,9 @@ impl Accessor {
     }
 
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_ref().map(Cow::as_ref)
+        self.json.name.as_ref().map(String::as_str)
     }
 
     /// Specifies whether integer data values should be normalized.
@@ -207,34 +143,6 @@ impl Accessor {
         self.json.sparse.as_ref().map(|json| {
             sparse::Sparse::new(self.gltf, json)
         })
-    }
-}
-
-impl DataType {
-    /// Returns the number of bytes this value represents.
-    pub fn size(&self) -> usize {
-        use self::DataType::*;
-        match *self {
-            I8 | U8 => 1,
-            I16 | U16 => 2,
-            F32 | U32 => 4,
-        }
-    }
-}
-
-impl Dimensions {
-    /// Returns the equivalent number of scalar quantities this dimension represents.
-    pub fn multiplicity(&self) -> usize {
-        use self::Dimensions::*;
-        match *self {
-            Scalar => 1,
-            Vec2 => 2,
-            Vec3 => 3,
-            Vec4 => 4,
-            Mat2 => 4,
-            Mat3 => 9,
-            Mat4 => 16,
-        }
     }
 }
 
@@ -280,7 +188,7 @@ pub mod sparse {
     }
     
     ///  Indices of those attributes that deviate from their initialization value.
-    pub struct Indices {
+    pub struct Indices<'a> {
         /// The parent `Gltf` struct.
         gltf: &'a Gltf,
 
@@ -288,7 +196,7 @@ pub mod sparse {
         json: &'a json::accessor::sparse::Indices,
     }
 
-    impl Indices {
+    impl<'a> Indices<'a> {
         /// Constructs a `Indices`.
         pub fn new(
             gltf: &'a Gltf,
@@ -308,7 +216,7 @@ pub mod sparse {
         /// The parent buffer view containing the sparse indices.  The referenced
         /// buffer view must not have `ARRAY_BUFFER` nor `ELEMENT_ARRAY_BUFFER` as
         /// its target.
-        pub fn view(&self) -> buffer::View {
+        pub fn view(&self) -> buffer::View<'a> {
             self.gltf.views().nth(self.json.buffer_view.value()).unwrap()
         }
 
@@ -319,12 +227,10 @@ pub mod sparse {
 
         /// The data type of each index.
         pub fn index_type(&self) -> IndexType {
-            use self::IndexType::*;
-            use json::accessor::*;
-            match self.json.component_type.0 {
-                UNSIGNED_BYTE => U8,
-                UNSIGNED_SHORT => U16,
-                UNSIGNED_INT => U32,
+            match self.json.component_type.unwrap().0 {
+                json::accessor::ComponentType::U8 => IndexType::U8,
+                json::accessor::ComponentType::U16 => IndexType::U16,
+                json::accessor::ComponentType::U32 => IndexType::U32,
                 _ => unreachable!(),
             }
         }
@@ -341,7 +247,7 @@ pub mod sparse {
     }
     
     /// Sparse storage of attributes that deviate from their initialization value.
-    pub struct Sparse {
+    pub struct Sparse<'a> {
         /// The parent `Gltf` struct.
         gltf: &'a Gltf,
 
@@ -349,7 +255,7 @@ pub mod sparse {
         json: &'a json::accessor::sparse::Sparse,
     }
 
-    impl Sparse {
+    impl<'a> Sparse<'a> {
         /// Constructs a `Sparse`.
         pub fn new(
             gltf: &'a Gltf,
@@ -374,7 +280,7 @@ pub mod sparse {
         /// Index array of size `count` that points to those accessor attributes
         /// that deviate from their initialization value.  Indices must strictly
         /// increase.
-        pub fn indices(&self) -> Indices {
+        pub fn indices(&self) -> Indices<'a> {
             Indices::new(self.gltf, &self.json.indices)
         }
 
@@ -382,7 +288,7 @@ pub mod sparse {
         /// accessor attributes pointed by `indices`.  Substituted values must have
         /// the same `component_type` and number of components as the base
         /// `Accessor`.
-        pub fn values(&self) -> Values {
+        pub fn values(&self) -> Values<'a> {
             Values::new(self.gltf, &self.json.values)
         }
 
@@ -399,7 +305,7 @@ pub mod sparse {
 
     /// Array of size `count * number_of_components` storing the displaced accessor
     /// attributes pointed by `accessor::sparse::Indices`.
-    pub struct Values {
+    pub struct Values<'a> {
         /// The parent `Gltf` struct.
         gltf: &'a Gltf,
 
@@ -407,7 +313,7 @@ pub mod sparse {
         json: &'a json::accessor::sparse::Values,
     }
 
-    impl Values {
+    impl<'a> Values<'a> {
         /// Constructs a `Values`.
         pub fn new(
             gltf: &'a Gltf,

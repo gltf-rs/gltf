@@ -7,8 +7,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use serde;
-
 /// Contains `Accessor` and other related data structures.
 pub mod accessor;
 
@@ -53,4 +51,4 @@ pub mod texture;
 
 pub use self::extras::Extras;
 pub use self::root::{Index, Root};
-
+pub use serde_json::{from_reader, from_value};

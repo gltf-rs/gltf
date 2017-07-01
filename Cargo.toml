@@ -24,6 +24,7 @@ serde_json = "1.0"
 [features]
 default = []
 extras = []
+names = []
 
 [[example]]
 name = "gltf_display"

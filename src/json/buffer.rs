@@ -42,13 +42,13 @@ pub enum Target {
 
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct Buffer {
     /// The length of the buffer in bytes.
     #[serde(default, rename = "byteLength")]
     pub byte_length: u32,
 
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub name: Option<String>,
 
     /// The uri of the buffer.  Relative paths are relative to the .gltf file.
@@ -73,7 +73,6 @@ pub struct BufferExtensions {
 
 /// A view into a buffer generally representing a subset of the buffer.
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct View {
     /// The parent `Buffer`.
     pub buffer: Index<Buffer>,
@@ -93,6 +92,7 @@ pub struct View {
     pub byte_stride: Option<ByteStride>,
 
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub name: Option<String>,
 
     /// Optional target the buffer should be bound to.

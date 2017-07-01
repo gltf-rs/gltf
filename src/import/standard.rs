@@ -19,21 +19,23 @@ use Gltf;
 pub struct StaticImporter;
 
 fn make_wrapper<'a, S: Source>(
-    root: json::Root<'a>,
+    root: json::Root,
     source: S,
-) -> Result<Gltf<'a>, Error<S>> {
+) -> Result<Gltf, Error<S>> {
     use self::Error::*;
     use std::io::Read;
-    use validation::{Error as Oops, JsonPath, Validate};
+    use validation::{Error as Reason, JsonPath, Validate};
 
     // Parse and validate the .gltf JSON data
     let mut errs = Vec::new();
-    root.validate(&root, || JsonPath::new(), &mut |err| errs.push(err));
+    root.validate(&root, || JsonPath::new(), &mut |path, err| {
+        errs.push((path(), err))
+    });
     for (index, buffer) in root.buffers.iter().enumerate() {
         if buffer.uri.is_none() {
             let path = JsonPath::new().field("buffers").index(index);
-            let reason = format!("uri is `undefined`");
-            errs.push(Oops::missing_data(path, reason));
+            // let reason = format!("uri is `undefined`");
+            errs.push((path, Reason::Missing));
         }
     }
     if !errs.is_empty() {
@@ -82,7 +84,7 @@ impl StaticImporter {
         &self,
         reader: R,
         source: S,
-    ) -> Result<Gltf<'static>, Error<S>>
+    ) -> Result<Gltf, Error<S>>
     where
         R: Read,
         S: Source,

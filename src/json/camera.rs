@@ -33,9 +33,9 @@ pub enum Type {
 /// A node can reference a camera to apply a transform to place the camera in the
 /// scene.
 #[derive(Clone, Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct Camera {
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub name: Option<String>,
 
     /// An orthographic camera containing properties to create an orthographic
@@ -68,7 +68,6 @@ pub struct CameraExtensions {
 
 /// Values for an orthographic camera.
 #[derive(Clone, Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct Orthographic {
     /// The horizontal magnification of the view.
     pub xmag: f32,
@@ -100,7 +99,6 @@ pub struct OrthographicExtensions {
 
 /// Values for a perspective camera.
 #[derive(Clone, Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct Perspective {
     /// Aspect ratio of the field of view.
     #[serde(rename = "aspectRatio")]

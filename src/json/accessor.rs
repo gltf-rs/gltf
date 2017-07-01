@@ -16,7 +16,7 @@ use validation::Checked;
 #[derive(Clone, Copy, Debug, Deserialize)]
 pub enum ComponentType {
     /// Corresponds to `GL_BYTE`.
-    I8,
+    I8 = 1,
 
     /// Corresponds to `GL_UNSIGNED_BYTE`.
     U8,
@@ -38,7 +38,7 @@ pub enum ComponentType {
 #[derive(Clone, Copy, Debug, Deserialize)]
 pub enum Type {
     /// Scalar quantity.
-    Scalar,
+    Scalar = 1,
 
     /// 2D vector.
     Vec2,
@@ -150,8 +150,7 @@ pub mod sparse {
 
     /// Sparse storage of attributes that deviate from their initialization value.
     #[derive(Clone, Debug, Deserialize, Validate)]
-    #[serde(deny_unknown_fields)]
-    pub struct Sparse {
+        pub struct Sparse {
         /// The number of attributes encoded in this sparse accessor.
         pub count: u32,
 
@@ -185,8 +184,7 @@ pub mod sparse {
     /// Array of size `count * number_of_components` storing the displaced
     /// accessor attributes pointed by `accessor::sparse::Indices`.
     #[derive(Clone, Debug, Deserialize, Validate)]
-    #[serde(deny_unknown_fields)]
-    pub struct Values {
+        pub struct Values {
         /// The parent buffer view containing the sparse indices.
         ///
         /// The referenced buffer view must not have `ARRAY_BUFFER` nor
@@ -215,7 +213,6 @@ pub struct AccessorExtensions {
 
 /// A typed view into a buffer view.
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct Accessor {
     /// The parent buffer view this accessor reads from.
     #[serde(rename = "bufferView")]
@@ -252,6 +249,7 @@ pub struct Accessor {
     pub max: Vec<f32>,
 
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub name: Option<String>,
 
     /// Specifies whether integer data values should be normalized.
@@ -362,5 +360,33 @@ impl<'de> de::Deserialize<'de> for Checked<Type> {
             }
         }
         deserializer.deserialize_str(Visitor)
+    }
+}
+
+impl ComponentType {
+    /// Returns the number of bytes this value represents.
+    pub fn size(&self) -> usize {
+        use self::ComponentType::*;
+        match *self {
+            I8 | U8 => 1,
+            I16 | U16 => 2,
+            F32 | U32 => 4,
+        }
+    }
+}
+
+impl Type {
+    /// Returns the equivalent number of scalar quantities this type represents.
+    pub fn multiplicity(&self) -> usize {
+        use self::Type::*;
+        match *self {
+            Scalar => 1,
+            Vec2 => 2,
+            Vec3 => 3,
+            Vec4 => 4,
+            Mat2 => 4,
+            Mat3 => 9,
+            Mat4 => 16,
+        }
     }
 }

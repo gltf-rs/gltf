@@ -7,19 +7,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::borrow::Cow;
 use std::ops::Deref;
 use {json, texture, Gltf};
 
-/// The alpha rendering mode of a material.
-pub enum AlphaMode {
-    Blend,
-    Mask,
-    Opaque,
-}
+pub use json::material::AlphaMode;
 
 ///  The material appearance of a primitive.
-pub struct Material {
+pub struct Material<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
@@ -27,7 +21,7 @@ pub struct Material {
     json: &'a json::material::Material,
 }
 
-impl Material {
+impl<'a> Material<'a> {
     /// Constructs a `Material`.
     pub fn new(gltf: &'a Gltf, json: &'a json::material::Material) -> Self {
         Self {
@@ -56,13 +50,7 @@ impl Material {
     /// output is combined with the background using the normal painting operation
     /// (i.e. the Porter and Duff over operIterator).
     pub fn alpha_mode(&self) -> AlphaMode {
-        use self::AlphaMode::*;
-        match self.json.alpha_mode.0.as_ref() {
-            "BLEND" => Blend,
-            "MASK" => Mask,
-            "OPAQUE" => Opaque,
-            _ => unreachable!(),
-        }
+        self.json.alpha_mode.unwrap()
     }
 
     ///  Specifies whether the material is double-sided.  * When this value is false,
@@ -74,14 +62,15 @@ impl Material {
     }
 
     ///  Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(Cow::as_ref)
+        self.json.name.as_ref().map(String::as_str)
     }
 
     ///  A set of parameter values that are used to define the metallic-roughness
     /// material model from Physically-Based Rendering (PBR) methodology. When not
     /// specified, all the default values of `pbrMetallicRoughness` apply.
-    pub fn pbr_metallic_roughness(&self) -> Option<PbrMetallicRoughness> {
+    pub fn pbr_metallic_roughness(&self) -> Option<PbrMetallicRoughness<'a>> {
         self.json.pbr_metallic_roughness.as_ref().map(|json| {
             PbrMetallicRoughness::new(self.gltf, json)
         })
@@ -93,7 +82,7 @@ impl Material {
     /// [-1 to 1]. Blue [128 to 255] maps to Z [1/255 to 1]. The normal vectors use
     /// OpenGL conventions where +X is right and +Y is up. +Z points toward the
     /// viewer.
-    pub fn normal_texture(&self) -> Option<NormalTexture> {
+    pub fn normal_texture(&self) -> Option<NormalTexture<'a>> {
         self.json.normal_texture.as_ref().map(|json| {
             let texture = self.gltf.textures().nth(json.index.value()).unwrap();
             NormalTexture::new(texture, json)
@@ -105,7 +94,7 @@ impl Material {
     /// lighting and lower values indicate no indirect lighting. These values are
     /// linear. If other channels are present (GBA), they are ignored for occlusion
     /// calculations.
-    pub fn occlusion_texture(&self) -> Option<OcclusionTexture> {
+    pub fn occlusion_texture(&self) -> Option<OcclusionTexture<'a>> {
         self.json.occlusion_texture.as_ref().map(|json| {
             let texture = self.gltf.textures().nth(json.index.value()).unwrap();
             OcclusionTexture::new(texture, json)
@@ -115,7 +104,7 @@ impl Material {
     ///  The emissive map controls the color and intensity of the light being emitted
     /// by the material. This texture contains RGB components in sRGB color space. If
     /// a fourth component (A) is present, it is ignored.
-    pub fn emissive_texture(&self) -> Option<texture::Info> {
+    pub fn emissive_texture(&self) -> Option<texture::Info<'a>> {
         self.json.emissive_texture.as_ref().map(|json| {
             let texture = self.gltf.textures().nth(json.index.value()).unwrap();
             texture::Info::new(texture, json)
@@ -139,7 +128,7 @@ impl Material {
 }
 ///  A set of parameter values that are used to define the metallic-roughness
 /// material model from Physically-Based Rendering (PBR) methodology.
-pub struct PbrMetallicRoughness {
+pub struct PbrMetallicRoughness<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
@@ -147,7 +136,7 @@ pub struct PbrMetallicRoughness {
     json: &'a json::material::PbrMetallicRoughness,
 }
 
-impl PbrMetallicRoughness {
+impl<'a> PbrMetallicRoughness<'a> {
     /// Constructs a `PbrMetallicRoughness`.
     pub fn new(
         gltf: &'a Gltf,
@@ -170,7 +159,7 @@ impl PbrMetallicRoughness {
     }
 
     ///  The base color texture.
-    pub fn base_color_texture(&self) -> Option<texture::Info> {
+    pub fn base_color_texture(&self) -> Option<texture::Info<'a>> {
         self.json.base_color_texture.as_ref().map(|json| {
             let texture = self.gltf.textures().nth(json.index.value()).unwrap();
             texture::Info::new(texture, json)
@@ -193,7 +182,7 @@ impl PbrMetallicRoughness {
     /// component (G) contains the roughness of the material. * If the third
     /// component (B) and/or the fourth component (A) are present then they are
     /// ignored.
-    pub fn metallic_roughness_texture(&self) -> Option<texture::Info> {
+    pub fn metallic_roughness_texture(&self) -> Option<texture::Info<'a>> {
         self.json.metallic_roughness_texture.as_ref().map(|json| {
             let texture = self.gltf.textures().nth(json.index.value()).unwrap();
             texture::Info::new(texture, json)
@@ -212,18 +201,18 @@ impl PbrMetallicRoughness {
 }
 
 ///  Defines the normal texture of a material.
-pub struct NormalTexture {
+pub struct NormalTexture<'a> {
     /// The parent `Texture` struct.
-    texture: texture::Texture,
+    texture: texture::Texture<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::material::NormalTexture,
 }
 
-impl NormalTexture {
+impl<'a> NormalTexture<'a> {
     /// Constructs a `NormalTexture`.
     pub fn new(
-        texture: texture::Texture,
+        texture: texture::Texture<'a>,
         json: &'a json::material::NormalTexture,
     ) -> Self {
         Self {
@@ -259,18 +248,18 @@ impl NormalTexture {
     }
 }
 ///  Defines the occlusion texture of a material.
-pub struct OcclusionTexture {
+pub struct OcclusionTexture<'a> {
     /// The parent `Texture` struct.
-    texture: texture::Texture,
+    texture: texture::Texture<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::material::OcclusionTexture,
 }
 
-impl OcclusionTexture {
+impl<'a> OcclusionTexture<'a> {
     /// Constructs a `OcclusionTexture`.
     pub fn new(
-        texture: texture::Texture,
+        texture: texture::Texture<'a>,
         json: &'a json::material::OcclusionTexture,
     ) -> Self {
         Self {
@@ -305,15 +294,15 @@ impl OcclusionTexture {
     }
 }
 
-impl Deref for NormalTexture {
-    type Target = texture::Texture;
+impl<'a> Deref for NormalTexture<'a> {
+    type Target = texture::Texture<'a>;
     fn deref(&self) -> &Self::Target {
         &self.texture
     }
 }
 
-impl Deref for OcclusionTexture {
-    type Target = texture::Texture;
+impl<'a> Deref for OcclusionTexture<'a> {
+    type Target = texture::Texture<'a>;
     fn deref(&self) -> &Self::Target {
         &self.texture
     }

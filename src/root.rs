@@ -10,11 +10,9 @@
 use std::slice;
 use json;
 
-use std::borrow::Cow;
-
 /// Iterator over extension strings.
 #[derive(Clone, Debug)]
-pub struct Extension(slice::Iter<'a, Cow<'a, str>>);
+pub struct Extensions<'a>(slice::Iter<'a, String>);
 
 /// The (immutable) root object for a glTF asset.
 #[derive(Clone, Debug)]
@@ -32,19 +30,19 @@ impl Root {
     }
 
     /// Returns the extensions referenced in this .gltf file.
-    pub fn extensions_used(&'a self) -> Extension {
-        Extension(self.0.extensions_used.iter())
+    pub fn extensions_used<'a>(&'a self) -> Extensions<'a> {
+        Extensions(self.0.extensions_used.iter())
     }
 
     /// Returns the extensions required to load and render this asset.
-    pub fn extensions_required(&'a self) -> Extension {
-        Extension(self.0.extensions_required.iter())
+    pub fn extensions_required<'a>(&'a self) -> Extensions<'a> {
+        Extensions(self.0.extensions_required.iter())
     }
 }
 
-impl Iterator for Extension {
+impl<'a> Iterator for Extensions<'a> {
     type Item = &'a str;
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.next().map(Cow::as_ref)
+        self.0.next().map(String::as_str)
     }
 }

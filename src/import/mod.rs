@@ -95,7 +95,7 @@ pub enum Error<S: Source> {
     Source(S::Err),
 
     /// The .gltf data is invalid.
-    Validation(Vec<validation::Error>),
+    Validation(Vec<(validation::JsonPath, validation::Error)>),
 }
 
 /// Describes image data required to render a single glTF asset.
@@ -128,7 +128,7 @@ impl StaticImporter {
     }
 
     /// Imports some glTF from the given custom source.
-    pub fn import_from_source<S>(&self, source: S) -> Result<Gltf<'static>, Error<S>>
+    pub fn import_from_source<S>(&self, source: S) -> Result<Gltf, Error<S>>
         where S: Source
     {
         use std::io::Read;
@@ -144,7 +144,7 @@ impl StaticImporter {
     }
     
     /// Import some glTF 2.0 from the file system.
-    pub fn import_from_path<P>(&self, path: P) -> Result<Gltf<'static>, Error<FromPath>>
+    pub fn import_from_path<P>(&self, path: P) -> Result<Gltf, Error<FromPath>>
         where P: AsRef<Path>
     {
         self.import_from_source(FromPath::new(path))
@@ -163,8 +163,8 @@ impl<S: Source> From<serde_json::Error> for Error<S> {
     }
 }
 
-impl<S: Source> From<Vec<validation::Error>> for Error<S> {
-    fn from(errs: Vec<validation::Error>) -> Error<S> {
+impl<S: Source> From<Vec<(validation::JsonPath, validation::Error)>> for Error<S> {
+    fn from(errs: Vec<(validation::JsonPath, validation::Error)>) -> Error<S> {
         Error::Validation(errs)
     }
 }

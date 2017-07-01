@@ -89,7 +89,6 @@ pub struct MeshExtensions {
 /// A node can contain one or more meshes and its transform places the meshes in
 /// the scene.
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct Mesh {
     /// Extension specific data.
     #[serde(default)]
@@ -100,6 +99,7 @@ pub struct Mesh {
     pub extras: Extras,
     
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub name: Option<String>,
     
     /// Defines the geometry to be renderered with a material.
@@ -111,7 +111,6 @@ pub struct Mesh {
 
 /// Geometry to be rendered with the given material.
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct Primitive {
     /// Maps attribute semantic names to the `Accessor`s containing the
     /// corresponding attribute data.

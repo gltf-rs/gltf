@@ -29,7 +29,6 @@ pub enum AlphaMode {
 
 /// The material appearance of a primitive.
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct Material {
     /// The alpha cutoff value of the material.
     #[serde(default, rename = "alphaCutoff")]
@@ -67,6 +66,7 @@ pub struct Material {
     pub double_sided: bool,
 
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub name: Option<String>,
 
     /// A set of parameter values that are used to define the metallic-roughness material model from Physically-Based Rendering (PBR) methodology. When not specified, all the default values of `pbrMetallicRoughness` apply.
@@ -108,7 +108,6 @@ pub struct MaterialExtensions {
 /// A set of parameter values that are used to define the metallic-roughness
 /// material model from Physically-Based Rendering (PBR) methodology.
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct PbrMetallicRoughness {
     /// The material's base color factor.
     #[serde(default, rename = "baseColorFactor")]
@@ -158,7 +157,6 @@ pub struct PbrMetallicRoughnessExtensions {
 
 /// Defines the normal texture of a material.
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct NormalTexture {
     /// The index of the texture.
     pub index: Index<texture::Texture>,
@@ -195,7 +193,6 @@ fn material_normal_texture_scale_default() -> f32 {
 
 /// Defines the occlusion texture of a material.
 #[derive(Clone, Debug, Deserialize, Validate)]
-#[serde(deny_unknown_fields)]
 pub struct OcclusionTexture {
     /// The index of the texture.
     pub index: Index<texture::Texture>,

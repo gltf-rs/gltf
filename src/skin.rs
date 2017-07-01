@@ -7,13 +7,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::borrow::Cow;
 use std::slice;
 use {accessor, json, scene, Gltf};
 
 /// Joints and matrices defining a skin.
 #[derive(Clone, Debug)]
-pub struct Skin {
+pub struct Skin<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
@@ -23,11 +22,11 @@ pub struct Skin {
 
 /// An `Iterator` that visits the inverse bind matrices of a `Skin`.
 #[derive(Clone, Debug)]
-pub struct InverseBindMatrices(accessor::Iter<'a, [[f32; 4]; 4]>);
+pub struct InverseBindMatrices<'a>(accessor::Iter<'a, [[f32; 4]; 4]>);
 
 /// An `Iterator` that visits the joints of a `Skin`.
 #[derive(Clone, Debug)]
-pub struct Joints {
+pub struct Joints<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
@@ -35,7 +34,7 @@ pub struct Joints {
     iter: slice::Iter<'a, json::Index<json::scene::Node>>,
 }
 
-impl Skin {
+impl<'a> Skin<'a> {
     /// Constructs a `Skin`.
     pub fn new(gltf: &'a Gltf, json: &'a json::skin::Skin) -> Self {
         Self {
@@ -62,7 +61,7 @@ impl Skin {
     /// The index of the accessor containing the 4x4 inverse-bind matrices.  When
     /// `None`,each matrix is assumed to be the 4x4 identity matrix which implies
     /// that the inverse-bind matrices were pre-applied.
-    pub fn inverse_bind_matrices(&self) -> Option<InverseBindMatrices> {
+    pub fn inverse_bind_matrices(&self) -> Option<InverseBindMatrices<'a>> {
         self.json.inverse_bind_matrices.as_ref().map(|index| {
             let accessor = self.gltf.accessors().nth(index.value()).unwrap();
             InverseBindMatrices(unsafe {
@@ -74,7 +73,7 @@ impl Skin {
     /// Indices of skeleton nodes used as joints in this skin.  The array length
     /// must be the same as the `count` property of the `inverse_bind_matrices`
     /// `Accessor` (when defined).
-    pub fn joints(&self) -> Joints {
+    pub fn joints(&self) -> Joints<'a> {
         Joints {
             gltf: self.gltf,
             iter: self.json.joints.iter(),
@@ -82,28 +81,29 @@ impl Skin {
     }
 
     /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(Cow::as_ref)
+        self.json.name.as_ref().map(String::as_str)
     }
 
     /// The index of the node used as a skeleton root.  When `None`, joints
     /// transforms resolve to scene root.
-    pub fn skeleton(&self) -> Option<scene::Node> {
+    pub fn skeleton(&self) -> Option<scene::Node<'a>> {
         self.json.skeleton.as_ref().map(|index| {
             scene::Node::new(self.gltf, self.gltf.as_json().get(index))
         })
     }
 }
 
-impl Iterator for InverseBindMatrices {
+impl<'a> Iterator for InverseBindMatrices<'a>  {
     type Item = [[f32; 4]; 4];
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
 }
 
-impl Iterator for Joints {
-    type Item = scene::Node;
+impl<'a> Iterator for Joints<'a>  {
+    type Item = scene::Node<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()

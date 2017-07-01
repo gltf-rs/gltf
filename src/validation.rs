@@ -51,6 +51,15 @@ pub enum Checked<T> {
 #[derive(Clone, Debug)]
 pub struct JsonPath(String);
 
+impl<T> Checked<T> {
+    pub fn unwrap(self) -> T {
+        match self {
+            Checked::Valid(item) => item,
+            Checked::Invalid => panic!("attempted to unwrap an invalid item"),
+        }
+    }
+}
+
 impl<T: Clone> Clone for Checked<T> {
     fn clone(&self) -> Self {
         match self {
