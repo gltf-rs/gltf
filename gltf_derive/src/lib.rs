@@ -47,7 +47,9 @@ fn expand(ast: &syn::MacroInput) -> quote::Tokens {
     quote!(
         impl #impl_generics ::validation::Validate for #ident #ty_generics #where_clause {
             fn validate<P, R>(&self, root: &::json::Root, path: P, report: &mut R)
-                where P: Fn() -> ::validation::JsonPath, R: FnMut(::validation::Error),
+            where
+                P: Fn() -> ::validation::JsonPath,
+                R: FnMut(&Fn() -> ::validation::JsonPath, ::validation::Error),
             {
                 #(
                     #validations;

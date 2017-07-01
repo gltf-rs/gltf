@@ -7,9 +7,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use serde::de;
 use std::collections::HashMap;
-use json::{accessor, material, Extras, Index, Root};
-use validation::{Error, JsonPath, Validate};
+use std::fmt;
+use json::{accessor, material, Extras, Index};
+use validation::Checked;
 
 /// Corresponds to `GL_POINTS`.
 pub const POINTS: u32 = 0;
@@ -50,8 +52,33 @@ pub const VALID_MORPH_TARGETS: &'static [&'static str] = &[
     "TANGENT",
 ];
 
+/// The type of primitives to render.
+#[derive(Clone, Copy, Debug, Deserialize)]
+pub enum Mode {
+    /// Corresponds to `GL_POINTS`.
+    Points = 1,
+
+    /// Corresponds to `GL_LINES`.
+    Lines,
+
+    /// Corresponds to `GL_LINE_LOOP`.
+    LineLoop,
+
+    /// Corresponds to `GL_LINE_STRIP`.
+    LineStrip,
+
+    /// Corresponds to `GL_TRIANGLES`.
+    Triangles,
+
+    /// Corresponds to `GL_TRIANGLE_STRIP`.
+    TriangleStrip, 
+
+    /// Corresponds to `GL_TRIANGLE_FAN`.
+    TriangleFan,
+}
+
 /// Extension specific data for `Mesh`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct MeshExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
@@ -61,7 +88,7 @@ pub struct MeshExtensions {
 ///
 /// A node can contain one or more meshes and its transform places the meshes in
 /// the scene.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Mesh {
     /// Extension specific data.
@@ -83,12 +110,12 @@ pub struct Mesh {
 }
 
 /// Geometry to be rendered with the given material.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Primitive {
     /// Maps attribute semantic names to the `Accessor`s containing the
     /// corresponding attribute data.
-    pub attributes: HashMap<String, Index<accessor::Accessor>>,
+    pub attributes: HashMap<Checked<Semantic>, Index<accessor::Accessor>>,
     
     /// Extension specific data.
     #[serde(default)]
@@ -106,51 +133,189 @@ pub struct Primitive {
     
     /// The type of primitives to render.
     #[serde(default)]
-    pub mode: Mode,
+    pub mode: Checked<Mode>,
     
-    /// An array of Morph Targets, each  Morph Target is a dictionary mapping attributes (only `POSITION`, `NORMAL`, and `TANGENT` supported) to their deviations in the Morph Target.
+    /// An array of Morph Targets, each  Morph Target is a dictionary mapping
+    /// attributes (only `POSITION`, `NORMAL`, and `TANGENT` supported) to their
+    /// deviations in the Morph Target.
     pub targets: Option<Vec<MorphTargets>>,
 }
 
 /// Extension specific data for `Primitive`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct PrimitiveExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
-/// The type of primitives to render.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct Mode(pub u32);
-
 /// A dictionary mapping attributes to their deviations in the Morph Target.
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct MorphTargets(pub HashMap<String, Index<accessor::Accessor>>);
+#[derive(Clone, Debug, Deserialize, Validate)]
+pub struct MorphTargets {
+    /// XYZ vertex position displacements of type `[f32; 3]`.
+    #[serde(rename = "POSITION")]
+    pub positions: Option<Index<accessor::Accessor>>,
+
+    /// XYZ vertex normal displacements of type `[f32; 3]`.
+    #[serde(rename = "NORMAL")]
+    pub normals: Option<Index<accessor::Accessor>>,
+
+    /// XYZ vertex tangent displacements of type `[f32; 3]`.
+    #[serde(rename = "TANGENT")]
+    pub tangents: Option<Index<accessor::Accessor>>,
+}
+
+/// Vertex attribute semantic name.
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub enum Semantic {
+    /// Extra attribute name.
+    #[cfg(feature = "extras")]
+    Extras(String),
+
+    /// XYZ vertex positions.
+    Positions,
+
+    /// XYZ vertex normals.
+    Normals,
+
+    /// XYZW vertex tangents where the `w` component is a sign value indicating the
+    /// handedness of the tangent basis.
+    Tangents,
+
+    /// RGB or RGBA vertex color.
+    Colors(u32),
+
+    /// UV texture co-ordinates.
+    TexCoords(u32),
+
+    /// Joint indices.
+    Joints(u32),
+
+    /// Joint weights.
+    Weights(u32),
+}
 
 impl Default for Mode {
     fn default() -> Mode {
-        Mode(TRIANGLES)
+        Mode::Triangles
     }
 }
 
-impl Validate for Mode {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+impl<'de> de::Deserialize<'de> for Checked<Mode> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: de::Deserializer<'de>
     {
-        if !VALID_MODES.contains(&self.0) {
-            report(Error::invalid_value(path(), self.0));
-        }
-    }
-}
+        struct Visitor;
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = Checked<Mode>;
 
-impl Validate for MorphTargets {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
-    {
-        for attr in self.0.keys() {
-            if !VALID_MORPH_TARGETS.contains(&attr.as_str()) {
-                report(Error::invalid_value(path().key(attr), attr.clone()));
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "any of: {:?}", VALID_MODES)
+            }
+
+            fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
+                where E: de::Error
+            {
+                use self::Mode::*;
+                use validation::Checked::*;
+                Ok(match value {
+                    POINTS => Valid(Points),
+                    LINES => Valid(Lines),
+                    LINE_LOOP => Valid(LineLoop),
+                    LINE_STRIP => Valid(LineStrip),
+                    TRIANGLES => Valid(Triangles),
+                    TRIANGLE_STRIP => Valid(TriangleStrip),
+                    TRIANGLE_FAN => Valid(TriangleFan),
+                    _ => Invalid,
+                })
             }
         }
+        deserializer.deserialize_u32(Visitor)
+    }
+}
+
+impl Semantic {
+    fn checked(s: &str) -> Checked<Self> {
+        use self::Semantic::*;
+        use validation::Checked::*;
+        match s {
+            "NORMAL" => Valid(Normals),
+            "POSITION" => Valid(Positions),
+            "TANGENT" => Valid(Tangents),
+            #[cfg(feature = "extras")]
+            _ if s.starts_with("_") => Valid(Extras(s[1..].to_string())),
+            _ if s.starts_with("COLOR_") => {
+                match s["COLOR_".len()..].parse() {
+                    Ok(set) => Valid(Colors(set)),
+                    Err(_) => Invalid,
+                }
+            },
+            _ if s.starts_with("TEXCOORD_") => {
+                match s["TEXCOORD_".len()..].parse() {
+                    Ok(set) => Valid(TexCoords(set)),
+                    Err(_) => Invalid,
+                }
+            },
+            _ if s.starts_with("JOINTS_") => {
+                match s["JOINTS_".len()..].parse() {
+                    Ok(set) => Valid(Joints(set)),
+                    Err(_) => Invalid,
+                }
+            },
+            _ if s.starts_with("WEIGHTS_") => {
+                match s["WEIGHTS_".len()..].parse() {
+                    Ok(set) => Valid(Weights(set)),
+                    Err(_) => Invalid,
+                }
+            },
+            _ => Invalid,
+        }
+    }
+}
+
+impl ToString for Semantic {
+    fn to_string(&self) -> String {
+        use self::Semantic::*;
+        match self {
+            &Positions => format!("POSITION"),
+            &Normals => format!("NORMAL"),
+            &Tangents => format!("TANGENT"),
+            &Colors(set) => format!("COLOR_{}", set),
+            &TexCoords(set) => format!("TEXCOORD_{}", set),
+            &Joints(set) => format!("JOINTS_{}", set),
+            &Weights(set) => format!("WEIGHTS_{}", set),
+            #[cfg(feature = "extras")]
+            &Extras(ref name) => format!("_{}", name),
+        }
+    }
+}
+
+impl ToString for Checked<Semantic> {
+    fn to_string(&self) -> String {
+        match self {
+            &Checked::Valid(ref semantic) => semantic.to_string(),
+            &Checked::Invalid => format!("<invalid semantic name>"),
+        }
+    }
+}
+
+impl<'de> de::Deserialize<'de> for Checked<Semantic> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: de::Deserializer<'de>
+    {
+        struct Visitor;
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = Checked<Semantic>;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "semantic name")
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+                where E: de::Error
+            {
+                Ok(Semantic::checked(value))
+            }
+        }
+        deserializer.deserialize_str(Visitor)
     }
 }

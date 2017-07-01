@@ -7,8 +7,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use json::{image, Extras, Index, Root};
-use validation::{Error, JsonPath, Validate};
+use serde::de;
+use std::fmt;
+use json::{image, Extras, Index};
+use validation::Checked;
 
 /// Corresponds to `GL_NEAREST`.
 pub const NEAREST: u32 = 9728;
@@ -60,28 +62,73 @@ pub const VALID_WRAPPING_MODES: &'static [u32] = &[
     REPEAT,
 ];
 
+/// Magnification filter.
+#[derive(Clone, Copy, Debug, Deserialize)]
+pub enum MagFilter {
+    /// Corresponds to `GL_NEAREST`.
+    Nearest = 1,
+
+    /// Corresponds to `GL_LINEAR`.
+    Linear,
+}
+
+/// Minification filter.
+#[derive(Clone, Copy, Debug, Deserialize)]
+pub enum MinFilter {
+    /// Corresponds to `GL_NEAREST`.
+    Nearest = 1,
+
+    /// Corresponds to `GL_LINEAR`.
+    Linear,
+
+    /// Corresponds to `GL_NEAREST_MIPMAP_NEAREST`.
+    NearestMipmapNearest,
+
+    /// Corresponds to `GL_LINEAR_MIPMAP_NEAREST`.
+    LinearMipmapNearest,
+
+    /// Corresponds to `GL_NEAREST_MIPMAP_LINEAR`.
+    NearestMipmapLinear,
+
+    /// Corresponds to `GL_LINEAR_MIPMAP_LINEAR`.
+    LinearMipmapLinear,
+}
+
+/// Texture co-ordinate wrapping mode.
+#[derive(Clone, Copy, Debug, Deserialize)]
+pub enum WrappingMode {
+    /// Corresponds to `GL_CLAMP_TO_EDGE`.
+    ClampToEdge = 1,
+
+    /// Corresponds to `GL_MIRRORED_REPEAT`.
+    MirroredRepeat,
+
+    /// Corresponds to `GL_REPEAT`.
+    Repeat,
+}
+
 /// Texture sampler properties for filtering and wrapping modes.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Sampler {
     /// Magnification filter.
     #[serde(rename = "magFilter")]
-    pub mag_filter: Option<MagFilter>,
+    pub mag_filter: Option<Checked<MagFilter>>,
 
     /// Minification filter.
     #[serde(rename = "minFilter")]
-    pub min_filter: Option<MinFilter>,
+    pub min_filter: Option<Checked<MinFilter>>,
 
     /// Optional user-defined name for this object.
     pub name: Option<String>,
 
     /// `s` wrapping mode.
     #[serde(default, rename = "wrapS")]
-    pub wrap_s: WrappingMode,
+    pub wrap_s: Checked<WrappingMode>,
 
     /// `t` wrapping mode.
     #[serde(default, rename = "wrapT")]
-    pub wrap_t: WrappingMode,
+    pub wrap_t: Checked<WrappingMode>,
 
     /// Extension specific data.
     #[serde(default)]
@@ -93,14 +140,14 @@ pub struct Sampler {
 }
 
 /// Extension specific data for `Sampler`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct SamplerExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// A texture and its sampler.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Texture {
     /// Optional user-defined name for this object.
@@ -122,13 +169,13 @@ pub struct Texture {
 }
 
 /// Extension specific data for `Texture`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct TextureExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Validate)]
 #[serde(deny_unknown_fields)]
 /// Reference to a `Texture`.
 pub struct Info {
@@ -149,56 +196,103 @@ pub struct Info {
 }
 
 /// Extension specific data for `Info`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct InfoExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
-/// Magnification filter.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct MagFilter(pub u32);
-
-/// Minification filter.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct MinFilter(pub u32);
-
-/// Texture co-ordinate wrapping mode.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct WrappingMode(pub u32);
-
-impl Validate for MagFilter {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+impl<'de> de::Deserialize<'de> for Checked<MagFilter> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: de::Deserializer<'de>
     {
-        if !VALID_MAG_FILTERS.contains(&self.0) {
-            report(Error::invalid_enum(path(), self.0));
+        struct Visitor;
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = Checked<MagFilter>;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "any of: {:?}", VALID_MAG_FILTERS)
+            }
+
+            fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
+                where E: de::Error
+            {
+                use self::MagFilter::*;
+                use validation::Checked::*;
+                Ok(match value {
+                    NEAREST => Valid(Nearest),
+                    LINEAR => Valid(Linear),
+                    _ => Invalid,
+                })
+            }
         }
+        deserializer.deserialize_u32(Visitor)
     }
 }
 
-impl Validate for MinFilter {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+impl<'de> de::Deserialize<'de> for Checked<MinFilter> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: de::Deserializer<'de>
     {
-        if !VALID_MIN_FILTERS.contains(&self.0) {
-            report(Error::invalid_enum(path(), self.0));
+        struct Visitor;
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = Checked<MinFilter>;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "any of: {:?}", VALID_MIN_FILTERS)
+            }
+
+            fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
+                where E: de::Error
+            {
+                use self::MinFilter::*;
+                use validation::Checked::*;
+                Ok(match value {
+                    NEAREST => Valid(Nearest),
+                    LINEAR => Valid(Linear),
+                    NEAREST_MIPMAP_NEAREST => Valid(NearestMipmapNearest),
+                    LINEAR_MIPMAP_NEAREST => Valid(LinearMipmapNearest),
+                    NEAREST_MIPMAP_LINEAR => Valid(NearestMipmapLinear),
+                    LINEAR_MIPMAP_LINEAR => Valid(LinearMipmapLinear),
+                    _ => Invalid,
+                })
+            }
         }
+        deserializer.deserialize_u32(Visitor)
+    }
+}
+
+impl<'de> de::Deserialize<'de> for Checked<WrappingMode> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: de::Deserializer<'de>
+    {
+        struct Visitor;
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = Checked<WrappingMode>;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "any of: {:?}", VALID_WRAPPING_MODES)
+            }
+
+            fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
+                where E: de::Error
+            {
+                use self::WrappingMode::*;
+                use validation::Checked::*;
+                Ok(match value {
+                    CLAMP_TO_EDGE => Valid(ClampToEdge),
+                    MIRRORED_REPEAT => Valid(MirroredRepeat),
+                    REPEAT => Valid(Repeat),
+                    _ => Invalid,
+                })
+            }
+        }
+        deserializer.deserialize_u32(Visitor)
     }
 }
 
 impl Default for WrappingMode {
     fn default() -> Self {
-        WrappingMode(REPEAT)
-    }
-}
-
-impl Validate for WrappingMode {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
-    {
-        if !VALID_WRAPPING_MODES.contains(&self.0) {
-            report(Error::invalid_enum(path(), self.0));
-        }
+        WrappingMode::Repeat
     }
 }

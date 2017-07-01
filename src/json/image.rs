@@ -17,10 +17,11 @@ pub const VALID_MIME_TYPES: &'static [&'static str] = &[
 ];
 
 /// Image data used to create a texture.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Image {
-    /// The index of the buffer view that contains the image. Use this instead of the image's uri property.
+    /// The index of the buffer view that contains the image. Use this instead of
+    /// the image's uri property.
     #[serde(rename = "bufferView")]
     pub buffer_view: Option<Index<buffer::View>>,
 
@@ -31,7 +32,9 @@ pub struct Image {
     /// Optional user-defined name for this object.
     pub name: Option<String>,
 
-    /// The uri of the image.  Relative paths are relative to the .gltf file.  Instead of referencing an external file, the uri can also be a data-uri.  The image format must be jpg or png.
+    /// The uri of the image.  Relative paths are relative to the .gltf file.
+    /// Instead of referencing an external file, the uri can also be a data-uri.
+    /// The image format must be jpg or png.
     pub uri: Option<String>,
 
     /// Extension specific data.
@@ -44,22 +47,22 @@ pub struct Image {
 }
 
 /// Extension specific data for `Image`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct ImageExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// An image MIME type.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct MimeType(pub String);
 
 impl Validate for MimeType {
     fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         if !VALID_MIME_TYPES.contains(&self.0.as_str()) {
-            report(Error::invalid_enum(path(), self.0.clone()));
+            report(&path, Error::Invalid);
         }
     }
 }

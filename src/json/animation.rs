@@ -7,8 +7,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use serde::de;
+use std::fmt;
 use json::{accessor, scene, Extras, Index, Root};
-use validation::{Error, JsonPath, Validate};
+use validation::{Checked, Error, JsonPath, Validate};
 
 /// All valid interpolation algorithms.
 pub const VALID_INTERPOLATION_ALGORITHMS: &'static [&'static str] = &[
@@ -26,8 +28,26 @@ pub const VALID_TRS_PROPERTIES: &'static [&'static str] = &[
     "weights",
 ];
 
+/// Specifies an interpolation algorithm.
+#[derive(Clone, Copy, Debug, Deserialize)]
+pub enum InterpolationAlgorithm {
+    Linear,
+    Step,
+    CatmullRomSpline,
+    CubicSpline,
+}
+
+/// Specifies a TRS property.
+#[derive(Clone, Copy, Debug, Deserialize)]
+pub enum TrsProperty {
+    Translation,
+    Rotation,
+    Scale,
+    Weights,
+}
+
 /// A keyframe animation.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Animation {
     /// Extension specific data.
@@ -53,17 +73,18 @@ pub struct Animation {
 }
 
 /// Extension specific data for `Animation`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct AnimationExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// Targets an animation's sampler at a node's property.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Channel {
-    /// The index of a sampler in this animation used to compute the value for the target.
+    /// The index of a sampler in this animation used to compute the value for the
+    /// target.
     pub sampler: Index<Sampler>,
     
     /// The index of the node and TRS property to target.
@@ -79,14 +100,14 @@ pub struct Channel {
 }
 
 /// Extension specific data for `Channel`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct ChannelExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// The index of the node and TRS property that an animation channel targets.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Target {
     /// Extension specific data.
@@ -102,18 +123,18 @@ pub struct Target {
     
     /// The name of the node's TRS property to modify or the 'weights' of the
     /// morph targets it instantiates.
-    pub path: TrsProperty,
+    pub path: Checked<TrsProperty>,
 }
 
 /// Extension specific data for `Target`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct TargetExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// Defines a keyframe graph but not its target.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Sampler {
     /// Extension specific data.
@@ -129,72 +150,95 @@ pub struct Sampler {
     
     /// The interpolation algorithm.
     #[serde(default)]
-    pub interpolation: InterpolationAlgorithm,
+    pub interpolation: Checked<InterpolationAlgorithm>,
     
     /// The index of an accessor containing keyframe output values.
     pub output: Index<accessor::Accessor>,
 }
 
 /// Extension specific data for `Sampler`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct SamplerExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
-/// Specifies an interpolation algorithm.
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct InterpolationAlgorithm(pub String);
-
-/// Specifies a TRS property.
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct TrsProperty(pub String);
-
 impl Validate for Animation {
     fn validate<P, R>(&self, root: &Root, path: P, mut report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         self.samplers.validate(root, || path().field("samplers"), report);
-        self.channels.validate(root, || path().field("channels"), report);
         for (index, channel) in self.channels.iter().enumerate() {
             if channel.sampler.value() as usize >= self.samplers.len() {
-                let field = format!("channels[{}].sampler", index);
-                report(Error::index_out_of_bounds(path().field(&field)));
+                let path = || path().field("channels").index(index).field("sampler");
+                report(&path, Error::IndexOutOfBounds);
             }
         }
     }
 }
 
-impl Validate for Channel {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
-    {
-        // nop
-    }
-}
-
 impl Default for InterpolationAlgorithm {
     fn default() -> Self {
-        InterpolationAlgorithm("LINEAR".to_string())
+        InterpolationAlgorithm::Linear
     }
 }
 
-impl Validate for InterpolationAlgorithm {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+impl<'de> de::Deserialize<'de> for Checked<InterpolationAlgorithm> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: de::Deserializer<'de>
     {
-        if !VALID_INTERPOLATION_ALGORITHMS.contains(&self.0.as_ref()) {
-            report(Error::invalid_enum(path(), self.0.clone()));
+        struct Visitor;
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = Checked<InterpolationAlgorithm>;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "any of: {:?}", VALID_INTERPOLATION_ALGORITHMS)
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+                where E: de::Error
+            {
+                use self::InterpolationAlgorithm::*;
+                use validation::Checked::*;
+                Ok(match value {
+                    "LINEAR" => Valid(Linear),
+                    "STEP" => Valid(Step),
+                    "CATMULLROMSPLINE" => Valid(CatmullRomSpline),
+                    "CUBICSPLINE" => Valid(CubicSpline),
+                    _ => Invalid,
+                })
+            }
         }
+        deserializer.deserialize_str(Visitor)
     }
 }
 
-impl Validate for TrsProperty {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+impl<'de> de::Deserialize<'de> for Checked<TrsProperty> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: de::Deserializer<'de>
     {
-        if !VALID_TRS_PROPERTIES.contains(&self.0.as_ref()) {
-            report(Error::invalid_enum(path(), self.0.clone()));
+        struct Visitor;
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = Checked<TrsProperty>;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "any of: {:?}", VALID_TRS_PROPERTIES)
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+                where E: de::Error
+            {
+                use self::TrsProperty::*;
+                use validation::Checked::*;
+                Ok(match value {
+                    "translation" => Valid(Translation),
+                    "rotation" => Valid(Rotation),
+                    "scale" => Valid(Scale),
+                    "weights" => Valid(Weights),
+                    _ => Invalid,
+                })
+            }
         }
+        deserializer.deserialize_str(Visitor)
     }
 }

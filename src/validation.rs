@@ -9,10 +9,11 @@
 
 use serde_json;
 use std;
-use std::collections::HashMap;
-use json::*;
+use std::fmt;
 
-pub use self::error::Error;
+use json::*;
+use std::collections::HashMap;
+use std::hash::Hash;
 
 /// Trait for validating glTF JSON data against the 2.0 specification.
 pub trait Validate {
@@ -20,114 +21,52 @@ pub trait Validate {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
         where
             P: Fn() -> JsonPath,
-            R: FnMut(Error);
+            R: FnMut(&Fn() -> JsonPath, Error);
 }
 
-/// Contains `Error` and other related data structures.
-pub mod error {
-    use serde_json;
-    use std;
-    use super::JsonPath;
+/// Specifies what kind of error occured during validation.
+#[derive(Clone, Debug)]
+pub enum Error {
+    /// An index was found to be out of bounds.
+    IndexOutOfBounds,
 
-    /// Error encountered when validating glTF 2.0 JSON data.
-    #[derive(Clone, Debug)]
-    pub struct Error {
-        /// JSON source path of the offending data.
-        path: JsonPath,
+    /// An invalid value was identified.
+    Invalid,
 
-        /// Error kind.
-        kind: Kind,
-    }
-
-    /// Specifies what kind of error occured during validation.
-    #[derive(Clone, Debug)]
-    pub enum Kind {
-        /// An index was found to be out of bounds.
-        IndexOutOfBounds,
-
-        /// An invalid enumeration constant was identified.
-        InvalidEnum(serde_json::Value),
-
-        /// An invalid value was identified.
-        InvalidValue(serde_json::Value),
-
-        /// Some required data has been omitted.
-        MissingData(String),
-    }
-
-    impl Error {
-        /// Returns an `IndexOutOfBounds` error.
-        pub fn index_out_of_bounds(path: JsonPath) -> Error {
-            Error {
-                kind: Kind::IndexOutOfBounds,
-                path: path,
-            }
-        }
-
-        /// Returns an `InvalidEnum` error.
-        pub fn invalid_enum<V>(path: JsonPath, value: V) -> Error
-            where V: Into<serde_json::Value>
-        {
-            Error {
-                kind: Kind::InvalidEnum(value.into()),
-                path: path,
-            }
-        }
-
-        /// Returns an `InvalidValue` error.
-        pub fn invalid_value<V>(path: JsonPath, value: V) -> Error
-            where V: Into<serde_json::Value>
-        {
-            Error {
-                kind: Kind::InvalidValue(value.into()),
-                path: path,
-            }
-        }
-
-        /// Returns a `MissingData` error.
-        pub fn missing_data(path: JsonPath, reason: String) -> Error {
-            Error {
-                kind: Kind::MissingData(reason),
-                path: path,
-            }
-        }
-    }
-
-    impl std::error::Error for Error {
-        fn description(&self) -> &str {
-            match &self.kind {
-                &Kind::IndexOutOfBounds => "Index out of bounds",
-                &Kind::InvalidEnum(_) => "Invalid enumeration constant",
-                &Kind::InvalidValue(_) => "Invalid value",
-                &Kind::MissingData(_) => "Missing data",
-            }
-        }
-    }
-
-    impl std::fmt::Display for Error {
-        fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-            use std::error::Error;
-            match &self.kind {
-                &Kind::IndexOutOfBounds => {
-                    write!(f, "{} ({})", self.path, self.description())
-                },
-                &Kind::InvalidEnum(ref value) => {
-                    write!(f, "{}: {} ({})", self.path, value, self.description())
-                },
-                &Kind::InvalidValue(ref value) => {
-                    write!(f, "{}: {} ({})", self.path, value, self.description())
-                },
-                &Kind::MissingData(ref reason) => {
-                    write!(f, "{}: {} ({})", self.path, self.description(), reason)
-                },
-            }
-        }
-    }
+    /// Some required data has been omitted.
+    Missing,
 }
-    
+
+/// Specifies a type that has been pre-validated during deserialization or otherwise.
+#[derive(Debug, Eq, Hash, PartialEq)]
+pub enum Checked<T> {
+    /// The item is valid.
+    Valid(T),
+
+    /// The item is invalid.
+    Invalid,
+}
+
 /// An immutable JSON source path.
 #[derive(Clone, Debug)]
 pub struct JsonPath(String);
+
+impl<T: Clone> Clone for Checked<T> {
+    fn clone(&self) -> Self {
+        match self {
+            &Checked::Valid(ref item) => Checked::Valid(item.clone()),
+            &Checked::Invalid => Checked::Invalid,
+        }
+    }
+}
+
+impl<T: Copy> Copy for Checked<T> {}
+
+impl<T: Default> Default for Checked<T> {
+    fn default() -> Self {
+        Checked::Valid(T::default())
+    }
+}
 
 impl JsonPath {
     /// Creates an empty JSON source path.
@@ -201,25 +140,37 @@ impl JsonPath {
     }
 }
 
-impl std::fmt::Display for JsonPath {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl fmt::Display for JsonPath {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl<T: Validate> Validate for HashMap<String, T> {
+impl<T> Validate for Checked<T> {
+    fn validate<P, R>(&self, _root: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+    {
+        match self {
+            &Checked::Valid(_) => {},
+            &Checked::Invalid => report(&path, Error::Invalid),
+        }
+    }
+}
+
+impl<K: Eq + Hash + ToString + Validate, V: Validate> Validate for HashMap<K, V> {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         for (key, value) in self.iter() {
-            value.validate(root, || path().key(key), report);
+            key.validate(root, || path().key(&key.to_string()), report);
+            value.validate(root, || path().key(&key.to_string()), report);
         }
     }
 }
 
 impl<T: Validate> Validate for Option<T> {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         if let Some(value) = self.as_ref() {
             value.validate(root, path, report);
@@ -229,7 +180,7 @@ impl<T: Validate> Validate for Option<T> {
 
 impl<T: Validate> Validate for Vec<T> {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         for (index, value) in self.iter().enumerate() {
             value.validate(root, || path().index(index), report);
@@ -239,7 +190,7 @@ impl<T: Validate> Validate for Vec<T> {
 
 impl Validate for bool {
     fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         // nop
     }
@@ -247,7 +198,7 @@ impl Validate for bool {
 
 impl Validate for u32 {
     fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         // nop
     }
@@ -255,7 +206,7 @@ impl Validate for u32 {
 
 impl Validate for i32 {
     fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         // nop
     }
@@ -263,7 +214,7 @@ impl Validate for i32 {
 
 impl Validate for f32 {
     fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         // nop
     }
@@ -271,7 +222,7 @@ impl Validate for f32 {
 
 impl Validate for [f32; 3] {
     fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         // nop
     }
@@ -279,7 +230,7 @@ impl Validate for [f32; 3] {
 
 impl Validate for [f32; 4] {
     fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         // nop
     }
@@ -287,7 +238,7 @@ impl Validate for [f32; 4] {
 
 impl Validate for [f32; 16] {
     fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         // nop
     }
@@ -295,7 +246,7 @@ impl Validate for [f32; 16] {
 
 impl Validate for () {
     fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         // nop
     }
@@ -303,7 +254,7 @@ impl Validate for () {
 
 impl Validate for String {
     fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         // nop
     }
@@ -311,9 +262,25 @@ impl Validate for String {
 
 impl Validate for serde_json::Value {
     fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         // nop
     }
 }
 
+impl std::error::Error for Error {
+    fn description(&self) -> &str {
+        match self {
+            &Error::IndexOutOfBounds => "Index out of bounds",
+            &Error::Invalid => "Invalid value",
+            &Error::Missing => "Missing data",
+        }
+    }
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        use std::error::Error;
+        write!(f, "{}", self.description())
+    }
+}

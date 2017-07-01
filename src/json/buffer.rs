@@ -7,8 +7,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use serde::de;
+use std::fmt;
 use json::{Extras, Index, Root};
-use validation::{Error, JsonPath, Validate};
+use validation::{Checked, Error, JsonPath, Validate};
 
 /// Corresponds to `GL_ARRAY_BUFFER`.
 pub const ARRAY_BUFFER: u32 = 34962;
@@ -28,8 +30,18 @@ pub const VALID_TARGETS: &'static [u32] = &[
     ELEMENT_ARRAY_BUFFER,
 ];
 
+/// Specifies the target a GPU buffer should be bound to. 
+#[derive(Clone, Copy, Debug)]
+pub enum Target {
+    /// Corresponds to `GL_ARRAY_BUFFER`.
+    ArrayBuffer,
+
+    /// Corresponds to `GL_ELEMENT_ARRAY_BUFFER`.
+    ElementArrayBuffer,
+}
+
 /// A buffer points to binary data representing geometry, animations, or skins.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Buffer {
     /// The length of the buffer in bytes.
@@ -39,7 +51,8 @@ pub struct Buffer {
     /// Optional user-defined name for this object.
     pub name: Option<String>,
 
-    /// The uri of the buffer.  Relative paths are relative to the .gltf file.  Instead of referencing an external file, the uri can also be a data-uri.
+    /// The uri of the buffer.  Relative paths are relative to the .gltf file.
+    /// Instead of referencing an external file, the uri can also be a data-uri.
     pub uri: Option<String>,
 
     /// Extension specific data.
@@ -52,14 +65,14 @@ pub struct Buffer {
 }
 
 /// Extension specific data for `Buffer`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct BufferExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// A view into a buffer generally representing a subset of the buffer.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct View {
     /// The parent `Buffer`.
@@ -83,7 +96,7 @@ pub struct View {
     pub name: Option<String>,
 
     /// Optional target the buffer should be bound to.
-    pub target: Option<Target>,
+    pub target: Option<Checked<Target>>,
 
     /// Extension specific data.
     #[serde(default)]
@@ -95,41 +108,56 @@ pub struct View {
 }
 
 /// Extension specific data for `View`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct ViewExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// The stride, in bytes, between vertex attributes.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize)]
 pub struct ByteStride(pub u32);
-
-/// Specifies the target a GPU buffer should be bound to. 
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct Target(pub u32);
 
 impl Validate for ByteStride {
     fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         if self.0 % 4 != 0 {
             // Not a multiple of 4
-            report(Error::invalid_value(path(), self.0));
+            report(&path, Error::Invalid);
         }
 
         if self.0 < MIN_BYTE_STRIDE || self.0 > MAX_BYTE_STRIDE {
-            report(Error::invalid_value(path(), self.0));
+            report(&path, Error::Invalid);
         }
     }
 }
 
-impl Validate for Target {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+impl<'de> de::Deserialize<'de> for Checked<Target> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: de::Deserializer<'de>
     {
-        if !VALID_TARGETS.contains(&self.0) {
-            report(Error::invalid_enum(path(), self.0));
+        struct Visitor;
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = Checked<Target>;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "any of: {:?}", VALID_TARGETS)
+            }
+
+            fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
+                where E: de::Error
+            {
+                use self::Target::*;
+                use validation::Checked::*;
+                Ok(match value {
+                    ARRAY_BUFFER => Valid(ArrayBuffer),
+                    ELEMENT_ARRAY_BUFFER => Valid(ElementArrayBuffer),
+                    _ => Invalid,
+                })
+            }
         }
+        deserializer.deserialize_u32(Visitor)
     }
 }
+

@@ -30,7 +30,7 @@ pub trait TryGet<T> {
 pub struct Index<T>(u32, std::marker::PhantomData<T>);
 
 /// The root object of a glTF 2.0 asset.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Root {
     /// An array of accessors.
@@ -109,7 +109,7 @@ pub struct Root {
 }
 
 /// Extension specific data for `Root`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct RootExtensions {
     _allow_unknown_fields: (),
 }
@@ -341,10 +341,10 @@ impl<T: Validate> Validate for Index<T>
     where Root: TryGet<T>
 {
     fn validate<P, R>(&self, root: &Root, path: P, mut report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         if root.try_get(self).is_err() {
-            report(Error::index_out_of_bounds(path()));
+            report(&path, Error::IndexOutOfBounds);
         }
     }
 }

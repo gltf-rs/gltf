@@ -7,8 +7,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use serde::de;
+use std::fmt;
 use json::{Extras, Root};
-use validation::{Error, JsonPath, Validate};
+use validation::{Checked, Error, JsonPath, Validate};
 
 /// All valid camera types.
 pub const VALID_CAMERA_TYPES: &'static [&'static str] = &[
@@ -16,11 +18,21 @@ pub const VALID_CAMERA_TYPES: &'static [&'static str] = &[
     "orthographic",
 ];
 
+/// Specifies the camera type.
+#[derive(Clone, Copy, Debug)]
+pub enum Type {
+    /// A perspective projection.
+    Perspective,
+
+    /// An orthographic projection.
+    Orthographic,
+}
+
 /// A camera's projection.
 ///
 /// A node can reference a camera to apply a transform to place the camera in the
 /// scene.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Camera {
     /// Optional user-defined name for this object.
@@ -36,7 +48,7 @@ pub struct Camera {
 
     /// Specifies if the camera uses a perspective or orthographic projection.
     #[serde(rename = "type")]
-    pub type_: Type,
+    pub type_: Checked<Type>,
 
     /// Extension specific data.
     #[serde(default)]
@@ -48,14 +60,14 @@ pub struct Camera {
 }
 
 /// Extension specific data for `Camera`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct CameraExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// Values for an orthographic camera.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Orthographic {
     /// The horizontal magnification of the view.
@@ -80,14 +92,14 @@ pub struct Orthographic {
 }
 
 /// Extension specific data for `Orthographic`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct OrthographicExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// Values for a perspective camera.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Perspective {
     /// Aspect ratio of the field of view.
@@ -113,23 +125,18 @@ pub struct Perspective {
 }
 
 /// Extension specific data for `Perspective`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct PerspectiveExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
-/// Specifies the camera type.
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Type(pub String);
-
 impl Validate for Camera {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         if self.orthographic.is_none() && self.perspective.is_none() {
-            let reason = "one of `orthographic` or `perspective` is required";
-            report(Error::missing_data(path().clone(), reason.to_string()));
+            report(&path, Error::Missing);
         }
 
         self.orthographic.validate(root, || path().field("orthographic"), report);
@@ -142,14 +149,14 @@ impl Validate for Camera {
 
 impl Validate for Orthographic {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         if self.znear < 0.0 {
-            report(Error::invalid_value(path(), self.znear));
+            report(&path, Error::Invalid);
         }
  
         if self.zfar < 0.0  || self.zfar < self.znear {
-            report(Error::invalid_value(path(), self.zfar));
+            report(&path, Error::Invalid);
         }
 
         self.extensions.validate(root, || path().field("extensions"), report);
@@ -159,25 +166,25 @@ impl Validate for Orthographic {
 
 impl Validate for Perspective {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         self.aspect_ratio.map(|aspect_ratio| {
             if aspect_ratio < 0.0 {
-                report(Error::invalid_value(path(), aspect_ratio));
+                report(&path, Error::Invalid);
             }
         });
 
         if self.yfov < 0.0 {
-            report(Error::invalid_value(path(), self.yfov));
+            report(&path, Error::Invalid);
         }
 
         if self.znear < 0.0 {
-            report(Error::invalid_value(path(), self.znear));
+            report(&path, Error::Invalid);
         }
 
         self.zfar.map(|zfar| {
             if zfar < 0.0 || zfar < self.znear {
-                report(Error::invalid_value(path(), zfar));
+                report(&path, Error::Invalid);
             }
         });
 
@@ -186,12 +193,30 @@ impl Validate for Perspective {
     }
 }
 
-impl Validate for Type {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+impl<'de> de::Deserialize<'de> for Checked<Type> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: de::Deserializer<'de>
     {
-        if !VALID_CAMERA_TYPES.contains(&self.0.as_ref()) {
-            report(Error::invalid_enum(path(), self.0.clone()));
+        struct Visitor;
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = Checked<Type>;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "any of: {:?}", VALID_CAMERA_TYPES)
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+                where E: de::Error
+            {
+                use self::Type::*;
+                use validation::Checked::*;
+                Ok(match value {
+                    "perspective" => Valid(Perspective),
+                    "orthographic" => Valid(Orthographic),
+                    _ => Invalid,
+                })
+            }
         }
+        deserializer.deserialize_str(Visitor)
     }
 }

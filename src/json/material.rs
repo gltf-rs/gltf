@@ -7,8 +7,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use serde::de;
+use std::fmt;
 use json::{texture, Extras, Index, Root};
-use validation::{Error, JsonPath, Validate};
+use validation::{Checked, Error, JsonPath, Validate};
 
 /// All valid alpha modes.
 pub const VALID_ALPHA_MODES: &'static [&'static str] = &[
@@ -17,8 +19,16 @@ pub const VALID_ALPHA_MODES: &'static [&'static str] = &[
     "BLEND",
 ];
 
+/// The alpha rendering mode of a material.
+#[derive(Clone, Copy, Debug)]
+pub enum AlphaMode {
+    Opaque,
+    Mask,
+    Blend,
+}
+
 /// The material appearance of a primitive.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct Material {
     /// The alpha cutoff value of the material.
@@ -42,7 +52,7 @@ pub struct Material {
     ///   background using the normal painting operation (i.e. the Porter and
     ///   Duff over operator).
     #[serde(default, rename = "alphaMode")]
-    pub alpha_mode: AlphaMode,
+    pub alpha_mode: Checked<AlphaMode>,
 
     /// Specifies whether the material is double-sided.
     ///
@@ -89,7 +99,7 @@ pub struct Material {
 }
 
 /// Extension specific data for `Material`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct MaterialExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
@@ -97,7 +107,7 @@ pub struct MaterialExtensions {
 
 /// A set of parameter values that are used to define the metallic-roughness
 /// material model from Physically-Based Rendering (PBR) methodology.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct PbrMetallicRoughness {
     /// The material's base color factor.
@@ -140,14 +150,14 @@ pub struct PbrMetallicRoughness {
 }
 
 /// Extension specific data for `PbrMetallicRoughness`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct PbrMetallicRoughnessExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// Defines the normal texture of a material.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct NormalTexture {
     /// The index of the texture.
@@ -173,7 +183,7 @@ pub struct NormalTexture {
 }
 
 /// Extension specific data for `NormalTexture`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct NormalTextureExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
@@ -184,7 +194,7 @@ fn material_normal_texture_scale_default() -> f32 {
 }
 
 /// Defines the occlusion texture of a material.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct OcclusionTexture {
     /// The index of the texture.
@@ -208,30 +218,26 @@ pub struct OcclusionTexture {
 }
 
 /// Extension specific data for `OcclusionTexture`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
 pub struct OcclusionTextureExtensions {
     #[serde(default)]
     _allow_unknown_fields: (),
 }
 
 /// The alpha cutoff value of a material.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize)]
 pub struct AlphaCutoff(pub f32);
 
-/// The alpha rendering mode of a material.
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct AlphaMode(pub String);
-
 /// The emissive color of a material.
-#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize)]
 pub struct EmissiveFactor(pub [f32; 3]);
 
 /// The base color factor of a material.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize)]
 pub struct PbrBaseColorFactor(pub [f32; 4]);
 
 /// A number in the inclusive range [0.0, 1.0] with a default value of 1.0.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize)]
 pub struct StrengthFactor(pub f32);
 
 impl Default for AlphaCutoff {
@@ -242,37 +248,56 @@ impl Default for AlphaCutoff {
 
 impl Default for AlphaMode {
     fn default() -> Self {
-        AlphaMode("OPAQUE".to_string())
+        AlphaMode::Opaque
     }
 }
 
 impl Validate for AlphaCutoff {
     fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         if self.0 < 0.0 {
-            report(Error::invalid_value(path(), self.0));
+            report(&path, Error::Invalid);
         }
     }
 }
 
-impl Validate for AlphaMode {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+impl<'de> de::Deserialize<'de> for Checked<AlphaMode> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: de::Deserializer<'de>
     {
-        if !VALID_ALPHA_MODES.contains(&self.0.as_str()) {
-            report(Error::invalid_enum(path(), self.0.clone()));
+        struct Visitor;
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = Checked<AlphaMode>;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "any of: {:?}", VALID_ALPHA_MODES)
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+                where E: de::Error
+            {
+                use self::AlphaMode::*;
+                use validation::Checked::*;
+                Ok(match value {
+                    "OPAQUE" => Valid(Opaque),
+                    "MASK" => Valid(Mask),
+                    "BLEND" => Valid(Blend),
+                    _ => Invalid,
+                })
+            }
         }
+        deserializer.deserialize_str(Visitor)
     }
 }
 
 impl Validate for EmissiveFactor {
     fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         for x in &self.0 {
             if *x < 0.0 || *x > 1.0 {
-                report(Error::invalid_value(path(), self.0.to_vec()));
+                report(&path, Error::Invalid);
                 // Only report once
                 break;
             }
@@ -288,11 +313,11 @@ impl Default for PbrBaseColorFactor {
 
 impl Validate for PbrBaseColorFactor {
     fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         for x in &self.0 {
             if *x < 0.0 || *x > 1.0 {
-                report(Error::invalid_value(path(), self.0.to_vec()));
+                report(&path, Error::Invalid);
                 // Only report once
                 break;
             }
@@ -308,10 +333,10 @@ impl Default for StrengthFactor {
 
 impl Validate for StrengthFactor {
     fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(Error)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         if self.0 < 0.0 || self.0 > 1.0 {
-            report(Error::invalid_value(path(), self.0));
+            report(&path, Error::Invalid);
         }
     }
 }
