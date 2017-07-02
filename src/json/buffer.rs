@@ -9,7 +9,7 @@
 
 use serde::de;
 use std::fmt;
-use json::{Extras, Index, Root};
+use json::{extensions, Extras, Index, Root};
 use validation::{Checked, Error, JsonPath, Validate};
 
 /// Corresponds to `GL_ARRAY_BUFFER`.
@@ -34,7 +34,7 @@ pub const VALID_TARGETS: &'static [u32] = &[
 #[derive(Clone, Copy, Debug)]
 pub enum Target {
     /// Corresponds to `GL_ARRAY_BUFFER`.
-    ArrayBuffer,
+    ArrayBuffer = 1,
 
     /// Corresponds to `GL_ELEMENT_ARRAY_BUFFER`.
     ElementArrayBuffer,
@@ -57,18 +57,11 @@ pub struct Buffer {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: BufferExtensions,
+    pub extensions: extensions::buffer::Buffer,
 
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
-}
-
-/// Extension specific data for `Buffer`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct BufferExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 /// A view into a buffer generally representing a subset of the buffer.
@@ -100,18 +93,11 @@ pub struct View {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: ViewExtensions,
+    pub extensions: extensions::buffer::View,
 
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
-}
-
-/// Extension specific data for `View`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct ViewExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 /// The stride, in bytes, between vertex attributes.

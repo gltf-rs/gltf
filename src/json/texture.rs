@@ -9,7 +9,7 @@
 
 use serde::de;
 use std::fmt;
-use json::{image, Extras, Index};
+use json::{extensions, image, Extras, Index};
 use validation::Checked;
 
 /// Corresponds to `GL_NEAREST`.
@@ -132,18 +132,11 @@ pub struct Sampler {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: SamplerExtensions,
+    pub extensions: extensions::texture::Sampler,
 
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
-}
-
-/// Extension specific data for `Sampler`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct SamplerExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 /// A texture and its sampler.
@@ -161,18 +154,11 @@ pub struct Texture {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: TextureExtensions,
+    pub extensions: extensions::texture::Texture,
 
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
-}
-
-/// Extension specific data for `Texture`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct TextureExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 #[derive(Clone, Debug, Deserialize, Validate)]
@@ -187,18 +173,11 @@ pub struct Info {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: InfoExtensions,
+    pub extensions: extensions::texture::Info,
 
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
-}
-
-/// Extension specific data for `Info`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct InfoExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 impl<'de> de::Deserialize<'de> for Checked<MagFilter> {

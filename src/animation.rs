@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use std::slice;
-use {accessor, json, scene, Gltf};
+use {accessor, extensions, json, scene, Gltf};
 
 pub use json::animation::{InterpolationAlgorithm, TrsProperty};
 
@@ -57,8 +57,11 @@ impl<'a> Animation<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::animation::AnimationExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::animation::Animation<'a> {
+        extensions::animation::Animation::new(
+            self.gltf,
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.
@@ -133,8 +136,11 @@ impl<'a> Channel<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::animation::ChannelExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::animation::Channel<'a> {
+        extensions::animation::Channel::new(
+            self.anim.clone(),
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.
@@ -173,8 +179,11 @@ impl<'a> Target<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::animation::TargetExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::animation::Target<'a> {
+        extensions::animation::Target::new(
+            self.anim.clone(),
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.
@@ -224,8 +233,11 @@ impl<'a> Sampler<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::animation::SamplerExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::animation::Sampler<'a> {
+        extensions::animation::Sampler::new(
+            self.anim.clone(),
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.

@@ -42,9 +42,9 @@ fn expand(ast: &syn::MacroInput) -> quote::Tokens {
             let field = ident.as_ref().to_camel_case();
             quote!(
                 self.#ident.validate_minimally(
-                    root,
-                    || path().field(#field),
-                    report,
+                    _root,
+                    || _path().field(#field),
+                    _report,
                 )
             )
         })
@@ -56,9 +56,9 @@ fn expand(ast: &syn::MacroInput) -> quote::Tokens {
             let field = ident.as_ref().to_camel_case();
             quote!(
                 self.#ident.validate_completely(
-                    root,
-                    || path().field(#field),
-                    report,
+                    _root,
+                    || _path().field(#field),
+                    _report,
                 )
             )
         })
@@ -70,9 +70,9 @@ fn expand(ast: &syn::MacroInput) -> quote::Tokens {
         {
             fn validate_minimally<P, R>(
                 &self,
-                root: &::json::Root,
-                path: P,
-                report: &mut R
+                _root: &::json::Root,
+                _path: P,
+                _report: &mut R
             ) where
                 P: Fn() -> ::validation::JsonPath,
                 R: FnMut(&Fn() -> ::validation::JsonPath, ::validation::Error),
@@ -84,9 +84,9 @@ fn expand(ast: &syn::MacroInput) -> quote::Tokens {
 
             fn validate_completely<P, R>(
                 &self,
-                root: &::json::Root,
-                path: P,
-                report: &mut R
+                _root: &::json::Root,
+                _path: P,
+                _report: &mut R
             ) where
                 P: Fn() -> ::validation::JsonPath,
                 R: FnMut(&Fn() -> ::validation::JsonPath, ::validation::Error),

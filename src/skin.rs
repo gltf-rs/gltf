@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use std::slice;
-use {accessor, json, scene, Gltf};
+use {accessor, extensions, json, scene, Gltf};
 
 /// Joints and matrices defining a skin.
 #[derive(Clone, Debug)]
@@ -49,8 +49,11 @@ impl<'a> Skin<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::skin::SkinExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::skin::Skin {
+        extensions::skin::Skin::new(
+            self.gltf,
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.

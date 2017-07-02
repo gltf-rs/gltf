@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use std::slice;
-use {camera, json, mesh, skin, Gltf};
+use {camera, extensions, json, mesh, skin, Gltf};
 
 ///  A node in the node hierarchy. When the node contains `skin`, all
 /// `mesh.primitives` must contain `JOINTS_0` and `WEIGHTS_0` attributes. A node can
@@ -89,8 +89,11 @@ impl<'a> Node<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::scene::NodeExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::scene::Node<'a> {
+        extensions::scene::Node::new(
+            self.gltf,
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.
@@ -161,8 +164,11 @@ impl<'a> Scene<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::scene::SceneExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::scene::Scene<'a> {
+        extensions::scene::Scene::new(
+            self.gltf,
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.

@@ -22,13 +22,6 @@ pub mod buffer;
 /// Contains `Camera` and other related data structures.
 pub mod camera;
 
-/// Contains extension specific data structures and the names of all
-/// 2.0 extensions supported by the library.
-pub mod extensions;
-
-/// Contains `Extras`.
-pub mod extras;
-
 /// Contains `Image` and other related data structures.
 pub mod image;
 
@@ -50,6 +43,10 @@ pub mod skin;
 /// Contains `Texture`, `Sampler`, and other related data structures.
 pub mod texture;
 
-pub use self::extras::Extras;
-pub use self::root::{Index, Root};
-pub use serde_json::{from_reader, from_value};
+pub use self::root::Root;
+
+/// Names of glTF 2.0 extensions enabled by the user.
+pub const ENABLED_EXTENSIONS: &'static [&'static str] = &[];
+
+/// Names of glTF 2.0 extensions supported by the library.
+pub const SUPPORTED_EXTENSIONS: &'static [&'static str] = &[];

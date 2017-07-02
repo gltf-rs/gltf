@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use json::Extras;
+use json::{extensions, Extras};
 
 /// Metadata about the glTF asset.
 #[derive(Clone, Debug, Deserialize, Validate)]
@@ -17,7 +17,7 @@ pub struct Asset {
     
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: AssetExtensions,
+    pub extensions: extensions::asset::Asset,
     
     /// Optional application specific data.
     #[serde(default)]
@@ -32,13 +32,6 @@ pub struct Asset {
     
     /// The glTF version of this asset.
     pub version: String,
-}
-
-/// Extension specific data for `Asset`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct AssetExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 impl Default for Asset {

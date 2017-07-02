@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use {json, Gltf};
+use {extensions, json, Gltf};
 
 pub use json::buffer::Target;
 
@@ -61,8 +61,11 @@ impl<'a> Buffer<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::buffer::BufferExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::buffer::Buffer<'a> {
+        extensions::buffer::Buffer::new(
+            self.gltf,
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.
@@ -123,8 +126,11 @@ impl<'a> View<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::buffer::ViewExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::buffer::View<'a> {
+        extensions::buffer::View::new(
+            self.gltf,
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.

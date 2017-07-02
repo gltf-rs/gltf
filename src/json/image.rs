@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use json::{buffer, Extras, Index, Root};
+use json::{buffer, extensions, Extras, Index, Root};
 use validation::{Error, JsonPath, Validate};
 
 /// All valid MIME types.
@@ -39,18 +39,11 @@ pub struct Image {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: ImageExtensions,
+    pub extensions: extensions::image::Image,
 
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
-}
-
-/// Extension specific data for `Image`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct ImageExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 /// An image MIME type.

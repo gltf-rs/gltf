@@ -9,7 +9,7 @@
 
 use serde::de;
 use std::fmt;
-use json::{texture, Extras, Index, Root};
+use json::{extensions, texture, Extras, Index, Root};
 use validation::{Checked, Error, JsonPath, Validate};
 
 /// All valid alpha modes.
@@ -22,7 +22,7 @@ pub const VALID_ALPHA_MODES: &'static [&'static str] = &[
 /// The alpha rendering mode of a material.
 #[derive(Clone, Copy, Debug)]
 pub enum AlphaMode {
-    Opaque,
+    Opaque = 1,
     Mask,
     Blend,
 }
@@ -91,18 +91,11 @@ pub struct Material {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: MaterialExtensions,
+    pub extensions: extensions::material::Material,
 
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
-}
-
-/// Extension specific data for `Material`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct MaterialExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 /// A set of parameter values that are used to define the metallic-roughness
@@ -141,18 +134,11 @@ pub struct PbrMetallicRoughness {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: PbrMetallicRoughnessExtensions,
+    pub extensions: extensions::material::PbrMetallicRoughness,
 
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
-}
-
-/// Extension specific data for `PbrMetallicRoughness`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct PbrMetallicRoughnessExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 /// Defines the normal texture of a material.
@@ -173,18 +159,11 @@ pub struct NormalTexture {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: NormalTextureExtensions,
+    pub extensions: extensions::material::NormalTexture,
 
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
-}
-
-/// Extension specific data for `NormalTexture`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct NormalTextureExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 fn material_normal_texture_scale_default() -> f32 {
@@ -207,18 +186,11 @@ pub struct OcclusionTexture {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: OcclusionTextureExtensions,
+    pub extensions: extensions::material::OcclusionTexture,
 
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
-}
-
-/// Extension specific data for `OcclusionTexture`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct OcclusionTextureExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 /// The alpha cutoff value of a material.

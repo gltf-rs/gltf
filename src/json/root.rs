@@ -57,7 +57,7 @@ pub struct Root {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: RootExtensions,
+    pub extensions: extensions::root::Root,
 
     /// Optional application specific data.
     #[serde(default)]
@@ -106,12 +106,6 @@ pub struct Root {
     /// An array of textures.
     #[serde(default)]
     pub textures: Vec<texture::Texture>,
-}
-
-/// Extension specific data for `Root`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct RootExtensions {
-    _allow_unknown_fields: (),
 }
 
 impl Root {

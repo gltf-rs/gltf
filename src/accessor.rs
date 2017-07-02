@@ -9,7 +9,7 @@
 
 use std::marker::PhantomData;
 use std::mem::{size_of, transmute_copy};
-use {buffer, json, Gltf};
+use {buffer, extensions, json, Gltf};
 
 pub use json::accessor::ComponentType as DataType;
 pub use json::accessor::Type as Dimensions;
@@ -103,8 +103,11 @@ impl<'a> Accessor<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::accessor::AccessorExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::accessor::Accessor<'a> {
+        extensions::accessor::Accessor::new(
+            self.gltf,
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.
@@ -172,7 +175,7 @@ impl<'a, T: 'a> Iterator for Iter<'a, T> {
 /// Contains data structures for sparse storage.
 pub mod sparse {
     use Gltf;
-    use {buffer, json};
+    use {buffer, extensions, json};
 
     /// The index data type.
     #[derive(Clone, Debug)]
@@ -236,8 +239,11 @@ pub mod sparse {
         }
 
         /// Extension specific data.
-        pub fn extensions(&self) -> &json::accessor::sparse::IndicesExtensions {
-            &self.json.extensions
+        pub fn extensions(&self) -> extensions::accessor::sparse::Indices<'a> {
+            extensions::accessor::sparse::Indices::new(
+                self.gltf,
+                &self.json.extensions,
+            )
         }
 
         /// Optional application specific data.
@@ -293,8 +299,11 @@ pub mod sparse {
         }
 
         ///  Extension specific data.
-        pub fn extensions(&self) -> &json::accessor::sparse::StorageExtensions {
-            &self.json.extensions
+        pub fn extensions(&self) -> extensions::accessor::sparse::Sparse<'a> {
+            extensions::accessor::sparse::Sparse::new(
+                self.gltf,
+                &self.json.extensions,
+            )
         }
 
         ///  Optional application specific data.
@@ -343,8 +352,11 @@ pub mod sparse {
         }
 
         /// Extension specific data.
-        pub fn extensions(&self) -> &json::accessor::sparse::ValuesExtensions {
-            &self.json.extensions
+        pub fn extensions(&self) -> extensions::accessor::sparse::Values<'a> {
+            extensions::accessor::sparse::Values::new(
+                self.gltf,
+                &self.json.extensions,
+            )
         }
 
         /// Optional application specific data.

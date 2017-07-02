@@ -9,7 +9,7 @@
 
 use serde::de;
 use std::fmt;
-use json::{accessor, scene, Extras, Index, Root};
+use json::{accessor, extensions, scene, Extras, Index, Root};
 use validation::{Checked, Error, JsonPath, Validate};
 
 /// All valid interpolation algorithms.
@@ -31,7 +31,7 @@ pub const VALID_TRS_PROPERTIES: &'static [&'static str] = &[
 /// Specifies an interpolation algorithm.
 #[derive(Clone, Copy, Debug, Deserialize)]
 pub enum InterpolationAlgorithm {
-    Linear,
+    Linear = 1,
     Step,
     CatmullRomSpline,
     CubicSpline,
@@ -40,7 +40,7 @@ pub enum InterpolationAlgorithm {
 /// Specifies a TRS property.
 #[derive(Clone, Copy, Debug, Deserialize)]
 pub enum TrsProperty {
-    Translation,
+    Translation = 1,
     Rotation,
     Scale,
     Weights,
@@ -51,7 +51,7 @@ pub enum TrsProperty {
 pub struct Animation {
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: AnimationExtensions,
+    pub extensions: extensions::animation::Animation,
     
     /// Optional application specific data.
     #[serde(default)]
@@ -72,13 +72,6 @@ pub struct Animation {
     pub samplers: Vec<Sampler>,
 }
 
-/// Extension specific data for `Animation`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct AnimationExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
-}
-
 /// Targets an animation's sampler at a node's property.
 #[derive(Clone, Debug, Deserialize)]
 pub struct Channel {
@@ -91,18 +84,11 @@ pub struct Channel {
     
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: ChannelExtensions,
+    pub extensions: extensions::animation::Channel,
     
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
-}
-
-/// Extension specific data for `Channel`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct ChannelExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 /// The index of the node and TRS property that an animation channel targets.
@@ -110,7 +96,7 @@ pub struct ChannelExtensions {
 pub struct Target {
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: TargetExtensions,
+    pub extensions: extensions::animation::Target,
     
     /// Optional application specific data.
     #[serde(default)]
@@ -124,19 +110,12 @@ pub struct Target {
     pub path: Checked<TrsProperty>,
 }
 
-/// Extension specific data for `Target`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct TargetExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
-}
-
 /// Defines a keyframe graph but not its target.
 #[derive(Clone, Debug, Deserialize, Validate)]
 pub struct Sampler {
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: SamplerExtensions,
+    pub extensions: extensions::animation::Sampler,
     
     /// Optional application specific data.
     #[serde(default)]
@@ -151,13 +130,6 @@ pub struct Sampler {
     
     /// The index of an accessor containing keyframe output values.
     pub output: Index<accessor::Accessor>,
-}
-
-/// Extension specific data for `Sampler`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct SamplerExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 impl Validate for Animation {

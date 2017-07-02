@@ -7,9 +7,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-/// Names of glTF 2.0 extensions enabled by the user.
-pub const ENABLED_EXTENSIONS: &'static [&'static str] = &[];
+/// A set of primitives to be rendered.
+///
+/// A node can contain one or more meshes and its transform places the meshes in
+/// the scene.
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
+pub struct Mesh {}
 
-/// Names of glTF 2.0 extensions supported by the library.
-pub const SUPPORTED_EXTENSIONS: &'static [&'static str] = &[];
-
+/// Geometry to be rendered with the given material.
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
+pub struct Primitive {}

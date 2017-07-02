@@ -10,7 +10,7 @@
 use serde::de;
 use std::collections::HashMap;
 use std::fmt;
-use json::{accessor, material, Extras, Index};
+use json::{accessor, extensions, material, Extras, Index};
 use validation::Checked;
 
 /// Corresponds to `GL_POINTS`.
@@ -77,13 +77,6 @@ pub enum Mode {
     TriangleFan,
 }
 
-/// Extension specific data for `Mesh`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct MeshExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
-}
-
 /// A set of primitives to be rendered.
 ///
 /// A node can contain one or more meshes and its transform places the meshes in
@@ -92,7 +85,7 @@ pub struct MeshExtensions {
 pub struct Mesh {
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: MeshExtensions,
+    pub extensions: extensions::mesh::Mesh,
     
     /// Optional application specific data.
     #[serde(default)]
@@ -118,7 +111,7 @@ pub struct Primitive {
     
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: PrimitiveExtensions,
+    pub extensions: extensions::mesh::Primitive,
     
     /// Optional application specific data.
     #[serde(default)]
@@ -138,13 +131,6 @@ pub struct Primitive {
     /// attributes (only `POSITION`, `NORMAL`, and `TANGENT` supported) to their
     /// deviations in the Morph Target.
     pub targets: Option<Vec<MorphTargets>>,
-}
-
-/// Extension specific data for `Primitive`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct PrimitiveExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 /// A dictionary mapping attributes to their deviations in the Morph Target.

@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use {json, Gltf};
+use {extensions, json, Gltf};
 
 /// A camera's projection.
 #[derive(Clone, Debug)]
@@ -85,8 +85,11 @@ impl<'a> Camera<'a> {
     } 
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::camera::CameraExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::camera::Camera<'a> {
+        extensions::camera::Camera::new(
+            self.gltf,
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.
@@ -130,8 +133,11 @@ impl<'a> Orthographic<'a> {
     }
 
     ///  Extension specific data.
-    pub fn extensions(&self) -> &json::camera::OrthographicExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::camera::Orthographic<'a> {
+        extensions::camera::Orthographic::new(
+            self.gltf,
+            &self.json.extensions,
+        )
     }
 
     ///  Optional application specific data.
@@ -175,8 +181,11 @@ impl<'a> Perspective<'a> {
     }
 
     ///  Extension specific data.
-    pub fn extensions(&self) -> &json::camera::PerspectiveExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::camera::Perspective<'a> {
+        extensions::camera::Perspective::new(
+            self.gltf,
+            &self.json.extensions,
+        )
     }
 
     ///  Optional application specific data.

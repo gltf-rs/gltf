@@ -7,14 +7,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use json::{accessor, scene, Extras, Index};
+use json::{accessor, extensions, scene, Extras, Index};
 
 /// Joints and matrices defining a skin.
 #[derive(Clone, Debug, Deserialize, Validate)]
 pub struct Skin {
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: SkinExtensions,
+    pub extensions: extensions::skin::Skin,
     
     /// Optional application specific data.
     #[serde(default)]
@@ -41,11 +41,4 @@ pub struct Skin {
     ///
     /// When `None`, joints transforms resolve to scene root.
     pub skeleton: Option<Index<scene::Node>>,
-}
-
-/// Extension specific data for `Skin`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct SkinExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }

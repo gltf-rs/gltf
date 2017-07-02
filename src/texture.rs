@@ -8,11 +8,22 @@
 // except according to those terms.
 
 use std::ops::Deref;
-use {image, json, Gltf};
+use {extensions, image, json, Gltf};
 
 pub use json::texture::{MagFilter, MinFilter, WrappingMode};
 
+/// A reference to a `Texture`.
+#[derive(Clone, Debug)]
+pub struct Info<'a> {
+    /// The parent `Texture` struct.
+    texture: Texture<'a>,
+
+    /// The corresponding JSON struct.
+    json: &'a json::texture::Info,
+}
+
 ///  Texture sampler properties for filtering and wrapping modes.
+#[derive(Clone, Debug)]
 pub struct Sampler<'a> {
     /// The parent `Gltf` struct.
     #[allow(dead_code)]
@@ -20,6 +31,16 @@ pub struct Sampler<'a> {
 
     /// The corresponding JSON struct.
     json: &'a json::texture::Sampler,
+}
+
+/// A texture and its sampler.
+#[derive(Clone, Debug)]
+pub struct Texture<'a> {
+    /// The parent `Gltf` struct.
+    gltf: &'a Gltf,
+
+    /// The corresponding JSON struct.
+    json: &'a json::texture::Texture,
 }
 
 impl<'a> Sampler<'a> {
@@ -63,22 +84,17 @@ impl<'a> Sampler<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::texture::SamplerExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::texture::Sampler<'a> {
+        extensions::texture::Sampler::new(
+            self.gltf,
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
     }
-}
-/// A texture and its sampler.
-pub struct Texture<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
-
-    /// The corresponding JSON struct.
-    json: &'a json::texture::Texture,
 }
 
 impl<'a> Texture<'a> {
@@ -114,22 +130,17 @@ impl<'a> Texture<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::texture::TextureExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::texture::Texture<'a> {
+        extensions::texture::Texture::new(
+            self.gltf,
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
     }
-}
-/// A reference to a `Texture`.
-pub struct Info<'a> {
-    /// The parent `Texture` struct.
-    texture: Texture<'a>,
-
-    /// The corresponding JSON struct.
-    json: &'a json::texture::Info,
 }
 
 impl<'a> Info<'a> {
@@ -152,8 +163,11 @@ impl<'a> Info<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::texture::InfoExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::texture::Info<'a> {
+        extensions::texture::Info::new(
+            self.texture.clone(),
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.

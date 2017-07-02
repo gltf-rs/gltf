@@ -9,7 +9,7 @@
 
 use std::collections::hash_map;
 use std::slice;
-use {accessor, json, material, Gltf};
+use {accessor, extensions, json, material, Gltf};
 
 use self::accessor::{Accessor, DataType, Dimensions, Iter};
 
@@ -228,8 +228,11 @@ impl<'a>  Mesh<'a>  {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::mesh::MeshExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::mesh::Mesh<'a> {
+        extensions::mesh::Mesh::new(
+            self.gltf,
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.
@@ -486,7 +489,7 @@ impl<'a> Primitive<'a> {
     /// Returns the attribute with the given semantic value.
     fn find_accessor_with_semantic(
         &self,
-        semantic: Semantic,
+        _semantic: Semantic,
     ) -> Option<accessor::Accessor> {
         unimplemented!()
     }
@@ -498,8 +501,11 @@ impl<'a> Primitive<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::mesh::PrimitiveExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::mesh::Primitive<'a> {
+        extensions::mesh::Primitive::new(
+            self.gltf,
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.

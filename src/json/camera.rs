@@ -9,7 +9,7 @@
 
 use serde::de;
 use std::fmt;
-use json::{Extras, Root};
+use json::{extensions, Extras, Root};
 use validation::{Checked, Error, JsonPath, Validate};
 
 /// All valid camera types.
@@ -22,7 +22,7 @@ pub const VALID_CAMERA_TYPES: &'static [&'static str] = &[
 #[derive(Clone, Copy, Debug)]
 pub enum Type {
     /// A perspective projection.
-    Perspective,
+    Perspective = 1,
 
     /// An orthographic projection.
     Orthographic,
@@ -52,18 +52,11 @@ pub struct Camera {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: CameraExtensions,
+    pub extensions: extensions::camera::Camera,
 
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
-}
-
-/// Extension specific data for `Camera`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct CameraExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 /// Values for an orthographic camera.
@@ -83,18 +76,11 @@ pub struct Orthographic {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: OrthographicExtensions,
+    pub extensions: extensions::camera::Orthographic,
 
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
-}
-
-/// Extension specific data for `Orthographic`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct OrthographicExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 /// Values for a perspective camera.
@@ -115,18 +101,11 @@ pub struct Perspective {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: PerspectiveExtensions,
+    pub extensions: extensions::camera::Perspective,
 
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
-}
-
-/// Extension specific data for `Perspective`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct PerspectiveExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 impl Validate for Camera {

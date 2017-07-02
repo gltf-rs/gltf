@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use json::{camera, mesh, scene, skin, Extras, Index, Root};
+use json::{camera, extensions, mesh, scene, skin, Extras, Index, Root};
 use validation::{Error, JsonPath, Validate};
 
 /// A node in the node hierarchy.  When the node contains `skin`, all
@@ -30,7 +30,7 @@ pub struct Node {
 
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: NodeExtensions,
+    pub extensions: extensions::scene::Node,
     
     /// Optional application specific data.
     #[serde(default)]
@@ -68,13 +68,6 @@ pub struct Node {
     pub weights: Option<Vec<f32>>,
 }
 
-/// Extension specific data for `Node`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct NodeExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
-}
-
 fn node_matrix_default() -> [f32; 16] {
     [1.0, 0.0, 0.0, 0.0, 
      0.0, 1.0, 0.0, 0.0, 
@@ -91,7 +84,7 @@ fn node_scale_default() -> [f32; 3] {
 pub struct Scene {
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: SceneExtensions,
+    pub extensions: extensions::scene::Scene,
     
     /// Optional application specific data.
     #[serde(default)]
@@ -103,13 +96,6 @@ pub struct Scene {
 
     /// The indices of each root node.
     pub nodes: Vec<Index<Node>>,
-}
-
-/// Extension specific data for `Scene`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct SceneExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 /// Unit quaternion rotation in the order (x, y, z, w), where w is the scalar.

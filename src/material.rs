@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use std::ops::Deref;
-use {json, texture, Gltf};
+use {extensions, json, texture, Gltf};
 
 pub use json::material::AlphaMode;
 
@@ -117,8 +117,11 @@ impl<'a> Material<'a> {
     }
 
     ///  Extension specific data.
-    pub fn extensions(&self) -> &json::material::MaterialExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::material::Material<'a> {
+        extensions::material::Material::new(
+            self.gltf,
+            &self.json.extensions,
+        )
     }
 
     ///  Optional application specific data.
@@ -190,8 +193,11 @@ impl<'a> PbrMetallicRoughness<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::material::PbrMetallicRoughnessExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::material::PbrMetallicRoughness<'a> {
+        extensions::material::PbrMetallicRoughness::new(
+            self.gltf,
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.
@@ -238,8 +244,11 @@ impl<'a> NormalTexture<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::material::NormalTextureExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::material::NormalTexture<'a> {
+        extensions::material::NormalTexture::new(
+            self.texture.clone(),
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.
@@ -284,8 +293,11 @@ impl<'a> OcclusionTexture<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::material::OcclusionTextureExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::material::OcclusionTexture<'a> {
+        extensions::material::OcclusionTexture::new(
+            self.texture.clone(),
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.

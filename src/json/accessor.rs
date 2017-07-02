@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use json::{buffer, Extras, Index};
+use json::{buffer, extensions, Extras, Index};
 use serde::de;
 use std::fmt;
 use validation::Checked;
@@ -108,13 +108,7 @@ pub const VALID_ACCESSOR_TYPES: &'static [&'static str] = &[
 /// Contains data structures for sparse storage.
 pub mod sparse {
     use super::*;
-    
-    /// Extension specific data for `Indices`.
-    #[derive(Clone, Debug, Default, Deserialize, Validate)]
-    pub struct IndicesExtensions {
-        #[serde(default)]
-        _allow_unknown_fields: (),
-    }
+    use json::extensions;
 
     /// Indices of those attributes that deviate from their initialization value.
     #[derive(Clone, Debug, Deserialize, Validate)]
@@ -135,22 +129,15 @@ pub mod sparse {
         pub component_type: Checked<IndexComponentType>,
 
         /// Extension specific data.
-        pub extensions: IndicesExtensions,
+        pub extensions: extensions::accessor::sparse::Indices,
 
         /// Optional application specific data.
         pub extras: Extras,
     }
 
-    /// Extension specific data for `Storage`.
-    #[derive(Clone, Debug, Default, Deserialize, Validate)]
-    pub struct StorageExtensions {
-        #[serde(default)]
-        _allow_unknown_fields: (),
-    }
-
     /// Sparse storage of attributes that deviate from their initialization value.
     #[derive(Clone, Debug, Deserialize, Validate)]
-        pub struct Sparse {
+    pub struct Sparse {
         /// The number of attributes encoded in this sparse accessor.
         pub count: u32,
 
@@ -168,23 +155,16 @@ pub mod sparse {
         pub values: Values,
 
         /// Extension specific data.
-        pub extensions: StorageExtensions,
+        pub extensions: extensions::accessor::sparse::Sparse,
 
         /// Optional application specific data.
         pub extras: Extras,
     }
 
-    /// Extension specific data for `Values`.
-    #[derive(Clone, Debug, Default, Deserialize, Validate)]
-    pub struct ValuesExtensions {
-        #[serde(default)]
-        _allow_unknown_fields: (),
-    }
-
     /// Array of size `count * number_of_components` storing the displaced
     /// accessor attributes pointed by `accessor::sparse::Indices`.
     #[derive(Clone, Debug, Deserialize, Validate)]
-        pub struct Values {
+    pub struct Values {
         /// The parent buffer view containing the sparse indices.
         ///
         /// The referenced buffer view must not have `ARRAY_BUFFER` nor
@@ -197,18 +177,11 @@ pub mod sparse {
         pub byte_offset: u32,
 
         /// Extension specific data.
-        pub extensions: ValuesExtensions,
+        pub extensions: extensions::accessor::sparse::Values,
 
         /// Optional application specific data.
         pub extras: Extras,
     }
-}
-
-/// Extension specific data for an `Accessor`.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
-pub struct AccessorExtensions {
-    #[serde(default)]
-    _allow_unknown_fields: (),
 }
 
 /// A typed view into a buffer view.
@@ -232,7 +205,7 @@ pub struct Accessor {
     
     /// Extension specific data.
     #[serde(default)]
-    pub extensions: AccessorExtensions,
+    pub extensions: extensions::accessor::Accessor,
     
     /// Optional application specific data.
     #[serde(default)]

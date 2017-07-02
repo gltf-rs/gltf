@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use {json, Gltf};
+use {extensions, json, Gltf};
 
 /// Image data used to create a texture.
 pub struct Image<'a> {
@@ -45,8 +45,11 @@ impl<'a> Image<'a> {
     }
 
     /// Extension specific data.
-    pub fn extensions(&self) -> &json::image::ImageExtensions {
-        &self.json.extensions
+    pub fn extensions(&self) -> extensions::image::Image<'a> {
+        extensions::image::Image::new(
+            self.gltf,
+            &self.json.extensions,
+        )
     }
 
     /// Optional application specific data.
