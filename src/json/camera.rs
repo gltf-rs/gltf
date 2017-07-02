@@ -130,23 +130,28 @@ pub struct PerspectiveExtensions {
 }
 
 impl Validate for Camera {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+    fn validate_minimally<P, R>(&self, root: &Root, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         if self.orthographic.is_none() && self.perspective.is_none() {
             report(&path, Error::Missing);
         }
 
-        self.orthographic.validate(root, || path().field("orthographic"), report);
-        self.perspective.validate(root, || path().field("perspective"), report);
-        self.type_.validate(root, || path().field("type"), report);
-        self.extensions.validate(root, || path().field("extensions"), report);
-        self.extras.validate(root, || path().field("extras"), report);
+        self.orthographic
+            .validate_minimally(root, || path().field("orthographic"), report);
+        self.perspective
+            .validate_minimally(root, || path().field("perspective"), report);
+        self.type_
+            .validate_minimally(root, || path().field("type"), report);
+        self.extensions
+            .validate_minimally(root, || path().field("extensions"), report);
+        self.extras
+            .validate_minimally(root, || path().field("extras"), report);
     }
 }
 
 impl Validate for Orthographic {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+    fn validate_completely<P, R>(&self, root: &Root, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         if self.znear < 0.0 {
@@ -157,13 +162,15 @@ impl Validate for Orthographic {
             report(&path, Error::Invalid);
         }
 
-        self.extensions.validate(root, || path().field("extensions"), report);
-        self.extras.validate(root, || path().field("extras"), report);
+        self.extensions
+            .validate_completely(root, || path().field("extensions"), report);
+        self.extras
+            .validate_completely(root, || path().field("extras"), report);
     }
 }
 
 impl Validate for Perspective {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+    fn validate_completely<P, R>(&self, root: &Root, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         self.aspect_ratio.map(|aspect_ratio| {
@@ -186,8 +193,10 @@ impl Validate for Perspective {
             }
         });
 
-        self.extensions.validate(root, || path().field("extensions"), report);
-        self.extras.validate(root, || path().field("extras"), report);
+        self.extensions
+            .validate_completely(root, || path().field("extensions"), report);
+        self.extras
+            .validate_completely(root, || path().field("extras"), report);
     }
 }
 

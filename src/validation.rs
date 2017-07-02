@@ -17,11 +17,23 @@ use std::hash::Hash;
 
 /// Trait for validating glTF JSON data against the 2.0 specification.
 pub trait Validate {
+    /// Validates only the invariants required for the library to function safely.
+    fn validate_minimally<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+    where
+        P: Fn() -> JsonPath,
+        R: FnMut(&Fn() -> JsonPath, Error),
+    {
+        // nop
+    }
+
     /// Validates the data against the glTF 2.0 specification.
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where
-            P: Fn() -> JsonPath,
-            R: FnMut(&Fn() -> JsonPath, Error);
+    fn validate_completely<P, R>(&self, root: &Root, path: P, report: &mut R)
+    where
+        P: Fn() -> JsonPath,
+        R: FnMut(&Fn() -> JsonPath, Error),
+    {
+        self.validate_minimally(root, path, report)
+    }
 }
 
 /// Specifies what kind of error occured during validation.
@@ -156,7 +168,7 @@ impl fmt::Display for JsonPath {
 }
 
 impl<T> Validate for Checked<T> {
-    fn validate<P, R>(&self, _root: &Root, path: P, report: &mut R)
+    fn validate_minimally<P, R>(&self, _root: &Root, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         match self {
@@ -167,113 +179,58 @@ impl<T> Validate for Checked<T> {
 }
 
 impl<K: Eq + Hash + ToString + Validate, V: Validate> Validate for HashMap<K, V> {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+    fn validate_minimally<P, R>(&self, root: &Root, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         for (key, value) in self.iter() {
-            key.validate(root, || path().key(&key.to_string()), report);
-            value.validate(root, || path().key(&key.to_string()), report);
+            key.validate_minimally(root, || path().key(&key.to_string()), report);
+            value.validate_minimally(root, || path().key(&key.to_string()), report);
+        }
+    }
+
+    fn validate_completely<P, R>(&self, root: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+    {
+        for (key, value) in self.iter() {
+            key.validate_completely(root, || path().key(&key.to_string()), report);
+            value.validate_completely(root, || path().key(&key.to_string()), report);
         }
     }
 }
 
 impl<T: Validate> Validate for Option<T> {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+    fn validate_minimally<P, R>(&self, root: &Root, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         if let Some(value) = self.as_ref() {
-            value.validate(root, path, report);
+            value.validate_minimally(root, path, report);
+        }
+    }
+
+    fn validate_completely<P, R>(&self, root: &Root, path: P, report: &mut R)
+        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+    {
+        if let Some(value) = self.as_ref() {
+            value.validate_completely(root, path, report);
         }
     }
 }
 
 impl<T: Validate> Validate for Vec<T> {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+    fn validate_minimally<P, R>(&self, root: &Root, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         for (index, value) in self.iter().enumerate() {
-            value.validate(root, || path().index(index), report);
+            value.validate_minimally(root, || path().index(index), report);
         }
     }
-}
 
-impl Validate for bool {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+    fn validate_completely<P, R>(&self, root: &Root, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
-        // nop
-    }
-}
-
-impl Validate for u32 {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
-    {
-        // nop
-    }
-}
-
-impl Validate for i32 {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
-    {
-        // nop
-    }
-}
-
-impl Validate for f32 {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
-    {
-        // nop
-    }
-}
-
-impl Validate for [f32; 3] {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
-    {
-        // nop
-    }
-}
-
-impl Validate for [f32; 4] {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
-    {
-        // nop
-    }
-}
-
-impl Validate for [f32; 16] {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
-    {
-        // nop
-    }
-}
-
-impl Validate for () {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
-    {
-        // nop
-    }
-}
-
-impl Validate for String {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
-    {
-        // nop
-    }
-}
-
-impl Validate for serde_json::Value {
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
-    {
-        // nop
+        for (index, value) in self.iter().enumerate() {
+            value.validate_completely(root, || path().index(index), report);
+        }
     }
 }
 
@@ -293,3 +250,15 @@ impl std::fmt::Display for Error {
         write!(f, "{}", self.description())
     }
 }
+
+// These types are assumed to be always valid.
+impl Validate for bool {}
+impl Validate for u32 {}
+impl Validate for i32 {}
+impl Validate for f32 {}
+impl Validate for [f32; 3] {}
+impl Validate for [f32; 4] {}
+impl Validate for [f32; 16] {}
+impl Validate for () {}
+impl Validate for String {}
+impl Validate for serde_json::Value {}

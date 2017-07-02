@@ -161,10 +161,12 @@ pub struct SamplerExtensions {
 }
 
 impl Validate for Animation {
-    fn validate<P, R>(&self, root: &Root, path: P, mut report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+    fn validate_minimally<P, R>(&self, root: &Root, path: P, mut report: &mut R)
+    where
+        P: Fn() -> JsonPath,
+        R: FnMut(&Fn() -> JsonPath, Error),
     {
-        self.samplers.validate(root, || path().field("samplers"), report);
+        self.samplers.validate_minimally(root, || path().field("samplers"), report);
         for (index, channel) in self.channels.iter().enumerate() {
             if channel.sampler.value() as usize >= self.samplers.len() {
                 let path = || path().field("channels").index(index).field("sampler");

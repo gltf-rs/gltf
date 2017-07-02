@@ -35,24 +35,64 @@ fn expand(ast: &syn::MacroInput) -> quote::Tokens {
         _ => panic!("#[derive(Validate)] only works on `struct`s"),
     };
     let ident = &ast.ident;
-    let validations: Vec<quote::Tokens> = fields.iter()
+    let minimal_validations: Vec<quote::Tokens> = fields.iter()
         .map(|f| f.ident.as_ref().unwrap())
         .map(|ident| {
-                 use inflections::Inflect;
-                 let field = ident.as_ref().to_camel_case();
-                 quote!(self.#ident.validate(root, || path().field(#field), report))
-             })
+            use inflections::Inflect;
+            let field = ident.as_ref().to_camel_case();
+            quote!(
+                self.#ident.validate_minimally(
+                    root,
+                    || path().field(#field),
+                    report,
+                )
+            )
+        })
+        .collect();
+    let complete_validations: Vec<quote::Tokens> = fields.iter()
+        .map(|f| f.ident.as_ref().unwrap())
+        .map(|ident| {
+            use inflections::Inflect;
+            let field = ident.as_ref().to_camel_case();
+            quote!(
+                self.#ident.validate_completely(
+                    root,
+                    || path().field(#field),
+                    report,
+                )
+            )
+        })
         .collect();
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
     quote!(
-        impl #impl_generics ::validation::Validate for #ident #ty_generics #where_clause {
-            fn validate<P, R>(&self, root: &::json::Root, path: P, report: &mut R)
-            where
+        impl #impl_generics ::validation::Validate
+            for #ident #ty_generics #where_clause
+        {
+            fn validate_minimally<P, R>(
+                &self,
+                root: &::json::Root,
+                path: P,
+                report: &mut R
+            ) where
                 P: Fn() -> ::validation::JsonPath,
                 R: FnMut(&Fn() -> ::validation::JsonPath, ::validation::Error),
             {
                 #(
-                    #validations;
+                    #minimal_validations;
+                )*
+            }
+
+            fn validate_completely<P, R>(
+                &self,
+                root: &::json::Root,
+                path: P,
+                report: &mut R
+            ) where
+                P: Fn() -> ::validation::JsonPath,
+                R: FnMut(&Fn() -> ::validation::JsonPath, ::validation::Error),
+            {
+                #(
+                    #complete_validations;
                 )*
             }
         }

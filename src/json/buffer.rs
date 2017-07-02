@@ -119,8 +119,10 @@ pub struct ViewExtensions {
 pub struct ByteStride(pub u32);
 
 impl Validate for ByteStride {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+    fn validate_minimally<P, R>(&self, _: &Root, path: P, report: &mut R)
+    where
+        P: Fn() -> JsonPath,
+        R: FnMut(&Fn() -> JsonPath, Error),
     {
         if self.0 % 4 != 0 {
             // Not a multiple of 4

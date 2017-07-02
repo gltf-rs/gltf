@@ -72,7 +72,8 @@ fn make_wrapper<'a, S: Source>(
 
     // Validate the JSON data.
     let mut errs = vec![];
-    root.validate(&root, || JsonPath::new(), &mut |path, err| {
+    // TODO: Choose validation strategy via import configuration or otherwise.
+    root.validate_completely(&root, || JsonPath::new(), &mut |path, err| {
         errs.push((path(), err));
     });
     for (index, buffer) in root.buffers.iter().enumerate() {

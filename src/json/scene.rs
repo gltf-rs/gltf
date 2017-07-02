@@ -123,7 +123,7 @@ impl Default for UnitQuaternion {
 }
 
 impl Validate for UnitQuaternion {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+    fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         for x in &self.0 {

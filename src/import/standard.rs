@@ -28,7 +28,8 @@ fn make_wrapper<'a, S: Source>(
 
     // Parse and validate the .gltf JSON data
     let mut errs = Vec::new();
-    root.validate(&root, || JsonPath::new(), &mut |path, err| {
+    // TODO: Choose validation strategy via import configuration or otherwise.
+    root.validate_completely(&root, || JsonPath::new(), &mut |path, err| {
         errs.push((path(), err))
     });
     for (index, buffer) in root.buffers.iter().enumerate() {

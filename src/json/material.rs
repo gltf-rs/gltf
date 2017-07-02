@@ -250,7 +250,7 @@ impl Default for AlphaMode {
 }
 
 impl Validate for AlphaCutoff {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+    fn validate_minimally<P, R>(&self, _: &Root, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         if self.0 < 0.0 {
@@ -289,7 +289,7 @@ impl<'de> de::Deserialize<'de> for Checked<AlphaMode> {
 }
 
 impl Validate for EmissiveFactor {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+    fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         for x in &self.0 {
@@ -309,7 +309,7 @@ impl Default for PbrBaseColorFactor {
 }
 
 impl Validate for PbrBaseColorFactor {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+    fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         for x in &self.0 {
@@ -329,7 +329,7 @@ impl Default for StrengthFactor {
 }
 
 impl Validate for StrengthFactor {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+    fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         if self.0 < 0.0 || self.0 > 1.0 {

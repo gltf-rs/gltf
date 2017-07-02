@@ -58,7 +58,7 @@ pub struct ImageExtensions {
 pub struct MimeType(pub String);
 
 impl Validate for MimeType {
-    fn validate<P, R>(&self, _: &Root, path: P, report: &mut R)
+    fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         if !VALID_MIME_TYPES.contains(&self.0.as_str()) {
