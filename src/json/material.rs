@@ -222,7 +222,7 @@ impl Default for AlphaMode {
 }
 
 impl Validate for AlphaCutoff {
-    fn validate_minimally<P, R>(&self, _: &Root, path: P, report: &mut R)
+    fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
         where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
     {
         if self.0 < 0.0 {

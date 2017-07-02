@@ -63,4 +63,3 @@ pub mod texture;
 pub mod validation;
 
 pub use self::gltf::{BufferData, Gltf, ImageData};
-pub use self::import::StaticImporter;

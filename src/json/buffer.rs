@@ -105,7 +105,7 @@ pub struct View {
 pub struct ByteStride(pub u32);
 
 impl Validate for ByteStride {
-    fn validate_minimally<P, R>(&self, _: &Root, path: P, report: &mut R)
+    fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
     where
         P: Fn() -> JsonPath,
         R: FnMut(&Fn() -> JsonPath, Error),
@@ -133,19 +133,19 @@ impl<'de> de::Deserialize<'de> for Checked<Target> {
                 write!(f, "any of: {:?}", VALID_TARGETS)
             }
 
-            fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
+            fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
                 where E: de::Error
             {
                 use self::Target::*;
                 use validation::Checked::*;
-                Ok(match value {
+                Ok(match value as u32 {
                     ARRAY_BUFFER => Valid(ArrayBuffer),
                     ELEMENT_ARRAY_BUFFER => Valid(ElementArrayBuffer),
                     _ => Invalid,
                 })
             }
         }
-        deserializer.deserialize_u32(Visitor)
+        deserializer.deserialize_u64(Visitor)
     }
 }
 

@@ -75,23 +75,12 @@ fn make_wrapper<'a, S: Source>(
     Ok(Gltf::new(Root::new(root), buffers, images))
 }   
 
-impl StaticImporter {
-    /// Constructs a `StaticImporter`.
-    pub fn new() -> Self {
-        StaticImporter
-    }
-
-    pub fn import<R, S>(
-        &self,
-        reader: R,
-        source: S,
-    ) -> Result<Gltf, Error<S>>
-    where
-        R: Read,
-        S: Source,
-    {
-        let root = json::from_reader(reader)?;
-        let gltf = make_wrapper(root, source)?;
-        Ok(gltf)
-    }
+pub fn import<R, S>(reader: R, source: S) -> Result<Gltf, Error<S>>
+where
+    R: Read,
+    S: Source,
+{
+    let root = json::from_reader(reader)?;
+    let gltf = make_wrapper(root, source)?;
+    Ok(gltf)
 }

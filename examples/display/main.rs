@@ -10,5 +10,5 @@ extern crate gltf;
 
 fn main() {
     let path = std::env::args().nth(1).unwrap();
-    println!("{:#?}", gltf::import(&path));
+    println!("{:#?}", gltf::import::from_path(&path));
 }

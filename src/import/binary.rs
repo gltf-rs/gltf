@@ -15,10 +15,6 @@ use std;
 use std::io::Read;
 use Gltf;
 
-/// Imports binary glTF (GLB) using static deserialization.
-#[derive(Clone, Debug)]
-pub struct StaticImporter;
-
 /// The contents of a .glb file.
 #[derive(Clone, Debug)]
 struct Glb(Vec<u8>);
@@ -216,37 +212,25 @@ impl Glb {
     }
 }
 
-impl StaticImporter {
-    /// Constructs a `StaticImporter`.
-    pub fn new() -> Self {
-        StaticImporter
-    }
-
-    /// Imports some glTF from the given data source.
-    pub fn import<R, S>(
-        &self,
-        mut reader: R,
-        source: S,
-    ) -> Result<Gltf, Error<S>>
-    where
-        R: Read,
-        S: Source,
-    {
-        let glb = {
-            let mut buffer = vec![];
-            let _ = reader.read_to_end(&mut buffer)?;
-            Glb(buffer)
-        };
-        debug_assert!(glb.0.starts_with(b"glTF"));
-        let (_header, json_chunk, blob_chunk) = glb.split()?;
-        let root = {
-            let begin = json_chunk.offset;
-            let end = begin + json_chunk.length;
-            let json = &glb.0[begin..end];
-            json::from_reader(std::io::Cursor::new(json))?
-        };
-        let blob = blob_chunk.map(|chunk| glb.slice(chunk).to_vec());
-        let gltf = make_wrapper(root, blob, source)?;
-        Ok(gltf)
-    }
+/// Imports some glTF from the given data source.
+pub fn import<R, S>(mut reader: R, source: S) -> Result<Gltf, Error<S>>
+where
+    R: Read,
+    S: Source,
+{
+    let glb = Glb({
+        let mut buffer = vec![];
+        let _ = reader.read_to_end(&mut buffer)?;
+        buffer
+    });
+    let (_header, json_chunk, blob_chunk) = glb.split()?;
+    let root = {
+        let begin = json_chunk.offset;
+        let end = begin + json_chunk.length;
+        let json = &glb.0[begin..end];
+        json::from_reader(std::io::Cursor::new(json))?
+    };
+    let blob = blob_chunk.map(|chunk| glb.slice(chunk).to_vec());
+    let gltf = make_wrapper(root, blob, source)?;
+    Ok(gltf)
 }

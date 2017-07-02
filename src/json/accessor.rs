@@ -254,12 +254,12 @@ impl<'de> de::Deserialize<'de> for Checked<GenericComponentType> {
                 write!(f, "any of: {:?}", VALID_COMPONENT_TYPES)
             }
 
-            fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
+            fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
                 where E: de::Error
             {
                 use self::ComponentType::*;
                 use validation::Checked::*;
-                Ok(match value {
+                Ok(match value as u32 {
                     BYTE => Valid(GenericComponentType(I8)),
                     UNSIGNED_BYTE => Valid(GenericComponentType(U8)),
                     SHORT => Valid(GenericComponentType(I16)),
@@ -270,7 +270,7 @@ impl<'de> de::Deserialize<'de> for Checked<GenericComponentType> {
                 })
             }
         }
-        deserializer.deserialize_u32(Visitor)
+        deserializer.deserialize_u64(Visitor)
     }
 }
 
@@ -286,12 +286,12 @@ impl<'de> de::Deserialize<'de> for Checked<IndexComponentType> {
                 write!(f, "any of: {:?}", VALID_INDEX_TYPES)
             }
 
-            fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
+            fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
                 where E: de::Error
             {
                 use self::ComponentType::*;
                 use validation::Checked::*;
-                Ok(match value {
+                Ok(match value as u32 {
                     UNSIGNED_BYTE => Valid(IndexComponentType(U8)),
                     UNSIGNED_SHORT => Valid(IndexComponentType(U16)),
                     UNSIGNED_INT => Valid(IndexComponentType(U32)),
@@ -299,7 +299,7 @@ impl<'de> de::Deserialize<'de> for Checked<IndexComponentType> {
                 })
             }
         }
-        deserializer.deserialize_u32(Visitor)
+        deserializer.deserialize_u64(Visitor)
     }
 }
 

@@ -192,19 +192,19 @@ impl<'de> de::Deserialize<'de> for Checked<MagFilter> {
                 write!(f, "any of: {:?}", VALID_MAG_FILTERS)
             }
 
-            fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
+            fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
                 where E: de::Error
             {
                 use self::MagFilter::*;
                 use validation::Checked::*;
-                Ok(match value {
+                Ok(match value as u32 {
                     NEAREST => Valid(Nearest),
                     LINEAR => Valid(Linear),
                     _ => Invalid,
                 })
             }
         }
-        deserializer.deserialize_u32(Visitor)
+        deserializer.deserialize_u64(Visitor)
     }
 }
 
@@ -220,12 +220,12 @@ impl<'de> de::Deserialize<'de> for Checked<MinFilter> {
                 write!(f, "any of: {:?}", VALID_MIN_FILTERS)
             }
 
-            fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
+            fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
                 where E: de::Error
             {
                 use self::MinFilter::*;
                 use validation::Checked::*;
-                Ok(match value {
+                Ok(match value as u32 {
                     NEAREST => Valid(Nearest),
                     LINEAR => Valid(Linear),
                     NEAREST_MIPMAP_NEAREST => Valid(NearestMipmapNearest),
@@ -236,7 +236,7 @@ impl<'de> de::Deserialize<'de> for Checked<MinFilter> {
                 })
             }
         }
-        deserializer.deserialize_u32(Visitor)
+        deserializer.deserialize_u64(Visitor)
     }
 }
 
@@ -252,12 +252,12 @@ impl<'de> de::Deserialize<'de> for Checked<WrappingMode> {
                 write!(f, "any of: {:?}", VALID_WRAPPING_MODES)
             }
 
-            fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
+            fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
                 where E: de::Error
             {
                 use self::WrappingMode::*;
                 use validation::Checked::*;
-                Ok(match value {
+                Ok(match value as u32 {
                     CLAMP_TO_EDGE => Valid(ClampToEdge),
                     MIRRORED_REPEAT => Valid(MirroredRepeat),
                     REPEAT => Valid(Repeat),
@@ -265,7 +265,7 @@ impl<'de> de::Deserialize<'de> for Checked<WrappingMode> {
                 })
             }
         }
-        deserializer.deserialize_u32(Visitor)
+        deserializer.deserialize_u64(Visitor)
     }
 }
 

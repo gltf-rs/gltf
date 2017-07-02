@@ -42,11 +42,9 @@
 //! }
 //!
 //! fn main() {
-//!     type Importer = gltf::StaticImporter;
-//!     let importer = Importer::new();
 //!     let path = Path::new("glTF-Sample-Models/2.0/Box/glTF/Box.gltf");
 //!     let source = SimpleSource(&path);
-//!     match importer.import_from_source(source) {
+//!     match gltf::import::from_source(source) {
 //!         Ok(gltf) => println!("{:#?}", gltf.as_json()),
 //!         Err(err) => println!("error: {:?}", err),
 //!     }
@@ -108,47 +106,22 @@ pub enum Image {
     Owned(Vec<u8>),
 }
 
-/// Imports glTF 2.0 using static deserialization.
-#[derive(Clone)]
-pub struct StaticImporter {
-    /// The binary glTF importer.
-    binary: binary::StaticImporter,
-
-    /// The standard glTF importer.
-    standard: standard::StaticImporter,
+/// Imports some glTF from the given custom source.
+pub fn from_source<S: Source>(source: S) -> Result<Gltf, Error<S>> {
+    use std::io::Read;
+    let mut stream = source.read_gltf().map_err(Error::Source)?;
+    let mut buffer = [0u8; 4];
+    let _ = stream.read_exact(&mut buffer)?;
+    if &buffer == b"glTF" {
+        binary::import(buffer.chain(stream), source)
+    } else {
+        standard::import(buffer.chain(stream), source)
+    }
 }
 
-impl StaticImporter {
-    /// Constructs a `StaticImporter`.
-    pub fn new() -> Self {
-        Self {
-            binary: binary::StaticImporter::new(),
-            standard: standard::StaticImporter::new(),
-        }
-    }
-
-    /// Imports some glTF from the given custom source.
-    pub fn import_from_source<S>(&self, source: S) -> Result<Gltf, Error<S>>
-        where S: Source
-    {
-        use std::io::Read;
-
-        let mut stream = source.read_gltf().map_err(Error::Source)?;
-        let mut buffer = [0u8; 4];
-        let _ = stream.read_exact(&mut buffer)?;
-        if &buffer == b"glTF" {
-            self.binary.import(buffer.chain(stream), source)
-        } else {
-            self.standard.import(buffer.chain(stream), source)
-        }
-    }
-    
-    /// Import some glTF 2.0 from the file system.
-    pub fn import_from_path<P>(&self, path: P) -> Result<Gltf, Error<FromPath>>
-        where P: AsRef<Path>
-    {
-        self.import_from_source(FromPath::new(path))
-    }
+/// Import some glTF 2.0 from the file system.
+pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Gltf, Error<FromPath>> {
+    from_source(FromPath::new(path))
 }
 
 impl<S: Source> From<std::io::Error> for Error<S> {

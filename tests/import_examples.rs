@@ -12,7 +12,7 @@ extern crate gltf;
 use std::{fs, io, path};
 
 fn try_import(path: &path::Path) {
-    let _ = gltf::import(&path).map_err(|err| {
+    let _ = gltf::import::from_path(&path).map_err(|err| {
         println!("{:?}: {:#?}", path, err);
         panic!();
     });
@@ -39,8 +39,5 @@ fn run() -> io::Result<()> {
 fn import() {
     // Import all 'standard' glTF in the glTF-Sample-Models/2.0 directory.
     run().expect("No I/O errors");
-
-    // Minimal example taken from https://github.com/javagl/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_003_MinimalGltfFile.md
-    try_import(path::Path::new("tests/minimal.gltf"));
 }
 

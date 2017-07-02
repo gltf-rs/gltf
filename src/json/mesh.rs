@@ -197,12 +197,12 @@ impl<'de> de::Deserialize<'de> for Checked<Mode> {
                 write!(f, "any of: {:?}", VALID_MODES)
             }
 
-            fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
+            fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
                 where E: de::Error
             {
                 use self::Mode::*;
                 use validation::Checked::*;
-                Ok(match value {
+                Ok(match value as u32 {
                     POINTS => Valid(Points),
                     LINES => Valid(Lines),
                     LINE_LOOP => Valid(LineLoop),
@@ -214,7 +214,7 @@ impl<'de> de::Deserialize<'de> for Checked<Mode> {
                 })
             }
         }
-        deserializer.deserialize_u32(Visitor)
+        deserializer.deserialize_u64(Visitor)
     }
 }
 
