@@ -52,6 +52,7 @@
 //! ```
 
 use gltf::Gltf;
+use json;
 use validation;
 use serde_json;
 use std;
@@ -93,7 +94,7 @@ pub enum Error<S: Source> {
     Source(S::Err),
 
     /// The .gltf data is invalid.
-    Validation(Vec<(validation::JsonPath, validation::Error)>),
+    Validation(Vec<(json::Path, validation::Error)>),
 }
 
 /// Describes image data required to render a single glTF asset.
@@ -136,8 +137,8 @@ impl<S: Source> From<serde_json::Error> for Error<S> {
     }
 }
 
-impl<S: Source> From<Vec<(validation::JsonPath, validation::Error)>> for Error<S> {
-    fn from(errs: Vec<(validation::JsonPath, validation::Error)>) -> Error<S> {
+impl<S: Source> From<Vec<(json::Path, validation::Error)>> for Error<S> {
+    fn from(errs: Vec<(json::Path, validation::Error)>) -> Error<S> {
         Error::Validation(errs)
     }
 }

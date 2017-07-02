@@ -9,8 +9,8 @@
 
 use serde::de;
 use std::fmt;
-use json::{accessor, extensions, scene, Extras, Index, Root};
-use validation::{Checked, Error, JsonPath, Validate};
+use json::{accessor, extensions, scene, Extras, Index, Path, Root};
+use validation::{Checked, Error, Validate};
 
 /// All valid interpolation algorithms.
 pub const VALID_INTERPOLATION_ALGORITHMS: &'static [&'static str] = &[
@@ -135,8 +135,8 @@ pub struct Sampler {
 impl Validate for Animation {
     fn validate_minimally<P, R>(&self, root: &Root, path: P, mut report: &mut R)
     where
-        P: Fn() -> JsonPath,
-        R: FnMut(&Fn() -> JsonPath, Error),
+        P: Fn() -> Path,
+        R: FnMut(&Fn() -> Path, Error),
     {
         self.samplers.validate_minimally(root, || path().field("samplers"), report);
         for (index, channel) in self.channels.iter().enumerate() {

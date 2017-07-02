@@ -64,16 +64,16 @@ fn make_wrapper<'a, S: Source>(
     blob: Option<Vec<u8>>,
     source: S,
 ) -> Result<Gltf, Error<S>> {
-    use validation::{Error as Reason, JsonPath, Validate};
+    use validation::{Error as Reason, Validate};
 
     // Validate the JSON data.
     let mut errs = vec![];
     // TODO: Choose validation strategy via import configuration or otherwise.
-    root.validate_completely(&root, || JsonPath::new(), &mut |path, err| {
+    root.validate_completely(&root, || json::Path::new(), &mut |path, err| {
         errs.push((path(), err));
     });
     for (index, buffer) in root.buffers.iter().enumerate() {
-        let path = || JsonPath::new().field("buffers").index(index).field("uri");
+        let path = || json::Path::new().field("buffers").index(index).field("uri");
         match index {
             0 if blob.is_some() => if buffer.uri.is_some() {
                 // let reason = format!("must be `undefined` when BIN is provided");

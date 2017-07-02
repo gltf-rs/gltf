@@ -9,8 +9,8 @@
 
 use serde::de;
 use std::fmt;
-use json::{extensions, texture, Extras, Index, Root};
-use validation::{Checked, Error, JsonPath, Validate};
+use json::{extensions, texture, Extras, Index, Root, Path};
+use validation::{Checked, Error, Validate};
 
 /// All valid alpha modes.
 pub const VALID_ALPHA_MODES: &'static [&'static str] = &[
@@ -223,7 +223,7 @@ impl Default for AlphaMode {
 
 impl Validate for AlphaCutoff {
     fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
         if self.0 < 0.0 {
             report(&path, Error::Invalid);
@@ -262,7 +262,7 @@ impl<'de> de::Deserialize<'de> for Checked<AlphaMode> {
 
 impl Validate for EmissiveFactor {
     fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
         for x in &self.0 {
             if *x < 0.0 || *x > 1.0 {
@@ -282,7 +282,7 @@ impl Default for PbrBaseColorFactor {
 
 impl Validate for PbrBaseColorFactor {
     fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
         for x in &self.0 {
             if *x < 0.0 || *x > 1.0 {
@@ -302,7 +302,7 @@ impl Default for StrengthFactor {
 
 impl Validate for StrengthFactor {
     fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
         if self.0 < 0.0 || self.0 > 1.0 {
             report(&path, Error::Invalid);

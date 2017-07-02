@@ -7,8 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use json::{buffer, extensions, Extras, Index, Root};
-use validation::{Error, JsonPath, Validate};
+use json::{buffer, extensions, Extras, Index, Root, Path};
+use validation::{Error, Validate};
 
 /// All valid MIME types.
 pub const VALID_MIME_TYPES: &'static [&'static str] = &[
@@ -52,7 +52,7 @@ pub struct MimeType(pub String);
 
 impl Validate for MimeType {
     fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
         if !VALID_MIME_TYPES.contains(&self.0.as_str()) {
             report(&path, Error::Invalid);

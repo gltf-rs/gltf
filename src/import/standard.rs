@@ -24,17 +24,17 @@ fn make_wrapper<'a, S: Source>(
 ) -> Result<Gltf, Error<S>> {
     use self::Error::*;
     use std::io::Read;
-    use validation::{Error as Reason, JsonPath, Validate};
+    use validation::{Error as Reason, Validate};
 
     // Parse and validate the .gltf JSON data
     let mut errs = Vec::new();
     // TODO: Choose validation strategy via import configuration or otherwise.
-    root.validate_completely(&root, || JsonPath::new(), &mut |path, err| {
+    root.validate_completely(&root, || json::Path::new(), &mut |path, err| {
         errs.push((path(), err))
     });
     for (index, buffer) in root.buffers.iter().enumerate() {
         if buffer.uri.is_none() {
-            let path = JsonPath::new().field("buffers").index(index);
+            let path = json::Path::new().field("buffers").index(index);
             // let reason = format!("uri is `undefined`");
             errs.push((path, Reason::Missing));
         }

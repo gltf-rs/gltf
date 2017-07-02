@@ -9,8 +9,8 @@
 
 use serde::de;
 use std::fmt;
-use json::{extensions, Extras, Root};
-use validation::{Checked, Error, JsonPath, Validate};
+use json::{extensions, Extras, Root, Path};
+use validation::{Checked, Error, Validate};
 
 /// All valid camera types.
 pub const VALID_CAMERA_TYPES: &'static [&'static str] = &[
@@ -110,7 +110,7 @@ pub struct Perspective {
 
 impl Validate for Camera {
     fn validate_minimally<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
         if self.orthographic.is_none() && self.perspective.is_none() {
             report(&path, Error::Missing);
@@ -131,7 +131,7 @@ impl Validate for Camera {
 
 impl Validate for Orthographic {
     fn validate_completely<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
         if self.znear < 0.0 {
             report(&path, Error::Invalid);
@@ -150,7 +150,7 @@ impl Validate for Orthographic {
 
 impl Validate for Perspective {
     fn validate_completely<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
         self.aspect_ratio.map(|aspect_ratio| {
             if aspect_ratio < 0.0 {

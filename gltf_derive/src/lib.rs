@@ -74,8 +74,8 @@ fn expand(ast: &syn::MacroInput) -> quote::Tokens {
                 _path: P,
                 _report: &mut R
             ) where
-                P: Fn() -> ::validation::JsonPath,
-                R: FnMut(&Fn() -> ::validation::JsonPath, ::validation::Error),
+                P: Fn() -> ::json::Path,
+                R: FnMut(&Fn() -> ::json::Path, ::validation::Error),
             {
                 #(
                     #minimal_validations;
@@ -88,8 +88,8 @@ fn expand(ast: &syn::MacroInput) -> quote::Tokens {
                 _path: P,
                 _report: &mut R
             ) where
-                P: Fn() -> ::validation::JsonPath,
-                R: FnMut(&Fn() -> ::validation::JsonPath, ::validation::Error),
+                P: Fn() -> ::json::Path,
+                R: FnMut(&Fn() -> ::json::Path, ::validation::Error),
             {
                 #(
                     #complete_validations;

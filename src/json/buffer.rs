@@ -9,8 +9,8 @@
 
 use serde::de;
 use std::fmt;
-use json::{extensions, Extras, Index, Root};
-use validation::{Checked, Error, JsonPath, Validate};
+use json::{extensions, Extras, Index, Root, Path};
+use validation::{Checked, Error, Validate};
 
 /// Corresponds to `GL_ARRAY_BUFFER`.
 pub const ARRAY_BUFFER: u32 = 34962;
@@ -107,8 +107,8 @@ pub struct ByteStride(pub u32);
 impl Validate for ByteStride {
     fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
     where
-        P: Fn() -> JsonPath,
-        R: FnMut(&Fn() -> JsonPath, Error),
+        P: Fn() -> Path,
+        R: FnMut(&Fn() -> Path, Error),
     {
         if self.0 % 4 != 0 {
             // Not a multiple of 4

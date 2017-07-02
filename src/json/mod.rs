@@ -38,6 +38,9 @@ pub mod material;
 /// Contains `Mesh` and other related data structures.
 pub mod mesh;
 
+/// Contains `Path`.
+pub mod path;
+
 /// Contains `Root`.
 pub mod root;
 
@@ -51,5 +54,6 @@ pub mod skin;
 pub mod texture;
 
 pub use self::extras::Extras;
+pub use self::path::Path;
 pub use self::root::{Index, Root};
 pub use serde_json::{from_reader, from_value};

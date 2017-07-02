@@ -7,8 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use json::{camera, extensions, mesh, scene, skin, Extras, Index, Root};
-use validation::{Error, JsonPath, Validate};
+use json::{camera, extensions, mesh, scene, skin, Extras, Index, Root, Path};
+use validation::{Error, Validate};
 
 /// A node in the node hierarchy.  When the node contains `skin`, all
 /// `mesh.primitives` must contain `JOINTS_0` and `WEIGHTS_0` attributes.
@@ -110,7 +110,7 @@ impl Default for UnitQuaternion {
 
 impl Validate for UnitQuaternion {
     fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
         for x in &self.0 {
             if *x < -1.0 || *x > 1.0 {

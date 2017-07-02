@@ -11,7 +11,7 @@ use serde;
 use std;
 use std::fmt;
 use json::*;
-use validation::{Error, JsonPath, Validate};
+use validation::{Error, Validate};
 
 /// Helper trait for retrieving top-level objects by a universal identifier.
 pub trait Get<T> {
@@ -335,7 +335,7 @@ impl<T: Validate> Validate for Index<T>
     where Root: TryGet<T>
 {
     fn validate_minimally<P, R>(&self, root: &Root, path: P, mut report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
         if root.try_get(self).is_err() {
             report(&path, Error::IndexOutOfBounds);

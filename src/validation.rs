@@ -1,4 +1,3 @@
-
 // Copyright 2017 The gltf Library Developers
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -9,7 +8,6 @@
 
 use serde_json;
 use std;
-use std::fmt;
 
 use json::*;
 use std::collections::HashMap;
@@ -20,8 +18,8 @@ pub trait Validate {
     /// Validates only the invariants required for the library to function safely.
     fn validate_minimally<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
     where
-        P: Fn() -> JsonPath,
-        R: FnMut(&Fn() -> JsonPath, Error),
+        P: Fn() -> Path,
+        R: FnMut(&Fn() -> Path, Error),
     {
         // nop
     }
@@ -29,8 +27,8 @@ pub trait Validate {
     /// Validates the data against the glTF 2.0 specification.
     fn validate_completely<P, R>(&self, root: &Root, path: P, report: &mut R)
     where
-        P: Fn() -> JsonPath,
-        R: FnMut(&Fn() -> JsonPath, Error),
+        P: Fn() -> Path,
+        R: FnMut(&Fn() -> Path, Error),
     {
         self.validate_minimally(root, path, report)
     }
@@ -59,10 +57,6 @@ pub enum Checked<T> {
     Invalid,
 }
 
-/// An immutable JSON source path.
-#[derive(Clone, Debug)]
-pub struct JsonPath(String);
-
 impl<T> Checked<T> {
     pub fn unwrap(self) -> T {
         match self {
@@ -89,87 +83,9 @@ impl<T: Default> Default for Checked<T> {
     }
 }
 
-impl JsonPath {
-    /// Creates an empty JSON source path.
-    ///
-    /// # Examples
-    ///
-    /// Basic usage:
-    ///
-    /// ```
-    /// # use gltf::validation::JsonPath;
-    /// let path = JsonPath::new();
-    /// assert_eq!("", path.as_str());
-    /// ```
-    pub fn new() -> Self {
-        JsonPath(String::new())
-    }
-
-    /// Returns a new path ending with the given field.
-    ///
-    /// # Examples
-    ///
-    /// Basic usage:
-    ///
-    /// ```
-    /// # use gltf::validation::JsonPath;
-    /// let path = JsonPath::new().field("foo");
-    /// assert_eq!("foo", path.as_str());
-    /// assert_eq!("foo.bar", path.field("bar").as_str());
-    /// ```
-    pub fn field(&self, name: &str) -> Self {
-        if self.0.is_empty() {
-            JsonPath(name.to_string())
-        } else {
-            JsonPath(format!("{}.{}", self.0, name))
-        }
-    }
-
-    /// Returns a new path ending with the given array index.
-    ///
-    /// # Examples
-    ///
-    /// Basic usage:
-    ///
-    /// ```
-    /// # use gltf::validation::JsonPath;
-    /// let path = JsonPath::new().field("foo");
-    /// assert_eq!("foo[123]", path.index(123).as_str());
-    /// ```
-    pub fn index(&self, index: usize) -> Self {
-        JsonPath(format!("{}[{}]", self.0, index))
-    }
-
-    /// Returns a new path ending with the given object key.
-    ///
-    /// # Examples
-    ///
-    /// Basic usage:
-    ///
-    /// ```
-    /// # use gltf::validation::JsonPath;
-    /// let path = JsonPath::new().field("foo");
-    /// assert_eq!("foo[\"bar\"]", path.key("bar").as_str());
-    /// ```
-    pub fn key(&self, key: &str) -> Self {
-        JsonPath(format!("{}[\"{}\"]", self.0, key))
-    }
-
-    /// Returns a view into the internal representation.
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-impl fmt::Display for JsonPath {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
 impl<T> Validate for Checked<T> {
     fn validate_minimally<P, R>(&self, _root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
         match self {
             &Checked::Valid(_) => {},
@@ -180,7 +96,7 @@ impl<T> Validate for Checked<T> {
 
 impl<K: Eq + Hash + ToString + Validate, V: Validate> Validate for HashMap<K, V> {
     fn validate_minimally<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
         for (key, value) in self.iter() {
             key.validate_minimally(root, || path().key(&key.to_string()), report);
@@ -189,7 +105,7 @@ impl<K: Eq + Hash + ToString + Validate, V: Validate> Validate for HashMap<K, V>
     }
 
     fn validate_completely<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
         for (key, value) in self.iter() {
             key.validate_completely(root, || path().key(&key.to_string()), report);
@@ -200,7 +116,7 @@ impl<K: Eq + Hash + ToString + Validate, V: Validate> Validate for HashMap<K, V>
 
 impl<T: Validate> Validate for Option<T> {
     fn validate_minimally<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
         if let Some(value) = self.as_ref() {
             value.validate_minimally(root, path, report);
@@ -208,7 +124,7 @@ impl<T: Validate> Validate for Option<T> {
     }
 
     fn validate_completely<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
         if let Some(value) = self.as_ref() {
             value.validate_completely(root, path, report);
@@ -218,7 +134,7 @@ impl<T: Validate> Validate for Option<T> {
 
 impl<T: Validate> Validate for Vec<T> {
     fn validate_minimally<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
         for (index, value) in self.iter().enumerate() {
             value.validate_minimally(root, || path().index(index), report);
@@ -226,7 +142,7 @@ impl<T: Validate> Validate for Vec<T> {
     }
 
     fn validate_completely<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> JsonPath, R: FnMut(&Fn() -> JsonPath, Error)
+        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
         for (index, value) in self.iter().enumerate() {
             value.validate_completely(root, || path().index(index), report);
