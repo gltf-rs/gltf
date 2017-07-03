@@ -7,42 +7,40 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{error, fmt};
+use futures::future;
+use futures::BoxFuture;
 
+use import;
+
+use std;
 use std::boxed::Box;
+use std::fmt;
 use std::fs::File;
-use std::io::{BufReader, Read};
+use std::io::BufReader;
+use std::marker::Send;
 
 pub use self::from_path::FromPath;
 
 /// A trait for representing sources of glTF data that may be read by an importer.
-pub trait Source: fmt::Debug {
-    /// Error type.
-    type Err: error::Error + fmt::Debug;
-    
+pub trait Source: Send + 'static {
     /// Read the contents of a .gltf or .glb file.
-    fn read_gltf(&self) -> Result<Box<Read>, Self::Err>;
+    fn source_gltf(&self) -> BoxFuture<Box<[u8]>, import::Error>;
 
     /// Read the contents of external data.
-    fn read_external_data(&self, uri: &str) -> Result<Box<Read>, Self::Err>;
+    fn source_external_data(&self, uri: &str) -> BoxFuture<Box<[u8]>, import::Error>;
+}
+
+/// Data source error.
+#[derive(Debug)]
+pub enum Error {
+    /// Standard I/O error.
+    Io(std::io::Error),
 }
 
 /// Contains the reference `Source` implementation.
 pub mod from_path {
     use super::*;
-    use std::{self, fmt};
-
     use std::path::{Path, PathBuf};
-
-    /// Possible runtime error for the `FromPath` data source.
-    #[derive(Debug)]
-    pub enum Error {
-        /// I/O error.
-        Io(std::io::Error),
-
-        /// The URI scheme for a buffer or image is not supported by this `Source`.
-        UnsupportedScheme,
-    }
 
     /// A simple synchronous data source that can read from the file system.
     #[derive(Clone, Debug)]
@@ -61,47 +59,55 @@ pub mod from_path {
         }
     }
 
-    impl std::error::Error for Error {
-        fn description(&self) -> &str {
-            match self {
-                &Error::Io(_) => "I/O error",
-                &Error::UnsupportedScheme => "Unsupported scheme",
-            }
-        }
-
-        fn cause(&self) -> Option<&std::error::Error> {
-            match self {
-                &Error::Io(ref err) => Some(err),
-                _ => None,
-            }
-        }
-    }
-
-    impl fmt::Display for Error {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            use std::error::Error;
-            write!(f, "{}", self.description())
-        }
-    }
-
-    impl From<std::io::Error> for Error {
-        fn from(err: std::io::Error) -> Error {
-            Error::Io(err)
-        }
-    }
-    
-    impl Source for FromPath {
-        type Err = Error;
-
-        fn read_gltf(&self) -> Result<Box<Read>, Self::Err> {
-            let file = File::open(&self.path)?;
-            Ok(Box::new(BufReader::new(file)))
-        }
-
-        fn read_external_data(&self, uri: &str) -> Result<Box<Read>, Self::Err> {
-            let path = self.path.parent().unwrap_or(Path::new("./")).join(uri);
+    fn read_to_end(path: PathBuf) -> BoxFuture<Box<[u8]>, import::Error> {
+        let future = future::lazy(move || {
+            use std::io::Read;
+            // TODO: Actually make this async.
             let file = File::open(path)?;
-            Ok(Box::new(BufReader::new(file)))
+            let mut reader = BufReader::new(file);
+            let mut data = vec![];
+            let _ = reader.read_to_end(&mut data)?;
+            Ok(data.into_boxed_slice())
+        });
+        Box::new(future)
+    }
+
+    impl Source for FromPath {
+        fn source_gltf(&self) -> BoxFuture<Box<[u8]>, import::Error> {
+            read_to_end(self.path.to_path_buf())
+        }
+
+        fn source_external_data(&self, uri: &str) -> BoxFuture<Box<[u8]>, import::Error> {
+            let path = self.path.parent().unwrap_or(Path::new("./")).join(uri);
+            read_to_end(path)
         }
     }
 }
+
+impl std::error::Error for Error {
+    fn description(&self) -> &str {
+        match self {
+            &Error::Io(_) => "I/O error",
+        }
+    }
+
+    fn cause(&self) -> Option<&std::error::Error> {
+        match self {
+            &Error::Io(ref err) => Some(err),
+        }
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use std::error::Error;
+        write!(f, "{}", self.description())
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(err: std::io::Error) -> Error {
+        Error::Io(err)
+    }
+}
+

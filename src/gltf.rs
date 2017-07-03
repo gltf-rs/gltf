@@ -7,50 +7,120 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use import;
+use json;
+use root;
+use std::{fmt, iter, ops, slice};
+
+use futures::future::{Shared, SharedItem};
+use futures::BoxFuture;
+
 use std::boxed::Box;
 use std::ops::Deref;
-use std::slice;
-use {accessor, animation, buffer, camera, image, json, material, mesh, root, scene, skin, texture};
 
-use self::accessor::Accessor;
-use self::animation::Animation;
-use self::buffer::{Buffer, View};
-use self::camera::Camera;
-use self::image::Image;
-use self::material::Material;
-use self::mesh::Mesh;
-use self::scene::{Node, Scene};
-use self::skin::Skin;
-use self::texture::{Sampler, Texture};
+use accessor::Accessor;
+use animation::Animation;
+use buffer::{Buffer, View};
+use camera::Camera;
+use image::Image;
+use material::Material;
+use mesh::Mesh;
+use scene::{Node, Scene};
+use skin::Skin;
+use texture::{Sampler, Texture};
 
-/// Describes buffer data required to render a single glTF asset.
+/// A concrete and thread-safe glTF buffer.
 #[derive(Clone, Debug)]
-pub enum BufferData {
-    /// The buffer data is owned.
-    Owned(Box<[u8]>),
+pub struct BufferData {
+    inner: SharedItem<Box<[u8]>>,
 }
 
-/// Describes image data required to render a single glTF asset.
-#[derive(Clone, Debug)]
-pub enum ImageData {
-    /// The image data is borrowed from the indexed buffer view.
-    Borrowed(usize),
+impl BufferData {
+    pub fn new(inner: SharedItem<Box<[u8]>>) -> Self {
+        BufferData {
+            inner: inner,
+        }
+    }
+}
 
-    /// The image data is owned.
-    Owned(Box<[u8]>),
+impl ops::Deref for BufferData {
+    type Target = [u8];
+    fn deref(&self) -> &Self::Target {
+        &self.inner[..]
+    }
+}
+
+/// A concrete and thread-safe glTF buffer view.
+#[derive(Clone, Debug)]
+pub struct ViewData {
+    buffer: BufferData,
+    begin: usize,
+    end: usize,
+}
+
+impl ViewData {
+    pub fn new(buffer: BufferData, begin: usize, end: usize) -> Self {
+        ViewData {
+            buffer: buffer,
+            begin: begin,
+            end: end,
+        }
+    }
+
+    pub fn into_parent(self) -> BufferData {
+        self.buffer
+    }
+
+    pub fn parent(&self) -> &BufferData {
+        &self.buffer
+    }
+}
+
+impl ops::Deref for ViewData {
+    type Target = [u8];
+    fn deref(&self) -> &Self::Target {
+        &self.buffer[self.begin..self.end]
+    }
+}
+
+/// A concrete, thread-safe, and decoded glTF image.
+#[derive(Clone, Debug)]
+pub struct ImageData {
+    pixels: SharedItem<Box<[u8]>>,
+}
+    
+impl ImageData {
+    pub fn new(pixels: SharedItem<Box<[u8]>>) -> Self {
+        ImageData {
+            pixels: pixels,
+        }
+    }
+}
+
+impl ops::Deref for ImageData {
+    type Target = [u8];
+    fn deref(&self) -> &Self::Target {
+        &self.pixels[..]
+    }
 }
 
 /// A loaded glTF complete with its data.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Gltf {
     /// The glTF buffer data.
-    buffer_data: Vec<BufferData>,
+    buffers: Vec<Shared<BoxFuture<Box<[u8]>, import::Error>>>,
 
     /// The glTF image data.
-    image_data: Vec<ImageData>,
+    images: Vec<Shared<BoxFuture<Box<[u8]>, import::Error>>>,
 
     /// The root glTF struct (and also `Deref` target).
     root: root::Root,
+}
+
+impl fmt::Debug for Gltf {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self.root)
+    }
 }
 
 /// An `Iterator` that visits every accessor in a glTF asset.
@@ -73,17 +143,17 @@ pub struct Animations<'a> {
     gltf: &'a Gltf,
 }
 
-/// An `Iterator` that visits every pre-loaded buffer in a glTF asset.
+/// An `Iterator` that visits every buffer in a glTF asset.
 #[derive(Clone, Debug)]
 pub struct Buffers<'a> {
     /// Internal buffer iterator.
-    iter: slice::Iter<'a, json::buffer::Buffer>,
+    iter: iter::Enumerate<slice::Iter<'a, json::buffer::Buffer>>,
 
     /// The internal root glTF object.
     gltf: &'a Gltf,
 }
 
-/// An `Iterator` that visits every pre-loaded buffer view in a glTF asset.
+/// An `Iterator` that visits every buffer view in a glTF asset.
 #[derive(Clone, Debug)]
 pub struct Views<'a> {
     /// Internal buffer view iterator.
@@ -107,7 +177,7 @@ pub struct Cameras<'a> {
 #[derive(Clone, Debug)]
 pub struct Images<'a> {
     /// Internal image iterator.
-    iter: slice::Iter<'a, json::image::Image>,
+    iter: iter::Enumerate<slice::Iter<'a, json::image::Image>>,
 
     /// The internal root glTF object.
     gltf: &'a Gltf,
@@ -184,17 +254,41 @@ pub struct Textures<'a> {
 }
 
 impl Gltf {
-    /// Constructor for a complete glTF asset.
+    /// Constructor for a complete lazy-loaded glTF asset.
     pub fn new(
         root: root::Root,
-        buffer_data: Vec<BufferData>,
-        image_data: Vec<ImageData>,
+        buffers: Vec<Shared<BoxFuture<Box<[u8]>, import::Error>>>,
+        images: Vec<Shared<BoxFuture<Box<[u8]>, import::Error>>>,
     ) -> Self {
         Self {
-            buffer_data: buffer_data,
-            image_data: image_data,
+            buffers: buffers,
+            images: images,
             root: root,
         }
+    }
+
+    /// Returns a shared `Future` that drives the lazy loading of buffer data.
+    ///
+    /// # Panics
+    ///
+    /// * If `index` is out of range.
+    fn buffer_data<'a>(
+        &'a self,
+        index: usize,
+    ) -> &'a Shared<BoxFuture<Box<[u8]>, import::Error>> {
+        &self.buffers[index]
+    }
+
+    /// Returns a shared `Future` that drives the lazy loading of image data.
+    ///
+    /// # Panics
+    ///
+    /// * If `index` is out of range.
+    fn image_data<'a>(
+        &'a self,
+        index: usize,
+    ) -> &'a Shared<BoxFuture<Box<[u8]>, import::Error>> {
+        &self.images[index]
     }
 
     /// Returns an `Iterator` that visits the accessors of the glTF asset.
@@ -216,7 +310,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the pre-loaded buffers of the glTF asset.
     pub fn buffers<'a>(&'a self) -> Buffers<'a> {
         Buffers {
-            iter: self.as_json().buffers.iter(),
+            iter: self.as_json().buffers.iter().enumerate(),
             gltf: self,
         }
     }
@@ -241,7 +335,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the pre-loaded images of the glTF asset.
     pub fn images<'a>(&'a self) -> Images<'a> {
         Images {
-            iter: self.as_json().images.iter(),
+            iter: self.as_json().images.iter().enumerate(),
             gltf: self,
         }
     }
@@ -327,7 +421,9 @@ impl<'a> Iterator for Animations<'a> {
 impl<'a> Iterator for Buffers<'a> {
     type Item = Buffer<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|json| Buffer::new(self.gltf, json))
+        self.iter.next().map(|(index, json)| {
+            Buffer::new(self.gltf, json, self.gltf.buffer_data(index))
+        })
     }
 }
 
@@ -348,7 +444,9 @@ impl<'a> Iterator for Cameras<'a> {
 impl<'a> Iterator for Images<'a> {
     type Item = Image<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|json| Image::new(self.gltf, json))
+        self.iter.next().map(|(index, json)| {
+            Image::new(self.gltf, json, self.gltf.image_data(index))
+        })
     }
 }
 

@@ -7,159 +7,165 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use futures::future;
+use import;
 use std::collections::hash_map;
 use std::slice;
-use {accessor, extensions, json, material, Gltf};
+use {accessor, extensions, json, material};
 
-use self::accessor::{Accessor, DataType, Dimensions, Iter};
+use accessor::{Accessor, DataType, Dimensions, Iter};
+use futures::{BoxFuture, Future};
+use Gltf;
 
 pub use json::mesh::{Mode, Semantic};
 
+pub type Error = future::SharedError<import::Error>;
+
 /// XYZ vertex normals of type `[f32; 3]`.
 #[derive(Clone, Debug)]
-pub struct Normals<'a>(Iter<'a, [f32; 3]>);
+pub struct Normals(Iter<[f32; 3]>);
 
 /// XYZ vertex normal displacements of type `[f32; 3]`.
 #[derive(Clone, Debug)]
-pub struct NormalDisplacements<'a>(Iter<'a, [f32; 3]>);
+pub struct NormalDisplacements(Iter<[f32; 3]>);
 
 /// XYZ vertex positions of type `[f32; 3]`.
 #[derive(Clone, Debug)]
-pub struct Positions<'a>(Iter<'a, [f32; 3]>);
+pub struct Positions(Iter<[f32; 3]>);
 
 /// XYZ vertex position displacements of type `[f32; 3]`.
 #[derive(Clone, Debug)]
-pub struct PositionDisplacements<'a>(Iter<'a, [f32; 3]>);
+pub struct PositionDisplacements(Iter<[f32; 3]>);
 
 /// XYZW vertex tangents of type `[f32; 4]` where the `w` component is a
 /// sign value (-1 or +1) indicating the handedness of the tangent basis.
 #[derive(Clone, Debug)]
-pub struct Tangents<'a>(Iter<'a, [f32; 4]>);
+pub struct Tangents(Iter<[f32; 4]>);
 
 /// XYZ vertex tangent displacements of type `[f32; 3]`.
 #[derive(Clone, Debug)]
-pub struct TangentDisplacements<'a>(Iter<'a, [f32; 3]>);
+pub struct TangentDisplacements(Iter<[f32; 3]>);
 
 /// Vertex colors.
 #[derive(Clone, Debug)]
-pub enum Colors<'a> {
+pub enum Colors {
     /// RGB vertex color of type `[u8; 3]>`.
-    RgbU8(Iter<'a, [u8; 3]>),
+    RgbU8(Iter<[u8; 3]>),
 
     /// RGBA vertex color of type `[u8; 4]>`.
-    RgbaU8(Iter<'a, [u8; 4]>),
+    RgbaU8(Iter<[u8; 4]>),
 
     /// RGB vertex color of type `[u16; 3]>`.
-    RgbU16(Iter<'a, [u16; 3]>),
+    RgbU16(Iter<[u16; 3]>),
 
     /// RGBA vertex color of type `[u16; 4]>`.
-    RgbaU16(Iter<'a, [u16; 4]>),
+    RgbaU16(Iter<[u16; 4]>),
 
     /// RGB vertex color of type `[f32; 3]`.
-    RgbF32(Iter<'a, [f32; 3]>),
+    RgbF32(Iter<[f32; 3]>),
 
     /// RGBA vertex color of type `[f32; 4]`.
-    RgbaF32(Iter<'a, [f32; 4]>),
+    RgbaF32(Iter<[f32; 4]>),
 }
 
 /// Index data.
 #[derive(Clone, Debug)]
-pub enum Indices<'a> {
+pub enum Indices {
     /// Index data of type U8
-    U8(Iter<'a, u8>),
+    U8(Iter<u8>),
     /// Index data of type U16
-    U16(Iter<'a, u16>),
+    U16(Iter<u16>),
     /// Index data of type U32
-    U32(Iter<'a, u32>),
+    U32(Iter<u32>),
 }
 
 /// Vertex joints.
 /// Refer to the documentation on morph targets and skins for more
 /// information.
 #[derive(Clone, Debug)]
-pub enum Joints<'a> {
+pub enum Joints {
     /// Joints of type `[u8; 4]`.
     /// Refer to the documentation on morph targets and skins for more
     /// information.
-    U8(Iter<'a, [u8; 4]>),
+    U8(Iter<[u8; 4]>),
     
     /// Joints of type `[u16; 4]`.
     /// Refer to the documentation on morph targets and skins for more
     /// information.
-    U16(Iter<'a, [u16; 4]>),
+    U16(Iter<[u16; 4]>),
 }
 
 /// UV texture co-ordinates.
 #[derive(Clone, Debug)]
-pub enum TexCoords<'a> {
+pub enum TexCoords {
     /// UV texture co-ordinates of type `[f32; 2]`.
-    F32(Iter<'a, [f32; 2]>),
+    F32(Iter<[f32; 2]>),
 
     /// UV texture co-ordinates of type `[u8; 2]>`.
-    U8(Iter<'a, [u8; 2]>),
+    U8(Iter<[u8; 2]>),
 
     /// UV texture co-ordinates of type `[u16; 2]>`.
-    U16(Iter<'a, [u16; 2]>),
+    U16(Iter<[u16; 2]>),
 }
 
 /// Weights,
 /// Refer to the documentation on morph targets for more information.
 #[derive(Clone, Debug)]
-pub enum Weights<'a> {
+pub enum Weights {
     /// Weights of type `[f32; 4]`.
-    F32(Iter<'a, [f32; 4]>),
+    F32(Iter<[f32; 4]>),
 
     /// Weights of type `[u8; 4]`.
-    U8(Iter<'a, [u8; 4]>),
+    U8(Iter<[u8; 4]>),
 
     /// Weights of type `[u16; 4]`.
-    U16(Iter<'a, [u16; 4]>),
+    U16(Iter<[u16; 4]>),
 }
 
 /// Vertex attribute data.
 #[derive(Clone, Debug)]
-pub enum Attribute<'a> {
+pub enum Attribute {
     /// Vertex colors.
-    Colors(u32, Colors<'a>),
+    Colors(u32, Colors),
 
-    /// Untyped user-defined vertex attributes.
-    #[cfg(feature = "extras")]
-    Extras(&'a str, accessor::Accessor<'a>),
+    // TODO: Handle extras (needs to be handled elsewhere to avoid taking lifetime)
+    // #[cfg(feature = "extras")]
+    // Extras(&'a str, accessor::Accessor),
 
     /// Vertex joints.
     /// Refer to the documentation on morph targets and skins for more
     /// information.
-    Joints(u32, Joints<'a>),
+    Joints(u32, Joints),
 
     /// XYZ vertex positions of type `[f32; 3]`.
-    Positions(Positions<'a>),
+    Positions(Positions),
 
     /// XYZ vertex normals of type `[f32; 3]`.
-    Normals(Normals<'a>),
+    Normals(Normals),
 
     /// XYZW vertex tangents of type `[f32; 4]` where the `w` component is a
     /// sign value (-1 or +1) indicating the handedness of the tangent basis.
-    Tangents(Tangents<'a>),
+    Tangents(Tangents),
 
     /// UV texture co-ordinates.
-    TexCoords(u32, TexCoords<'a>),
+    TexCoords(u32, TexCoords),
 
     /// Weights.
     /// Refer to the documentation on morph targets for more information.
-    Weights(u32, Weights<'a>),
+    Weights(u32, Weights),
 }
 
 /// Morph targets.
 #[derive(Clone, Debug)]
-pub struct MorphTarget<'a> {
+pub struct MorphTarget {
     /// XYZ vertex position displacements.
-    positions: Option<PositionDisplacements<'a>>,
+    positions: Option<PositionDisplacements>,
 
     /// XYZ vertex normal displacements.
-    normals: Option<NormalDisplacements<'a>>,
+    normals: Option<NormalDisplacements>,
 
     /// XYZ vertex tangent displacements.
-    tangents: Option<TangentDisplacements<'a>>,
+    tangents: Option<TangentDisplacements>,
 }
 
 /// A set of primitives to be rendered.  A node can contain one or more meshes and
@@ -203,17 +209,7 @@ pub struct Primitives<'a>  {
     iter: slice::Iter<'a, json::mesh::Primitive>,
 }
 
-/// An `Iterator` that visits the Morph targets of a `Primitive`.
-#[derive(Clone, Debug)]
-pub struct MorphTargets<'a>  {
-    /// The parent `Primitive` struct.
-    prim: &'a Primitive<'a>,
-
-    /// The internal Morph target iterIterator.
-    iter: slice::Iter<'a, json::mesh::MorphTargets>,
-}
-
-impl<'a>  Mesh<'a>  {
+impl<'a> Mesh<'a>  {
     /// Constructs a `Mesh`.
     pub fn new(gltf: &'a Gltf, json: &'a json::mesh::Mesh) -> Self {
         Self {
@@ -260,144 +256,81 @@ impl<'a>  Mesh<'a>  {
     }
 }
 
-impl<'a> MorphTarget<'a> {
-    /// Returns the XYZ position displacements.
-    pub fn positions(&self) -> Option<PositionDisplacements<'a>> {
-        self.positions.clone()
-    }
-
-    /// Returns the XYZ normal displacements.
-    pub fn normals(&self) -> Option<NormalDisplacements<'a>> {
-        self.normals.clone()
-    }
-
-    /// Returns the XYZ tangent displacements.
-    pub fn tangents(&self) -> Option<TangentDisplacements<'a>> {
-        self.tangents.clone()
-    }
-}
-
-impl<'a> Colors<'a> {
-    fn from_accessor(accessor: Accessor<'a>) -> Self {
-        match (accessor.dimensions(), accessor.data_type()) {
-            (Dimensions::Vec3, DataType::U8) => {
-                Colors::RgbU8(unsafe {
-                    accessor.iter()
-                })
-            },
-            (Dimensions::Vec4, DataType::U8) => {
-                Colors::RgbaU8(unsafe {
-                    accessor.iter()
-                })
-            },
-            (Dimensions::Vec3, DataType::U16) => {
-                Colors::RgbU16(unsafe {
-                    accessor.iter()
-                })
-            },
-            (Dimensions::Vec4, DataType::U16) => {
-                Colors::RgbaU16(unsafe {
-                    accessor.iter()
-                })
-            },
-            (Dimensions::Vec3, DataType::F32) => {
-                Colors::RgbF32(unsafe {
-                    accessor.iter()
-                })
-            },
-            (Dimensions::Vec4, DataType::F32) => {
-                Colors::RgbaF32(unsafe {
-                    accessor.iter()
-                })
-            },
-            _ => unreachable!(),
+impl Colors {
+    fn from_accessor<'a>(accessor: Accessor<'a>) -> BoxFuture<Colors, Error> {
+        unsafe {
+            match (accessor.dimensions(), accessor.data_type()) {
+                (Dimensions::Vec3, DataType::U8) => {
+                    accessor.iter().map(Colors::RgbU8).boxed()
+                },
+                (Dimensions::Vec4, DataType::U8) => {
+                    accessor.iter().map(Colors::RgbaU8).boxed()
+                },
+                (Dimensions::Vec3, DataType::U16) => {
+                    accessor.iter().map(Colors::RgbU16).boxed()
+                },
+                (Dimensions::Vec4, DataType::U16) => {
+                    accessor.iter().map(Colors::RgbaU16).boxed()
+                },
+                (Dimensions::Vec3, DataType::F32) => {
+                    accessor.iter().map(Colors::RgbF32).boxed()
+                },
+                (Dimensions::Vec4, DataType::F32) => {
+                    accessor.iter().map(Colors::RgbaF32).boxed()
+                },
+                _ => unreachable!(),
+            }
         }
     }
 }
 
-impl<'a> TexCoords<'a> {
-    fn from_accessor(accessor: Accessor<'a>) -> TexCoords<'a> {
-        match accessor.data_type() {
-            DataType::U8 => {
-                TexCoords::U8(unsafe {
-                    accessor.iter()
-                })
-            },
-            DataType::U16 => {
-                TexCoords::U16(unsafe {
-                    accessor.iter()
-                })
-            },
-            DataType::F32 => {
-                TexCoords::F32(unsafe {
-                    accessor.iter()
-                })
-            },
-            _ => unreachable!(),
+impl TexCoords {
+    fn from_accessor<'a>(accessor: Accessor<'a>) -> BoxFuture<TexCoords, Error> {
+        unsafe {
+            match accessor.data_type() {
+                DataType::U8 => accessor.iter().map(TexCoords::U8).boxed(),
+                DataType::U16 => accessor.iter().map(TexCoords::U16).boxed(),
+                DataType::F32 => accessor.iter().map(TexCoords::F32).boxed(),
+                _ => unreachable!(),
+            }
         }
     }
 }
 
-impl<'a> Indices<'a> {
-    fn from_accessor(accessor: Accessor<'a>) -> Indices<'a> {
-        match accessor.data_type() {
-            DataType::U8 => {
-                Indices::U8(unsafe {
-                    accessor.iter()
-                })
-            },
-            DataType::U16 => {
-                Indices::U16(unsafe {
-                    accessor.iter()
-                })
-            },
-            DataType::U32 => {
-                Indices::U32(unsafe {
-                    accessor.iter()
-                })
-            },
-            _ => unreachable!(),
+impl Indices {
+    fn from_accessor<'a>(accessor: Accessor) -> BoxFuture<Indices, Error> {
+        unsafe {
+            match accessor.data_type() {
+                DataType::U8 => accessor.iter().map(Indices::U8).boxed(),
+                DataType::U16 => accessor.iter().map(Indices::U8).boxed(),
+                DataType::U32 => accessor.iter().map(Indices::U8).boxed(),
+                _ => unreachable!(),
+            }
         }
     }
 }
 
-impl<'a> Joints<'a> {
-    fn from_accessor(accessor: Accessor<'a>) -> Joints<'a> {
-        match accessor.data_type() {
-            DataType::U8 => {
-                Joints::U8(unsafe {
-                    accessor.iter()
-                })
-            },
-            DataType::U16 => {
-                Joints::U16(unsafe {
-                    accessor.iter()
-                })
-            },
-            _ => unreachable!(),
+impl Joints {
+    fn from_accessor<'a>(accessor: Accessor<'a>) -> BoxFuture<Joints, Error> {
+        unsafe {
+            match accessor.data_type() {
+                DataType::U8 => accessor.iter().map(Joints::U8).boxed(),
+                DataType::U16 => accessor.iter().map(Joints::U16).boxed(),
+                _ => unreachable!(),
+            }
         }
     }
 }
 
-impl<'a> Weights<'a> {
-    fn from_accessor(accessor: Accessor<'a>) -> Weights<'a> {
-        match accessor.data_type() {
-            DataType::U8 => {
-                Weights::U8(unsafe {
-                    accessor.iter()
-                })
-            },
-            DataType::U16 => {
-                Weights::U16(unsafe {
-                    accessor.iter()
-                })
-            },
-            DataType::F32 => {
-                Weights::F32(unsafe {
-                    accessor.iter()
-                })
-            },
-            _ => unreachable!(),
+impl Weights {
+    fn from_accessor<'a>(accessor: Accessor<'a>) -> BoxFuture<Weights, Error> {
+        unsafe {
+            match accessor.data_type() {
+                DataType::U8 => accessor.iter().map(Weights::U8).boxed(),
+                DataType::U16 => accessor.iter().map(Weights::U16).boxed(),
+                DataType::F32 => accessor.iter().map(Weights::F32).boxed(),
+                _ => unreachable!(),
+            }
         }
     }
 }
@@ -417,39 +350,31 @@ impl<'a> Primitive<'a> {
     }
 
     /// Returns the vertex colors of the given set.
-    pub fn colors(&'a self, set: u32) -> Option<Colors<'a>> {
+    pub fn colors(&self, set: u32) -> Option<BoxFuture<Colors, Error>> {
         self.find_accessor_with_semantic(Semantic::Colors(set))
-            .map(|accessor| {
-                Colors::from_accessor(accessor)
-            })
+            .map(|accessor| Colors::from_accessor(accessor))
     }
 
     /// Returns the vertex texture co-ordinates of the given set.
-    pub fn tex_coords(&'a self, set: u32) -> Option<TexCoords<'a>> {
+    pub fn tex_coords(&self, set: u32) -> Option<BoxFuture<TexCoords, Error>> {
         self.find_accessor_with_semantic(Semantic::TexCoords(set))
-            .map(|accessor| {
-                TexCoords::from_accessor(accessor)
-            })
+            .map(|accessor| TexCoords::from_accessor(accessor))
     }
 
     /// Returns the joint indices of the given set.
-    pub fn joints(&'a self, set: u32) -> Option<Joints<'a>> {
+    pub fn joints(&self, set: u32) -> Option<BoxFuture<Joints, Error>> {
         self.find_accessor_with_semantic(Semantic::Joints(set))
-            .map(|accessor| {
-                Joints::from_accessor(accessor)
-            })
+            .map(|accessor| Joints::from_accessor(accessor))
     }
     
     /// Returns the joint weights of the given set.
-    pub fn weights(&'a self, set: u32) -> Option<Weights<'a>> {
+    pub fn weights(&self, set: u32) -> Option<BoxFuture<Weights, Error>> {
         self.find_accessor_with_semantic(Semantic::Weights(set))
-            .map(|accessor| {
-                Weights::from_accessor(accessor)
-            })
+            .map(|accessor| Weights::from_accessor(accessor))
     }
 
     /// Returns the primitive indices.
-    pub fn indices(&'a self) -> Option<Indices<'a>> {
+    pub fn indices(&self) -> Option<BoxFuture<Indices, Error>> {
         self.json.indices.as_ref().map(|index| {
             let accessor = self.gltf.accessors().nth(index.value()).unwrap();
             Indices::from_accessor(accessor)
@@ -457,47 +382,39 @@ impl<'a> Primitive<'a> {
     }
     
     /// Returns the primitive positions.
-    pub fn positions(&'a self) -> Option<Positions<'a>> {
+    pub fn positions(&self) -> Option<BoxFuture<Positions, Error>> {
         self.find_accessor_with_semantic(Semantic::Positions)
-            .map(|accessor| {
-                Positions(unsafe {
-                    accessor.iter()
-                })
+            .map(|accessor| unsafe {
+                accessor.iter().map(|iter| Positions(iter)).boxed()
             })
     }
 
     /// Returns the primitive normals.
-    pub fn normals(&'a self) -> Option<Normals<'a>> {
+    pub fn normals(&self) -> Option<BoxFuture<Normals, Error>> {
         self.find_accessor_with_semantic(Semantic::Normals)
-            .map(|accessor| {
-                Normals(unsafe {
-                    accessor.iter()
-                })
+            .map(|accessor| unsafe {
+                accessor.iter().map(|iter| Normals(iter)).boxed()
             })
     }
 
     /// Returns the primitive tangents.
-    pub fn tangents(&'a self) -> Option<Tangents<'a>> {
+    pub fn tangents(&self) -> Option<BoxFuture<Tangents, Error>> {
         self.find_accessor_with_semantic(Semantic::Tangents)
-            .map(|accessor| {
-                Tangents(unsafe {
-                    accessor.iter()
-                })
+            .map(|accessor| unsafe {
+                accessor.iter().map(|iter| Tangents(iter)).boxed()
             })
     }
 
     /// Returns the attribute with the given semantic value.
     fn find_accessor_with_semantic(
         &self,
-        _semantic: Semantic,
-    ) -> Option<accessor::Accessor> {
-        unimplemented!()
-    }
-    
-    /// Maps attribute semantic names to the `Accessor`s containing the
-    /// corresponding attribute data.
-    pub fn attributes(&self) -> Attributes<'a> {
-        unimplemented!()
+        semantic: Semantic,
+    ) -> Option<accessor::Accessor<'a>> {
+        self.json.attributes
+            .keys()
+            .map(|key| key.as_ref().unwrap())
+            .position(|key| key == &semantic)
+            .map(|index| self.gltf.accessors().nth(index).unwrap())
     }
 
     /// Extension specific data.
@@ -524,101 +441,44 @@ impl<'a> Primitive<'a> {
     pub fn mode(&self) -> Mode {
         self.json.mode.unwrap()
     }
-
-    /// Returns an iterIterator over the primitive Morph Targets.
-    pub fn morph_targets(&'a self) -> Option<MorphTargets<'a>> {
-        self.json.targets.as_ref().map(|targets| {
-            MorphTargets {
-                prim: self,
-                iter: targets.iter(),
-            }
-        })
-    }
 }
 
-impl<'a> Iterator for Attributes<'a> {
-    type Item = (&'a Semantic, Attribute<'a>);
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|(semantic, index)| {
-            use self::*;
-            let accessor = self.prim.gltf
-                .accessors()
-                .nth(index.value())
-                .unwrap();
-            let attribute = match semantic {
-                &Semantic::Positions => {
-                    Attribute::Positions(unsafe {
-                        Positions(accessor.iter())
-                    })
-                },
-                &Semantic::Normals => {
-                    Attribute::Normals(unsafe {
-                        Normals(accessor.iter())
-                    })
-                },
-                &Semantic::Tangents => {
-                    Attribute::Tangents(unsafe {
-                        Tangents(accessor.iter())
-                    })
-                },
-                &Semantic::Colors(set) => {
-                    Attribute::Colors(set, Colors::from_accessor(accessor))
-                },
-                &Semantic::TexCoords(set) => {
-                    Attribute::TexCoords(set, TexCoords::from_accessor(accessor))
-                },
-                &Semantic::Joints(set) => {
-                    Attribute::Joints(set, Joints::from_accessor(accessor))
-                },
-                &Semantic::Weights(set) => {
-                    Attribute::Weights(set, Weights::from_accessor(accessor))
-                },
-                #[cfg(feature = "extras")]
-                &Semantic::Extras(ref name) => {
-                    Attribute::Extras(name, accessor)
-                },
-            };
-            (semantic, attribute)
-        })
-    }
-}
-
-impl<'a> Iterator for Positions<'a> {
+impl Iterator for Positions {
     type Item = [f32; 3];
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
 }
 
-impl<'a> Iterator for PositionDisplacements<'a> {
+impl Iterator for PositionDisplacements {
     type Item = [f32; 3];
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
 }
 
-impl<'a> Iterator for Normals<'a> {
+impl Iterator for Normals {
     type Item = [f32; 3];
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
 }
  
-impl<'a> Iterator for NormalDisplacements<'a> {
+impl Iterator for NormalDisplacements {
     type Item = [f32; 3];
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
 }
 
-impl<'a> Iterator for Tangents<'a> {
+impl Iterator for Tangents {
     type Item = [f32; 4];
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
 }
 
-impl<'a> Iterator for TangentDisplacements<'a> {
+impl Iterator for TangentDisplacements {
     type Item = [f32; 3];
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
@@ -629,12 +489,5 @@ impl<'a> Iterator for Primitives<'a> {
     type Item = Primitive<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|json| Primitive::new(self.mesh.gltf, json))
-    }
-}
-
-impl<'a> Iterator for MorphTargets<'a> {
-    type Item = MorphTarget<'a>;
-    fn next(&mut self) -> Option<Self::Item> {
-        unimplemented!()
     }
 }

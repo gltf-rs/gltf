@@ -58,6 +58,13 @@ pub enum Checked<T> {
 }
 
 impl<T> Checked<T> {
+    pub fn as_ref(&self) -> Checked<&T> {
+        match self {
+            &Checked::Valid(ref item) => Checked::Valid(item),
+            &Checked::Invalid => Checked::Invalid,
+        }
+    }
+    
     pub fn unwrap(self) -> T {
         match self {
             Checked::Valid(item) => item,

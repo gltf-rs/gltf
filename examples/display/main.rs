@@ -6,9 +6,16 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+extern crate futures;
 extern crate gltf;
+
+use futures::executor::spawn;
+use std::error::Error;
 
 fn main() {
     let path = std::env::args().nth(1).unwrap();
-    println!("{:#?}", gltf::import::from_path(&path));
+    match spawn(gltf::import::from_path(&path)).wait_future() {
+        Ok(gltf) => println!("{:#?}", gltf),
+        Err(err) => println!("Invalid glTF ({})", err.description()),
+    }
 }

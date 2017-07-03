@@ -17,7 +17,7 @@
 //! which allows for reading from the file system. This implemenation may be used as
 //! reference for other schemes.
 //!
-//! ```
+//! ```no-run
 //! use std::path::Path;
 //! use std::io::{self, BufReader, Read};
 //! use std::fs::File;
@@ -27,8 +27,6 @@
 //! struct SimpleSource<'a>(&'a Path);
 //!
 //! impl<'a> gltf::import::Source for SimpleSource<'a> {
-//!     type Err = io::Error;
-//!
 //!     fn read_gltf(&self) -> Result<Box<Read>, Self::Err> {
 //!         let file = File::open(&self.0)?;
 //!         Ok(Box::new(BufReader::new(file)))
@@ -51,15 +49,19 @@
 //! }
 //! ```
 
-use gltf::Gltf;
+use futures::future;
 use json;
 use validation;
 use serde_json;
-use std;
-use std::fmt;
+use std::{self, fmt};
+
+use image_crate::ImageError;
+use futures::{BoxFuture, Future};
+use gltf::Gltf;
+use std::boxed::Box;
 use std::path::Path;
 
-mod binary;
+// mod binary;
 mod standard;
 
 /// Contains the `Source` trait and its reference implementation.
@@ -71,7 +73,10 @@ use self::source::FromPath;
 
 /// Error encountered when importing a glTF 2.0 asset.
 #[derive(Debug)]
-pub enum Error<S: Source> {
+pub enum Error {
+    /// A glTF image could not be decoded.
+    Decode(ImageError),
+
     /// A glTF extension required by the asset has not been enabled by the user.
     ExtensionDisabled(String),
     
@@ -81,9 +86,9 @@ pub enum Error<S: Source> {
     /// The glTF version of the asset is incompatible with the importer.
     IncompatibleVersion(String),
 
-    /// I/O error.
+    /// Standard I/O error.
     Io(std::io::Error),
-
+    
     /// Failure when parsing a .glb file.
     MalformedGlb(String),
 
@@ -91,73 +96,89 @@ pub enum Error<S: Source> {
     MalformedJson(serde_json::error::Error),
     
     /// Data source error.
-    Source(S::Err),
+    Source(source::Error),
 
+    /// Error upon lazy loading data.
+    LazyLoading(future::SharedError<Error>),
+    
     /// The .gltf data is invalid.
     Validation(Vec<(json::Path, validation::Error)>),
 }
 
-/// Describes image data required to render a single glTF asset.
-#[derive(Clone, Debug)]
-pub enum Image {
-    /// The image data is borrowed from a buffer.
-    Borrowed(usize),
-
-    /// The image data is owned.
-    Owned(Vec<u8>),
-}
-
 /// Imports some glTF from the given custom source.
-pub fn from_source<S: Source>(source: S) -> Result<Gltf, Error<S>> {
-    use std::io::Read;
-    let mut stream = source.read_gltf().map_err(Error::Source)?;
-    let mut buffer = [0u8; 4];
-    let _ = stream.read_exact(&mut buffer)?;
-    if &buffer == b"glTF" {
-        binary::import(buffer.chain(stream), source)
-    } else {
-        standard::import(buffer.chain(stream), source)
-    }
+pub fn from_source<S: Source>(source: S) -> BoxFuture<Gltf, Error> {
+    let future = source
+        .source_gltf()
+        .and_then(move |data| {
+            if data.starts_with(b"glTF") {
+                unimplemented!()
+            } else {
+                standard::import(data, source)
+            }
+        });
+    Box::new(future)
 }
 
 /// Import some glTF 2.0 from the file system.
-pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Gltf, Error<FromPath>> {
+pub fn from_path<P>(path: P) -> BoxFuture<Gltf, Error>
+    where P: AsRef<Path>
+{
     from_source(FromPath::new(path))
 }
 
-impl<S: Source> From<std::io::Error> for Error<S> {
-    fn from(err: std::io::Error) -> Error<S> {
-        Error::Io(err)
+impl From<ImageError> for Error {
+    fn from(err: ImageError) -> Error {
+        Error::Decode(err)
     }
 }
 
-impl<S: Source> From<serde_json::Error> for Error<S> {
-    fn from(err: serde_json::Error) -> Error<S> {
+impl From<serde_json::Error> for Error {
+    fn from(err: serde_json::Error) -> Error {
         Error::MalformedJson(err)
     }
 }
 
-impl<S: Source> From<Vec<(json::Path, validation::Error)>> for Error<S> {
-    fn from(errs: Vec<(json::Path, validation::Error)>) -> Error<S> {
+impl From<future::SharedError<Error>> for Error {
+    fn from(err: future::SharedError<Error>) -> Error {
+        Error::LazyLoading(err)
+    }
+}
+
+impl From<source::Error> for Error {
+    fn from(err: source::Error) -> Error {
+        Error::Source(err)
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(err: std::io::Error) -> Error {
+        Error::Io(err)
+    }
+}
+
+impl From<Vec<(json::Path, validation::Error)>> for Error {
+    fn from(errs: Vec<(json::Path, validation::Error)>) -> Error {
         Error::Validation(errs)
     }
 }
 
-impl<S: Source> fmt::Display for Error<S> {
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use std::error::Error;
         write!(f, "{}", self.description())
     }
 }
 
-impl<S: Source> std::error::Error for Error<S> {
+impl std::error::Error for Error {
     fn description(&self) -> &str {
         use self::Error::*;
         match self {
+            &Decode(_) => "Image decoding failed",
             &ExtensionDisabled(_) => "Asset requires a disabled extension",
             &ExtensionUnsupported(_) => "Assets requires an unsupported extension",
             &IncompatibleVersion(_) => "Asset is not glTF version 2.0",
             &Io(_) => "I/O error",
+            &LazyLoading(_) => "Lazy loading",
             &MalformedGlb(_) => "Malformed .glb file",
             &MalformedJson(_) => "Malformed .gltf / .glb JSON",
             &Source(_) => "Data source error",
@@ -170,7 +191,6 @@ impl<S: Source> std::error::Error for Error<S> {
         match self {
             &MalformedJson(ref err) => Some(err),
             &Io(ref err) => Some(err),
-            &Source(ref err) => Some(err),
             _ => None,
         }
     }

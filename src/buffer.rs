@@ -7,18 +7,24 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use {extensions, json, Gltf};
+use {extensions, import, json};
+
+use futures::future::{BoxFuture, Future, Shared, SharedError};
+use std::boxed::Box;
+use {BufferData, Gltf, ViewData};
 
 pub use json::buffer::Target;
 
 ///  A buffer points to binary data representing geometry, animations, or skins.
 pub struct Buffer<'a> {
     /// The parent `Gltf` struct.
-    #[allow(dead_code)]
     gltf: &'a Gltf,
 
     /// The corresponding JSON struct.
     json: &'a json::buffer::Buffer,
+
+    /// The buffer view data.
+    data: &'a Shared<BoxFuture<Box<[u8]>, import::Error>>,
 }
 
 ///  A view into a buffer generally representing a subset of the buffer.
@@ -32,10 +38,15 @@ pub struct View<'a> {
 
 impl<'a> Buffer<'a> {
     /// Constructs a `Buffer`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::buffer::Buffer) -> Self {
+    pub fn new(
+        gltf: &'a Gltf,
+        json: &'a json::buffer::Buffer,
+        data: &'a Shared<BoxFuture<Box<[u8]>, import::Error>>,
+    ) -> Self {
         Self {
             gltf: gltf,
             json: json,
+            data: data,
         }
     }
 
@@ -45,15 +56,18 @@ impl<'a> Buffer<'a> {
     }
 
     /// The length of the buffer in bytes.
-    pub fn length(&self) -> u32 {
-        self.json.byte_length
+    pub fn length(&self) -> usize {
+        self.json.byte_length as usize
     }
 
     /// The buffer data.
-    pub fn data(&self) -> &[u8] {
-        unimplemented!()
+    pub fn data(&self) -> BoxFuture<BufferData, SharedError<import::Error>> {
+        self.data
+            .clone()
+            .map(|data| BufferData::new(data))
+            .boxed()
     }
-    
+
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&str> {
@@ -76,7 +90,10 @@ impl<'a> Buffer<'a> {
 
 impl<'a> View<'a> {
     /// Constructs a `View`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::buffer::View) -> Self {
+    pub fn new(
+        gltf: &'a Gltf,
+        json: &'a json::buffer::View,
+    ) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -94,26 +111,31 @@ impl<'a> View<'a> {
     }
 
     /// Returns the length of the buffer view in bytes.
-    pub fn length(&self) -> u32 {
-        self.json.byte_length
+    pub fn length(&self) -> usize {
+        self.json.byte_length as usize
     }
 
     /// Returns the offset into the parent buffer in bytes.
-    pub fn offset(&self) -> u32 {
-        self.json.byte_offset
+    pub fn offset(&self) -> usize {
+        self.json.byte_offset as usize
     }
 
     /// Returns the stride in bytes between vertex attributes or other interleavable
     /// data. When `None`, data is assumed to be tightly packed.
-    pub fn stride(&self) -> Option<u32> {
-        self.json.byte_stride.map(|x| x.0)
+    pub fn stride(&self) -> Option<usize> {
+        self.json.byte_stride.map(|x| x.0 as usize)
     }
 
     /// Returns the buffer view data.
-    pub fn data(&self) -> &[u8] {
-        unimplemented!()
+    pub fn data(&self) -> BoxFuture<ViewData, SharedError<import::Error>> {
+        let begin = self.offset();
+        let end = begin + self.length();
+        self.buffer()
+            .data()
+            .map(move |buffer| ViewData::new(buffer, begin, end))
+            .boxed()
     }
-    
+
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&str> {

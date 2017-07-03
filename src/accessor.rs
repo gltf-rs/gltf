@@ -7,9 +7,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::marker::PhantomData;
-use std::mem::{size_of, transmute_copy};
-use {buffer, extensions, json, Gltf};
+use std::{marker, mem};
+use {buffer, extensions, import, json};
+
+use futures::future::SharedError;
+use futures::{BoxFuture, Future};
+use {Gltf, ViewData};
 
 pub use json::accessor::ComponentType as DataType;
 pub use json::accessor::Type as Dimensions;
@@ -26,18 +29,21 @@ pub struct Accessor<'a> {
 
 /// An `Iterator` that iterates over the members of an accessor.
 #[derive(Clone, Debug)]
-pub struct Iter<'a, T: 'a> {
+pub struct Iter<T> {
     /// Number of iterations left.
-    count: u32,
+    count: usize,
 
     /// The address of the value yielded from the last iteration.
     ptr: *const u8,
 
     /// The number of bytes to advance `ptr` by per iteration.
-    stride: u32,
+    stride: usize,
 
-    /// Consumes the data type we're iterating over.
-    _mk: PhantomData<&'a T>,
+    /// The buffer view data we're iterating over.
+    data: ViewData,
+
+    /// Consumes the data type we're returning at each iteration.
+    _mk: marker::PhantomData<T>,
 }
 
 impl<'a> Accessor<'a> {
@@ -63,17 +69,24 @@ impl<'a> Accessor<'a> {
     /// # Panics
     ///
     /// If the size of an individual `T` does not match the accessor component size.
-    pub unsafe fn iter<T>(&self) -> Iter<'a, T> {
-        assert!(self.size() == size_of::<T>());
-        let view = self.view();
-        let data = view.data();
-        let ptr = data.as_ptr().offset(self.json.byte_offset as isize);
-        Iter {
-            count: self.json.count,
-            ptr: ptr,
-            stride: view.stride().unwrap_or(size_of::<T>() as u32),
-            _mk: PhantomData,
-        }
+    pub unsafe fn iter<T>(&self) -> BoxFuture<Iter<T>, SharedError<import::Error>> {
+        assert!(self.size() == mem::size_of::<T>());
+        let count = self.count();
+        let offset = self.offset() as isize;
+        let stride = self.view().stride().unwrap_or(mem::size_of::<T>());
+        self.view()
+            .data()
+            .map(move |data| {
+                let ptr = data.as_ptr().offset(offset);
+                Iter {
+                    count: count,
+                    ptr: ptr,
+                    stride: stride,
+                    data: data,
+                    _mk: marker::PhantomData,
+                }
+            })
+            .boxed()
     }
 
     /// Returns the internal JSON item.
@@ -87,14 +100,14 @@ impl<'a> Accessor<'a> {
     }
 
     /// The offset relative to the start of the parent buffer view in bytes.
-    pub fn offset(&self) -> u32 {
-        self.json.byte_offset
+    pub fn offset(&self) -> usize {
+        self.json.byte_offset as usize
     }
 
     /// The number of components within the buffer view - not to be confused with
     /// the number of bytes in the buffer view.
-    pub fn count(&self) -> u32 {
-        self.json.count
+    pub fn count(&self) -> usize {
+        self.json.count as usize
     }
 
     /// The data type of components in the attribute.
@@ -149,13 +162,13 @@ impl<'a> Accessor<'a> {
     }
 }
 
-impl<'a, T: 'a> ExactSizeIterator for Iter<'a, T> {}
-impl<'a, T: 'a> Iterator for Iter<'a, T> {
+impl<T> ExactSizeIterator for Iter<T> {}
+impl<T> Iterator for Iter<T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
         if self.count > 0 {
             let value: T = unsafe {
-                transmute_copy(&*self.ptr)
+                mem::transmute_copy(&*self.ptr)
             };
             self.count -= 1;
             unsafe {

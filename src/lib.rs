@@ -7,8 +7,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+extern crate futures;
 #[macro_use]
 extern crate gltf_derive;
+extern crate image as image_crate;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -62,4 +64,4 @@ pub mod texture;
 /// Contains functions that validate glTF JSON data against the specification.
 pub mod validation;
 
-pub use self::gltf::{BufferData, Gltf, ImageData};
+pub use self::gltf::{BufferData, Gltf, ImageData, ViewData};

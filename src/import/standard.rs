@@ -7,80 +7,176 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use gltf::{BufferData, ImageData};
-use import::{Error, Source};
+use futures::future;
 use json;
+
+use futures::future::Shared;
+use futures::{BoxFuture, Future};
+use image_crate::{load_from_memory, load_from_memory_with_format};
+use image_crate::ImageFormat::{JPEG as Jpeg, PNG as Png};
+use import::{Error, Source};
 use root::Root;
-use std::io::Read;
+use std::boxed::Box;
+use std::io::Cursor;
+use validation::Validate;
+
 use Gltf;
 
-/// Imports standard glTF using static deserialization.
-#[derive(Clone)]
-pub struct StaticImporter;
+fn source_buffers(
+    json: &json::Root,
+    source: &Source,
+) -> Vec<Shared<BoxFuture<Box<[u8]>, Error>>> {
+    json.buffers
+        .iter()
+        .map(|entry| {
+            let uri = entry.uri.as_ref().unwrap();
+            source
+                .source_external_data(uri)
+                .boxed()
+                .shared()
+        })
+        .collect()
+}
 
-fn make_wrapper<'a, S: Source>(
-    root: json::Root,
-    source: S,
-) -> Result<Gltf, Error<S>> {
-    use self::Error::*;
-    use std::io::Read;
-    use validation::{Error as Reason, Validate};
-
-    // Parse and validate the .gltf JSON data
-    let mut errs = Vec::new();
-    // TODO: Choose validation strategy via import configuration or otherwise.
-    root.validate_completely(&root, || json::Path::new(), &mut |path, err| {
-        errs.push((path(), err))
-    });
-    for (index, buffer) in root.buffers.iter().enumerate() {
-        if buffer.uri.is_none() {
-            let path = json::Path::new().field("buffers").index(index);
-            // let reason = format!("uri is `undefined`");
-            errs.push((path, Reason::Missing));
-        }
+fn source_images(
+    json: &json::Root,
+    buffers: &[Shared<BoxFuture<Box<[u8]>, Error>>],
+    source: &Source,
+) -> Vec<Shared<BoxFuture<Box<[u8]>, Error>>> {
+    enum Type<'a> {
+        Borrowed {
+            buffer_index: usize,
+            begin: usize,
+            end: usize,
+        },
+        Owned {
+            uri: &'a str,
+        },
     }
-    if !errs.is_empty() {
-        return Err(Validation(errs));
-    }
-
-    // Preload the external glTF buffer data.
-    let mut buffers = vec![];
-    for entry in &root.buffers {
-        let mut buffer = vec![];
-        let _ = source
-            .read_external_data(entry.uri.as_ref().unwrap().as_ref())
-            .map_err(Source)?
-        .read_to_end(&mut buffer)?;
-        buffers.push(BufferData::Owned(buffer.into_boxed_slice()));
-    }
-
-    // Preload the glTF image data.
     let mut images = vec![];
-    for entry in &root.images {
-        images.push(if let Some(index) = entry.buffer_view.as_ref() {
-            ImageData::Borrowed(index.value())
-        } else if let Some(uri) = entry.uri.as_ref() {
-            // Read the external glTF image data.
-            let mut buffer = vec![];
-            let _ = source
-                .read_external_data(uri)
-                .map_err(Source)?
-            .read_to_end(&mut buffer)?;
-            ImageData::Owned(buffer.into_boxed_slice())
+    for entry in &json.images {
+        let format = entry.mime_type.as_ref().map(|x| match x.0.as_str() {
+            "image/jpeg" => Jpeg,
+            "image/png" => Png,
+            _ => unreachable!(),
+        });
+        let ty = if let Some(uri) = entry.uri.as_ref() {
+            Type::Owned {
+                uri: uri,
+            }
+        } else if let Some(index) = entry.buffer_view.as_ref() {
+            let buffer_view = &json.buffer_views[index.value()];
+            let begin = buffer_view.byte_offset as usize;
+            let end = begin + buffer_view.byte_length as usize;
+            Type::Borrowed {
+                buffer_index: buffer_view.buffer.value(),
+                begin: begin,
+                end: end
+            }
         } else {
             unreachable!()
-        });
+        };
+        let future = match ty {
+            Type::Owned {
+                uri,
+            } => {
+                source
+                    .source_external_data(uri)
+                    .and_then(move |data| {
+                        if let Some(format) = format {
+                            match load_from_memory_with_format(&data, format) {
+                                Ok(image) => {
+                                    let pixels = image
+                                        .raw_pixels()
+                                        .into_boxed_slice();
+                                    future::ok(pixels)
+                                },
+                                Err(err) => {
+                                    future::err(Error::Decode(err))
+                                },
+                            }
+                        } else {
+                            match load_from_memory(&data) {
+                                Ok(image) => {
+                                    let pixels = image
+                                        .raw_pixels()
+                                        .into_boxed_slice();
+                                    future::ok(pixels)
+                                },
+                                Err(err) => {
+                                    future::err(Error::Decode(err))
+                                },
+                            }
+                        }
+                    })
+                    .boxed()
+                    .shared()
+            },
+            Type::Borrowed {
+                buffer_index,
+                begin,
+                end,
+            } => {
+                buffers[buffer_index]
+                    .clone()
+                    .map_err(Error::LazyLoading)
+                    .and_then(move |data| {
+                        let slice = &data[begin..end];
+                        match load_from_memory_with_format(slice, format.unwrap()) {
+                            Ok(image) => {
+                                let pixels = image
+                                    .raw_pixels()
+                                    .into_boxed_slice();
+                                future::ok(pixels)
+                            },
+                            Err(err) => {
+                                future::err(Error::Decode(err))
+                            },
+                        }
+                    })
+                    .boxed()
+                    .shared()
+            },
+        };
+        images.push(future);
     }
+    images
+}
 
-    Ok(Gltf::new(Root::new(root), buffers, images))
-}   
+fn validate(json: json::Root) -> BoxFuture<json::Root, Error> {
+    let future = future::lazy(move || {
+        let mut errs = vec![];
+        // TODO: Allow this to be configurable
+        json.validate_completely(&json, || json::Path::new(), &mut |path, err| {
+            errs.push((path(), err));
+        });
+        if errs.is_empty() {
+            future::ok(json)
+        } else {
+            future::err(Error::Validation(errs))
+        }
+    });
+    Box::new(future)
+}
 
-pub fn import<R, S>(reader: R, source: S) -> Result<Gltf, Error<S>>
-where
-    R: Read,
-    S: Source,
+pub fn import<S>(data: Box<[u8]>, source: S) -> BoxFuture<Gltf, Error>
+    where S: Source
 {
-    let root = json::from_reader(reader)?;
-    let gltf = make_wrapper(root, source)?;
-    Ok(gltf)
+    let gltf = future::lazy(move || {
+        json::from_reader(Cursor::new(data)).map_err(Error::MalformedJson)
+    })
+        .and_then(|json| validate(json))
+        .and_then(move |json| {
+            let source = source;
+            let buffers = source_buffers(&json, &source);
+            future::ok((json, source, buffers))
+        })
+        .and_then(|(json, source, buffers)| {
+            let images = source_images(&json, &buffers, &source);
+            future::ok((json, buffers, images))
+        })
+        .and_then(|(json, buffers, images)| {
+            future::ok(Gltf::new(Root::new(json), buffers, images))
+        });
+    Box::new(gltf)
 }

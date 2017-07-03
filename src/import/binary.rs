@@ -7,13 +7,20 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use gltf::{BufferData, ImageData};
-use import::{Error, Source};
+use futures::future;
 use json;
-use root::Root;
 use std;
+
+use futures::Future;
+use import::{Error, Source};
+use root::Root;
 use std::io::Read;
 use Gltf;
+
+enum ImageData {
+    Owned,
+    Borrowed(usize),
+}
 
 /// The contents of a .glb file.
 #[derive(Clone, Debug)]
@@ -99,34 +106,30 @@ fn make_wrapper<'a, S: Source>(
         let mut buffer_iter = root.buffers.iter();
         if let Some(data) = blob {
             let _ = buffer_iter.next();
-            buffers.push(BufferData::Owned(data.into_boxed_slice()));
+            buffers.push(future::ok(data.into_boxed_slice()).boxed());
         }
 
         // Read any other external GLB buffers.
         for entry in buffer_iter {
             let uri = entry.uri.as_ref().unwrap(); 
-            let mut data = vec![];
-            let _ = source
-                .read_external_data(uri)
-                .map_err(Error::Source)?
-                .read_to_end(&mut data)?;
-            buffers.push(BufferData::Owned(data.into_boxed_slice()));
+            buffers.push(source.source_image(uri));
         }
     }
 
     // Preload the glTF image data.
     let mut images = vec![];
     for entry in &root.images {
+        let mime_type = entry.mime_type.as_ref().unwrap();
         images.push(if let Some(index) = entry.buffer_view.as_ref() {
-            ImageData::Borrowed(index.value())
+            let data = buffers[index.value()].clone();
+            let future = source.decode_image(data, mime_type);
+            Box::new(future)
+        } else if let Some(uri) = entry.uri.as_ref() {
+            let data = source.source_external_data(uri);
+            let future = source.decode_image(data, mime_type);
+            Box::new(future)
         } else {
-            // Read the external GLB image data.
-            let mut data = vec![];
-            let _ = source
-                .read_external_data(entry.uri.as_ref().unwrap())
-                .map_err(Error::Source)?
-            .read_to_end(&mut data)?;
-            ImageData::Owned(data.into_boxed_slice())
+            unreachable!()
         });
     }
 

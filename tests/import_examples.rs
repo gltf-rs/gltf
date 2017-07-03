@@ -7,15 +7,19 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+extern crate futures;
 extern crate gltf;
 
 use std::{fs, io, path};
 
+use futures::executor::spawn;
+
 fn try_import(path: &path::Path) {
-    let _ = gltf::import::from_path(&path).map_err(|err| {
-        println!("{:?}: {:#?}", path, err);
-        panic!();
-    });
+    print!("{:?}", path);
+    match spawn(gltf::import::from_path(&path)).wait_future() {
+        Ok(_) => println!(": Ok"),
+        Err(err) => println!(": Err({:?})", err),
+    }
 }
 
 fn run() -> io::Result<()> {

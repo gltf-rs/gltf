@@ -8,7 +8,11 @@
 // except according to those terms.
 
 use std::slice;
-use {accessor, extensions, json, scene, Gltf};
+use {accessor, extensions, import, json, scene};
+
+use futures::future::SharedError;
+use futures::{BoxFuture, Future};
+use Gltf;
 
 /// Joints and matrices defining a skin.
 #[derive(Clone, Debug)]
@@ -22,7 +26,7 @@ pub struct Skin<'a> {
 
 /// An `Iterator` that visits the inverse bind matrices of a `Skin`.
 #[derive(Clone, Debug)]
-pub struct InverseBindMatrices<'a>(accessor::Iter<'a, [[f32; 4]; 4]>);
+pub struct InverseBindMatrices(accessor::Iter<[[f32; 4]; 4]>);
 
 /// An `Iterator` that visits the joints of a `Skin`.
 #[derive(Clone, Debug)]
@@ -64,12 +68,12 @@ impl<'a> Skin<'a> {
     /// The index of the accessor containing the 4x4 inverse-bind matrices.  When
     /// `None`,each matrix is assumed to be the 4x4 identity matrix which implies
     /// that the inverse-bind matrices were pre-applied.
-    pub fn inverse_bind_matrices(&self) -> Option<InverseBindMatrices<'a>> {
+    pub fn inverse_bind_matrices(&self) -> Option<BoxFuture<InverseBindMatrices, SharedError<import::Error>>> {
         self.json.inverse_bind_matrices.as_ref().map(|index| {
             let accessor = self.gltf.accessors().nth(index.value()).unwrap();
-            InverseBindMatrices(unsafe {
-                accessor.iter()
-            })
+            unsafe {
+                accessor.iter().map(|iter| InverseBindMatrices(iter)).boxed()
+            }
         })
     }
 
@@ -98,7 +102,7 @@ impl<'a> Skin<'a> {
     }
 }
 
-impl<'a> Iterator for InverseBindMatrices<'a>  {
+impl Iterator for InverseBindMatrices  {
     type Item = [[f32; 4]; 4];
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()

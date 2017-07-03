@@ -7,24 +7,36 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use {extensions, json, Gltf};
+use futures::future;
+use {extensions, import, json};
+
+use futures::future::{BoxFuture, Future, Shared, SharedError};
+use std::boxed::Box;
+use {Gltf, ImageData};
 
 /// Image data used to create a texture.
 pub struct Image<'a> {
     /// The parent `Gltf` struct.
-    #[allow(dead_code)]
     gltf: &'a Gltf,
-
+    
     /// The corresponding JSON struct.
     json: &'a json::image::Image,
+
+    /// The buffer view data.
+    data: &'a Shared<BoxFuture<Box<[u8]>, import::Error>>,
 }
 
 impl<'a> Image<'a> {
     /// Constructs an `Image` from owned data.
-    pub fn new(gltf: &'a Gltf, json: &'a json::image::Image) -> Self {
+    pub fn new(
+        gltf: &'a Gltf,
+        json: &'a json::image::Image,
+        data: &'a Shared<BoxFuture<Box<[u8]>, import::Error>>,
+    ) -> Self {
         Self {
             gltf: gltf,
             json: json,
+            data: data,
         }
     }
     
@@ -40,8 +52,11 @@ impl<'a> Image<'a> {
     }
 
     /// Returns the image data.
-    pub fn data(&self) -> &[u8] {
-        unimplemented!()
+    pub fn data(&self) -> BoxFuture<ImageData, SharedError<import::Error>> {
+        self.data
+            .clone()
+            .and_then(|pixels| future::ok(ImageData::new(pixels)))
+            .boxed()
     }
 
     /// Extension specific data.
