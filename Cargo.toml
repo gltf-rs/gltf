@@ -18,7 +18,7 @@ include = [
 inflections = "1.1"
 
 [dependencies]
-futures = { path = "../futures-rs" }
+futures = { git = "https://github.com/alteous/futures-rs.git" }
 gltf_derive = { path = "./gltf_derive" }
 image = "0.14"
 serde = "1.0"
