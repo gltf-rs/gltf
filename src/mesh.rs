@@ -302,8 +302,8 @@ impl Indices {
         unsafe {
             match accessor.data_type() {
                 DataType::U8 => accessor.iter().map(Indices::U8).boxed(),
-                DataType::U16 => accessor.iter().map(Indices::U8).boxed(),
-                DataType::U32 => accessor.iter().map(Indices::U8).boxed(),
+                DataType::U16 => accessor.iter().map(Indices::U16).boxed(),
+                DataType::U32 => accessor.iter().map(Indices::U32).boxed(),
                 _ => unreachable!(),
             }
         }

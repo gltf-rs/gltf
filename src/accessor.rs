@@ -70,7 +70,6 @@ impl<'a> Accessor<'a> {
     ///
     /// If the size of an individual `T` does not match the accessor component size.
     pub unsafe fn iter<T>(&self) -> BoxFuture<Iter<T>, SharedError<import::Error>> {
-        assert!(self.size() == mem::size_of::<T>());
         let count = self.count();
         let offset = self.offset() as isize;
         let stride = self.view().stride().unwrap_or(mem::size_of::<T>());
