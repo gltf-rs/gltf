@@ -411,10 +411,9 @@ impl<'a> Primitive<'a> {
         semantic: Semantic,
     ) -> Option<accessor::Accessor<'a>> {
         self.json.attributes
-            .keys()
-            .map(|key| key.as_ref().unwrap())
-            .position(|key| key == &semantic)
-            .map(|index| self.gltf.accessors().nth(index).unwrap())
+            .iter()
+            .find(|&(ref key, _)| key.as_ref().unwrap() == &semantic)
+            .map(|(_, index)| self.gltf.accessors().nth(index.value()).unwrap())
     }
 
     /// Extension specific data.
