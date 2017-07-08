@@ -24,7 +24,7 @@ This crate is intended to load [glTF 2.0](https://www.khronos.org/gltf), a file 
 
 ### Usage
 
-#### Importing some glTF 2.0
+#### Import some glTF 2.0
 
 ```rust
 extern crate gltf;
@@ -48,12 +48,12 @@ gltf = { version = "0.6", features = ["extras"] }
 
 ### Examples
 
-#### gltf_display
+#### gltf-display
 
 If you want to see how the structure of the glTF file is deserialized, you can
 use the example here to poke at it.
 
 ```sh
-cargo run --example gltf_display glTF-Sample-Models/2.0/Box/glTF/Box.gltf
+cargo run --example gltf-display glTF-Sample-Models/2.0/Box/glTF/Box.gltf
 ```
 

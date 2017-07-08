@@ -1,5 +1,5 @@
 [package]
-name = "gltf_derive"
+name = "gltf-derive"
 version = "0.1.0"
 authors = ["alteous <alteous@outlook.com>"]
 description = "Implementation of the Validate proc_macro"
