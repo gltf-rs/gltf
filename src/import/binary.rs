@@ -281,7 +281,7 @@ fn validate(
             return Ok(json);
         },
         config::ValidationStrategy::Minimal => {
-            json.validate_completely(&json, || json::Path::new(), &mut |path, err| {
+            json.validate_minimally(&json, || json::Path::new(), &mut |path, err| {
                 errs.push((path(), err));
             })
         },
