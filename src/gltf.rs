@@ -12,11 +12,10 @@ use json;
 use root;
 use std::{fmt, iter, ops, slice};
 
-use futures::future::{Shared, SharedItem};
-use futures::BoxFuture;
+use futures::future::{Shared, SharedError, SharedItem};
+use futures::{BoxFuture, Future, Poll};
 
 use std::boxed::Box;
-use std::ops::Deref;
 
 use accessor::Accessor;
 use animation::Animation;
@@ -29,78 +28,116 @@ use scene::{Node, Scene};
 use skin::Skin;
 use texture::{Sampler, Texture};
 
-/// A concrete and thread-safe glTF buffer.
-#[derive(Clone, Debug)]
-pub struct BufferData {
-    inner: SharedItem<Box<[u8]>>,
+#[derive(Clone, Copy, Debug)]
+enum Region {
+    Full,
+    View {
+        offset: usize,
+        len: usize,
+    },
 }
 
-impl BufferData {
-    pub fn new(inner: SharedItem<Box<[u8]>>) -> Self {
-        BufferData {
-            inner: inner,
+impl Region {
+    pub fn subview(self, offset: usize, len: usize) -> Region {
+        match self {
+            Region::Full => {
+                Region::View {
+                    offset: offset,
+                    len: len,
+                }
+            },
+            Region::View {
+                offset: prev_offset,
+                len: _,
+            } => {
+                Region::View {
+                    offset: prev_offset + offset,
+                    len: len,
+                }
+            },
         }
     }
 }
 
-impl ops::Deref for BufferData {
-    type Target = [u8];
-    fn deref(&self) -> &Self::Target {
-        &self.inner[..]
-    }
+/// A `Future` that drives the acquisition of glTF data.
+#[derive(Clone)]
+pub struct AsyncData {
+    future: Shared<BoxFuture<Box<[u8]>, import::Error>>,
+    region: Region,
 }
 
-/// A concrete and thread-safe glTF buffer view.
-#[derive(Clone, Debug)]
-pub struct ViewData {
-    buffer: BufferData,
-    begin: usize,
-    end: usize,
-}
+/// Error that could occur during asynchronous imports.
+pub type AsyncError = SharedError<import::Error>;
 
-impl ViewData {
-    pub fn new(buffer: BufferData, begin: usize, end: usize) -> Self {
-        ViewData {
-            buffer: buffer,
-            begin: begin,
-            end: end,
+impl AsyncData {
+    pub fn full(future: Shared<BoxFuture<Box<[u8]>, import::Error>>) -> Self {
+        AsyncData {
+            future: future,
+            region: Region::Full,
         }
     }
 
-    pub fn into_parent(self) -> BufferData {
-        self.buffer
-    }
-
-    pub fn parent(&self) -> &BufferData {
-        &self.buffer
-    }
-}
-
-impl ops::Deref for ViewData {
-    type Target = [u8];
-    fn deref(&self) -> &Self::Target {
-        &self.buffer[self.begin..self.end]
-    }
-}
-
-/// A concrete, thread-safe, and decoded glTF image.
-#[derive(Clone, Debug)]
-pub struct ImageData {
-    pixels: SharedItem<Box<[u8]>>,
-}
-    
-impl ImageData {
-    pub fn new(pixels: SharedItem<Box<[u8]>>) -> Self {
-        ImageData {
-            pixels: pixels,
+    pub fn view(self, offset: usize, len: usize) -> Self {
+        AsyncData {
+            future: self.future,
+            region: self.region.subview(offset, len),
         }
     }
 }
 
-impl ops::Deref for ImageData {
+impl Future for AsyncData {
+    type Item = Data;
+    type Error = AsyncError;
+    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+        self.future
+            .poll()
+            .map(|async| {
+                async.map(|item| {
+                    match self.region {
+                        Region::Full => Data::full(item),
+                        Region::View { offset, len } => Data::view(item, offset, len),
+                    }
+                })
+            })
+    }
+}
+
+/// Concrete and thread-safe glTF data.
+///
+/// May represent `Buffer`, `View`, or `Image` data.
+#[derive(Clone, Debug)]
+pub struct Data {
+    /// The resolved data from a `future::Shared`.
+    item: SharedItem<Box<[u8]>>,
+
+    /// The byte region the data reads from.
+    region: Region,
+}
+
+impl Data {
+    /// Constructs concrete and thread-safe glTF data.
+    pub fn full(item: SharedItem<Box<[u8]>>) -> Self {
+        Data {
+            item: item,
+            region: Region::Full,
+        }
+    }
+
+    pub fn view(item: SharedItem<Box<[u8]>>, offset: usize, len: usize) -> Self {
+        Data {
+            item: item,
+            region: Region::View { offset, len },
+        }
+    }
+}
+
+impl ops::Deref for Data {
     type Target = [u8];
     fn deref(&self) -> &Self::Target {
-        &self.pixels[..]
+        match self.region {
+            Region::Full => &self.item[..],
+            Region::View { offset, len } => &self.item[offset..(offset + len)],
+        }
     }
 }
 
@@ -108,10 +145,10 @@ impl ops::Deref for ImageData {
 #[derive(Clone)]
 pub struct Gltf {
     /// The glTF buffer data.
-    buffers: Vec<Shared<BoxFuture<Box<[u8]>, import::Error>>>,
+    buffers: Vec<AsyncData>,
 
     /// The glTF image data.
-    images: Vec<Shared<BoxFuture<Box<[u8]>, import::Error>>>,
+    images: Vec<AsyncData>,
 
     /// The root glTF struct (and also `Deref` target).
     root: root::Root,
@@ -257,8 +294,8 @@ impl Gltf {
     /// Constructor for a complete lazy-loaded glTF asset.
     pub fn new(
         root: root::Root,
-        buffers: Vec<Shared<BoxFuture<Box<[u8]>, import::Error>>>,
-        images: Vec<Shared<BoxFuture<Box<[u8]>, import::Error>>>,
+        buffers: Vec<AsyncData>,
+        images: Vec<AsyncData>,
     ) -> Self {
         Self {
             buffers: buffers,
@@ -275,7 +312,7 @@ impl Gltf {
     fn buffer_data<'a>(
         &'a self,
         index: usize,
-    ) -> &'a Shared<BoxFuture<Box<[u8]>, import::Error>> {
+    ) -> &'a AsyncData {
         &self.buffers[index]
     }
 
@@ -287,7 +324,7 @@ impl Gltf {
     fn image_data<'a>(
         &'a self,
         index: usize,
-    ) -> &'a Shared<BoxFuture<Box<[u8]>, import::Error>> {
+    ) -> &'a AsyncData {
         &self.images[index]
     }
 
@@ -397,7 +434,7 @@ impl Gltf {
     }
 }
 
-impl Deref for Gltf {
+impl ops::Deref for Gltf {
     type Target = root::Root;
     fn deref(&self) -> &Self::Target {
         &self.root

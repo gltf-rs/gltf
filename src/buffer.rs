@@ -7,11 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use {extensions, import, json};
+use {extensions, json};
 
-use futures::future::{BoxFuture, Future, Shared, SharedError};
-use std::boxed::Box;
-use {BufferData, Gltf, ViewData};
+use {AsyncData, Gltf};
 
 pub use json::buffer::Target;
 
@@ -24,7 +22,7 @@ pub struct Buffer<'a> {
     json: &'a json::buffer::Buffer,
 
     /// The buffer view data.
-    data: &'a Shared<BoxFuture<Box<[u8]>, import::Error>>,
+    data: &'a AsyncData,
 }
 
 ///  A view into a buffer generally representing a subset of the buffer.
@@ -41,7 +39,7 @@ impl<'a> Buffer<'a> {
     pub fn new(
         gltf: &'a Gltf,
         json: &'a json::buffer::Buffer,
-        data: &'a Shared<BoxFuture<Box<[u8]>, import::Error>>,
+        data: &'a AsyncData,
     ) -> Self {
         Self {
             gltf: gltf,
@@ -61,11 +59,8 @@ impl<'a> Buffer<'a> {
     }
 
     /// The buffer data.
-    pub fn data(&self) -> BoxFuture<BufferData, SharedError<import::Error>> {
-        self.data
-            .clone()
-            .map(|data| BufferData::new(data))
-            .boxed()
+    pub fn data(&self) -> AsyncData {
+        self.data.clone()
     }
 
     /// Optional user-defined name for this object.
@@ -127,13 +122,8 @@ impl<'a> View<'a> {
     }
 
     /// Returns the buffer view data.
-    pub fn data(&self) -> BoxFuture<ViewData, SharedError<import::Error>> {
-        let begin = self.offset();
-        let end = begin + self.length();
-        self.buffer()
-            .data()
-            .map(move |buffer| ViewData::new(buffer, begin, end))
-            .boxed()
+    pub fn data(&self) -> AsyncData {
+        self.buffer().data().view(self.offset(), self.length())
     }
 
     /// Optional user-defined name for this object.

@@ -10,7 +10,6 @@
 use futures::future;
 use json;
 
-use futures::future::Shared;
 use futures::{BoxFuture, Future};
 use image_crate::{load_from_memory, load_from_memory_with_format};
 use image_crate::ImageFormat::{JPEG as Jpeg, PNG as Png};
@@ -20,34 +19,35 @@ use std::boxed::Box;
 use std::io::Cursor;
 use validation::Validate;
 
-use Gltf;
+use {AsyncData, Gltf};
 
 fn source_buffers(
     json: &json::Root,
     source: &Source,
-) -> Vec<Shared<BoxFuture<Box<[u8]>, Error>>> {
+) -> Vec<AsyncData> {
     json.buffers
         .iter()
         .map(|entry| {
             let uri = entry.uri.as_ref().unwrap();
-            source
+            let future = source
                 .source_external_data(uri)
                 .boxed()
-                .shared()
+                .shared();
+            AsyncData::full(future)
         })
         .collect()
 }
 
 fn source_images(
     json: &json::Root,
-    buffers: &[Shared<BoxFuture<Box<[u8]>, Error>>],
+    buffers: &[AsyncData],
     source: &Source,
-) -> Vec<Shared<BoxFuture<Box<[u8]>, Error>>> {
+) -> Vec<AsyncData> {
     enum Type<'a> {
         Borrowed {
             buffer_index: usize,
-            begin: usize,
-            end: usize,
+            offset: usize,
+            len: usize,
         },
         Owned {
             uri: &'a str,
@@ -66,12 +66,10 @@ fn source_images(
             }
         } else if let Some(index) = entry.buffer_view.as_ref() {
             let buffer_view = &json.buffer_views[index.value()];
-            let begin = buffer_view.byte_offset as usize;
-            let end = begin + buffer_view.byte_length as usize;
             Type::Borrowed {
                 buffer_index: buffer_view.buffer.value(),
-                begin: begin,
-                end: end
+                offset: buffer_view.byte_offset as usize,
+                len: buffer_view.byte_length as usize,
             }
         } else {
             unreachable!()
@@ -114,14 +112,14 @@ fn source_images(
             },
             Type::Borrowed {
                 buffer_index,
-                begin,
-                end,
+                offset,
+                len,
             } => {
                 buffers[buffer_index]
                     .clone()
                     .map_err(Error::LazyLoading)
                     .and_then(move |data| {
-                        let slice = &data[begin..end];
+                        let slice = &data[offset..(offset + len)];
                         match load_from_memory_with_format(slice, format.unwrap()) {
                             Ok(image) => {
                                 let pixels = image
@@ -138,7 +136,7 @@ fn source_images(
                     .shared()
             },
         };
-        images.push(future);
+        images.push(AsyncData::full(future));
     }
     images
 }

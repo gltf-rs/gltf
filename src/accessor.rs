@@ -12,7 +12,7 @@ use {buffer, extensions, import, json};
 
 use futures::future::SharedError;
 use futures::{BoxFuture, Future};
-use {Gltf, ViewData};
+use {Data, Gltf};
 
 pub use json::accessor::ComponentType as DataType;
 pub use json::accessor::Type as Dimensions;
@@ -40,7 +40,7 @@ pub struct Iter<T> {
     stride: usize,
 
     /// The buffer view data we're iterating over.
-    data: ViewData,
+    data: Data,
 
     /// Consumes the data type we're returning at each iteration.
     _mk: marker::PhantomData<T>,
@@ -56,6 +56,7 @@ impl<'a> Accessor<'a> {
     }
 
     /// Returns the size of each component that this accessor describes.
+    #[allow(dead_code)]
     fn size(&self) -> usize {
         self.data_type().size() * self.dimensions().multiplicity()
     }
