@@ -105,6 +105,13 @@ pub enum Error {
     Validation(Vec<(json::Path, validation::Error)>),
 }
 
+/// Import some glTF 2.0 synchronously from the file system.
+pub fn from_path_sync<P>(path: P) -> Result<Gltf, Error>
+    where P: AsRef<Path>
+{
+    from_path(path).wait()
+}
+
 /// Imports some glTF from the given custom source.
 pub fn from_source<S: Source>(source: S) -> BoxFuture<Gltf, Error> {
     let future = source

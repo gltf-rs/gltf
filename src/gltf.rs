@@ -28,94 +28,37 @@ use scene::{Node, Scene};
 use skin::Skin;
 use texture::{Sampler, Texture};
 
+/// Represents an error that could occur when loading glTF data asynchronously.
+pub type AsyncError = SharedError<import::Error>;
+
+/// Represents a contiguous subset of either `AsyncData` or concrete `Data`.
 #[derive(Clone, Copy, Debug)]
 enum Region {
+    /// Represents the whole contents of the parent data. 
     Full,
+
+    /// Represents a subset of the contents of the parent data.
     View {
+        /// Byte offset where the data region begins.
         offset: usize,
+
+        /// Byte length past the offset where the data region ends.
         len: usize,
     },
 }
 
-impl Region {
-    pub fn subview(self, offset: usize, len: usize) -> Region {
-        match self {
-            Region::Full => {
-                Region::View {
-                    offset: offset,
-                    len: len,
-                }
-            },
-            Region::View {
-                offset: prev_offset,
-                len: _,
-            } => {
-                Region::View {
-                    offset: prev_offset + offset,
-                    len: len,
-                }
-            },
-        }
-    }
-}
+/// A `Future` that drives a glTF import.
+pub struct Async(BoxFuture<Gltf, import::Error>);
 
 /// A `Future` that drives the acquisition of glTF data.
 #[derive(Clone)]
 pub struct AsyncData {
+    /// A `Future` that resolves to either a `SharedItem<Box<[u8]>>` or else an
+    /// `AsyncError`.
     future: Shared<BoxFuture<Box<[u8]>, import::Error>>,
+
+    /// The subset the data that is required once available.
     region: Region,
-}
-
-/// Error that could occur during asynchronous imports.
-pub type AsyncError = SharedError<import::Error>;
-
-impl AsyncData {
-    /// Constructs `AsyncData` that uses all data from the given future. 
-    pub fn full(future: Shared<BoxFuture<Box<[u8]>, import::Error>>) -> Self {
-        AsyncData {
-            future: future,
-            region: Region::Full,
-        }
-    }
-
-    /// Constructs `AsyncData` that uses a subset of the data from the given future.
-    pub fn view(
-        future: Shared<BoxFuture<Box<[u8]>, import::Error>>,
-        offset: usize,
-        len: usize,
-    ) -> Self {
-        AsyncData {
-            future: future,
-            region: Region::View { offset, len },
-        }
-    }
-
-    /// Consumes this `AsyncData`, constructing a subset instead.
-    ///
-    /// If the data is already a subset then a sub-subset is created, etc.
-    pub fn subview(self, offset: usize, len: usize) -> Self {
-        AsyncData {
-            future: self.future,
-            region: self.region.subview(offset, len),
-        }
-    }
-}
-
-impl Future for AsyncData {
-    type Item = Data;
-    type Error = AsyncError;
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        self.future
-            .poll()
-            .map(|async| {
-                async.map(|item| {
-                    match self.region {
-                        Region::Full => Data::full(item),
-                        Region::View { offset, len } => Data::view(item, offset, len),
-                    }
-                })
-            })
-    }
 }
 
 /// Concrete and thread-safe glTF data.
@@ -130,44 +73,6 @@ pub struct Data {
     region: Region,
 }
 
-impl Data {
-    /// Constructs concrete and thread-safe glTF data.
-    pub fn full(item: SharedItem<Box<[u8]>>) -> Self {
-        Data {
-            item: item,
-            region: Region::Full,
-        }
-    }
-
-    /// Constructs a concrete and thread-safe subset of glTF data.
-    pub fn view(item: SharedItem<Box<[u8]>>, offset: usize, len: usize) -> Self {
-        Data {
-            item: item,
-            region: Region::View { offset, len },
-        }
-    }
-
-    /// Consumes this `Data`, constructing a subset instead.
-    ///
-    /// If the data is already a subset then a sub-subset is created, etc.
-    pub fn subview(self, offset: usize, len: usize) -> Self {
-        Data {
-            item: self.item,
-            region: self.region.subview(offset, len),
-        }
-    }
-}
-
-impl ops::Deref for Data {
-    type Target = [u8];
-    fn deref(&self) -> &Self::Target {
-        match self.region {
-            Region::Full => &self.item[..],
-            Region::View { offset, len } => &self.item[offset..(offset + len)],
-        }
-    }
-}
-
 /// A loaded glTF complete with its data.
 #[derive(Clone)]
 pub struct Gltf {
@@ -179,12 +84,6 @@ pub struct Gltf {
 
     /// The root glTF struct (and also `Deref` target).
     root: root::Root,
-}
-
-impl fmt::Debug for Gltf {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self.root)
-    }
 }
 
 /// An `Iterator` that visits every accessor in a glTF asset.
@@ -461,10 +360,141 @@ impl Gltf {
     }
 }
 
+impl fmt::Debug for Gltf {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self.root)
+    }
+}
+
 impl ops::Deref for Gltf {
     type Target = root::Root;
     fn deref(&self) -> &Self::Target {
         &self.root
+    }
+}
+
+impl Future for Async {
+    type Item = Gltf;
+    type Error = import::Error;
+    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+        self.0.poll()
+    }
+}
+
+impl AsyncData {
+    /// Constructs `AsyncData` that uses all data from the given future. 
+    pub fn full(future: Shared<BoxFuture<Box<[u8]>, import::Error>>) -> Self {
+        AsyncData {
+            future: future,
+            region: Region::Full,
+        }
+    }
+
+    /// Constructs `AsyncData` that uses a subset of the data from the given future.
+    pub fn view(
+        future: Shared<BoxFuture<Box<[u8]>, import::Error>>,
+        offset: usize,
+        len: usize,
+    ) -> Self {
+        AsyncData {
+            future: future,
+            region: Region::View { offset, len },
+        }
+    }
+
+    /// Consumes this `AsyncData`, constructing a subset instead.
+    ///
+    /// If the data is already a subset then a sub-subset is created, etc.
+    pub fn subview(self, offset: usize, len: usize) -> Self {
+        AsyncData {
+            future: self.future,
+            region: self.region.subview(offset, len),
+        }
+    }
+}
+
+
+impl Future for AsyncData {
+    type Item = Data;
+    type Error = AsyncError;
+    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+        self.future
+            .poll()
+            .map(|async| {
+                async.map(|item| {
+                    match self.region {
+                        Region::Full => {
+                            Data::full(item)
+                        },
+                        Region::View { offset, len } => {
+                            Data::view(item, offset, len)
+                        },
+                    }
+                })
+            })
+    }
+}
+
+impl Data {
+    /// Constructs concrete and thread-safe glTF data.
+    pub fn full(item: SharedItem<Box<[u8]>>) -> Self {
+        Data {
+            item: item,
+            region: Region::Full,
+        }
+    }
+
+    /// Constructs a concrete and thread-safe subset of glTF data.
+    pub fn view(item: SharedItem<Box<[u8]>>, offset: usize, len: usize) -> Self {
+        Data {
+            item: item,
+            region: Region::View { offset, len },
+        }
+    }
+
+    /// Consumes this `Data`, constructing a subset instead.
+    ///
+    /// If the data is already a subset then a sub-subset is created, etc.
+    pub fn subview(self, offset: usize, len: usize) -> Self {
+        Data {
+            item: self.item,
+            region: self.region.subview(offset, len),
+        }
+    }
+}
+
+impl ops::Deref for Data {
+    type Target = [u8];
+    fn deref(&self) -> &Self::Target {
+        match self.region {
+            Region::Full => &self.item[..],
+            Region::View { offset, len } => &self.item[offset..(offset + len)],
+        }
+    }
+}
+
+impl Region {
+    /// Consumes this `Region`, constructing a view instead.
+    ///
+    /// If the region is already a view then a subview is created, etc.
+    pub fn subview(self, offset: usize, len: usize) -> Region {
+        match self {
+            Region::Full => {
+                Region::View {
+                    offset: offset,
+                    len: len,
+                }
+            },
+            Region::View {
+                offset: prev_offset,
+                len: _,
+            } => {
+                Region::View {
+                    offset: prev_offset + offset,
+                    len: len,
+                }
+            },
+        }
     }
 }
 

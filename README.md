@@ -30,16 +30,17 @@ This crate is intended to load [glTF 2.0](https://www.khronos.org/gltf), a file 
 extern crate gltf;
 
 fn main() {
-    match gltf::import("Example.gltf") {
-        Ok(root) => println!("glTF 2.0: {:#?}", root),
-        Err(err) => println!("{:?}", err),
+    let path = std::env::args().nth(1).unwrap();
+    match gltf::import::from_path_sync(&path) {
+        Ok(gltf) => println!("{:#?}", gltf),
+        Err(err) => println!("Invalid glTF ({:?})", err),
     }
 }
 ```
 
-### Extras
+### Extras and Names
 
-By default, `gltf` ignores all `extras` included with glTF assets. You can negate this by enabling the `extras` feature.
+By default, `gltf` ignores all `extras` and `names` included with glTF assets. You can negate this by enabling the `extras` and `names` features, respectively.
 
 ```toml
 [dependencies]
