@@ -61,7 +61,7 @@ use gltf::Gltf;
 use std::boxed::Box;
 use std::path::Path;
 
-// mod binary;
+mod binary;
 mod standard;
 
 /// Contains the `Source` trait and its reference implementation.
@@ -111,7 +111,7 @@ pub fn from_source<S: Source>(source: S) -> BoxFuture<Gltf, Error> {
         .source_gltf()
         .and_then(move |data| {
             if data.starts_with(b"glTF") {
-                unimplemented!()
+                binary::import(data, source)
             } else {
                 standard::import(data, source)
             }

@@ -123,7 +123,7 @@ impl<'a> View<'a> {
 
     /// Returns the buffer view data.
     pub fn data(&self) -> AsyncData {
-        self.buffer().data().view(self.offset(), self.length())
+        self.buffer().data().subview(self.offset(), self.length())
     }
 
     /// Optional user-defined name for this object.

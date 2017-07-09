@@ -77,7 +77,14 @@ impl AsyncData {
         }
     }
 
-    pub fn view(self, offset: usize, len: usize) -> Self {
+    pub fn view(future: Shared<BoxFuture<Box<[u8]>, import::Error>>, offset: usize, len: usize) -> Self {
+        AsyncData {
+            future: future,
+            region: Region::View { offset, len },
+        }
+    }
+
+    pub fn subview(self, offset: usize, len: usize) -> Self {
         AsyncData {
             future: self.future,
             region: self.region.subview(offset, len),
@@ -123,6 +130,13 @@ impl Data {
         }
     }
 
+    pub fn subview(self, offset: usize, len: usize) -> Self {
+        Data {
+            item: self.item,
+            region: self.region.subview(offset, len),
+        }
+    }
+    
     pub fn view(item: SharedItem<Box<[u8]>>, offset: usize, len: usize) -> Self {
         Data {
             item: item,

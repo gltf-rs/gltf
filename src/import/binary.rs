@@ -8,23 +8,19 @@
 // except according to those terms.
 
 use futures::future;
+use import;
 use json;
-use std;
 
-use futures::Future;
-use import::{Error, Source};
+use futures::{BoxFuture, Future};
+use image_crate::{load_from_memory, load_from_memory_with_format};
+use image_crate::ImageFormat::{JPEG as Jpeg, PNG as Png};
+use import::Source;
 use root::Root;
-use std::io::Read;
-use Gltf;
-
-enum ImageData {
-    Owned,
-    Borrowed(usize),
-}
+use {AsyncData, Gltf};
 
 /// The contents of a .glb file.
 #[derive(Clone, Debug)]
-struct Glb(Vec<u8>);
+struct Glb(Box<[u8]>);
 
 /// The header section of a .glb file.
 #[derive(Copy, Clone, Debug)]
@@ -66,76 +62,6 @@ struct Slice {
 /// The header, JSON, and BIN sections of a .glb file, respectively.
 type Split = (Header, Slice, Option<Slice>);
 
-fn make_wrapper<'a, S: Source>(
-    root: json::Root,
-    blob: Option<Vec<u8>>,
-    source: S,
-) -> Result<Gltf, Error<S>> {
-    use validation::{Error as Reason, Validate};
-
-    // Validate the JSON data.
-    let mut errs = vec![];
-    // TODO: Choose validation strategy via import configuration or otherwise.
-    root.validate_completely(&root, || json::Path::new(), &mut |path, err| {
-        errs.push((path(), err));
-    });
-    for (index, buffer) in root.buffers.iter().enumerate() {
-        let path = || json::Path::new().field("buffers").index(index).field("uri");
-        match index {
-            0 if blob.is_some() => if buffer.uri.is_some() {
-                // let reason = format!("must be `undefined` when BIN is provided");
-                // let uri = buffer.uri.as_ref().unwrap().as_ref();
-                errs.push((path(), Reason::Missing));
-            },
-            _ if buffer.uri.is_none() => {
-                // let reason = format!("must be defined");
-                errs.push((path(), Reason::Missing));
-            },
-            _ => {},
-        }
-    }
-
-    if !errs.is_empty() {
-        return Err(Error::Validation(errs));
-    }
-
-    // Preload the glTF buffer data.
-    let mut buffers = vec![];
-    {
-        // When provided, the internal GLB buffer data is the first in the array.
-        let mut buffer_iter = root.buffers.iter();
-        if let Some(data) = blob {
-            let _ = buffer_iter.next();
-            buffers.push(future::ok(data.into_boxed_slice()).boxed());
-        }
-
-        // Read any other external GLB buffers.
-        for entry in buffer_iter {
-            let uri = entry.uri.as_ref().unwrap(); 
-            buffers.push(source.source_image(uri));
-        }
-    }
-
-    // Preload the glTF image data.
-    let mut images = vec![];
-    for entry in &root.images {
-        let mime_type = entry.mime_type.as_ref().unwrap();
-        images.push(if let Some(index) = entry.buffer_view.as_ref() {
-            let data = buffers[index.value()].clone();
-            let future = source.decode_image(data, mime_type);
-            Box::new(future)
-        } else if let Some(uri) = entry.uri.as_ref() {
-            let data = source.source_external_data(uri);
-            let future = source.decode_image(data, mime_type);
-            Box::new(future)
-        } else {
-            unreachable!()
-        });
-    }
-
-    Ok(Gltf::new(Root::new(root), buffers, images))
-}
-
 impl Glb {
     /// Obtains a slice of the GLB data.
     fn slice(&self, slice: Slice) -> &[u8] {
@@ -149,10 +75,10 @@ impl Glb {
     /// * Mandatory GLB header.
     /// * Mandatory JSON chunk.
     /// * Optional BIN chunk.
-    fn split<S: Source>(&self) -> Result<Split, Error<S>> {
+    fn split(&self) -> Result<Split, import::Error> {
         use std::mem::{size_of, transmute};
-        let err = |reason: &str| Err(Error::MalformedGlb(reason.to_string()));
-        let glb = self.0.as_slice();
+        let err = |reason: &str| Err(import::Error::MalformedGlb(reason.to_string()));
+        let glb = &self.0;
         let glb_ptr = glb.as_ptr();
         if glb.len() < size_of::<Header>() + size_of::<ChunkInfo>() {
             return err("GLB missing header");
@@ -215,25 +141,195 @@ impl Glb {
     }
 }
 
-/// Imports some glTF from the given data source.
-pub fn import<R, S>(mut reader: R, source: S) -> Result<Gltf, Error<S>>
-where
-    R: Read,
-    S: Source,
-{
-    let glb = Glb({
-        let mut buffer = vec![];
-        let _ = reader.read_to_end(&mut buffer)?;
-        buffer
+fn source_buffers(
+    json: &json::Root,
+    blob: Option<Box<[u8]>>,
+    source: &Source,
+) -> Vec<AsyncData> {
+    let mut iter = json.buffers.iter();
+    let mut buffers = vec![];
+    if let Some(data) = blob {
+        let future = future::ok(data).boxed().shared();
+        // Skip the first buffer entry.
+        let _ = iter.next();
+        buffers.push(AsyncData::full(future));
+    }
+    for entry in iter {
+        let uri = entry.uri.as_ref().unwrap();
+        let future = source
+            .source_external_data(uri)
+            .boxed()
+            .shared();
+        buffers.push(AsyncData::full(future));
+    }
+    buffers
+}
+
+fn source_images(
+    json: &json::Root,
+    buffers: &[AsyncData],
+    source: &Source,
+) -> Vec<AsyncData> {
+    enum Type<'a> {
+        Borrowed {
+            buffer_index: usize,
+            offset: usize,
+            len: usize,
+        },
+        Owned {
+            uri: &'a str,
+        },
+    }
+    let mut images = vec![];
+    for entry in &json.images {
+        let format = entry.mime_type.as_ref().map(|x| match x.0.as_str() {
+            "image/jpeg" => Jpeg,
+            "image/png" => Png,
+            _ => unreachable!(),
+        });
+        let ty = if let Some(uri) = entry.uri.as_ref() {
+            Type::Owned {
+                uri: uri,
+            }
+        } else if let Some(index) = entry.buffer_view.as_ref() {
+            let buffer_view = &json.buffer_views[index.value()];
+            Type::Borrowed {
+                buffer_index: buffer_view.buffer.value(),
+                offset: buffer_view.byte_offset as usize,
+                len: buffer_view.byte_length as usize,
+            }
+        } else {
+            unreachable!()
+        };
+        let future = match ty {
+            Type::Owned {
+                uri,
+            } => {
+                source
+                    .source_external_data(uri)
+                    .and_then(move |data| {
+                        if let Some(format) = format {
+                            match load_from_memory_with_format(&data, format) {
+                                Ok(image) => {
+                                    let pixels = image
+                                        .raw_pixels()
+                                        .into_boxed_slice();
+                                    future::ok(pixels)
+                                },
+                                Err(err) => {
+                                    future::err(import::Error::Decode(err))
+                                },
+                            }
+                        } else {
+                            match load_from_memory(&data) {
+                                Ok(image) => {
+                                    let pixels = image
+                                        .raw_pixels()
+                                        .into_boxed_slice();
+                                    future::ok(pixels)
+                                },
+                                Err(err) => {
+                                    future::err(import::Error::Decode(err))
+                                },
+                            }
+                        }
+                    })
+                    .boxed()
+                    .shared()
+            },
+            Type::Borrowed {
+                buffer_index,
+                offset,
+                len,
+            } => {
+                buffers[buffer_index]
+                    .clone()
+                    .map_err(import::Error::LazyLoading)
+                    .and_then(move |data| {
+                        let slice = &data[offset..(offset + len)];
+                        match load_from_memory_with_format(slice, format.unwrap()) {
+                            Ok(image) => {
+                                let pixels = image
+                                    .raw_pixels()
+                                    .into_boxed_slice();
+                                future::ok(pixels)
+                            },
+                            Err(err) => {
+                                future::err(import::Error::Decode(err))
+                            },
+                        }
+                    })
+                    .boxed()
+                    .shared()
+            },
+        };
+        images.push(AsyncData::full(future));
+    }
+    images
+}
+
+fn validate(json: json::Root, has_blob: bool) -> Result<json::Root, import::Error> {
+    use validation::{Error as Reason, Validate};
+    let mut errs = vec![];
+    // TODO: Allow this to be configurable
+    json.validate_completely(&json, || json::Path::new(), &mut |path, err| {
+        errs.push((path(), err));
     });
-    let (_header, json_chunk, blob_chunk) = glb.split()?;
-    let root = {
+
+    for (index, buffer) in json.buffers.iter().enumerate() {
+        let path = || json::Path::new().field("buffers").index(index).field("uri");
+        match index {
+            0 if has_blob => if buffer.uri.is_some() {
+                // let reason = format!("must be `undefined` when BIN is provided");
+                // let uri = buffer.uri.as_ref().unwrap().as_ref();
+                errs.push((path(), Reason::Missing));
+            },
+            _ if buffer.uri.is_none() => {
+                // let reason = format!("must be defined");
+                errs.push((path(), Reason::Missing));
+            },
+            _ => {},
+        }
+    }
+
+    if errs.is_empty() {
+        Ok(json)
+    } else {
+        Err(import::Error::Validation(errs))
+    }
+}
+
+/// Imports some glTF from the given data source.
+pub fn import<S>(data: Box<[u8]>, source: S) -> BoxFuture<Gltf, import::Error>
+    where S: Source
+{
+    let gltf = future::lazy(move || {
+        let glb = Glb(data);
+        let (_, json_chunk, blob_chunk) = glb.split()?;
         let begin = json_chunk.offset;
         let end = begin + json_chunk.length;
-        let json = &glb.0[begin..end];
-        json::from_reader(std::io::Cursor::new(json))?
-    };
-    let blob = blob_chunk.map(|chunk| glb.slice(chunk).to_vec());
-    let gltf = make_wrapper(root, blob, source)?;
-    Ok(gltf)
+        let json: json::Root = json::from_slice(&glb.0[begin..end])?;
+        let blob = blob_chunk.map(|chunk| {
+            glb.slice(chunk).to_vec().into_boxed_slice()
+        });
+        Ok((json, blob))
+    })
+        .and_then(|(json, blob)| match validate(json, blob.is_some()) {
+            Ok(json) => future::ok((json, blob)).boxed(),
+            Err(err) => future::err(err).boxed(),
+        })
+        .and_then(move |(json, blob)| {
+            let source = source;
+            let buffers = source_buffers(&json, blob, &source);
+            future::ok((json, source, buffers))
+        })
+        .and_then(|(json, source, buffers)| {
+            let images = source_images(&json, &buffers, &source);
+            future::ok((json, buffers, images))
+        })
+        .and_then(|(json, buffers, images)| {
+            future::ok(Gltf::new(Root::new(json), buffers, images))
+        });
+    Box::new(gltf)
 }
+
