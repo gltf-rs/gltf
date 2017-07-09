@@ -7,6 +7,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#![deny(missing_docs)]
+
+//! glTF 2.0 loader
+
 extern crate futures;
 #[macro_use]
 extern crate gltf_derive;

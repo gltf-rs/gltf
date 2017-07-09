@@ -70,6 +70,7 @@ pub struct AsyncData {
 pub type AsyncError = SharedError<import::Error>;
 
 impl AsyncData {
+    /// Constructs `AsyncData` that uses all data from the given future. 
     pub fn full(future: Shared<BoxFuture<Box<[u8]>, import::Error>>) -> Self {
         AsyncData {
             future: future,
@@ -77,13 +78,21 @@ impl AsyncData {
         }
     }
 
-    pub fn view(future: Shared<BoxFuture<Box<[u8]>, import::Error>>, offset: usize, len: usize) -> Self {
+    /// Constructs `AsyncData` that uses a subset of the data from the given future.
+    pub fn view(
+        future: Shared<BoxFuture<Box<[u8]>, import::Error>>,
+        offset: usize,
+        len: usize,
+    ) -> Self {
         AsyncData {
             future: future,
             region: Region::View { offset, len },
         }
     }
 
+    /// Consumes this `AsyncData`, constructing a subset instead.
+    ///
+    /// If the data is already a subset then a sub-subset is created, etc.
     pub fn subview(self, offset: usize, len: usize) -> Self {
         AsyncData {
             future: self.future,
@@ -130,17 +139,21 @@ impl Data {
         }
     }
 
-    pub fn subview(self, offset: usize, len: usize) -> Self {
-        Data {
-            item: self.item,
-            region: self.region.subview(offset, len),
-        }
-    }
-    
+    /// Constructs a concrete and thread-safe subset of glTF data.
     pub fn view(item: SharedItem<Box<[u8]>>, offset: usize, len: usize) -> Self {
         Data {
             item: item,
             region: Region::View { offset, len },
+        }
+    }
+
+    /// Consumes this `Data`, constructing a subset instead.
+    ///
+    /// If the data is already a subset then a sub-subset is created, etc.
+    pub fn subview(self, offset: usize, len: usize) -> Self {
+        Data {
+            item: self.item,
+            region: self.region.subview(offset, len),
         }
     }
 }

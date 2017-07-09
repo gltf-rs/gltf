@@ -22,8 +22,15 @@ pub const VALID_ALPHA_MODES: &'static [&'static str] = &[
 /// The alpha rendering mode of a material.
 #[derive(Clone, Copy, Debug)]
 pub enum AlphaMode {
+    /// The alpha value is ignored and the rendered output is fully opaque.
     Opaque = 1,
+
+    /// The rendered output is either fully opaque or fully transparent depending on
+    /// the alpha value and the specified alpha cutoff value.
     Mask,
+
+    /// The rendered output is either fully opaque or fully transparent depending on
+    /// the alpha value and the specified alpha cutoff value.
     Blend,
 }
 

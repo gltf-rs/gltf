@@ -58,13 +58,19 @@ pub enum Checked<T> {
 }
 
 impl<T> Checked<T> {
+    /// Converts from `Checked<T>` to `Checked<&T>`.
     pub fn as_ref(&self) -> Checked<&T> {
         match self {
             &Checked::Valid(ref item) => Checked::Valid(item),
             &Checked::Invalid => Checked::Invalid,
         }
     }
-    
+
+    /// Takes ownership of the contained item if it is `Valid`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called on an `Invalid` item.
     pub fn unwrap(self) -> T {
         match self {
             Checked::Valid(item) => item,

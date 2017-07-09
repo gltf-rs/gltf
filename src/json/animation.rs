@@ -31,18 +31,53 @@ pub const VALID_TRS_PROPERTIES: &'static [&'static str] = &[
 /// Specifies an interpolation algorithm.
 #[derive(Clone, Copy, Debug, Deserialize)]
 pub enum InterpolationAlgorithm {
+    /// Linear interpolation.
+    ///
+    /// The animated values are linearly interpolated between keyframes.
+    /// When targeting a rotation, spherical linear interpolation (slerp) should be
+    /// used to interpolate quaternions. The number output of elements must equal
+    /// the number of input elements.
     Linear = 1,
+
+    /// Step interpolation.
+    ///
+    /// The animated values remain constant to the output of the first keyframe,
+    /// until the next keyframe. The number of output elements must equal the number
+    /// of input elements.
     Step,
+
+    /// Uniform Catmull-Rom spline interpolation.
+    ///
+    /// The animation's interpolation is computed using a uniform Catmull-Rom spline.
+    /// The number of output elements must equal two more than the number of input
+    /// elements. The first and last output elements represent the start and end
+    /// tangents of the spline. There must be at least four keyframes when using this
+    /// interpolation.
     CatmullRomSpline,
+
+    /// Cubic spline interpolation.
+    ///
+    /// The animation's interpolation is computed using a uniform Catmull-Rom spline.
+    /// The number of output elements must equal two more than the number of input
+    /// elements. The first and last output elements represent the start and end
+    /// tangents of the spline. There must be at least four keyframes when using this
+    /// interpolation.
     CubicSpline,
 }
 
 /// Specifies a TRS property.
 #[derive(Clone, Copy, Debug, Deserialize)]
 pub enum TrsProperty {
+    /// XYZ translation vector.
     Translation = 1,
+
+    /// XYZW rotation quaternion.
     Rotation,
+
+    /// XYZ scale vector.
     Scale,
+
+    /// Weights of morph targets.
     Weights,
 }
 
