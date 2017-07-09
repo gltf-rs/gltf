@@ -1,3 +1,4 @@
+
 // Copyright 2017 The gltf Library Developers
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -9,9 +10,15 @@
 extern crate gltf;
 
 fn main() {
-    let path = std::env::args().nth(1).unwrap();
-    match gltf::import::from_path_sync(&path) {
-        Ok(gltf) => println!("{:#?}", gltf),
-        Err(err) => println!("Invalid glTF ({:?})", err),
+    if let Some(path) = std::env::args().nth(1) {
+        let source = gltf::import::FromPath::new(&path);
+        let config = Default::default();
+        let import = gltf::Import::custom(source, config);
+        match import.sync() {
+            Ok(gltf) => println!("{:#?}", gltf),
+            Err(err) => println!("Invalid glTF ({:?})", err),
+        }
+    } else {
+        println!("usage: gltf-display <PATH>");
     }
 }

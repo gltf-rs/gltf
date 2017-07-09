@@ -13,41 +13,10 @@
 //! trait is provided to facilitate the user customization of the importer data
 //! loading process.
 //!
-//! For convenience, the library contains one implementation of the `Source` trait
-//! which allows for reading from the file system. This implemenation may be used as
-//! reference for other schemes.
+//! For convenience, the library contains one implementation of the `Source` trait,
+//! namely `FromPath`, which allows for reading from the file system.
 //!
-//! ```no-run
-//! use std::path::Path;
-//! use std::io::{self, BufReader, Read};
-//! use std::fs::File;
-//!
-//! /// A simple synchronous data source that can read from the file system.
-//! #[derive(Debug)]
-//! struct SimpleSource<'a>(&'a Path);
-//!
-//! impl<'a> gltf::import::Source for SimpleSource<'a> {
-//!     fn read_gltf(&self) -> Result<Box<Read>, Self::Err> {
-//!         let file = File::open(&self.0)?;
-//!         Ok(Box::new(BufReader::new(file)))
-//!     }
-//!
-//!     fn read_external_data(&self, uri: &str) -> Result<Box<Read>, Self::Err> {
-//!         let path = self.0.parent().unwrap_or(Path::new("./")).join(uri);
-//!         let file = File::open(path)?;
-//!         Ok(Box::new(BufReader::new(file)))
-//!     }
-//! }
-//!
-//! fn main() {
-//!     let path = Path::new("glTF-Sample-Models/2.0/Box/glTF/Box.gltf");
-//!     let source = SimpleSource(&path);
-//!     match gltf::import::from_source(source) {
-//!         Ok(gltf) => println!("{:#?}", gltf.as_json()),
-//!         Err(err) => println!("error: {:?}", err),
-//!     }
-//! }
-//! ```
+//! This implementation may be used as reference.
 
 use futures::future;
 use json;
@@ -56,20 +25,25 @@ use serde_json;
 use std::{self, fmt};
 
 use image_crate::ImageError;
-use futures::{BoxFuture, Future};
+use futures::{BoxFuture, Future, Poll};
 use gltf::Gltf;
 use std::boxed::Box;
 use std::path::Path;
 
+/// Contains the implementation of the binary glTF importer.
 mod binary;
+
+/// Contains the implementation of the standard glTF importer.
 mod standard;
+
+/// Contains data structures for import configuration.
+pub mod config;
 
 /// Contains the `Source` trait and its reference implementation.
 pub mod source;
 
-pub use self::source::Source;
-
-use self::source::FromPath;
+pub use self::config::Config;
+pub use self::source::{FromPath, Source};
 
 /// Error encountered when importing a glTF 2.0 asset.
 #[derive(Debug)]
@@ -105,32 +79,53 @@ pub enum Error {
     Validation(Vec<(json::Path, validation::Error)>),
 }
 
-/// Import some glTF 2.0 synchronously from the file system.
-pub fn from_path_sync<P>(path: P) -> Result<Gltf, Error>
-    where P: AsRef<Path>
-{
-    from_path(path).wait()
+/// A `Future` that drives the importation of glTF.
+pub struct Import {
+    /// Internal `Future`.
+    future: BoxFuture<Gltf, Error>,
 }
 
 /// Imports some glTF from the given custom source.
-pub fn from_source<S: Source>(source: S) -> BoxFuture<Gltf, Error> {
+fn import<S: Source>(source: S, config: Config) -> BoxFuture<Gltf, Error> {
     let future = source
         .source_gltf()
         .and_then(move |data| {
             if data.starts_with(b"glTF") {
-                binary::import(data, source)
+                binary::import(data, source, config)
             } else {
-                standard::import(data, source)
+                standard::import(data, source, config)
             }
         });
     Box::new(future)
 }
 
-/// Import some glTF 2.0 from the file system.
-pub fn from_path<P>(path: P) -> BoxFuture<Gltf, Error>
-    where P: AsRef<Path>
-{
-    from_source(FromPath::new(path))
+impl Import {
+    /// Constructs an `Import` from a custom `Source` and `Config` arguments.
+    pub fn custom<S: Source>(source: S, config: Config) -> Self {
+        Import {
+            future: import(source, config),
+        }
+    }
+
+    /// Constructs an `Import` with `FromPath` as its data source and default
+    /// configuration parameters. 
+    pub fn from_path<P: AsRef<Path>>(path: P) -> Self {
+        Import::custom(FromPath::new(path), Default::default())
+    }
+
+    /// Drives the import process to completion. Blocks the current thread until
+    /// the process is complete.
+    pub fn sync(self) -> Result<Gltf, Error> {
+        self.wait()
+    }
+}
+
+impl Future for Import {
+    type Item = Gltf;
+    type Error = Error;
+    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+        self.future.poll()
+    }
 }
 
 impl From<ImageError> for Error {

@@ -8,12 +8,13 @@
 // except according to those terms.
 
 use futures::future;
+use import::config;
 use json;
 
 use futures::{BoxFuture, Future};
 use image_crate::{load_from_memory, load_from_memory_with_format};
 use image_crate::ImageFormat::{JPEG as Jpeg, PNG as Png};
-use import::{Error, Source};
+use import::{Config, Error, Source};
 use root::Root;
 use std::boxed::Box;
 use std::io::Cursor;
@@ -141,29 +142,59 @@ fn source_images(
     images
 }
 
-fn validate(json: json::Root) -> BoxFuture<json::Root, Error> {
-    let future = future::lazy(move || {
-        let mut errs = vec![];
-        // TODO: Allow this to be configurable
-        json.validate_completely(&json, || json::Path::new(), &mut |path, err| {
-            errs.push((path(), err));
-        });
-        if errs.is_empty() {
-            future::ok(json)
-        } else {
-            future::err(Error::Validation(errs))
-        }
-    });
-    Box::new(future)
+fn validate(
+    json: json::Root,
+    validation_strategy: config::ValidationStrategy,
+) -> BoxFuture<json::Root, Error> {
+    match validation_strategy {
+        config::ValidationStrategy::Skip => {
+            future::ok(json).boxed()
+        },
+        config::ValidationStrategy::Minimal => {
+            future::lazy(move || {
+                let mut errs = vec![];
+                json.validate_minimally(
+                    &json,
+                    || json::Path::new(),
+                    &mut |path, err| errs.push((path(), err)),
+                );
+                if errs.is_empty() {
+                    future::ok(json)
+                } else {
+                    future::err(Error::Validation(errs))
+                }
+            }).boxed() 
+        },
+        config::ValidationStrategy::Complete => {
+            future::lazy(move || {
+                let mut errs = vec![];
+                json.validate_completely(
+                    &json,
+                    || json::Path::new(),
+                    &mut |path, err| errs.push((path(), err)),
+                );
+                if errs.is_empty() {
+                    future::ok(json)
+                } else {
+                    future::err(Error::Validation(errs))
+                }
+            }).boxed() 
+        },
+    }
 }
 
-pub fn import<S>(data: Box<[u8]>, source: S) -> BoxFuture<Gltf, Error>
-    where S: Source
-{
+pub fn import<S: Source>(
+    data: Box<[u8]>,
+    source: S,
+    config: Config,
+) -> BoxFuture<Gltf, Error> {
     let gltf = future::lazy(move || {
         json::from_reader(Cursor::new(data)).map_err(Error::MalformedJson)
     })
-        .and_then(|json| validate(json))
+        .and_then(move |json| {
+            let config = config;
+            validate(json, config.validation_strategy)
+        })
         .and_then(move |json| {
             let source = source;
             let buffers = source_buffers(&json, &source);

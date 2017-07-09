@@ -30,8 +30,7 @@ This crate is intended to load [glTF 2.0](https://www.khronos.org/gltf), a file 
 extern crate gltf;
 
 fn main() {
-    let path = std::env::args().nth(1).unwrap();
-    match gltf::import::from_path_sync(&path) {
+    match gltf::Import::from_path("path/to/asset.gltf").sync() {
         Ok(gltf) => println!("{:#?}", gltf),
         Err(err) => println!("Invalid glTF ({:?})", err),
     }

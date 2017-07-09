@@ -8,13 +8,13 @@
 // except according to those terms.
 
 use futures::future;
-use import;
+use import::{self, config};
 use json;
 
 use futures::{BoxFuture, Future};
 use image_crate::{load_from_memory, load_from_memory_with_format};
 use image_crate::ImageFormat::{JPEG as Jpeg, PNG as Png};
-use import::Source;
+use import::{Config, Source};
 use root::Root;
 use {AsyncData, Gltf};
 
@@ -268,24 +268,38 @@ fn source_images(
     images
 }
 
-fn validate(json: json::Root, has_blob: bool) -> Result<json::Root, import::Error> {
+fn validate(
+    json: json::Root,
+    has_blob: bool,
+    strategy: config::ValidationStrategy, 
+) -> Result<json::Root, import::Error> {
     use validation::{Error as Reason, Validate};
+    
     let mut errs = vec![];
-    // TODO: Allow this to be configurable
-    json.validate_completely(&json, || json::Path::new(), &mut |path, err| {
-        errs.push((path(), err));
-    });
+    match strategy {
+        config::ValidationStrategy::Skip => {
+            return Ok(json);
+        },
+        config::ValidationStrategy::Minimal => {
+            json.validate_completely(&json, || json::Path::new(), &mut |path, err| {
+                errs.push((path(), err));
+            })
+        },
+        config::ValidationStrategy::Complete => {
+            json.validate_completely(&json, || json::Path::new(), &mut |path, err| {
+                errs.push((path(), err));
+            })
+        }
+    }
 
+    // Required for the `Minimal` and `Complete` validation strategies.
     for (index, buffer) in json.buffers.iter().enumerate() {
         let path = || json::Path::new().field("buffers").index(index).field("uri");
         match index {
             0 if has_blob => if buffer.uri.is_some() {
-                // let reason = format!("must be `undefined` when BIN is provided");
-                // let uri = buffer.uri.as_ref().unwrap().as_ref();
                 errs.push((path(), Reason::Missing));
             },
             _ if buffer.uri.is_none() => {
-                // let reason = format!("must be defined");
                 errs.push((path(), Reason::Missing));
             },
             _ => {},
@@ -300,7 +314,11 @@ fn validate(json: json::Root, has_blob: bool) -> Result<json::Root, import::Erro
 }
 
 /// Imports some glTF from the given data source.
-pub fn import<S>(data: Box<[u8]>, source: S) -> BoxFuture<Gltf, import::Error>
+pub fn import<S>(
+    data: Box<[u8]>,
+    source: S,
+    config: Config,
+) -> BoxFuture<Gltf, import::Error>
     where S: Source
 {
     let gltf = future::lazy(move || {
@@ -314,9 +332,12 @@ pub fn import<S>(data: Box<[u8]>, source: S) -> BoxFuture<Gltf, import::Error>
         });
         Ok((json, blob))
     })
-        .and_then(|(json, blob)| match validate(json, blob.is_some()) {
-            Ok(json) => future::ok((json, blob)).boxed(),
-            Err(err) => future::err(err).boxed(),
+        .and_then(move |(json, blob)| {
+            let config = config;
+            match validate(json, blob.is_some(), config.validation_strategy) {
+                Ok(json) => future::ok((json, blob)).boxed(),
+                Err(err) => future::err(err).boxed(),
+            }
         })
         .and_then(move |(json, blob)| {
             let source = source;

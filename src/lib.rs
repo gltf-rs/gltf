@@ -69,3 +69,4 @@ pub mod texture;
 pub mod validation;
 
 pub use self::gltf::{AsyncData, Data, Gltf};
+pub use self::import::Import;

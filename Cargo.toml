@@ -14,9 +14,6 @@ include = [
     "Cargo.toml",
 ]
 
-[dev-dependencies]
-inflections = "1.1"
-
 [dependencies]
 futures = { git = "https://github.com/alteous/futures-rs.git" }
 gltf-derive = { path = "./gltf-derive" }
