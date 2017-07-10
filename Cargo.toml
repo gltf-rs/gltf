@@ -15,7 +15,8 @@ include = [
 ]
 
 [dependencies]
-futures = { git = "https://github.com/alteous/futures-rs.git" }
+base64 = "0.6"
+futures = "0.1"
 gltf-derive = { path = "./gltf-derive" }
 image = "0.14"
 serde = "1.0"

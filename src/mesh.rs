@@ -18,32 +18,32 @@ use gltf::{AsyncError, Gltf};
 pub use json::mesh::{Mode, Semantic};
 
 /// XYZ vertex normals of type `[f32; 3]`.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Normals(Iter<[f32; 3]>);
 
 /// XYZ vertex normal displacements of type `[f32; 3]`.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct NormalDisplacements(Iter<[f32; 3]>);
 
 /// XYZ vertex positions of type `[f32; 3]`.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Positions(Iter<[f32; 3]>);
 
 /// XYZ vertex position displacements of type `[f32; 3]`.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct PositionDisplacements(Iter<[f32; 3]>);
 
 /// XYZW vertex tangents of type `[f32; 4]` where the `w` component is a
 /// sign value (-1 or +1) indicating the handedness of the tangent basis.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Tangents(Iter<[f32; 4]>);
 
 /// XYZ vertex tangent displacements of type `[f32; 3]`.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct TangentDisplacements(Iter<[f32; 3]>);
 
 /// Vertex colors.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum Colors {
     /// RGB vertex color of type `[u8; 3]>`.
     RgbU8(Iter<[u8; 3]>),
@@ -65,7 +65,7 @@ pub enum Colors {
 }
 
 /// Index data.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum Indices {
     /// Index data of type U8
     U8(Iter<u8>),
@@ -78,7 +78,7 @@ pub enum Indices {
 /// Vertex joints.
 /// Refer to the documentation on morph targets and skins for more
 /// information.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum Joints {
     /// Joints of type `[u8; 4]`.
     /// Refer to the documentation on morph targets and skins for more
@@ -92,7 +92,7 @@ pub enum Joints {
 }
 
 /// UV texture co-ordinates.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum TexCoords {
     /// UV texture co-ordinates of type `[f32; 2]`.
     F32(Iter<[f32; 2]>),
@@ -106,7 +106,7 @@ pub enum TexCoords {
 
 /// Weights,
 /// Refer to the documentation on morph targets for more information.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum Weights {
     /// Weights of type `[f32; 4]`.
     F32(Iter<[f32; 4]>),
@@ -119,7 +119,7 @@ pub enum Weights {
 }
 
 /// Vertex attribute data.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum Attribute {
     /// Vertex colors.
     Colors(u32, Colors),
@@ -152,7 +152,7 @@ pub enum Attribute {
 }
 
 /// Morph targets.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct MorphTarget {
     /// XYZ vertex position displacements.
     positions: Option<PositionDisplacements>,

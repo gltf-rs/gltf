@@ -64,7 +64,7 @@ pub struct AsyncData {
 /// Concrete and thread-safe glTF data.
 ///
 /// May represent `Buffer`, `View`, or `Image` data.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Data {
     /// The resolved data from a `future::Shared`.
     item: SharedItem<Box<[u8]>>,

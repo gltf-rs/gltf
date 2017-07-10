@@ -25,7 +25,7 @@ pub struct Skin<'a> {
 }
 
 /// An `Iterator` that visits the inverse bind matrices of a `Skin`.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct InverseBindMatrices(accessor::Iter<[[f32; 4]; 4]>);
 
 /// An `Iterator` that visits the joints of a `Skin`.

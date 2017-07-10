@@ -11,6 +11,7 @@
 
 //! glTF 2.0 loader
 
+extern crate base64;
 extern crate futures;
 #[macro_use]
 extern crate gltf_derive;
