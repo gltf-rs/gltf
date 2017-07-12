@@ -32,7 +32,7 @@ use std::fmt::Debug;
 use std::path::Path;
 
 /// Contains the implementation of the binary glTF importer.
-// mod binary;
+mod binary;
 
 /// Contains the implementation of the standard glTF importer.
 mod standard;
@@ -107,7 +107,7 @@ impl<S: Source> Import<S> {
             .map_err(Error::Source)
             .and_then(move |data| {
                 if data.starts_with(b"glTF") {
-                    // binary::import(data, source, config)
+                    binary::import(data, source, config)
                 } else {
                     standard::import(data, source, config)
                 }
