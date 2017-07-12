@@ -23,14 +23,14 @@ pub struct Mesh<'a>  {
 /// Geometry to be rendered with the given material.
 #[derive(Clone, Debug)]
 pub struct Primitive<'a>  {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    /// The parent `Mesh` struct.
+    mesh: &'a ::mesh::Mesh<'a>,
 
     /// The corresponding JSON struct.
     json: &'a json::extensions::mesh::Primitive,
 }
 
-impl<'a>  Mesh<'a>  {
+impl<'a> Mesh<'a>  {
     /// Constructs a `Mesh`.
     pub fn new(gltf: &'a Gltf, json: &'a json::extensions::mesh::Mesh) -> Self {
         Self {
@@ -47,9 +47,9 @@ impl<'a>  Mesh<'a>  {
 
 impl<'a> Primitive<'a> {
     /// Constructs a `Primitive`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::extensions::mesh::Primitive) -> Self {
+    pub fn new(mesh: &'a ::mesh::Mesh<'a>, json: &'a json::extensions::mesh::Primitive) -> Self {
         Self {
-            gltf: gltf,
+            mesh: mesh,
             json: json,
         }
     }

@@ -9,34 +9,39 @@
 
 use {extensions, json};
 
-use {AsyncData, Gltf};
+use {Data, Gltf};
 
 /// Image data used to create a texture.
 pub struct Image<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
-    
+
+    /// The corresponding JSON index.
+    index: usize,
+
     /// The corresponding JSON struct.
     json: &'a json::image::Image,
-
-    /// The buffer view data.
-    data: &'a AsyncData,
 }
 
 impl<'a> Image<'a> {
     /// Constructs an `Image` from owned data.
     pub fn new(
         gltf: &'a Gltf,
+        index: usize,
         json: &'a json::image::Image,
-        data: &'a AsyncData,
     ) -> Self {
         Self {
             gltf: gltf,
+            index: index,
             json: json,
-            data: data,
         }
     }
     
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
+    }
+
     /// Returns the internal JSON item.
     pub fn as_json(&self) -> &json::image::Image {
         self.json
@@ -49,8 +54,8 @@ impl<'a> Image<'a> {
     }
 
     /// Returns the image data.
-    pub fn data(&self) -> AsyncData {
-        self.data.clone()
+    pub fn data(&self) -> Data {
+        self.gltf.image_data(self.index())
     }
 
     /// Extension specific data.

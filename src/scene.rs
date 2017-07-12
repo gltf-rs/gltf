@@ -24,6 +24,9 @@ pub struct Node<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
+    /// The corresponding JSON index.
+    index: usize,
+
     /// The corresponding JSON struct.
     json: &'a json::scene::Node,
 }
@@ -34,6 +37,9 @@ pub struct Scene<'a> {
     /// The parent `Gltf` struct.
     #[allow(dead_code)]
     gltf: &'a Gltf,
+
+    /// The corresponding JSON index.
+    index: usize,
 
     /// The corresponding JSON struct.
     json: &'a json::scene::Scene,
@@ -61,11 +67,17 @@ pub struct Children<'a> {
 
 impl<'a> Node<'a> {
     /// Constructs a `Node`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::scene::Node) -> Self {
+    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::scene::Node) -> Self {
         Self {
             gltf: gltf,
+            index: index,
             json: json,
         }
+    }
+
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// Returns the internal JSON item.
@@ -76,7 +88,7 @@ impl<'a> Node<'a> {
     /// The index of the camera referenced by this node.
     pub fn camera(&self) -> Option<camera::Camera> {
         self.json.camera.as_ref().map(|index| {
-            camera::Camera::new(self.gltf, self.gltf.as_json().get(index))
+            self.gltf.cameras().nth(index.value()).unwrap()
         })
     }
 
@@ -109,7 +121,7 @@ impl<'a> Node<'a> {
     /// The index of the mesh in this node.
     pub fn mesh(&self) -> Option<mesh::Mesh<'a>> {
         self.json.mesh.as_ref().map(|index| {
-            mesh::Mesh::new(self.gltf, self.gltf.as_json().get(index))
+            self.gltf.meshes().nth(index.value()).unwrap()
         })
     }
 
@@ -138,7 +150,7 @@ impl<'a> Node<'a> {
     /// The index of the skin referenced by this node.
     pub fn skin(&self) -> Option<skin::Skin<'a>> {
         self.json.skin.as_ref().map(|index| {
-            skin::Skin::new(self.gltf, self.gltf.as_json().get(index))
+            self.gltf.skins().nth(index.value()).unwrap()
         })
     }
 
@@ -151,11 +163,17 @@ impl<'a> Node<'a> {
 
 impl<'a> Scene<'a> {
     /// Constructs a `Scene`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::scene::Scene) -> Self {
+    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::scene::Scene) -> Self {
         Self {
             gltf: gltf,
+            index: index,
             json: json,
         }
+    }
+
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// Returns the internal JSON item.

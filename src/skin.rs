@@ -8,10 +8,8 @@
 // except according to those terms.
 
 use std::slice;
-use {accessor, extensions, import, json, scene};
+use {accessor, extensions, json, scene};
 
-use futures::future::SharedError;
-use futures::{BoxFuture, Future};
 use Gltf;
 
 /// Joints and matrices defining a skin.
@@ -19,6 +17,9 @@ use Gltf;
 pub struct Skin<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
+
+    /// The corresponding JSON index.
+    index: usize,
 
     /// The corresponding JSON struct.
     json: &'a json::skin::Skin,
@@ -40,11 +41,17 @@ pub struct Joints<'a> {
 
 impl<'a> Skin<'a> {
     /// Constructs a `Skin`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::skin::Skin) -> Self {
+    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::skin::Skin) -> Self {
         Self {
             gltf: gltf,
+            index: index,
             json: json,
         }
+    }
+
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// Returns the internal JSON item.
@@ -68,11 +75,11 @@ impl<'a> Skin<'a> {
     /// The index of the accessor containing the 4x4 inverse-bind matrices.  When
     /// `None`,each matrix is assumed to be the 4x4 identity matrix which implies
     /// that the inverse-bind matrices were pre-applied.
-    pub fn inverse_bind_matrices(&self) -> Option<BoxFuture<InverseBindMatrices, SharedError<import::Error>>> {
+    pub fn inverse_bind_matrices(&self) -> Option<InverseBindMatrices> {
         self.json.inverse_bind_matrices.as_ref().map(|index| {
             let accessor = self.gltf.accessors().nth(index.value()).unwrap();
             unsafe {
-                accessor.iter().map(|iter| InverseBindMatrices(iter)).boxed()
+                InverseBindMatrices(accessor.iter())
             }
         })
     }
@@ -97,7 +104,7 @@ impl<'a> Skin<'a> {
     /// transforms resolve to scene root.
     pub fn skeleton(&self) -> Option<scene::Node<'a>> {
         self.json.skeleton.as_ref().map(|index| {
-            scene::Node::new(self.gltf, self.gltf.as_json().get(index))
+            self.gltf.nodes().nth(index.value()).unwrap()
         })
     }
 }
@@ -117,4 +124,3 @@ impl<'a> Iterator for Joints<'a>  {
             .map(|index| self.gltf.nodes().nth(index.value()).unwrap())
     }
 }
-

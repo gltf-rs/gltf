@@ -7,205 +7,238 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use futures::future;
-use import::config;
+use futures::{self, future};
+use import::{self, data};
 use json;
 
-use futures::{BoxFuture, Future};
+use futures::{BoxFuture, Future, Poll};
 use image_crate::{load_from_memory, load_from_memory_with_format};
+use image_crate::ImageFormat as Format;
+use image_crate::ImageResult;
 use image_crate::ImageFormat::{JPEG as Jpeg, PNG as Png};
-use import::{Config, Error, Source};
 use root::Root;
 use std::boxed::Box;
 use std::io::Cursor;
+use std::sync::Arc;
 use validation::Validate;
 
-use {AsyncData, Gltf};
+use {Data, Gltf};
 
-fn source_buffers(
-    json: &json::Root,
-    source: &Source,
-) -> Vec<AsyncData> {
-    json.buffers
+enum AsyncImage<S: import::Source> {
+    /// Image data is borrowed from a buffer.
+    Borrowed {
+        /// The buffer index.
+        index: usize,
+
+        /// Byte offset into the indexed buffer where the image data begins.
+        offset: usize,
+
+        /// Length of the image past the offset in bytes.
+        len: usize,
+
+        /// The image format.
+        format: Format,
+    },
+
+    /// Image data is owned.
+    Owned {
+        /// A `Future` that drives the loading of external image data.
+        data: data::Async<S>,
+
+        /// The image format.
+        format: Option<Format>,
+    },
+}
+
+impl<S: import::Source> Future for AsyncImage<S> {
+    type Item = Image;
+    type Error = import::Error<S>;
+    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+        match self {
+            &mut AsyncImage::Borrowed { index, offset, len, format } => {
+                Ok(futures::Async::Ready(Image::Borrowed {
+                    index: index,
+                    offset: offset,
+                    len: len,
+                    format: format,
+                }))
+            },
+            &mut AsyncImage::Owned { ref mut data, format } => {
+                data.poll()
+                    .map(|async| {
+                        async.map(|data| {
+                            Image::Owned {
+                                data: data,
+                                format: format,
+                            }
+                        })
+                    })
+            },
+        }
+    }
+}
+
+/// A resolved `AsyncImage`.
+enum Image {
+    /// Image data is borrowed from a buffer.
+    Borrowed {
+        /// The buffer index.
+        index: usize,
+
+        /// Byte offset into the indexed buffer where the image data begins.
+        offset: usize,
+
+        /// Length of the image past the offset in bytes.
+        len: usize,
+
+        /// The image format.
+        format: Format,
+    },
+
+    /// Image data is owned.
+    Owned {
+        /// A `Future` that drives the loading of external image data.
+        data: Data,
+
+        /// The image format.
+        format: Option<Format>,
+    },
+}
+
+fn source_buffers<S: import::Source>(
+    root: &Root,
+    source: &S,
+) -> Vec<data::Async<S>> {
+    root.as_json().buffers
         .iter()
         .map(|entry| {
             let uri = entry.uri.as_ref().unwrap();
-            let future = source
-                .source_external_data(uri)
-                .boxed()
-                .shared();
-            AsyncData::full(future)
+            let future = source.source_external_data(uri).boxed();
+            data::Async::full(future)
         })
         .collect()
 }
 
-fn source_images(
-    json: &json::Root,
-    buffers: &[AsyncData],
-    source: &Source,
-) -> Vec<AsyncData> {
-    enum Type<'a> {
-        Borrowed {
-            buffer_index: usize,
-            offset: usize,
-            len: usize,
-        },
-        Owned {
-            uri: &'a str,
-        },
-    }
-    let mut images = vec![];
-    for entry in &json.images {
-        let format = entry.mime_type.as_ref().map(|x| match x.0.as_str() {
-            "image/jpeg" => Jpeg,
-            "image/png" => Png,
-            _ => unreachable!(),
-        });
-        let ty = if let Some(uri) = entry.uri.as_ref() {
-            Type::Owned {
-                uri: uri,
+fn source_images<S: import::Source>(
+    root: &Root,
+    source: &S,
+) -> Vec<AsyncImage<S>> {
+    root.as_json().images
+        .iter()
+        .map(|entry| {
+            let format = entry.mime_type.as_ref().map(|x| match x.0.as_str() {
+                "image/jpeg" => Jpeg,
+                "image/png" => Png,
+                _ => unreachable!(),
+            });
+            if let Some(uri) = entry.uri.as_ref() {
+                let future = source.source_external_data(uri).boxed();
+                AsyncImage::Owned {
+                    data: data::Async::full(future),
+                    format: format,
+                }
+            } else if let Some(index) = entry.buffer_view.as_ref() {
+                let buffer_view = &root.as_json().buffer_views[index.value()];
+                AsyncImage::Borrowed {
+                    index: buffer_view.buffer.value(),
+                    offset: buffer_view.byte_offset as usize,
+                    len: buffer_view.byte_length as usize,
+                    format: format.unwrap(),
+                }
+            } else {
+                unreachable!()
             }
-        } else if let Some(index) = entry.buffer_view.as_ref() {
-            let buffer_view = &json.buffer_views[index.value()];
-            Type::Borrowed {
-                buffer_index: buffer_view.buffer.value(),
-                offset: buffer_view.byte_offset as usize,
-                len: buffer_view.byte_length as usize,
-            }
-        } else {
-            unreachable!()
-        };
-        let future = match ty {
-            Type::Owned {
-                uri,
-            } => {
-                source
-                    .source_external_data(uri)
-                    .and_then(move |data| {
-                        if let Some(format) = format {
-                            match load_from_memory_with_format(&data, format) {
-                                Ok(image) => {
-                                    let pixels = image
-                                        .raw_pixels()
-                                        .into_boxed_slice();
-                                    future::ok(pixels)
-                                },
-                                Err(err) => {
-                                    future::err(Error::Decode(err))
-                                },
-                            }
-                        } else {
-                            match load_from_memory(&data) {
-                                Ok(image) => {
-                                    let pixels = image
-                                        .raw_pixels()
-                                        .into_boxed_slice();
-                                    future::ok(pixels)
-                                },
-                                Err(err) => {
-                                    future::err(Error::Decode(err))
-                                },
-                            }
-                        }
-                    })
-                    .boxed()
-                    .shared()
-            },
-            Type::Borrowed {
-                buffer_index,
-                offset,
-                len,
-            } => {
-                buffers[buffer_index]
-                    .clone()
-                    .map_err(Error::LazyLoading)
-                    .and_then(move |data| {
-                        let slice = &data[offset..(offset + len)];
-                        match load_from_memory_with_format(slice, format.unwrap()) {
-                            Ok(image) => {
-                                let pixels = image
-                                    .raw_pixels()
-                                    .into_boxed_slice();
-                                future::ok(pixels)
-                            },
-                            Err(err) => {
-                                future::err(Error::Decode(err))
-                            },
-                        }
-                    })
-                    .boxed()
-                    .shared()
-            },
-        };
-        images.push(AsyncData::full(future));
-    }
+        })
+        .collect()
+}
+
+fn decode_images(
+    buffers: &[Data],
+    images: Vec<Image>,
+) -> ImageResult<Vec<Data>> {
     images
+        .iter()
+        .map(|entry| {
+            match entry {
+                &Image::Borrowed { index, offset, len, format } => {
+                    let data = &buffers[index][offset..(offset + len)];
+                    load_from_memory_with_format(data, format)
+                },
+                &Image::Owned { ref data, format: Some(format) } => {
+                    load_from_memory_with_format(data, format)
+                },
+                &Image::Owned { ref data, format: None } => {
+                    load_from_memory(data)
+                },
+            }.map(|decoded| {
+                Data::full(Arc::new(decoded.raw_pixels().into_boxed_slice()))
+            })
+        })
+        .collect()
 }
 
-fn validate(
-    json: json::Root,
-    validation_strategy: config::ValidationStrategy,
-) -> BoxFuture<json::Root, Error> {
-    match validation_strategy {
-        config::ValidationStrategy::Skip => {
-            future::ok(json).boxed()
-        },
-        config::ValidationStrategy::Minimal => {
-            future::lazy(move || {
-                let mut errs = vec![];
-                json.validate_minimally(
-                    &json,
-                    || json::Path::new(),
-                    &mut |path, err| errs.push((path(), err)),
-                );
-                if errs.is_empty() {
-                    future::ok(json)
-                } else {
-                    future::err(Error::Validation(errs))
-                }
-            }).boxed() 
-        },
-        config::ValidationStrategy::Complete => {
-            future::lazy(move || {
-                let mut errs = vec![];
-                json.validate_completely(
-                    &json,
-                    || json::Path::new(),
-                    &mut |path, err| errs.push((path(), err)),
-                );
-                if errs.is_empty() {
-                    future::ok(json)
-                } else {
-                    future::err(Error::Validation(errs))
-                }
-            }).boxed() 
-        },
-    }
-}
-
-pub fn import<S: Source>(
+pub fn import<S: import::Source>(
     data: Box<[u8]>,
     source: S,
-    config: Config,
-) -> BoxFuture<Gltf, Error> {
-    let gltf = future::lazy(move || {
-        json::from_reader(Cursor::new(data)).map_err(Error::MalformedJson)
+    config: import::Config,
+) -> BoxFuture<Gltf, import::Error<S>> {
+    future::lazy(move || {
+        json::from_reader(Cursor::new(data)).map_err(import::Error::MalformedJson)
     })
-        .and_then(move |json| {
+        .and_then(move |json: json::Root| {
             let config = config;
-            validate(json, config.validation_strategy)
+            match config.validation_strategy {
+                import::config::ValidationStrategy::Skip => {
+                    future::ok(Root::new(json)).boxed()
+                },
+                import::config::ValidationStrategy::Minimal => {
+                    future::lazy(move || {
+                        let mut errs = vec![];
+                        json.validate_minimally(
+                            &json,
+                            || json::Path::new(),
+                            &mut |path, err| errs.push((path(), err)),
+                        );
+                        if errs.is_empty() {
+                            future::ok(Root::new(json))
+                        } else {
+                            future::err(import::Error::Validation(errs))
+                        }
+                    }).boxed() 
+                },
+                import::config::ValidationStrategy::Complete => {
+                    future::lazy(move || {
+                        let mut errs = vec![];
+                        json.validate_completely(
+                            &json,
+                            || json::Path::new(),
+                            &mut |path, err| errs.push((path(), err)),
+                        );
+                        if errs.is_empty() {
+                            future::ok(Root::new(json))
+                        } else {
+                            future::err(import::Error::Validation(errs))
+                        }
+                    }).boxed() 
+                },
+            }
         })
-        .and_then(move |json| {
+        .and_then(move |root| {
             let source = source;
-            let buffers = source_buffers(&json, &source);
-            future::ok((json, source, buffers))
+            let buffers = source_buffers(&root, &source);
+            let images = source_images(&root, &source);
+            future::ok(root)
+                .join3(
+                    future::join_all(buffers),
+                    future::join_all(images),
+                )
         })
-        .and_then(|(json, source, buffers)| {
-            let images = source_images(&json, &buffers, &source);
-            future::ok((json, buffers, images))
+        .and_then(|(root, buffers, images)| {
+            let decoded_images = decode_images(&buffers, images)?;
+            Ok((root, buffers, decoded_images))
         })
-        .and_then(|(json, buffers, images)| {
-            future::ok(Gltf::new(Root::new(json), buffers, images))
-        });
-    Box::new(gltf)
+        .and_then(|(root, buffers, images)| {
+            Ok(Gltf::new(root, buffers, images))
+        })
+        .boxed()
 }

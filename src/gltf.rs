@@ -12,11 +12,6 @@ use json;
 use root;
 use std::{fmt, iter, ops, slice};
 
-use futures::future::{Shared, SharedError, SharedItem};
-use futures::{BoxFuture, Future, Poll};
-
-use std::boxed::Box;
-
 use accessor::Accessor;
 use animation::Animation;
 use buffer::{Buffer, View};
@@ -28,59 +23,13 @@ use scene::{Node, Scene};
 use skin::Skin;
 use texture::{Sampler, Texture};
 
-/// Represents an error that could occur when loading glTF data asynchronously.
-pub type AsyncError = SharedError<import::Error>;
-
-/// Represents a contiguous subset of either `AsyncData` or concrete `Data`.
-#[derive(Clone, Copy, Debug)]
-enum Region {
-    /// Represents the whole contents of the parent data. 
-    Full,
-
-    /// Represents a subset of the contents of the parent data.
-    View {
-        /// Byte offset where the data region begins.
-        offset: usize,
-
-        /// Byte length past the offset where the data region ends.
-        len: usize,
-    },
-}
-
-/// A `Future` that drives a glTF import.
-pub struct Async(BoxFuture<Gltf, import::Error>);
-
-/// A `Future` that drives the acquisition of glTF data.
-#[derive(Clone)]
-pub struct AsyncData {
-    /// A `Future` that resolves to either a `SharedItem<Box<[u8]>>` or else an
-    /// `AsyncError`.
-    future: Shared<BoxFuture<Box<[u8]>, import::Error>>,
-
-    /// The subset the data that is required once available.
-    region: Region,
-}
-
-/// Concrete and thread-safe glTF data.
-///
-/// May represent `Buffer`, `View`, or `Image` data.
-#[derive(Debug)]
-pub struct Data {
-    /// The resolved data from a `future::Shared`.
-    item: SharedItem<Box<[u8]>>,
-
-    /// The byte region the data reads from.
-    region: Region,
-}
-
 /// A loaded glTF complete with its data.
-#[derive(Clone)]
 pub struct Gltf {
     /// The glTF buffer data.
-    buffers: Vec<AsyncData>,
+    buffer_data: Vec<import::Data>,
 
     /// The glTF image data.
-    images: Vec<AsyncData>,
+    image_data: Vec<import::Data>,
 
     /// The root glTF struct (and also `Deref` target).
     root: root::Root,
@@ -90,7 +39,7 @@ pub struct Gltf {
 #[derive(Clone, Debug)]
 pub struct Accessors<'a> {
     /// Internal accessor iterator.
-    iter: slice::Iter<'a, json::accessor::Accessor>,
+    iter: iter::Enumerate<slice::Iter<'a, json::accessor::Accessor>>,
 
     /// The internal root glTF object.
     gltf: &'a Gltf,
@@ -100,7 +49,7 @@ pub struct Accessors<'a> {
 #[derive(Clone, Debug)]
 pub struct Animations<'a> {
     /// Internal animation iterator.
-    iter: slice::Iter<'a, json::animation::Animation>,
+    iter: iter::Enumerate<slice::Iter<'a, json::animation::Animation>>,
 
     /// The internal root glTF object.
     gltf: &'a Gltf,
@@ -120,7 +69,7 @@ pub struct Buffers<'a> {
 #[derive(Clone, Debug)]
 pub struct Views<'a> {
     /// Internal buffer view iterator.
-    iter: slice::Iter<'a, json::buffer::View>,
+    iter: iter::Enumerate<slice::Iter<'a, json::buffer::View>>,
 
     /// The internal root glTF object.
     gltf: &'a Gltf,
@@ -130,7 +79,7 @@ pub struct Views<'a> {
 #[derive(Clone, Debug)]
 pub struct Cameras<'a> {
     /// Internal buffer view iterator.
-    iter: slice::Iter<'a, json::camera::Camera>,
+    iter: iter::Enumerate<slice::Iter<'a, json::camera::Camera>>,
 
     /// The internal root glTF object.
     gltf: &'a Gltf,
@@ -150,7 +99,7 @@ pub struct Images<'a> {
 #[derive(Clone, Debug)]
 pub struct Materials<'a> {
     /// Internal material iterator.
-    iter: slice::Iter<'a, json::material::Material>,
+    iter: iter::Enumerate<slice::Iter<'a, json::material::Material>>,
 
     /// The internal root glTF object.
     gltf: &'a Gltf,
@@ -160,7 +109,7 @@ pub struct Materials<'a> {
 #[derive(Clone, Debug)]
 pub struct Meshes<'a> {
     /// Internal mesh iterator.
-    iter: slice::Iter<'a, json::mesh::Mesh>,
+    iter: iter::Enumerate<slice::Iter<'a, json::mesh::Mesh>>,
 
     /// The internal root glTF object.
     gltf: &'a Gltf,
@@ -170,7 +119,7 @@ pub struct Meshes<'a> {
 #[derive(Clone, Debug)]
 pub struct Nodes<'a> {
     /// Internal node iterator.
-    iter: slice::Iter<'a, json::scene::Node>,
+    iter: iter::Enumerate<slice::Iter<'a, json::scene::Node>>,
 
     /// The internal root glTF object.
     gltf: &'a Gltf,
@@ -180,7 +129,7 @@ pub struct Nodes<'a> {
 #[derive(Clone, Debug)]
 pub struct Samplers<'a> {
     /// Internal sampler iterator.
-    iter: slice::Iter<'a, json::texture::Sampler>,
+    iter: iter::Enumerate<slice::Iter<'a, json::texture::Sampler>>,
 
     /// The internal root glTF object.
     gltf: &'a Gltf,
@@ -190,7 +139,7 @@ pub struct Samplers<'a> {
 #[derive(Clone, Debug)]
 pub struct Scenes<'a> {
     /// Internal scene iterator.
-    iter: slice::Iter<'a, json::scene::Scene>,
+    iter: iter::Enumerate<slice::Iter<'a, json::scene::Scene>>,
 
     /// The internal root glTF object.
     gltf: &'a Gltf,
@@ -200,7 +149,7 @@ pub struct Scenes<'a> {
 #[derive(Clone, Debug)]
 pub struct Skins<'a> {
     /// Internal skin iterator.
-    iter: slice::Iter<'a, json::skin::Skin>,
+    iter: iter::Enumerate<slice::Iter<'a, json::skin::Skin>>,
 
     /// The internal root glTF object.
     gltf: &'a Gltf,
@@ -210,7 +159,7 @@ pub struct Skins<'a> {
 #[derive(Clone, Debug)]
 pub struct Textures<'a> {
     /// Internal texture iterator.
-    iter: slice::Iter<'a, json::texture::Texture>,
+    iter: iter::Enumerate<slice::Iter<'a, json::texture::Texture>>,
 
     /// The internal root glTF object.
     gltf: &'a Gltf,
@@ -220,44 +169,38 @@ impl Gltf {
     /// Constructor for a complete lazy-loaded glTF asset.
     pub fn new(
         root: root::Root,
-        buffers: Vec<AsyncData>,
-        images: Vec<AsyncData>,
+        buffer_data: Vec<import::Data>,
+        image_data: Vec<import::Data>,
     ) -> Self {
         Self {
-            buffers: buffers,
-            images: images,
+            buffer_data: buffer_data,
+            image_data: image_data,
             root: root,
         }
     }
 
-    /// Returns a shared `Future` that drives the lazy loading of buffer data.
+    /// Returns preloaded buffer data.
     ///
     /// # Panics
     ///
-    /// * If `index` is out of range.
-    fn buffer_data<'a>(
-        &'a self,
-        index: usize,
-    ) -> &'a AsyncData {
-        &self.buffers[index]
+    /// Panics if the index is out of range.
+    pub fn buffer_data(&self, index: usize) -> import::Data {
+        self.buffer_data[index].clone()
     }
 
-    /// Returns a shared `Future` that drives the lazy loading of image data.
+    /// Returns preloaded image data. 
     ///
     /// # Panics
     ///
-    /// * If `index` is out of range.
-    fn image_data<'a>(
-        &'a self,
-        index: usize,
-    ) -> &'a AsyncData {
-        &self.images[index]
+    /// Panics if the index is out of range.
+    pub fn image_data(&self, index: usize) -> import::Data {
+        self.image_data[index].clone()
     }
 
     /// Returns an `Iterator` that visits the accessors of the glTF asset.
     pub fn accessors<'a>(&'a self) -> Accessors<'a> {
         Accessors {
-            iter: self.as_json().accessors.iter(),
+            iter: self.as_json().accessors.iter().enumerate(),
             gltf: self,
         }
     }
@@ -265,7 +208,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the animations of the glTF asset.
     pub fn animations<'a>(&'a self) -> Animations<'a> {
         Animations {
-            iter: self.as_json().animations.iter(),
+            iter: self.as_json().animations.iter().enumerate(),
             gltf: self,
         }
     }
@@ -282,7 +225,7 @@ impl Gltf {
     /// asset.
     pub fn views<'a>(&'a self) -> Views<'a> {
         Views {
-            iter: self.as_json().buffer_views.iter(),
+            iter: self.as_json().buffer_views.iter().enumerate(),
             gltf: self,
         }
     }
@@ -290,7 +233,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the cameras of the glTF asset.
     pub fn cameras<'a>(&'a self) -> Cameras<'a> {
         Cameras {
-            iter: self.as_json().cameras.iter(),
+            iter: self.as_json().cameras.iter().enumerate(),
             gltf: self,
         }
     }
@@ -306,7 +249,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the materials of the glTF asset.
     pub fn materials<'a>(&'a self) -> Materials<'a> {
         Materials {
-            iter: self.as_json().materials.iter(),
+            iter: self.as_json().materials.iter().enumerate(),
             gltf: self,
         }
     }
@@ -314,7 +257,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the meshes of the glTF asset.
     pub fn meshes<'a>(&'a self) -> Meshes<'a> {
         Meshes {
-            iter: self.as_json().meshes.iter(),
+            iter: self.as_json().meshes.iter().enumerate(),
             gltf: self,
         }
     }
@@ -322,7 +265,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the nodes of the glTF asset.
     pub fn nodes<'a>(&'a self) -> Nodes<'a> {
         Nodes {
-            iter: self.as_json().nodes.iter(),
+            iter: self.as_json().nodes.iter().enumerate(),
             gltf: self,
         }
     }
@@ -330,7 +273,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the scenes of the glTF asset.
     pub fn samplers<'a>(&'a self) -> Samplers<'a> {
         Samplers {
-            iter: self.as_json().samplers.iter(),
+            iter: self.as_json().samplers.iter().enumerate(),
             gltf: self,
         }
     }
@@ -338,7 +281,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the samplers of the glTF asset.
     pub fn scenes<'a>(&'a self) -> Scenes<'a> {
         Scenes {
-            iter: self.as_json().scenes.iter(),
+            iter: self.as_json().scenes.iter().enumerate(),
             gltf: self,
         }
     }
@@ -346,7 +289,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the skins of the glTF asset.
     pub fn skins<'a>(&'a self) -> Skins<'a> {
         Skins {
-            iter: self.as_json().skins.iter(),
+            iter: self.as_json().skins.iter().enumerate(),
             gltf: self,
         }
     }
@@ -354,7 +297,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the textures of the glTF asset.
     pub fn textures<'a>(&'a self) -> Textures<'a> {
         Textures {
-            iter: self.as_json().textures.iter(),
+            iter: self.as_json().textures.iter().enumerate(),
             gltf: self,
         }
     }
@@ -373,222 +316,93 @@ impl ops::Deref for Gltf {
     }
 }
 
-impl Future for Async {
-    type Item = Gltf;
-    type Error = import::Error;
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        self.0.poll()
-    }
-}
-
-impl AsyncData {
-    /// Constructs `AsyncData` that uses all data from the given future. 
-    pub fn full(future: Shared<BoxFuture<Box<[u8]>, import::Error>>) -> Self {
-        AsyncData {
-            future: future,
-            region: Region::Full,
-        }
-    }
-
-    /// Constructs `AsyncData` that uses a subset of the data from the given future.
-    pub fn view(
-        future: Shared<BoxFuture<Box<[u8]>, import::Error>>,
-        offset: usize,
-        len: usize,
-    ) -> Self {
-        AsyncData {
-            future: future,
-            region: Region::View { offset, len },
-        }
-    }
-
-    /// Consumes this `AsyncData`, constructing a subset instead.
-    ///
-    /// If the data is already a subset then a sub-subset is created, etc.
-    pub fn subview(self, offset: usize, len: usize) -> Self {
-        AsyncData {
-            future: self.future,
-            region: self.region.subview(offset, len),
-        }
-    }
-}
-
-
-impl Future for AsyncData {
-    type Item = Data;
-    type Error = AsyncError;
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        self.future
-            .poll()
-            .map(|async| {
-                async.map(|item| {
-                    match self.region {
-                        Region::Full => {
-                            Data::full(item)
-                        },
-                        Region::View { offset, len } => {
-                            Data::view(item, offset, len)
-                        },
-                    }
-                })
-            })
-    }
-}
-
-impl Data {
-    /// Constructs concrete and thread-safe glTF data.
-    pub fn full(item: SharedItem<Box<[u8]>>) -> Self {
-        Data {
-            item: item,
-            region: Region::Full,
-        }
-    }
-
-    /// Constructs a concrete and thread-safe subset of glTF data.
-    pub fn view(item: SharedItem<Box<[u8]>>, offset: usize, len: usize) -> Self {
-        Data {
-            item: item,
-            region: Region::View { offset, len },
-        }
-    }
-
-    /// Consumes this `Data`, constructing a subset instead.
-    ///
-    /// If the data is already a subset then a sub-subset is created, etc.
-    pub fn subview(self, offset: usize, len: usize) -> Self {
-        Data {
-            item: self.item,
-            region: self.region.subview(offset, len),
-        }
-    }
-}
-
-impl ops::Deref for Data {
-    type Target = [u8];
-    fn deref(&self) -> &Self::Target {
-        match self.region {
-            Region::Full => &self.item[..],
-            Region::View { offset, len } => &self.item[offset..(offset + len)],
-        }
-    }
-}
-
-impl Region {
-    /// Consumes this `Region`, constructing a view instead.
-    ///
-    /// If the region is already a view then a subview is created, etc.
-    pub fn subview(self, offset: usize, len: usize) -> Region {
-        match self {
-            Region::Full => {
-                Region::View {
-                    offset: offset,
-                    len: len,
-                }
-            },
-            Region::View {
-                offset: prev_offset,
-                len: _,
-            } => {
-                Region::View {
-                    offset: prev_offset + offset,
-                    len: len,
-                }
-            },
-        }
-    }
-}
-
 impl<'a> Iterator for Accessors<'a> {
     type Item = Accessor<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|json| Accessor::new(self.gltf, json))
+        self.iter.next().map(|(index, json)| Accessor::new(self.gltf, index, json))
     }
 }
 
 impl<'a> Iterator for Animations<'a> {
     type Item = Animation<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|json| Animation::new(self.gltf, json))
+        self.iter.next().map(|(index, json)| Animation::new(self.gltf, index, json))
     }
 }
 
 impl<'a> Iterator for Buffers<'a> {
     type Item = Buffer<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|(index, json)| {
-            Buffer::new(self.gltf, json, self.gltf.buffer_data(index))
-        })
+        self.iter.next().map(|(index, json)| Buffer::new(self.gltf, index, json))
     }
 }
 
 impl<'a> Iterator for Views<'a> {
     type Item = View<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|json| View::new(self.gltf, json))
+        self.iter.next().map(|(index, json)| View::new(self.gltf, index, json))
     }
 }
 
 impl<'a> Iterator for Cameras<'a> {
     type Item = Camera<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|json| Camera::new(self.gltf, json))
+        self.iter.next().map(|(index, json)| Camera::new(self.gltf, index, json))
     }
 }
 
 impl<'a> Iterator for Images<'a> {
     type Item = Image<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|(index, json)| {
-            Image::new(self.gltf, json, self.gltf.image_data(index))
-        })
+        self.iter.next().map(|(index, json)| Image::new(self.gltf, index, json))
     }
 }
 
 impl<'a> Iterator for Materials<'a> {
     type Item = Material<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|json| Material::new(self.gltf, json))
+        self.iter.next().map(|(index, json)| Material::new(self.gltf, index, json))
     }
 }
 
 impl<'a> Iterator for Meshes<'a> {
     type Item = Mesh<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|json| Mesh::new(self.gltf, json))
+        self.iter.next().map(|(index, json)| Mesh::new(self.gltf, index, json))
     }
 }
 
 impl<'a> Iterator for Nodes<'a> {
     type Item = Node<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|json| Node::new(self.gltf, json))
+        self.iter.next().map(|(index, json)| Node::new(self.gltf, index, json))
     }
 }
 
 impl<'a> Iterator for Samplers<'a> {
     type Item = Sampler<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|json| Sampler::new(self.gltf, json))
+        self.iter.next().map(|(index, json)| Sampler::new(self.gltf, index, json))
     }
 }
 
 impl<'a> Iterator for Scenes<'a> {
     type Item = Scene<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|json| Scene::new(self.gltf, json))
+        self.iter.next().map(|(index, json)| Scene::new(self.gltf, index, json))
     }
 }
 
 impl<'a> Iterator for Skins<'a> {
     type Item = Skin<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|json| Skin::new(self.gltf, json))
+        self.iter.next().map(|(index, json)| Skin::new(self.gltf, index, json))
     }
 }
 
 impl<'a> Iterator for Textures<'a> {
     type Item = Texture<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|json| Texture::new(self.gltf, json))
+        self.iter.next().map(|(index, json)| Texture::new(self.gltf, index, json))
     }
 }

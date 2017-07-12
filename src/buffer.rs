@@ -9,26 +9,29 @@
 
 use {extensions, json};
 
-use {AsyncData, Gltf};
+use {Data, Gltf};
 
 pub use json::buffer::Target;
 
-///  A buffer points to binary data representing geometry, animations, or skins.
+/// A buffer points to binary data representing geometry, animations, or skins.
 pub struct Buffer<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
+    /// The corresponding JSON index.
+    index: usize,
+
     /// The corresponding JSON struct.
     json: &'a json::buffer::Buffer,
-
-    /// The buffer view data.
-    data: &'a AsyncData,
 }
 
-///  A view into a buffer generally representing a subset of the buffer.
+/// A view into a buffer generally representing a subset of the buffer.
 pub struct View<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
+
+    /// The corresponding JSON index.
+    index: usize,
 
     /// The corresponding JSON struct.
     json: &'a json::buffer::View,
@@ -38,14 +41,19 @@ impl<'a> Buffer<'a> {
     /// Constructs a `Buffer`.
     pub fn new(
         gltf: &'a Gltf,
+        index: usize,
         json: &'a json::buffer::Buffer,
-        data: &'a AsyncData,
     ) -> Self {
         Self {
             gltf: gltf,
+            index: index,
             json: json,
-            data: data,
         }
+    }
+
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// Returns the internal JSON item.
@@ -59,8 +67,8 @@ impl<'a> Buffer<'a> {
     }
 
     /// The buffer data.
-    pub fn data(&self) -> AsyncData {
-        self.data.clone()
+    pub fn data(&self) -> Data {
+        self.gltf.buffer_data(self.index())
     }
 
     /// Optional user-defined name for this object.
@@ -87,12 +95,19 @@ impl<'a> View<'a> {
     /// Constructs a `View`.
     pub fn new(
         gltf: &'a Gltf,
+        index: usize,
         json: &'a json::buffer::View,
     ) -> Self {
         Self {
             gltf: gltf,
+            index: index,
             json: json,
         }
+    }
+
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// Returns the internal JSON item.
@@ -122,7 +137,7 @@ impl<'a> View<'a> {
     }
 
     /// Returns the buffer view data.
-    pub fn data(&self) -> AsyncData {
+    pub fn data(&self) -> Data {
         self.buffer().data().subview(self.offset(), self.length())
     }
 
