@@ -8,10 +8,8 @@
 // except according to those terms.
 
 use std::slice;
-use {accessor, extensions, import, json, scene};
+use {accessor, extensions, json, scene};
 
-use futures::future::SharedError;
-use futures::{BoxFuture, Future};
 use Gltf;
 
 /// Joints and matrices defining a skin.
@@ -68,11 +66,11 @@ impl<'a> Skin<'a> {
     /// The index of the accessor containing the 4x4 inverse-bind matrices.  When
     /// `None`,each matrix is assumed to be the 4x4 identity matrix which implies
     /// that the inverse-bind matrices were pre-applied.
-    pub fn inverse_bind_matrices(&self) -> Option<BoxFuture<InverseBindMatrices, SharedError<import::Error>>> {
+    pub fn inverse_bind_matrices(&self) -> Option<InverseBindMatrices> {
         self.json.inverse_bind_matrices.as_ref().map(|index| {
             let accessor = self.gltf.accessors().nth(index.value()).unwrap();
             unsafe {
-                accessor.iter().map(|iter| InverseBindMatrices(iter)).boxed()
+                InverseBindMatrices(accessor.iter())
             }
         })
     }

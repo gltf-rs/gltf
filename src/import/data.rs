@@ -11,10 +11,8 @@ use futures::future;
 use import;
 use std::ops;
 
-use futures::{Future, IntoFuture, Poll};
-use futures::future::{Shared, SharedItem, SharedError};
+use futures::{BoxFuture, Future, IntoFuture, Poll};
 use std::boxed::Box;
-use std::sync::Arc;
 
 /// Represents a contiguous subset of either `AsyncData` or concrete `Data`.
 #[derive(Clone, Copy, Debug)]
@@ -33,11 +31,10 @@ enum Region {
 }
 
 /// A `Future` that drives the acquisition of glTF data.
-#[derive(Clone)]
 pub struct Async<S: import::Source> {
     /// A `Future` that resolves to either a `SharedItem<Box<[u8]>>` or else an
     /// `AsyncError`.
-    future: Shared<Box<Future<Item = Box<[u8]>, Error = S::Error>>>,
+    future: BoxFuture<Box<[u8]>, import::Error<S>>,
 
     /// The subset the data that is required once available.
     region: Region,
@@ -46,10 +43,10 @@ pub struct Async<S: import::Source> {
 /// Concrete and thread-safe glTF data.
 ///
 /// May represent `Buffer`, `View`, or `Image` data.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Data {
     /// The resolved data.
-    item: SharedItem<Box<[u8]>>,
+    item: Box<[u8]>,
 
     /// The byte region the data reads from.
     region: Region,
@@ -57,23 +54,21 @@ pub struct Data {
 
 impl<S: import::Source> Async<S> {
     /// Constructs `AsyncData` that uses all data from the given future. 
-    pub fn full(
-        future: Shared<Box<Future<Item = Box<[u8]>, Error = S::Error>>>,
-    ) -> Self {
+    pub fn full<F>(future: F) -> Self
+        where F: Future<Item = Box<[u8]>, Error = S::Error> + Send + 'static
+    {
         Async {
-            future: future,
+            future: future.map_err(import::Error::Source).boxed(),
             region: Region::Full,
         }
     }
 
     /// Constructs `AsyncData` that uses a subset of the data from the given future.
-    pub fn view(
-        future: Shared<Box<Future<Item = Box<[u8]>, Error = S::Error>>>,
-        offset: usize,
-        len: usize,
-    ) -> Self {
+    pub fn view<F>(future: F, offset: usize, len: usize) -> Self
+    where F: Future<Item = Box<[u8]>, Error = S::Error> + Send + 'static
+    {
         Async {
-            future: future,
+            future: future.map_err(import::Error::Source).boxed(),
             region: Region::View { offset, len },
         }
     }
@@ -95,7 +90,6 @@ impl<S: import::Source> Future for Async<S> {
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         self.future
             .poll()
-            .map_err(import::Error::Source)
             .map(|async| {
                 async.map(|item| {
                     match self.region {
@@ -117,7 +111,7 @@ impl Data {
     /// # Notes
     ///
     /// This method is unstable and hence subject to change.
-    pub fn full(item: SharedItem<Box<[u8]>>) -> Self {
+    pub fn full(item: Box<[u8]>) -> Self {
         Data {
             item: item,
             region: Region::Full,
@@ -129,7 +123,7 @@ impl Data {
     /// # Notes
     ///
     /// This method is unstable and hence subject to change.
-    pub fn view(item: SharedItem<Box<[u8]>>, offset: usize, len: usize) -> Self {
+    pub fn view(item: Box<[u8]>, offset: usize, len: usize) -> Self {
         Data {
             item: item,
             region: Region::View { offset, len },

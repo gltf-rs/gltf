@@ -7,9 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use {extensions, json};
+use {extensions, import, json};
 
-use {AsyncData, Gltf};
+use Gltf;
 
 pub use json::buffer::Target;
 
@@ -20,9 +20,6 @@ pub struct Buffer<'a> {
 
     /// The corresponding JSON struct.
     json: &'a json::buffer::Buffer,
-
-    /// The buffer view data.
-    data: &'a AsyncData,
 }
 
 ///  A view into a buffer generally representing a subset of the buffer.
@@ -39,12 +36,10 @@ impl<'a> Buffer<'a> {
     pub fn new(
         gltf: &'a Gltf,
         json: &'a json::buffer::Buffer,
-        data: &'a AsyncData,
     ) -> Self {
         Self {
             gltf: gltf,
             json: json,
-            data: data,
         }
     }
 
@@ -59,8 +54,8 @@ impl<'a> Buffer<'a> {
     }
 
     /// The buffer data.
-    pub fn data(&self) -> AsyncData {
-        self.data.clone()
+    pub fn data(&self) -> import::Data {
+        unimplemented!()
     }
 
     /// Optional user-defined name for this object.
@@ -122,7 +117,7 @@ impl<'a> View<'a> {
     }
 
     /// Returns the buffer view data.
-    pub fn data(&self) -> AsyncData {
+    pub fn data(&self) -> import::Data {
         self.buffer().data().subview(self.offset(), self.length())
     }
 

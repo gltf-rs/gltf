@@ -12,10 +12,7 @@ use json;
 use root;
 use std::{fmt, iter, ops, slice};
 
-use futures::future::{Shared, SharedError, SharedItem};
-use futures::{BoxFuture, Future, Poll};
-
-use std::boxed::Box;
+use futures::future::SharedItem;
 
 use accessor::Accessor;
 use animation::Animation;
@@ -28,59 +25,13 @@ use scene::{Node, Scene};
 use skin::Skin;
 use texture::{Sampler, Texture};
 
-/// Represents an error that could occur when loading glTF data asynchronously.
-pub type AsyncError = SharedError<import::Error>;
-
-/// Represents a contiguous subset of either `AsyncData` or concrete `Data`.
-#[derive(Clone, Copy, Debug)]
-enum Region {
-    /// Represents the whole contents of the parent data. 
-    Full,
-
-    /// Represents a subset of the contents of the parent data.
-    View {
-        /// Byte offset where the data region begins.
-        offset: usize,
-
-        /// Byte length past the offset where the data region ends.
-        len: usize,
-    },
-}
-
-/// A `Future` that drives a glTF import.
-pub struct Async(BoxFuture<Gltf, import::Error>);
-
-/// A `Future` that drives the acquisition of glTF data.
-#[derive(Clone)]
-pub struct AsyncData {
-    /// A `Future` that resolves to either a `SharedItem<Box<[u8]>>` or else an
-    /// `AsyncError`.
-    future: Shared<BoxFuture<Box<[u8]>, import::Error>>,
-
-    /// The subset the data that is required once available.
-    region: Region,
-}
-
-/// Concrete and thread-safe glTF data.
-///
-/// May represent `Buffer`, `View`, or `Image` data.
-#[derive(Debug)]
-pub struct Data {
-    /// The resolved data from a `future::Shared`.
-    item: SharedItem<Box<[u8]>>,
-
-    /// The byte region the data reads from.
-    region: Region,
-}
-
 /// A loaded glTF complete with its data.
-#[derive(Clone)]
 pub struct Gltf {
     /// The glTF buffer data.
-    buffers: Vec<AsyncData>,
+    buffers: Vec<SharedItem<import::Data>>,
 
     /// The glTF image data.
-    images: Vec<AsyncData>,
+    images: Vec<import::Data>,
 
     /// The root glTF struct (and also `Deref` target).
     root: root::Root,
@@ -220,8 +171,8 @@ impl Gltf {
     /// Constructor for a complete lazy-loaded glTF asset.
     pub fn new(
         root: root::Root,
-        buffers: Vec<AsyncData>,
-        images: Vec<AsyncData>,
+        buffers: Vec<SharedItem<import::Data>>,
+        images: Vec<import::Data>,
     ) -> Self {
         Self {
             buffers: buffers,
@@ -235,10 +186,7 @@ impl Gltf {
     /// # Panics
     ///
     /// * If `index` is out of range.
-    fn buffer_data<'a>(
-        &'a self,
-        index: usize,
-    ) -> &'a AsyncData {
+    fn buffer_data<'a>(&'a self, index: usize) -> &'a import::Data {
         &self.buffers[index]
     }
 
@@ -247,10 +195,7 @@ impl Gltf {
     /// # Panics
     ///
     /// * If `index` is out of range.
-    fn image_data<'a>(
-        &'a self,
-        index: usize,
-    ) -> &'a AsyncData {
+    fn image_data<'a>(&'a self, index: usize) -> &'a import::Data {
         &self.images[index]
     }
 
@@ -373,131 +318,6 @@ impl ops::Deref for Gltf {
     }
 }
 
-impl Future for Async {
-    type Item = Gltf;
-    type Error = import::Error;
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        self.0.poll()
-    }
-}
-
-impl AsyncData {
-    /// Constructs `AsyncData` that uses all data from the given future. 
-    pub fn full(future: Shared<BoxFuture<Box<[u8]>, import::Error>>) -> Self {
-        AsyncData {
-            future: future,
-            region: Region::Full,
-        }
-    }
-
-    /// Constructs `AsyncData` that uses a subset of the data from the given future.
-    pub fn view(
-        future: Shared<BoxFuture<Box<[u8]>, import::Error>>,
-        offset: usize,
-        len: usize,
-    ) -> Self {
-        AsyncData {
-            future: future,
-            region: Region::View { offset, len },
-        }
-    }
-
-    /// Consumes this `AsyncData`, constructing a subset instead.
-    ///
-    /// If the data is already a subset then a sub-subset is created, etc.
-    pub fn subview(self, offset: usize, len: usize) -> Self {
-        AsyncData {
-            future: self.future,
-            region: self.region.subview(offset, len),
-        }
-    }
-}
-
-
-impl Future for AsyncData {
-    type Item = Data;
-    type Error = AsyncError;
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        self.future
-            .poll()
-            .map(|async| {
-                async.map(|item| {
-                    match self.region {
-                        Region::Full => {
-                            Data::full(item)
-                        },
-                        Region::View { offset, len } => {
-                            Data::view(item, offset, len)
-                        },
-                    }
-                })
-            })
-    }
-}
-
-impl Data {
-    /// Constructs concrete and thread-safe glTF data.
-    pub fn full(item: SharedItem<Box<[u8]>>) -> Self {
-        Data {
-            item: item,
-            region: Region::Full,
-        }
-    }
-
-    /// Constructs a concrete and thread-safe subset of glTF data.
-    pub fn view(item: SharedItem<Box<[u8]>>, offset: usize, len: usize) -> Self {
-        Data {
-            item: item,
-            region: Region::View { offset, len },
-        }
-    }
-
-    /// Consumes this `Data`, constructing a subset instead.
-    ///
-    /// If the data is already a subset then a sub-subset is created, etc.
-    pub fn subview(self, offset: usize, len: usize) -> Self {
-        Data {
-            item: self.item,
-            region: self.region.subview(offset, len),
-        }
-    }
-}
-
-impl ops::Deref for Data {
-    type Target = [u8];
-    fn deref(&self) -> &Self::Target {
-        match self.region {
-            Region::Full => &self.item[..],
-            Region::View { offset, len } => &self.item[offset..(offset + len)],
-        }
-    }
-}
-
-impl Region {
-    /// Consumes this `Region`, constructing a view instead.
-    ///
-    /// If the region is already a view then a subview is created, etc.
-    pub fn subview(self, offset: usize, len: usize) -> Region {
-        match self {
-            Region::Full => {
-                Region::View {
-                    offset: offset,
-                    len: len,
-                }
-            },
-            Region::View {
-                offset: prev_offset,
-                len: _,
-            } => {
-                Region::View {
-                    offset: prev_offset + offset,
-                    len: len,
-                }
-            },
-        }
-    }
-}
-
 impl<'a> Iterator for Accessors<'a> {
     type Item = Accessor<'a>;
     fn next(&mut self) -> Option<Self::Item> {
@@ -515,9 +335,7 @@ impl<'a> Iterator for Animations<'a> {
 impl<'a> Iterator for Buffers<'a> {
     type Item = Buffer<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|(index, json)| {
-            Buffer::new(self.gltf, json, self.gltf.buffer_data(index))
-        })
+        self.iter.next().map(|(index, json)| Buffer::new(self.gltf, json))
     }
 }
 
@@ -538,9 +356,7 @@ impl<'a> Iterator for Cameras<'a> {
 impl<'a> Iterator for Images<'a> {
     type Item = Image<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|(index, json)| {
-            Image::new(self.gltf, json, self.gltf.image_data(index))
-        })
+        self.iter.next().map(|(index, json)| Image::new(self.gltf, json))
     }
 }
 

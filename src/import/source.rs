@@ -20,15 +20,6 @@ use std::marker::Send;
 
 pub use self::from_path::FromPath;
 
-/// A trait for representing sources of glTF data that may be read by an importer.
-pub trait Source: Send + 'static {
-    /// Read the contents of a .gltf or .glb file.
-    fn source_gltf(&self) -> BoxFuture<Box<[u8]>, import::Error>;
-
-    /// Read the contents of external data.
-    fn source_external_data(&self, uri: &str) -> BoxFuture<Box<[u8]>, import::Error>;
-}
-
 /// Data source error.
 #[derive(Debug)]
 pub enum Error {

@@ -10,9 +10,7 @@
 use std::{marker, mem};
 use {buffer, extensions, import, json};
 
-use futures::future::SharedError;
-use futures::{BoxFuture, Future};
-use {Data, Gltf};
+use Gltf;
 
 pub use json::accessor::ComponentType as DataType;
 pub use json::accessor::Type as Dimensions;
@@ -40,7 +38,7 @@ pub struct Iter<T> {
     stride: usize,
 
     /// The buffer view data we're iterating over.
-    data: Data,
+    data: import::Data,
 
     /// Consumes the data type we're returning at each iteration.
     _mk: marker::PhantomData<T>,
@@ -70,23 +68,19 @@ impl<'a> Accessor<'a> {
     /// # Panics
     ///
     /// If the size of an individual `T` does not match the accessor component size.
-    pub unsafe fn iter<T>(&self) -> BoxFuture<Iter<T>, SharedError<import::Error>> {
+    pub unsafe fn iter<T>(&self) -> Iter<T> {
         let count = self.count();
         let offset = self.offset() as isize;
         let stride = self.view().stride().unwrap_or(mem::size_of::<T>());
-        self.view()
-            .data()
-            .map(move |data| {
-                let ptr = data.as_ptr().offset(offset);
-                Iter {
-                    count: count,
-                    ptr: ptr,
-                    stride: stride,
-                    data: data,
-                    _mk: marker::PhantomData,
-                }
-            })
-            .boxed()
+        let data = self.view().data();
+        let ptr = data.as_ptr().offset(offset);
+        Iter {
+            count: count,
+            ptr: ptr,
+            stride: stride,
+            data: data,
+            _mk: marker::PhantomData,
+        }
     }
 
     /// Returns the internal JSON item.

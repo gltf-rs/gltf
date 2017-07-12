@@ -12,8 +12,7 @@ use std::slice;
 use {accessor, extensions, json, material};
 
 use accessor::{Accessor, DataType, Dimensions, Iter};
-use futures::{BoxFuture, Future};
-use gltf::{AsyncError, Gltf};
+use Gltf;
 
 pub use json::mesh::{Mode, Semantic};
 
@@ -253,26 +252,26 @@ impl<'a> Mesh<'a>  {
 }
 
 impl Colors {
-    fn from_accessor<'a>(accessor: Accessor<'a>) -> BoxFuture<Colors, AsyncError> {
+    fn from_accessor<'a>(accessor: Accessor<'a>) -> Colors {
         unsafe {
             match (accessor.dimensions(), accessor.data_type()) {
                 (Dimensions::Vec3, DataType::U8) => {
-                    accessor.iter().map(Colors::RgbU8).boxed()
+                    Colors::RgbU8(accessor.iter())
                 },
                 (Dimensions::Vec4, DataType::U8) => {
-                    accessor.iter().map(Colors::RgbaU8).boxed()
+                    Colors::RgbaU8(accessor.iter())
                 },
                 (Dimensions::Vec3, DataType::U16) => {
-                    accessor.iter().map(Colors::RgbU16).boxed()
+                    Colors::RgbU16(accessor.iter())
                 },
                 (Dimensions::Vec4, DataType::U16) => {
-                    accessor.iter().map(Colors::RgbaU16).boxed()
+                    Colors::RgbaU16(accessor.iter())
                 },
                 (Dimensions::Vec3, DataType::F32) => {
-                    accessor.iter().map(Colors::RgbF32).boxed()
+                    Colors::RgbF32(accessor.iter())
                 },
                 (Dimensions::Vec4, DataType::F32) => {
-                    accessor.iter().map(Colors::RgbaF32).boxed()
+                    Colors::RgbaF32(accessor.iter())
                 },
                 _ => unreachable!(),
             }
@@ -281,12 +280,12 @@ impl Colors {
 }
 
 impl TexCoords {
-    fn from_accessor<'a>(accessor: Accessor<'a>) -> BoxFuture<TexCoords, AsyncError> {
+    fn from_accessor<'a>(accessor: Accessor<'a>) -> TexCoords {
         unsafe {
             match accessor.data_type() {
-                DataType::U8 => accessor.iter().map(TexCoords::U8).boxed(),
-                DataType::U16 => accessor.iter().map(TexCoords::U16).boxed(),
-                DataType::F32 => accessor.iter().map(TexCoords::F32).boxed(),
+                DataType::U8 => TexCoords::U8(accessor.iter()),
+                DataType::U16 => TexCoords::U16(accessor.iter()),
+                DataType::F32 => TexCoords::F32(accessor.iter()),
                 _ => unreachable!(),
             }
         }
@@ -294,12 +293,12 @@ impl TexCoords {
 }
 
 impl Indices {
-    fn from_accessor<'a>(accessor: Accessor) -> BoxFuture<Indices, AsyncError> {
+    fn from_accessor<'a>(accessor: Accessor) -> Indices {
         unsafe {
             match accessor.data_type() {
-                DataType::U8 => accessor.iter().map(Indices::U8).boxed(),
-                DataType::U16 => accessor.iter().map(Indices::U16).boxed(),
-                DataType::U32 => accessor.iter().map(Indices::U32).boxed(),
+                DataType::U8 => Indices::U8(accessor.iter()),
+                DataType::U16 => Indices::U16(accessor.iter()),
+                DataType::U32 => Indices::U32(accessor.iter()),
                 _ => unreachable!(),
             }
         }
@@ -307,11 +306,11 @@ impl Indices {
 }
 
 impl Joints {
-    fn from_accessor<'a>(accessor: Accessor<'a>) -> BoxFuture<Joints, AsyncError> {
+    fn from_accessor<'a>(accessor: Accessor<'a>) -> Joints {
         unsafe {
             match accessor.data_type() {
-                DataType::U8 => accessor.iter().map(Joints::U8).boxed(),
-                DataType::U16 => accessor.iter().map(Joints::U16).boxed(),
+                DataType::U8 => Joints::U8(accessor.iter()),
+                DataType::U16 => Joints::U16(accessor.iter()),
                 _ => unreachable!(),
             }
         }
@@ -319,12 +318,12 @@ impl Joints {
 }
 
 impl Weights {
-    fn from_accessor<'a>(accessor: Accessor<'a>) -> BoxFuture<Weights, AsyncError> {
+    fn from_accessor<'a>(accessor: Accessor<'a>) -> Weights {
         unsafe {
             match accessor.data_type() {
-                DataType::U8 => accessor.iter().map(Weights::U8).boxed(),
-                DataType::U16 => accessor.iter().map(Weights::U16).boxed(),
-                DataType::F32 => accessor.iter().map(Weights::F32).boxed(),
+                DataType::U8 => Weights::U8(accessor.iter()),
+                DataType::U16 => Weights::U16(accessor.iter()),
+                DataType::F32 => Weights::F32(accessor.iter()),
                 _ => unreachable!(),
             }
         }
@@ -346,31 +345,31 @@ impl<'a> Primitive<'a> {
     }
 
     /// Returns the vertex colors of the given set.
-    pub fn colors(&self, set: u32) -> Option<BoxFuture<Colors, AsyncError>> {
+    pub fn colors(&self, set: u32) -> Option<Colors> {
         self.find_accessor_with_semantic(Semantic::Colors(set))
             .map(|accessor| Colors::from_accessor(accessor))
     }
 
     /// Returns the vertex texture co-ordinates of the given set.
-    pub fn tex_coords(&self, set: u32) -> Option<BoxFuture<TexCoords, AsyncError>> {
+    pub fn tex_coords(&self, set: u32) -> Option<TexCoords> {
         self.find_accessor_with_semantic(Semantic::TexCoords(set))
             .map(|accessor| TexCoords::from_accessor(accessor))
     }
 
     /// Returns the joint indices of the given set.
-    pub fn joints(&self, set: u32) -> Option<BoxFuture<Joints, AsyncError>> {
+    pub fn joints(&self, set: u32) -> Option<Joints> {
         self.find_accessor_with_semantic(Semantic::Joints(set))
             .map(|accessor| Joints::from_accessor(accessor))
     }
     
     /// Returns the joint weights of the given set.
-    pub fn weights(&self, set: u32) -> Option<BoxFuture<Weights, AsyncError>> {
+    pub fn weights(&self, set: u32) -> Option<Weights> {
         self.find_accessor_with_semantic(Semantic::Weights(set))
             .map(|accessor| Weights::from_accessor(accessor))
     }
 
     /// Returns the primitive indices.
-    pub fn indices(&self) -> Option<BoxFuture<Indices, AsyncError>> {
+    pub fn indices(&self) -> Option<Indices> {
         self.json.indices.as_ref().map(|index| {
             let accessor = self.gltf.accessors().nth(index.value()).unwrap();
             Indices::from_accessor(accessor)
@@ -378,26 +377,26 @@ impl<'a> Primitive<'a> {
     }
     
     /// Returns the primitive positions.
-    pub fn positions(&self) -> Option<BoxFuture<Positions, AsyncError>> {
+    pub fn positions(&self) -> Option<Positions> {
         self.find_accessor_with_semantic(Semantic::Positions)
             .map(|accessor| unsafe {
-                accessor.iter().map(|iter| Positions(iter)).boxed()
+                Positions(accessor.iter())
             })
     }
 
     /// Returns the primitive normals.
-    pub fn normals(&self) -> Option<BoxFuture<Normals, AsyncError>> {
+    pub fn normals(&self) -> Option<Normals> {
         self.find_accessor_with_semantic(Semantic::Normals)
             .map(|accessor| unsafe {
-                accessor.iter().map(|iter| Normals(iter)).boxed()
+                Normals(accessor.iter())
             })
     }
 
     /// Returns the primitive tangents.
-    pub fn tangents(&self) -> Option<BoxFuture<Tangents, AsyncError>> {
+    pub fn tangents(&self) -> Option<Tangents> {
         self.find_accessor_with_semantic(Semantic::Tangents)
             .map(|accessor| unsafe {
-                accessor.iter().map(|iter| Tangents(iter)).boxed()
+                Tangents(accessor.iter())
             })
     }
 

@@ -7,9 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use {extensions, json};
+use {extensions, import, json};
 
-use {AsyncData, Gltf};
+use Gltf;
 
 /// Image data used to create a texture.
 pub struct Image<'a> {
@@ -18,9 +18,6 @@ pub struct Image<'a> {
     
     /// The corresponding JSON struct.
     json: &'a json::image::Image,
-
-    /// The buffer view data.
-    data: &'a AsyncData,
 }
 
 impl<'a> Image<'a> {
@@ -28,12 +25,10 @@ impl<'a> Image<'a> {
     pub fn new(
         gltf: &'a Gltf,
         json: &'a json::image::Image,
-        data: &'a AsyncData,
     ) -> Self {
         Self {
             gltf: gltf,
             json: json,
-            data: data,
         }
     }
     
@@ -49,8 +44,8 @@ impl<'a> Image<'a> {
     }
 
     /// Returns the image data.
-    pub fn data(&self) -> AsyncData {
-        self.data.clone()
+    pub fn data(&self) -> import::Data {
+        unimplemented!()
     }
 
     /// Extension specific data.
