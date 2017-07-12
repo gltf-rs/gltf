@@ -18,6 +18,9 @@ pub struct Skin<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
+    /// The corresponding JSON index.
+    index: usize,
+
     /// The corresponding JSON struct.
     json: &'a json::skin::Skin,
 }
@@ -38,11 +41,17 @@ pub struct Joints<'a> {
 
 impl<'a> Skin<'a> {
     /// Constructs a `Skin`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::skin::Skin) -> Self {
+    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::skin::Skin) -> Self {
         Self {
             gltf: gltf,
+            index: index,
             json: json,
         }
+    }
+
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// Returns the internal JSON item.
@@ -95,7 +104,7 @@ impl<'a> Skin<'a> {
     /// transforms resolve to scene root.
     pub fn skeleton(&self) -> Option<scene::Node<'a>> {
         self.json.skeleton.as_ref().map(|index| {
-            scene::Node::new(self.gltf, self.gltf.as_json().get(index))
+            self.gltf.nodes().nth(index.value()).unwrap()
         })
     }
 }
@@ -115,4 +124,3 @@ impl<'a> Iterator for Joints<'a>  {
             .map(|index| self.gltf.nodes().nth(index.value()).unwrap())
     }
 }
-

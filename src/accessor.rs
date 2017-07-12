@@ -21,6 +21,9 @@ pub struct Accessor<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
+    /// The corresponding JSON index.
+    index: usize,
+
     /// The corresponding JSON struct.
     json: &'a json::accessor::Accessor,
 }
@@ -46,13 +49,19 @@ pub struct Iter<T> {
 
 impl<'a> Accessor<'a> {
     /// Constructs an `Accessor`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::accessor::Accessor) -> Self {
+    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::accessor::Accessor) -> Self {
         Self {
             gltf: gltf,
+            index: index,
             json: json,
         }
     }
 
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
+    }
+    
     /// Returns the size of each component that this accessor describes.
     #[allow(dead_code)]
     fn size(&self) -> usize {

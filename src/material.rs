@@ -17,17 +17,26 @@ pub struct Material<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
+    /// The corresponding JSON index.
+    index: usize,
+
     /// The corresponding JSON struct.
     json: &'a json::material::Material,
 }
 
 impl<'a> Material<'a> {
     /// Constructs a `Material`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::material::Material) -> Self {
+    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::material::Material) -> Self {
         Self {
             gltf: gltf,
+            index: index,
             json: json,
         }
+    }
+
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// Returns the internal JSON item.

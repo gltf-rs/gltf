@@ -26,6 +26,9 @@ pub struct Camera<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
+    /// The corresponding JSON index.
+    index: usize,
+
     /// The corresponding JSON struct.
     json: &'a json::camera::Camera,
 }
@@ -52,11 +55,17 @@ pub struct Perspective<'a> {
 
 impl<'a> Camera<'a> {
     /// Constructs a `Camera`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::camera::Camera) -> Self {
+    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::camera::Camera) -> Self {
         Self {
             gltf: gltf,
+            index: index,
             json: json,
         }
+    }
+
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// Returns the internal JSON item.

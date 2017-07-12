@@ -7,11 +7,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use futures::future;
 use import;
 use std::ops;
 
-use futures::{BoxFuture, Future, IntoFuture, Poll};
+use futures::{BoxFuture, Future, Poll};
 use std::boxed::Box;
 
 /// Represents a contiguous subset of either `AsyncData` or concrete `Data`.

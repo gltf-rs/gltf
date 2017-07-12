@@ -18,6 +18,9 @@ pub struct Buffer<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
+    /// The corresponding JSON index.
+    index: usize,
+
     /// The corresponding JSON struct.
     json: &'a json::buffer::Buffer,
 }
@@ -27,6 +30,9 @@ pub struct View<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
+    /// The corresponding JSON index.
+    index: usize,
+
     /// The corresponding JSON struct.
     json: &'a json::buffer::View,
 }
@@ -35,12 +41,19 @@ impl<'a> Buffer<'a> {
     /// Constructs a `Buffer`.
     pub fn new(
         gltf: &'a Gltf,
+        index: usize,
         json: &'a json::buffer::Buffer,
     ) -> Self {
         Self {
             gltf: gltf,
+            index: index,
             json: json,
         }
+    }
+
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// Returns the internal JSON item.
@@ -82,12 +95,19 @@ impl<'a> View<'a> {
     /// Constructs a `View`.
     pub fn new(
         gltf: &'a Gltf,
+        index: usize,
         json: &'a json::buffer::View,
     ) -> Self {
         Self {
             gltf: gltf,
+            index: index,
             json: json,
         }
+    }
+
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// Returns the internal JSON item.

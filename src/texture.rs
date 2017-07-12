@@ -29,6 +29,9 @@ pub struct Sampler<'a> {
     #[allow(dead_code)]
     gltf: &'a Gltf,
 
+    /// The corresponding JSON index.
+    index: usize,
+
     /// The corresponding JSON struct.
     json: &'a json::texture::Sampler,
 }
@@ -39,17 +42,26 @@ pub struct Texture<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
+    /// The corresponding JSON index.
+    index: usize,
+
     /// The corresponding JSON struct.
     json: &'a json::texture::Texture,
 }
 
 impl<'a> Sampler<'a> {
     /// Constructs a `Sampler`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::texture::Sampler) -> Self {
+    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::texture::Sampler) -> Self {
         Self {
             gltf: gltf,
+            index: index,
             json: json,
         }
+    }
+
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// Returns the internal JSON item.
@@ -99,11 +111,17 @@ impl<'a> Sampler<'a> {
 
 impl<'a> Texture<'a> {
     /// Constructs a `Texture`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::texture::Texture) -> Self {
+    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::texture::Texture) -> Self {
         Self {
             gltf: gltf,
+            index: index,
             json: json,
         }
+    }
+
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// Returns the internal JSON item.

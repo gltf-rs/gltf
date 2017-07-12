@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use std::collections::hash_map;
-use std::slice;
+use std::{iter, slice};
 use {accessor, extensions, json, material};
 
 use accessor::{Accessor, DataType, Dimensions, Iter};
@@ -170,6 +170,9 @@ pub struct Mesh<'a>  {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
+    /// The corresponding JSON index.
+    index: usize,
+
     /// The corresponding JSON struct.
     json: &'a json::mesh::Mesh,
 }
@@ -177,8 +180,11 @@ pub struct Mesh<'a>  {
 /// Geometry to be rendered with the given material.
 #[derive(Clone, Debug)]
 pub struct Primitive<'a>  {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    /// The parent `Mesh` struct.
+    mesh: &'a Mesh<'a>,
+
+    /// The corresponding JSON index.
+    index: usize,
 
     /// The corresponding JSON struct.
     json: &'a json::mesh::Primitive,
@@ -188,7 +194,7 @@ pub struct Primitive<'a>  {
 #[derive(Clone, Debug)]
 pub struct Attributes<'a> {
     /// The parent `Primitive` struct.
-    prim: Primitive<'a>,
+    prim: &'a Primitive<'a>,
 
     /// The internal attribute iterIterator.
     iter: hash_map::Iter<'a, json::mesh::Semantic, json::Index<json::accessor::Accessor>>,
@@ -198,19 +204,25 @@ pub struct Attributes<'a> {
 #[derive(Clone, Debug)]
 pub struct Primitives<'a>  {
     /// The parent `Mesh` struct.
-    mesh: Mesh<'a>,
+    mesh: &'a Mesh<'a>,
 
     /// The internal JSON primitive iterIterator.
-    iter: slice::Iter<'a, json::mesh::Primitive>,
+    iter: iter::Enumerate<slice::Iter<'a, json::mesh::Primitive>>,
 }
 
 impl<'a> Mesh<'a>  {
     /// Constructs a `Mesh`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::mesh::Mesh) -> Self {
+    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::mesh::Mesh) -> Self {
         Self {
             gltf: gltf,
+            index: index,
             json: json,
         }
+    }
+
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// Returns the internal JSON item.
@@ -238,10 +250,10 @@ impl<'a> Mesh<'a>  {
     }
 
     /// Defines the geometry to be renderered with a material.
-    pub fn primitives(&self) -> Primitives {
+    pub fn primitives(&'a self) -> Primitives<'a> {
         Primitives {
-            mesh: self.clone(),
-            iter: self.json.primitives.iter(),
+            mesh: self,
+            iter: self.json.primitives.iter().enumerate(),
         }
     }
 
@@ -332,9 +344,10 @@ impl Weights {
 
 impl<'a> Primitive<'a> {
     /// Constructs a `Primitive`.
-    pub fn new(gltf: &'a Gltf, json: &'a json::mesh::Primitive) -> Self {
+    pub fn new(mesh: &'a Mesh<'a>, index: usize, json: &'a json::mesh::Primitive) -> Self {
         Self {
-            gltf: gltf,
+            mesh: mesh,
+            index: index,
             json: json,
         }
     }
@@ -371,7 +384,7 @@ impl<'a> Primitive<'a> {
     /// Returns the primitive indices.
     pub fn indices(&self) -> Option<Indices> {
         self.json.indices.as_ref().map(|index| {
-            let accessor = self.gltf.accessors().nth(index.value()).unwrap();
+            let accessor = self.mesh.gltf.accessors().nth(index.value()).unwrap();
             Indices::from_accessor(accessor)
         })
     }
@@ -408,13 +421,13 @@ impl<'a> Primitive<'a> {
         self.json.attributes
             .iter()
             .find(|&(ref key, _)| key.as_ref().unwrap() == &semantic)
-            .map(|(_, index)| self.gltf.accessors().nth(index.value()).unwrap())
+            .map(|(_, index)| self.mesh.gltf.accessors().nth(index.value()).unwrap())
     }
 
     /// Extension specific data.
     pub fn extensions(&self) -> extensions::mesh::Primitive<'a> {
         extensions::mesh::Primitive::new(
-            self.gltf,
+            self.mesh,
             &self.json.extensions,
         )
     }
@@ -427,7 +440,7 @@ impl<'a> Primitive<'a> {
     /// The material to apply to this primitive when rendering
     pub fn material(&self) -> Option<material::Material<'a>> {
         self.json.material.as_ref().map(|index| {
-            material::Material::new(self.gltf, self.gltf.as_json().get(index))
+            self.mesh.gltf.materials().nth(index.value()).unwrap()
         })
     }
 
@@ -482,6 +495,6 @@ impl Iterator for TangentDisplacements {
 impl<'a> Iterator for Primitives<'a> {
     type Item = Primitive<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|json| Primitive::new(self.mesh.gltf, json))
+        self.iter.next().map(|(index, json)| Primitive::new(self.mesh, index, json))
     }
 }
