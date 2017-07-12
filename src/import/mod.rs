@@ -29,12 +29,13 @@ use futures::{BoxFuture, Future, Poll};
 use gltf::Gltf;
 use std::boxed::Box;
 use std::fmt::Debug;
+use std::path::Path;
 
 /// Contains the implementation of the binary glTF importer.
 // mod binary;
 
 /// Contains the implementation of the standard glTF importer.
-// mod standard;
+mod standard;
 
 /// Contains data structures for import configuration.
 pub mod config;
@@ -43,11 +44,11 @@ pub mod config;
 pub mod data;
 
 /// Contains the reference `Source` implementation, namely `FromPath`.
-// pub mod from_path;
+pub mod from_path;
 
 pub use self::config::Config;
 pub use self::data::Data;
-// pub use self::from_path::FromPath;
+pub use self::from_path::FromPath;
 
 /// A trait for representing sources of glTF data that may be read by an importer.
 pub trait Source: Debug + Send + Sync + 'static {
@@ -86,8 +87,11 @@ pub enum Error<S: Source> {
     MalformedJson(serde_json::error::Error),
     
     /// Data source error.
-    Source(S::Error),
+    Shared(future::SharedError<Error<S>>),
     
+    /// Data source error.
+    Source(S::Error),
+
     /// The .gltf data is invalid.
     Validation(Vec<(json::Path, validation::Error)>),
 }
@@ -104,10 +108,8 @@ impl<S: Source> Import<S> {
             .and_then(move |data| {
                 if data.starts_with(b"glTF") {
                     // binary::import(data, source, config)
-                    unimplemented!()
                 } else {
-                    // standard::import(data, source, config)
-                    future::ok(unimplemented!())
+                    standard::import(data, source, config)
                 }
             })
             .boxed();
@@ -121,15 +123,13 @@ impl<S: Source> Import<S> {
     }
 }
 
-/*
 impl Import<FromPath> {
     /// Constructs an `Import` with `FromPath` as its data source and default
     /// configuration parameters. 
     pub fn from_path<P: AsRef<Path>>(path: P) -> Self {
-        unimplemented!() // Import::custom(FromPath::new(path), Default::default())
+        Import::custom(FromPath::new(path), Default::default())
     }
 }
-*/
 
 impl<S: Source> Future for Import<S> {
     type Item = Gltf;
@@ -154,6 +154,12 @@ impl<S: Source> From<serde_json::Error> for Error<S> {
 impl<S: Source> From<std::io::Error> for Error<S> {
     fn from(err: std::io::Error) -> Error<S> {
         Error::Io(err)
+    }
+}
+
+impl<S: Source> From<future::SharedError<Error<S>>> for Error<S> {
+    fn from(err: future::SharedError<Error<S>>) -> Error<S> {
+        Error::Shared(err)
     }
 }
 
@@ -182,6 +188,7 @@ impl<S: Source> std::error::Error for Error<S> {
             &MalformedGlb(_) => "Malformed .glb file",
             &MalformedJson(_) => "Malformed .gltf / .glb JSON",
             &Source(_) => "Data source error",
+            &Shared(_) => "Shared error",
             &Validation(_) => "Asset failed validation tests",
         }
     }

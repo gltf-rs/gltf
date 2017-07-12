@@ -12,6 +12,7 @@ use std::ops;
 
 use futures::{BoxFuture, Future, Poll};
 use std::boxed::Box;
+use std::sync::Arc;
 
 /// Represents a contiguous subset of either `AsyncData` or concrete `Data`.
 #[derive(Clone, Copy, Debug)]
@@ -42,10 +43,10 @@ pub struct Async<S: import::Source> {
 /// Concrete and thread-safe glTF data.
 ///
 /// May represent `Buffer`, `View`, or `Image` data.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Data {
     /// The resolved data.
-    item: Box<[u8]>,
+    item: Arc<Box<[u8]>>,
 
     /// The byte region the data reads from.
     region: Region,
@@ -93,10 +94,10 @@ impl<S: import::Source> Future for Async<S> {
                 async.map(|item| {
                     match self.region {
                         Region::Full => {
-                            Data::full(item)
+                            Data::full(Arc::new(item))
                         },
                         Region::View { offset, len } => {
-                            Data::view(item, offset, len)
+                            Data::view(Arc::new(item), offset, len)
                         },
                     }
                 })
@@ -110,7 +111,7 @@ impl Data {
     /// # Notes
     ///
     /// This method is unstable and hence subject to change.
-    pub fn full(item: Box<[u8]>) -> Self {
+    pub fn full(item: Arc<Box<[u8]>>) -> Self {
         Data {
             item: item,
             region: Region::Full,
@@ -122,7 +123,7 @@ impl Data {
     /// # Notes
     ///
     /// This method is unstable and hence subject to change.
-    pub fn view(item: Box<[u8]>, offset: usize, len: usize) -> Self {
+    pub fn view(item: Arc<Box<[u8]>>, offset: usize, len: usize) -> Self {
         Data {
             item: item,
             region: Region::View { offset, len },

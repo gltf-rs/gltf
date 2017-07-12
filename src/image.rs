@@ -7,9 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use {extensions, import, json};
+use {extensions, json};
 
-use Gltf;
+use {Data, Gltf};
 
 /// Image data used to create a texture.
 pub struct Image<'a> {
@@ -54,8 +54,8 @@ impl<'a> Image<'a> {
     }
 
     /// Returns the image data.
-    pub fn data(&self) -> import::Data {
-        unimplemented!()
+    pub fn data(&self) -> Data {
+        self.gltf.image_data(self.index())
     }
 
     /// Extension specific data.

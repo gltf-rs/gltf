@@ -12,8 +12,6 @@ use json;
 use root;
 use std::{fmt, iter, ops, slice};
 
-use futures::future::SharedItem;
-
 use accessor::Accessor;
 use animation::Animation;
 use buffer::{Buffer, View};
@@ -28,10 +26,10 @@ use texture::{Sampler, Texture};
 /// A loaded glTF complete with its data.
 pub struct Gltf {
     /// The glTF buffer data.
-    buffers: Vec<SharedItem<import::Data>>,
+    buffer_data: Vec<import::Data>,
 
     /// The glTF image data.
-    images: Vec<import::Data>,
+    image_data: Vec<import::Data>,
 
     /// The root glTF struct (and also `Deref` target).
     root: root::Root,
@@ -171,32 +169,32 @@ impl Gltf {
     /// Constructor for a complete lazy-loaded glTF asset.
     pub fn new(
         root: root::Root,
-        buffers: Vec<SharedItem<import::Data>>,
-        images: Vec<import::Data>,
+        buffer_data: Vec<import::Data>,
+        image_data: Vec<import::Data>,
     ) -> Self {
         Self {
-            buffers: buffers,
-            images: images,
+            buffer_data: buffer_data,
+            image_data: image_data,
             root: root,
         }
     }
 
-    /// Returns a shared `Future` that drives the lazy loading of buffer data.
+    /// Returns preloaded buffer data.
     ///
     /// # Panics
     ///
-    /// * If `index` is out of range.
-    fn buffer_data<'a>(&'a self, index: usize) -> &'a import::Data {
-        &self.buffers[index]
+    /// Panics if the index is out of range.
+    pub fn buffer_data(&self, index: usize) -> import::Data {
+        self.buffer_data[index].clone()
     }
 
-    /// Returns a shared `Future` that drives the lazy loading of image data.
+    /// Returns preloaded image data. 
     ///
     /// # Panics
     ///
-    /// * If `index` is out of range.
-    fn image_data<'a>(&'a self, index: usize) -> &'a import::Data {
-        &self.images[index]
+    /// Panics if the index is out of range.
+    pub fn image_data(&self, index: usize) -> import::Data {
+        self.image_data[index].clone()
     }
 
     /// Returns an `Iterator` that visits the accessors of the glTF asset.

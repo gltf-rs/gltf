@@ -7,13 +7,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use {extensions, import, json};
+use {extensions, json};
 
-use Gltf;
+use {Data, Gltf};
 
 pub use json::buffer::Target;
 
-///  A buffer points to binary data representing geometry, animations, or skins.
+/// A buffer points to binary data representing geometry, animations, or skins.
 pub struct Buffer<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
@@ -25,7 +25,7 @@ pub struct Buffer<'a> {
     json: &'a json::buffer::Buffer,
 }
 
-///  A view into a buffer generally representing a subset of the buffer.
+/// A view into a buffer generally representing a subset of the buffer.
 pub struct View<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
@@ -67,8 +67,8 @@ impl<'a> Buffer<'a> {
     }
 
     /// The buffer data.
-    pub fn data(&self) -> import::Data {
-        unimplemented!()
+    pub fn data(&self) -> Data {
+        self.gltf.buffer_data(self.index())
     }
 
     /// Optional user-defined name for this object.
@@ -137,7 +137,7 @@ impl<'a> View<'a> {
     }
 
     /// Returns the buffer view data.
-    pub fn data(&self) -> import::Data {
+    pub fn data(&self) -> Data {
         self.buffer().data().subview(self.offset(), self.length())
     }
 
