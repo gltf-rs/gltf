@@ -1,0 +1,20 @@
+[package]
+name = "gltf-derive"
+version = "0.1.0"
+authors = ["alteous <alteous@outlook.com>"]
+description = "Internal macros for the gltf crate"
+repository = "https://github.com/alteous/gltf"
+readme = "../README.md"
+license = "MIT/Apache-2.0"
+include = [
+    "**/.rs",
+    "Cargo.toml",
+]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+inflections = "1.1"
+quote = "0.3"
+syn = "0.11"
