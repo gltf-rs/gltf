@@ -30,8 +30,9 @@ serde_derive = "1.0"
 serde_json = "1.0"
 
 [dependencies.gltf-derive]
-version = "0.1"
 path = "./gltf-derive"
+version = "0.1.0"
+optional = true
 
 [features]
 default = []
