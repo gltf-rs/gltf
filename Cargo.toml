@@ -24,11 +24,14 @@ futures-cpupool = "0.1"
 [dependencies]
 base64 = "0.6"
 futures = "0.1"
-gltf-derive = { path = "./gltf-derive" }
 image = "0.14"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
+
+[dependencies.gltf-derive]
+version = "0.1"
+path = "./gltf-derive"
 
 [features]
 default = []
