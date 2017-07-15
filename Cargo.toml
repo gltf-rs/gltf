@@ -2,9 +2,10 @@
 name = "gltf"
 version = "0.6.0"
 authors = ["alteous <alteous@outlook.com>"]
-description = "glTF asset loader"
+description = "glTF 2.0 loader"
 documentation = "https://docs.rs/gltf"
 repository = "https://github.com/alteous/gltf"
+homepage = "https://github.com/alteous/gltf"
 readme = "README.md"
 keywords = ["glTF", "3D", "asset", "model", "scene"]
 license = "MIT/Apache-2.0"
@@ -13,6 +14,12 @@ include = [
     "**/*.rs",
     "Cargo.toml",
 ]
+
+[badges]
+travis-ci = { repository = "alteous/gltf" }
+
+[dev-dependencies]
+futures-cpupool = "0.1"
 
 [dependencies]
 base64 = "0.6"

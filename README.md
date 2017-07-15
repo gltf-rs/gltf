@@ -42,18 +42,18 @@ fn main() {
 By default, `gltf` ignores all `extras` and `names` included with glTF assets. You can negate this by enabling the `extras` and `names` features, respectively.
 
 ```toml
-[dependencies]
-gltf = { version = "0.6", features = ["extras"] }
+[dependencies.gltf]
+version = "0.6"
+features = ["extras"]
 ```
 
 ### Examples
 
 #### gltf-display
 
-If you want to see how the structure of the glTF file is deserialized, you can
-use the example here to poke at it.
+Demonstrates how the glTF JSON is deserialized.
 
 ```sh
-cargo run --example gltf-display glTF-Sample-Models/2.0/Box/glTF/Box.gltf
+cargo run --example gltf-display path/to/asset.gltf
 ```
 
