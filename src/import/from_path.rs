@@ -57,22 +57,22 @@ fn read_to_end(path: PathBuf) -> BoxFuture<Box<[u8]>, Error> {
     Box::new(future)
 }
 
-fn decode_base64(stream: Vec<u8>) -> BoxFuture<Box<[u8]>, Error> {
-    future::lazy(move || {
+fn decode_base64(stream: Vec<u8>) -> Box<Future<Item = Box<[u8]>, Error = Error>> {
+    Box::new(future::lazy(move || {
         let stream = stream;
         let decoded = base64::decode(&stream)?;
         Ok(decoded.into_boxed_slice())
-    }).boxed()
+    }))
 }
 
 impl import::Source for FromPath {
     type Error = Error;
     
-    fn source_gltf(&self) -> BoxFuture<Box<[u8]>, Self::Error> {
+    fn source_gltf(&self) -> Box<Future<Item = Box<[u8]>, Error = Self::Error>> {
         read_to_end(self.path.to_path_buf())
     }
 
-    fn source_external_data(&self, uri: &str) -> BoxFuture<Box<[u8]>, Self::Error> {
+    fn source_external_data(&self, uri: &str) -> Box<Future<Item = Box<[u8]>, Error = Self::Error>> {
         let data_scheme = "data:application/octet-stream;base64,";
         if uri.starts_with(data_scheme) {
             let stream = uri[data_scheme.len()..].as_bytes().to_vec();

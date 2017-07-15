@@ -10,7 +10,7 @@
 use import;
 use std::ops;
 
-use futures::{BoxFuture, Future, Poll};
+use futures::{Future, Poll};
 use std::boxed::Box;
 use std::sync::Arc;
 
@@ -34,7 +34,7 @@ enum Region {
 pub struct Async<S: import::Source> {
     /// A `Future` that resolves to either a `SharedItem<Box<[u8]>>` or else an
     /// `AsyncError`.
-    future: BoxFuture<Box<[u8]>, import::Error<S>>,
+    future: Box<Future<Item = Box<[u8]>, Error = import::Error<S>>>,
 
     /// The subset the data that is required once available.
     region: Region,
@@ -54,21 +54,21 @@ pub struct Data {
 
 impl<S: import::Source> Async<S> {
     /// Constructs `AsyncData` that uses all data from the given future. 
-    pub fn full<F>(future: F) -> Self
-        where F: Future<Item = Box<[u8]>, Error = S::Error> + Send + 'static
-    {
+    pub fn full(future: Box<Future<Item = Box<[u8]>, Error = S::Error>>) -> Self {
         Async {
-            future: future.map_err(import::Error::Source).boxed(),
+            future: Box::new(future.map_err(import::Error::Source)),
             region: Region::Full,
         }
     }
 
     /// Constructs `AsyncData` that uses a subset of the data from the given future.
-    pub fn view<F>(future: F, offset: usize, len: usize) -> Self
-    where F: Future<Item = Box<[u8]>, Error = S::Error> + Send + 'static
-    {
+    pub fn view(
+        future: Box<Future<Item = Box<[u8]>, Error = S::Error>>,
+        offset: usize,
+        len: usize,
+    ) -> Self {
         Async {
-            future: future.map_err(import::Error::Source).boxed(),
+            future: Box::new(future.map_err(import::Error::Source)),
             region: Region::View { offset, len },
         }
     }

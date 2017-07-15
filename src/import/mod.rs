@@ -24,7 +24,7 @@ use serde_json;
 use std::{self, fmt};
 
 use image_crate::ImageError;
-use futures::{BoxFuture, Future, Poll};
+use futures::{Future, Poll};
 use gltf::Gltf;
 use std::boxed::Box;
 use std::fmt::Debug;
@@ -50,15 +50,15 @@ pub use self::data::Data;
 pub use self::from_path::FromPath;
 
 /// A trait for representing sources of glTF data that may be read by an importer.
-pub trait Source: Debug + Send + Sync + 'static {
+pub trait Source: Debug + Sized + 'static {
     /// User error type.
-    type Error: std::error::Error + Send + Sync;
+    type Error: std::error::Error;
 
     /// Read the contents of a .gltf or .glb file.
-    fn source_gltf(&self) -> BoxFuture<Box<[u8]>, Self::Error>;
+    fn source_gltf(&self) -> Box<Future<Item = Box<[u8]>, Error = Self::Error>>;
 
     /// Read the contents of external data.
-    fn source_external_data(&self, uri: &str) -> BoxFuture<Box<[u8]>, Self::Error>;
+    fn source_external_data(&self, uri: &str) -> Box<Future<Item = Box<[u8]>, Error = Self::Error>>;
 }
 
 /// Error encountered when importing a glTF 2.0 asset.
@@ -96,7 +96,7 @@ pub enum Error<S: Source> {
 }
 
 /// A `Future` that drives the importation of glTF.
-pub struct Import<S: Source>(BoxFuture<Gltf, Error<S>>);
+pub struct Import<S: Source>(Box<Future<Item = Gltf, Error = Error<S>>>);
 
 impl<S: Source> Import<S> {
     /// Constructs an `Import` from a custom `Source` and `Config` arguments.
@@ -110,9 +110,8 @@ impl<S: Source> Import<S> {
                 } else {
                     standard::import(data, source, config)
                 }
-            })
-            .boxed();
-        Import(future)
+            });
+        Import(Box::new(future))
     }
 
     /// Drives the import process to completion, blocking the current thread until
