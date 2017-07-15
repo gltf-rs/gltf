@@ -1,3 +1,4 @@
+
 // Copyright 2017 The gltf Library Developers
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -8,25 +9,16 @@
 
 extern crate gltf;
 
-use gltf::{v1, v2};
-
 fn main() {
-    let path = std::env::args().nth(1).unwrap();
-    match v1::import(&path) {
-        Ok(root) => {
-            println!("glTF version 1.0");
-            println!("{:#?}", root);
+    if let Some(path) = std::env::args().nth(1) {
+        let source = gltf::import::FromPath::new(&path);
+        let config = Default::default();
+        let import = gltf::Import::custom(source, config);
+        match import.sync() {
+            Ok(gltf) => println!("{:#?}", gltf),
+            Err(err) => println!("Invalid glTF ({:?})", err),
         }
-        Err(_) => {
-            match v2::import(&path) {
-                Ok(root) => {
-                    println!("glTF version 2.0");
-                    println!("{:#?}", root);
-                }
-                Err(err) => {
-                    println!("Error: {:#?}", err);
-                }
-            }
-        }
+    } else {
+        println!("usage: gltf-display <PATH>");
     }
 }

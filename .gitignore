@@ -1,3 +1,5 @@
 /target/
 Cargo.lock
+/gltf-derive/target/
+/gltf-derive/Cargo.lock
 *.bk

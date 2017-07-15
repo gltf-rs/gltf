@@ -1,19 +1,31 @@
 [package]
 name = "gltf"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["alteous <alteous@outlook.com>"]
-description = "glTF asset loader"
+description = "glTF 2.0 loader"
 documentation = "https://docs.rs/gltf"
 repository = "https://github.com/alteous/gltf"
+homepage = "https://github.com/alteous/gltf"
 readme = "README.md"
 keywords = ["glTF", "3D", "asset", "model", "scene"]
 license = "MIT/Apache-2.0"
 include = [
+    "./gltf-derive",
     "**/*.rs",
     "Cargo.toml",
 ]
 
+[badges]
+travis-ci = { repository = "alteous/gltf" }
+
+[dev-dependencies]
+futures-cpupool = "0.1"
+
 [dependencies]
+base64 = "0.6"
+futures = "0.1"
+gltf-derive = { path = "./gltf-derive" }
+image = "0.14"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
@@ -21,9 +33,9 @@ serde_json = "1.0"
 [features]
 default = []
 extras = []
-KHR_binary_glTF = []
+names = []
 
 [[example]]
-name = "gltf_display"
+name = "gltf-display"
 path = "examples/display/main.rs"
 

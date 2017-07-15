@@ -18,70 +18,42 @@
 </p>
 <hr>
 
-This crate is intended to load [glTF](https://www.khronos.org/gltf), a file format designed for the efficient transmission of 3D assets.
+This crate is intended to load [glTF 2.0](https://www.khronos.org/gltf), a file format designed for the efficient transmission of 3D assets.
 
 `rustc` version 1.15 or above is required.
 
 ### Usage
 
-Add `gltf` to the dependencies section of `Cargo.toml`.
-
-```toml
-[dependencies]
-gltf = "0.5"
-```
-Import some glTF 1.0 / 2.0.
+#### Import some glTF 2.0
 
 ```rust
 extern crate gltf;
 
 fn main() {
-    // Import some glTF 1.0
-    match gltf::v1::import("Example-1.0.gltf") {
-        Ok(root) => println!("glTF 1.0: {:#?}", root),
-        Err(err) => println!("{:?}", err),
-    }
-
-    // Import some glTF 2.0
-    match gltf::v2::import("Example-2.0.gltf") {
-        Ok(root) => println!("glTF 2.0: {:#?}", root),
-        Err(err) => println!("{:?}", err),
+    match gltf::Import::from_path("path/to/asset.gltf").sync() {
+        Ok(gltf) => println!("{:#?}", gltf),
+        Err(err) => println!("Invalid glTF ({:?})", err),
     }
 }
 ```
 
-### Extensions
+### Extras and Names
 
-All glTF extensions are opt-in and are enabled by specifying [features](http://doc.crates.io/specifying-dependencies.html#choosing-features) in your crate's Cargo.toml manifest file.
-
-Currently, only the `KHR_binary_glTF` extension for glTF 1.0 is supported by the crate.
-
-#### Examples
-
-Enabling the `KHR_binary_glTF` extension.
+By default, `gltf` ignores all `extras` and `names` included with glTF assets. You can negate this by enabling the `extras` and `names` features, respectively.
 
 ```toml
-[dependencies]
-gltf = { version = "0.5", features = ["KHR_binary_glTF"] }
-```
-
-### Extras
-
-By default, `gltf` ignores all `extras` included with glTF assets. You can negate this by enabling the `extras` feature.
-
-```toml
-[dependencies]
-gltf = { version = "0.5", features = ["extras"] }
+[dependencies.gltf]
+version = "0.6"
+features = ["extras"]
 ```
 
 ### Examples
 
-#### gltf_display
+#### gltf-display
 
-If you want to see how the structure of the glTF file is deserialized, you can
-use the example here to poke at it.
+Demonstrates how the glTF JSON is deserialized.
 
 ```sh
-cargo run --example gltf_display Example.gltf
+cargo run --example gltf-display path/to/asset.gltf
 ```
 
