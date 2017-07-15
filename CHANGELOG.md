@@ -1,5 +1,20 @@
 ### Changelog
 
+0.6.0 (15/07/17)
+
+ * Added the wrapper interface.
+ * Added the `Source` trait, which allows for customizing the import process.
+ * Added the reference `Source` trait implementation, namely `FromPath`, that can
+   read from the file system and decode embedded base64 data URIs.
+ * Added support for binary glTF.
+ * Added the `Validate` trait, which validates glTF JSON metadata.
+ * Added the `Import` struct which drives the asynchronous loading of glTF data.
+ * Implemented "poor man's zero-copy deserialization".
+ * Moved all extension data structures into a new `extensions` module.
+ * Removed the `v1` module.
+ * Made the `Get` trait behave the same as the `TryGet` trait.
+ * Removed the `TryGet` trait.
+
 0.5.0 (10/06/17)
 
  * Added the `v2` module, containing all glTF 2.0 data structures.
