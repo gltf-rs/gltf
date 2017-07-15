@@ -1,5 +1,9 @@
 ### Changelog
 
+0.6.1 (15/07/17)
+
+ * Removed the Send and Sync requirements from the Source trait
+
 0.6.0 (15/07/17)
 
  * Added the wrapper interface.
