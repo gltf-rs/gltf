@@ -11,7 +11,7 @@ use futures::{self, future};
 use import::{self, config, data};
 use json;
 
-use futures::{BoxFuture, Future, Poll};
+use futures::{Future, Poll};
 use image_crate::{load_from_memory, load_from_memory_with_format};
 use image_crate::ImageFormat as Format;
 use image_crate::ImageFormat::{JPEG as Jpeg, PNG as Png};
@@ -234,14 +234,14 @@ fn source_buffers<S: import::Source>(
     let mut iter = json.buffers.iter();
     let mut buffers = vec![];
     if let Some(data) = blob {
-        let future = future::ok(data).boxed();
+        let future = Box::new(future::ok(data));
         // Skip the first buffer entry.
         let _ = iter.next();
         buffers.push(data::Async::full(future));
     }
     for entry in iter {
         let uri = entry.uri.as_ref().unwrap();
-        let future = source.source_external_data(uri).boxed();
+        let future = Box::new(source.source_external_data(uri));
         buffers.push(data::Async::full(future));
     }
     buffers
@@ -260,7 +260,7 @@ fn source_images<S: import::Source>(
                 _ => unreachable!(),
             });
             if let Some(uri) = entry.uri.as_ref() {
-                let future = source.source_external_data(uri).boxed();
+                let future = Box::new(source.source_external_data(uri));
                 AsyncImage::Owned {
                     data: data::Async::full(future),
                     format: format,
@@ -309,9 +309,9 @@ fn validate<S: Source>(
     json: json::Root,
     strategy: config::ValidationStrategy, 
     has_blob: bool,
-) -> BoxFuture<Root, import::Error<S>> {
+) -> Box<Future<Item = Root, Error = import::Error<S>>> {
     use validation::{Error as Reason, Validate};
-    future::lazy(move || {
+    Box::new(future::lazy(move || {
         let mut errs = vec![];
         match strategy {
             config::ValidationStrategy::Skip => {
@@ -361,7 +361,7 @@ fn validate<S: Source>(
         } else {
             Err(import::Error::Validation(errs))
         }
-    }).boxed()
+    }))
 }
 
 /// Imports some glTF from the given data source.
@@ -369,8 +369,8 @@ pub fn import<S: import::Source>(
     data: Box<[u8]>,
     source: S,
     config: Config,
-) -> BoxFuture<Gltf, import::Error<S>> {
-    future::lazy(move || {
+) -> Box<Future<Item = Gltf, Error = import::Error<S>>> {
+    Box::new(future::lazy(move || {
         let glb = Glb(data);
         let (_, json_chunk, blob_chunk) = glb.split()?;
         let begin = json_chunk.offset;
@@ -403,7 +403,6 @@ pub fn import<S: import::Source>(
         })
         .and_then(|(root, buffers, images)| {
             Ok(Gltf::new(root, buffers, images))
-        })
-        .boxed()
+        }))
 }
 

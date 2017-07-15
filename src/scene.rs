@@ -85,14 +85,14 @@ impl<'a> Node<'a> {
         self.json
     }
 
-    /// The index of the camera referenced by this node.
+    /// The camera referenced by this node.
     pub fn camera(&self) -> Option<camera::Camera> {
         self.json.camera.as_ref().map(|index| {
             self.gltf.cameras().nth(index.value()).unwrap()
         })
     }
 
-    /// The indices of this node's children.
+    /// Returns an `Iterator` that visits the node's children.
     pub fn children(&'a self) -> Children<'a> {
         Children {
             parent: self,
@@ -118,7 +118,7 @@ impl<'a> Node<'a> {
         self.json.matrix
     }
 
-    /// The index of the mesh in this node.
+    /// The mesh in this node.
     pub fn mesh(&self) -> Option<mesh::Mesh<'a>> {
         self.json.mesh.as_ref().map(|index| {
             self.gltf.meshes().nth(index.value()).unwrap()
@@ -147,7 +147,7 @@ impl<'a> Node<'a> {
         self.json.translation
     }
 
-    /// The index of the skin referenced by this node.
+    /// The skin referenced by this node.
     pub fn skin(&self) -> Option<skin::Skin<'a>> {
         self.json.skin.as_ref().map(|index| {
             self.gltf.skins().nth(index.value()).unwrap()
