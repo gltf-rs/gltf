@@ -16,14 +16,7 @@ use validation::{Error, Validate};
 /// Helper trait for retrieving top-level objects by a universal identifier.
 pub trait Get<T> {
     /// Retrieves a single value at the given index.
-    fn get(&self, id: &Index<T>) -> &T;
-}
-
-/// Helper trait for attempting to retrieve top-level objects by a universal
-/// identifier.
-pub trait TryGet<T> {
-    /// Attempts to retrieve a single value at the given index.
-    fn try_get(&self, id: &Index<T>) -> Result<&T, ()>;
+    fn get(&self, id: &Index<T>) -> Option<&T>;
 }
 
 /// Represents an offset into an array of type `T` owned by the root glTF object.
@@ -164,11 +157,6 @@ impl Root {
         &self.cameras
     }
 
-    /// Returns the default scene.
-    pub fn default_scene(&self) -> Option<&scene::Scene> {
-        self.scene.as_ref().map(|s| self.get(s))
-    }
-
     /// Returns the extensions referenced in this .gltf file.
     pub fn extensions_used(&self) -> &[String] {
         &self.extensions_used
@@ -180,20 +168,10 @@ impl Root {
     }
 
     /// Returns a single item from the root object.
-    pub fn get<T>(&self, index: &Index<T>) -> &T
+    pub fn get<T>(&self, index: &Index<T>) -> Option<&T>
         where Self: Get<T>
     {
         (self as &Get<T>).get(index)
-    }
-
-    /// Returns a single item from the root object if the index is in range.
-    // N.B. this is hidden from the docs because it's only necessary for
-    // validation during `import()`.
-    #[doc(hidden)]
-    pub fn try_get<T>(&self, index: &Index<T>) -> Result<&T, ()>
-        where Self: TryGet<T>
-    {
-        (self as &TryGet<T>).try_get(index)
     }
 
     /// Returns the image at the given index.
@@ -332,12 +310,12 @@ impl<T> fmt::Display for Index<T> {
 }
 
 impl<T: Validate> Validate for Index<T>
-    where Root: TryGet<T>
+    where Root: Get<T>
 {
     fn validate_minimally<P, R>(&self, root: &Root, path: P, mut report: &mut R)
         where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
-        if root.try_get(self).is_err() {
+        if root.get(self).is_none() {
             report(&path, Error::IndexOutOfBounds);
         }
     }
@@ -346,19 +324,8 @@ impl<T: Validate> Validate for Index<T>
 macro_rules! impl_get {
     ($ty:ty, $field:ident) => {
         impl<'a> Get<$ty> for Root {
-            fn get(&self, index: &Index<$ty>) -> &$ty {
-                &self.$field[index.value() as usize]
-            }
-        }
-    }
-}
-
-macro_rules! impl_try_get {
-    ($ty:ty, $field:ident) => {
-        #[doc(hidden)]
-        impl<'a> TryGet<$ty> for Root {
-            fn try_get(&self, index: &Index<$ty>) -> Result<&$ty, ()> {
-                self.$field.get(index.value() as usize).ok_or(())
+            fn get(&self, index: &Index<$ty>) -> Option<&$ty> {
+                self.$field.get(index.value())
             }
         }
     }
@@ -377,17 +344,3 @@ impl_get!(texture::Sampler, samplers);
 impl_get!(scene::Scene, scenes);
 impl_get!(skin::Skin, skins);
 impl_get!(texture::Texture, textures);
-
-impl_try_get!(accessor::Accessor, accessors);
-impl_try_get!(animation::Animation, animations);
-impl_try_get!(buffer::Buffer, buffers);
-impl_try_get!(buffer::View, buffer_views);
-impl_try_get!(camera::Camera, cameras);
-impl_try_get!(image::Image, images);
-impl_try_get!(material::Material, materials);
-impl_try_get!(mesh::Mesh, meshes);
-impl_try_get!(scene::Node, nodes);
-impl_try_get!(texture::Sampler, samplers);
-impl_try_get!(scene::Scene, scenes);
-impl_try_get!(skin::Skin, skins);
-impl_try_get!(texture::Texture, textures);

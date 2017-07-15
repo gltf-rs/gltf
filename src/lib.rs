@@ -10,6 +10,81 @@
 #![deny(missing_docs)]
 
 //! glTF 2.0 loader
+//!
+//! This crate is intended to load [glTF 2.0], a file format designed for the
+//! efficient runtime transmission of 3D scenes. The crate aims to provide
+//! rustic utilities that make working with glTF simple and intuitive.
+//!
+//! [glTF 2.0]: https://www.khronos.org/gltf
+//!
+//! ## Installation
+//!
+//! Add `gltf` version 0.6 to your `Cargo.toml`.
+//!
+//! ```toml
+//! [dependencies.gltf]
+//! version = "0.6"
+//! ```
+//!
+//! ## Examples
+//!
+//! ### Loading glTF from the file system
+//!
+//! The crate provides a `from_path` method whereby one can import glTF from the
+//! system.
+//!
+//! ```
+//! extern crate gltf;
+//!
+//! fn main() {
+//!     # #[allow(unused_variables)]
+//!     let path = "path/to/asset.gltf";
+//!     # let path = "./glTF-Sample-Models/2.0/Box/glTF/Box.gltf";
+//!     // This creates a `Future` that drives the loading
+//!     // of glTF and all of its data.
+//!     let import = gltf::Import::from_path(path);
+//!     // The simpliest way of working with futures is to
+//!     // block the thread until the glTF is ready.
+//!     match import.sync() {
+//!         Ok(gltf) => println!("{:#?}", gltf),
+//!         Err(err) => println!("error: {:?}", err),
+//!     }
+//! }
+//! ```
+//!
+//! An [`Import`] resolves to [`Gltf`], a data structure that provides helpful utilities
+//! such as iterators for working with glTF.
+//!
+//! [`Import`]: import/struct.Import.html
+//! [`Gltf`]: gltf/struct.Gltf.html
+//!
+//! ### Walking the node hierarchy
+//!
+//! Below demonstates visiting the root [`Node`]s of every [`Scene`], printing the
+//! number of children each node has.
+//!
+//! [`Node`]: scene/struct.Node.html
+//! [`Scene`]: scene/struct.Scene.html
+//! ```
+//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! # let path = "./glTF-Sample-Models/2.0/Box/glTF/Box.gltf";
+//! let gltf = gltf::Import::from_path(path).sync()?;
+//! for scene in gltf.scenes() {
+//!     for node in scene.nodes() {
+//!         // Do something with this node
+//!         println!(
+//!             "Node {} has {} children",
+//!             node.index(),
+//!             node.children().count(),
+//!         );
+//!     }
+//! }
+//! # Ok(())
+//! # }
+//! # fn main() {
+//! #    let _ = run().expect("No runtime errors");
+//! # }
+//! ```
 
 extern crate base64;
 extern crate futures;

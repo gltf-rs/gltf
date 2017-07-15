@@ -8,15 +8,14 @@
 // except according to those terms.
 
 //!
-//! glTF JSON, buffers, and images often come from a wide range of external sources,
-//! so customization is an important design goal of the import module. The `Source`
-//! trait is provided to facilitate the user customization of the importer data
-//! loading process.
+//! glTF JSON, buffers, and images may come from a range of external sources, so
+//! customization is an important design goal of the import module. The `Source`
+//! trait is provided to facilitate customization of the data loading process.
 //!
 //! For convenience, the library contains one implementation of the `Source` trait,
-//! namely `FromPath`, which allows for reading from the file system.
-//!
-//! This implementation may be used as reference.
+//! namely `FromPath`, which allows loading from file system and also from embedded
+//! base64 encoded data. This implementation may be used as reference for other
+//! schemes such as `http`.
 
 use futures::future;
 use json;
@@ -116,8 +115,8 @@ impl<S: Source> Import<S> {
         Import(future)
     }
 
-    /// Drives the import process to completion. Blocks the current thread until
-    /// the process is complete.
+    /// Drives the import process to completion, blocking the current thread until
+    /// complete.
     pub fn sync(self) -> Result<Gltf, Error<S>> {
         self.wait()
     }
