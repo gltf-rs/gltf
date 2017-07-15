@@ -10,7 +10,6 @@ readme = "README.md"
 keywords = ["glTF", "3D", "asset", "model", "scene"]
 license = "MIT/Apache-2.0"
 include = [
-    "./gltf-derive",
     "**/*.rs",
     "Cargo.toml",
 ]
@@ -30,7 +29,7 @@ serde_derive = "1.0"
 serde_json = "1.0"
 
 [dependencies.gltf-derive]
-path = "./gltf-derive"
+path = "src/derive"
 version = "0.1.0"
 optional = true
 
