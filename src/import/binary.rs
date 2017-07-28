@@ -13,7 +13,6 @@ use json;
 
 use futures::{Future, Poll};
 use image_crate::{load_from_memory, load_from_memory_with_format};
-use image_crate::GenericImage;
 use image_crate::ImageFormat as Format;
 use image_crate::ImageFormat::{JPEG as Jpeg, PNG as Png};
 use image_crate::ImageResult;
