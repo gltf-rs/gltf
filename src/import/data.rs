@@ -14,6 +14,21 @@ use futures::{Future, Poll};
 use std::boxed::Box;
 use std::sync::Arc;
 
+pub use image_crate::DynamicImage;
+
+/// Represents decoded image data.
+#[derive(Clone, Debug)]
+pub struct DecodedImage {
+    /// The image width.
+    width: u32,
+
+    /// The image height.
+    height: u32,
+
+    /// The raw pixel data.
+    pixels: Data,
+}
+
 /// Represents a contiguous subset of either `AsyncData` or concrete `Data`.
 #[derive(Clone, Copy, Debug)]
 enum Region {
@@ -32,15 +47,14 @@ enum Region {
 
 /// A `Future` that drives the acquisition of glTF data.
 pub struct Async<S: import::Source> {
-    /// A `Future` that resolves to either a `SharedItem<Box<[u8]>>` or else an
-    /// `AsyncError`.
+    /// A `Future` that resolves to a `Box<[u8]>`.
     future: Box<Future<Item = Box<[u8]>, Error = import::Error<S>>>,
 
     /// The subset the data that is required once available.
     region: Region,
 }
 
-/// Concrete and thread-safe glTF data.
+/// Concrete glTF data.
 ///
 /// May represent `Buffer`, `View`, or `Image` data.
 #[derive(Clone, Debug)]
@@ -93,12 +107,8 @@ impl<S: import::Source> Future for Async<S> {
             .map(|async| {
                 async.map(|item| {
                     match self.region {
-                        Region::Full => {
-                            Data::full(Arc::new(item))
-                        },
-                        Region::View { offset, len } => {
-                            Data::view(Arc::new(item), offset, len)
-                        },
+                        Region::Full => Data::full(item),
+                        Region::View { offset, len } => Data::view(item, offset, len),
                     }
                 })
             })
@@ -111,21 +121,21 @@ impl Data {
     /// # Notes
     ///
     /// This method is unstable and hence subject to change.
-    pub fn full(item: Arc<Box<[u8]>>) -> Self {
+    pub fn full(item: Box<[u8]>) -> Self {
         Data {
-            item: item,
+            item: Arc::new(item),
             region: Region::Full,
         }
     }
 
-    /// Constructs a concrete and thread-safe subset of glTF data.
+    /// Constructs a subset of concrete glTF data.
     ///
     /// # Notes
     ///
     /// This method is unstable and hence subject to change.
-    pub fn view(item: Arc<Box<[u8]>>, offset: usize, len: usize) -> Self {
+    pub fn view(item: Box<[u8]>, offset: usize, len: usize) -> Self {
         Data {
-            item: item,
+            item: Arc::new(item),
             region: Region::View { offset, len },
         }
     }

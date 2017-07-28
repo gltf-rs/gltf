@@ -19,10 +19,9 @@ use image_crate::ImageFormat::{JPEG as Jpeg, PNG as Png};
 use root::Root;
 use std::boxed::Box;
 use std::io::Cursor;
-use std::sync::Arc;
 use validation::Validate;
 
-use {Data, Gltf};
+use {Data, DynamicImage, Gltf};
 
 enum AsyncImage<S: import::Source> {
     /// Image data is borrowed from a buffer.
@@ -51,12 +50,12 @@ enum AsyncImage<S: import::Source> {
 }
 
 impl<S: import::Source> Future for AsyncImage<S> {
-    type Item = Image;
+    type Item = EncodedImage;
     type Error = import::Error<S>;
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         match self {
             &mut AsyncImage::Borrowed { index, offset, len, format } => {
-                Ok(futures::Async::Ready(Image::Borrowed {
+                Ok(futures::Async::Ready(EncodedImage::Borrowed {
                     index: index,
                     offset: offset,
                     len: len,
@@ -67,7 +66,7 @@ impl<S: import::Source> Future for AsyncImage<S> {
                 data.poll()
                     .map(|async| {
                         async.map(|data| {
-                            Image::Owned {
+                            EncodedImage::Owned {
                                 data: data,
                                 format: format,
                             }
@@ -79,7 +78,7 @@ impl<S: import::Source> Future for AsyncImage<S> {
 }
 
 /// A resolved `AsyncImage`.
-enum Image {
+enum EncodedImage {
     /// Image data is borrowed from a buffer.
     Borrowed {
         /// The buffer index.
@@ -154,25 +153,23 @@ fn source_images<S: import::Source>(
 
 fn decode_images(
     buffers: &[Data],
-    images: Vec<Image>,
-) -> ImageResult<Vec<Data>> {
+    images: Vec<EncodedImage>,
+) -> ImageResult<Vec<DynamicImage>> {
     images
         .iter()
         .map(|entry| {
             match entry {
-                &Image::Borrowed { index, offset, len, format } => {
+                &EncodedImage::Borrowed { index, offset, len, format } => {
                     let data = &buffers[index][offset..(offset + len)];
                     load_from_memory_with_format(data, format)
                 },
-                &Image::Owned { ref data, format: Some(format) } => {
+                &EncodedImage::Owned { ref data, format: Some(format) } => {
                     load_from_memory_with_format(data, format)
                 },
-                &Image::Owned { ref data, format: None } => {
+                &EncodedImage::Owned { ref data, format: None } => {
                     load_from_memory(data)
                 },
-            }.map(|decoded| {
-                Data::full(Arc::new(decoded.raw_pixels().into_boxed_slice()))
-            })
+            }
         })
         .collect()
 }

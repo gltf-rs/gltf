@@ -1,5 +1,9 @@
 ### Changelog
 
+0.7.0 (28/07/17)
+
+ * Image::data now returns a `DynamicImage`, allowing for image post-processing.
+
 0.6.1 (15/07/17)
 
  * Removed the Send and Sync requirements from the Source trait

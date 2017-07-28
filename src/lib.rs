@@ -145,4 +145,4 @@ pub mod texture;
 pub mod validation;
 
 pub use self::gltf::Gltf;
-pub use self::import::{Data, Import};
+pub use self::import::{Data, DynamicImage, Import};

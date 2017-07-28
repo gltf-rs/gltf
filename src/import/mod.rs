@@ -46,7 +46,7 @@ pub mod data;
 pub mod from_path;
 
 pub use self::config::Config;
-pub use self::data::Data;
+pub use self::data::{Data, DynamicImage};
 pub use self::from_path::FromPath;
 
 /// A trait for representing sources of glTF data that may be read by an importer.
