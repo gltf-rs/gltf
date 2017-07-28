@@ -12,6 +12,9 @@ use std::ops;
 
 use futures::{Future, Poll};
 use std::boxed::Box;
+use std::sync::Arc;
+
+pub use image_crate::DynamicImage;
 
 /// Represents decoded image data.
 #[derive(Clone, Debug)]
@@ -57,7 +60,7 @@ pub struct Async<S: import::Source> {
 #[derive(Clone, Debug)]
 pub struct Data {
     /// The resolved data.
-    item: Box<[u8]>,
+    item: Arc<Box<[u8]>>,
 
     /// The byte region the data reads from.
     region: Region,
@@ -113,14 +116,14 @@ impl<S: import::Source> Future for Async<S> {
 }
 
 impl Data {
-    /// Constructs concrete glTF data.
+    /// Constructs concrete and thread-safe glTF data.
     ///
     /// # Notes
     ///
     /// This method is unstable and hence subject to change.
     pub fn full(item: Box<[u8]>) -> Self {
         Data {
-            item: item,
+            item: Arc::new(item),
             region: Region::Full,
         }
     }
@@ -132,7 +135,7 @@ impl Data {
     /// This method is unstable and hence subject to change.
     pub fn view(item: Box<[u8]>, offset: usize, len: usize) -> Self {
         Data {
-            item: item,
+            item: Arc::new(item),
             region: Region::View { offset, len },
         }
     }
@@ -180,31 +183,5 @@ impl Region {
                 }
             },
         }
-    }
-}
-
-impl DecodedImage {
-    /// Constructs a `DecodedImage`.
-    pub fn new(width: u32, height: u32, pixels: Data) -> Self {
-        DecodedImage {
-            width: width,
-            height: height,
-            pixels: pixels,
-        }
-    }
-
-    /// Returns the image width in pixels.
-    pub fn width(&self) -> u32 {
-        self.width
-    }
-
-    /// Returns the image height in pixels.
-    pub fn height(&self) -> u32 {
-        self.height
-    }
-
-    /// Returns the raw image pixel data.
-    pub fn raw_pixels(&self) -> &[u8] {
-        &self.pixels
     }
 }

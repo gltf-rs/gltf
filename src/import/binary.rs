@@ -19,7 +19,7 @@ use image_crate::ImageFormat::{JPEG as Jpeg, PNG as Png};
 use image_crate::ImageResult;
 use import::{Config, Source};
 use root::Root;
-use {Data, DecodedImage, Gltf};
+use {Data, DynamicImage, Gltf};
 
 /// The contents of a .glb file.
 #[derive(Clone, Debug)]
@@ -283,7 +283,7 @@ fn source_images<S: import::Source>(
 fn decode_images(
     buffers: &[Data],
     images: Vec<EncodedImage>,
-) -> ImageResult<Vec<DecodedImage>> {
+) -> ImageResult<Vec<DynamicImage>> {
     images
         .iter()
         .map(|entry| {
@@ -298,12 +298,7 @@ fn decode_images(
                 &EncodedImage::Owned { ref data, format: None } => {
                     load_from_memory(data)
                 },
-            }.map(|decoded_image| {
-                let (width, height) = decoded_image.dimensions();
-                let raw_pixels = decoded_image.raw_pixels().into_boxed_slice();
-                let image_data = Data::full(raw_pixels);
-                DecodedImage::new(width as u32, height as u32, image_data)
-            })
+            }
         })
         .collect()
 }

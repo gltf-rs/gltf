@@ -8,8 +8,7 @@
 // except according to those terms.
 
 use {extensions, json};
-
-use {DecodedImage, Gltf};
+use {DynamicImage, Gltf};
 
 /// Image data used to create a texture.
 pub struct Image<'a> {
@@ -23,7 +22,7 @@ pub struct Image<'a> {
     json: &'a json::image::Image,
 
     /// The corresponding decoded image data.
-    decoded: DecodedImage,
+    data: &'a DynamicImage,
 }
 
 impl<'a> Image<'a> {
@@ -33,12 +32,12 @@ impl<'a> Image<'a> {
         index: usize,
         json: &'a json::image::Image,
     ) -> Self {
-        let decoded = gltf.image_data(index).clone();
+        let data = gltf.image_data(index);
         Self {
             gltf: gltf,
             index: index,
             json: json,
-            decoded: decoded,
+            data: data,
         }
     }
     
@@ -58,19 +57,9 @@ impl<'a> Image<'a> {
         self.json.name.as_ref().map(String::as_str)
     }
 
-    /// Returns the image width in pixels.
-    pub fn width(&self) -> u32 {
-        self.decoded.width()
-    }
-
-    /// Returns the image height in pixels.
-    pub fn height(&self) -> u32 {
-        self.decoded.height()
-    }
-    
     /// Returns the raw image data.
-    pub fn raw_pixels(&self) -> &[u8] {
-        self.decoded.raw_pixels()
+    pub fn data(&self) -> &DynamicImage {
+        self.data
     }
 
     /// Extension specific data.

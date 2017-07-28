@@ -13,7 +13,6 @@ use json;
 
 use futures::{Future, Poll};
 use image_crate::{load_from_memory, load_from_memory_with_format};
-use image_crate::GenericImage;
 use image_crate::ImageFormat as Format;
 use image_crate::ImageResult;
 use image_crate::ImageFormat::{JPEG as Jpeg, PNG as Png};
@@ -22,7 +21,7 @@ use std::boxed::Box;
 use std::io::Cursor;
 use validation::Validate;
 
-use {Data, DecodedImage, Gltf};
+use {Data, DynamicImage, Gltf};
 
 enum AsyncImage<S: import::Source> {
     /// Image data is borrowed from a buffer.
@@ -155,7 +154,7 @@ fn source_images<S: import::Source>(
 fn decode_images(
     buffers: &[Data],
     images: Vec<EncodedImage>,
-) -> ImageResult<Vec<DecodedImage>> {
+) -> ImageResult<Vec<DynamicImage>> {
     images
         .iter()
         .map(|entry| {
@@ -170,12 +169,7 @@ fn decode_images(
                 &EncodedImage::Owned { ref data, format: None } => {
                     load_from_memory(data)
                 },
-            }.map(|decoded_image| {
-                let (width, height) = decoded_image.dimensions();
-                let raw_pixels = decoded_image.raw_pixels().into_boxed_slice();
-                let image_data = Data::full(raw_pixels);
-                DecodedImage::new(width as u32, height as u32, image_data)
-            })
+            }
         })
         .collect()
 }
