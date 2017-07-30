@@ -72,6 +72,16 @@ pub enum MagFilter {
     Linear,
 }
 
+impl MagFilter {
+    /// OpenGL enum
+    pub fn as_gl_enum(&self) -> i32 {
+        match *self {
+            MagFilter::Nearest => NEAREST as i32,
+            MagFilter::Linear => LINEAR as i32,
+        }
+    }
+}
+
 /// Minification filter.
 #[derive(Clone, Copy, Debug, Deserialize)]
 pub enum MinFilter {
@@ -94,6 +104,20 @@ pub enum MinFilter {
     LinearMipmapLinear,
 }
 
+impl MinFilter {
+    /// OpenGL enum
+    pub fn as_gl_enum(&self) -> i32 {
+        match *self {
+            MinFilter::Nearest => NEAREST as i32,
+            MinFilter::Linear => LINEAR as i32,
+            MinFilter::NearestMipmapNearest => NEAREST_MIPMAP_NEAREST as i32,
+            MinFilter::LinearMipmapNearest => LINEAR_MIPMAP_NEAREST as i32,
+            MinFilter::NearestMipmapLinear => NEAREST_MIPMAP_LINEAR as i32,
+            MinFilter::LinearMipmapLinear => LINEAR_MIPMAP_LINEAR as i32,
+        }
+    }
+}
+
 /// Texture co-ordinate wrapping mode.
 #[derive(Clone, Copy, Debug, Deserialize)]
 pub enum WrappingMode {
@@ -105,6 +129,17 @@ pub enum WrappingMode {
 
     /// Corresponds to `GL_REPEAT`.
     Repeat,
+}
+
+impl WrappingMode {
+    /// OpenGL enum
+    pub fn as_gl_enum(&self) -> i32 {
+        match *self {
+            WrappingMode::ClampToEdge => CLAMP_TO_EDGE as i32,
+            WrappingMode::MirroredRepeat => MIRRORED_REPEAT as i32,
+            WrappingMode::Repeat => REPEAT as i32,
+        }
+    }
 }
 
 /// Texture sampler properties for filtering and wrapping modes.
