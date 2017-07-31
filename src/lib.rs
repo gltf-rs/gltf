@@ -144,5 +144,20 @@ pub mod texture;
 /// Contains functions that validate glTF JSON data against the specification.
 pub mod validation;
 
-pub use self::gltf::Gltf;
-pub use self::import::{Data, DynamicImage, Import};
+/// Contains re-exports of commonly used glTF data structures.
+pub mod prelude {
+    pub use ::animation::Animation;
+    pub use ::accessor::Accessor;
+    pub use ::buffer::Buffer;
+    pub use ::camera::Camera;
+    pub use ::gltf::Gltf;
+    pub use ::image::Image;
+    pub use ::import::{Data, DynamicImage, Import};
+    pub use ::material::Material;
+    pub use ::mesh::{Mesh, Primitive};
+    pub use ::scene::{Node, Scene};
+    pub use ::skin::Skin;
+    pub use ::texture::Texture;
+}
+
+pub use self::prelude::*;
