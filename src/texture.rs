@@ -76,7 +76,9 @@ impl<'a> Sampler<'a> {
         }
     }
 
-    /// Returns the internal JSON index.
+    /// Returns the internal JSON index if this `Sampler` was explicity defined.
+    ///
+    /// This function returns `None` if the `Sampler` is the default sampler.
     pub fn index(&self) -> Option<usize> {
         self.index
     }
