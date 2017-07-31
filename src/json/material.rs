@@ -35,10 +35,11 @@ pub enum AlphaMode {
 }
 
 /// The material appearance of a primitive.
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
+#[serde(default)]
 pub struct Material {
     /// The alpha cutoff value of the material.
-    #[serde(default, rename = "alphaCutoff")]
+    #[serde(rename = "alphaCutoff")]
     pub alpha_cutoff: AlphaCutoff,
     
     /// The alpha rendering mode of the material.
@@ -57,7 +58,7 @@ pub struct Material {
     ///   destination areas and the rendered output is combined with the
     ///   background using the normal painting operation (i.e. the Porter and
     ///   Duff over operator).
-    #[serde(default, rename = "alphaMode")]
+    #[serde(rename = "alphaMode")]
     pub alpha_mode: Checked<AlphaMode>,
 
     /// Specifies whether the material is double-sided.
@@ -69,48 +70,60 @@ pub struct Material {
     ///
     /// The back-face must have its normals reversed before the lighting
     /// equation is evaluated.
-    #[serde(default, rename = "doubleSided")]
+    #[serde(rename = "doubleSided")]
     pub double_sided: bool,
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
     pub name: Option<String>,
 
-    /// A set of parameter values that are used to define the metallic-roughness material model from Physically-Based Rendering (PBR) methodology. When not specified, all the default values of `pbrMetallicRoughness` apply.
-    #[serde(rename = "pbrMetallicRoughness")]
-    pub pbr_metallic_roughness: Option<PbrMetallicRoughness>,
+    /// A set of parameter values that are used to define the metallic-roughness
+    /// material model from Physically-Based Rendering (PBR) methodology. When not
+    /// specified, all the default values of `pbrMetallicRoughness` apply.
+    #[serde(default, rename = "pbrMetallicRoughness")]
+    pub pbr_metallic_roughness: PbrMetallicRoughness,
 
-    /// A tangent space normal map. The texture contains RGB components in linear space. Each texel represents the XYZ components of a normal vector in tangent space. Red [0 to 255] maps to X [-1 to 1]. Green [0 to 255] maps to Y [-1 to 1]. Blue [128 to 255] maps to Z [1/255 to 1]. The normal vectors use OpenGL conventions where +X is right and +Y is up. +Z points toward the viewer.
+    /// A tangent space normal map. The texture contains RGB components in linear
+    /// space. Each texel represents the XYZ components of a normal vector in
+    /// tangent space. Red [0 to 255] maps to X [-1 to 1]. Green [0 to 255] maps to
+    /// Y [-1 to 1]. Blue [128 to 255] maps to Z [1/255 to 1]. The normal vectors
+    /// use OpenGL conventions where +X is right and +Y is up. +Z points toward the
+    /// viewer.
     #[serde(rename = "normalTexture")]
     pub normal_texture: Option<NormalTexture>,
 
-    /// The occlusion map texture. The occlusion values are sampled from the R channel. Higher values indicate areas that should receive full indirect lighting and lower values indicate no indirect lighting. These values are linear. If other channels are present (GBA), they are ignored for occlusion calculations.
+    /// The occlusion map texture. The occlusion values are sampled from the R
+    /// channel. Higher values indicate areas that should receive full indirect
+    /// lighting and lower values indicate no indirect lighting. These values are
+    /// linear. If other channels are present (GBA), they are ignored for occlusion
+    /// calculations.
     #[serde(rename = "occlusionTexture")]
     pub occlusion_texture: Option<OcclusionTexture>,
 
-    /// The emissive map controls the color and intensity of the light being emitted by the material. This texture contains RGB components in sRGB color space. If a fourth component (A) is present, it is ignored.
+    /// The emissive map controls the color and intensity of the light being emitted
+    /// by the material. This texture contains RGB components in sRGB color space.
+    /// If a fourth component (A) is present, it is ignored.
     #[serde(rename = "emissiveTexture")]
     pub emissive_texture: Option<texture::Info>,
 
     /// The emissive color of the material.
-    #[serde(default, rename = "emissiveFactor")]
+    #[serde(rename = "emissiveFactor")]
     pub emissive_factor: EmissiveFactor,
 
     /// Extension specific data.
-    #[serde(default)]
     pub extensions: extensions::material::Material,
 
     /// Optional application specific data.
-    #[serde(default)]
     pub extras: Extras,
 }
 
 /// A set of parameter values that are used to define the metallic-roughness
 /// material model from Physically-Based Rendering (PBR) methodology.
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
+#[serde(default)]
 pub struct PbrMetallicRoughness {
     /// The material's base color factor.
-    #[serde(default, rename = "baseColorFactor")]
+    #[serde(rename = "baseColorFactor")]
     pub base_color_factor: PbrBaseColorFactor,
 
     /// The base color texture.
@@ -118,14 +131,14 @@ pub struct PbrMetallicRoughness {
     pub base_color_texture: Option<texture::Info>,
 
     /// The metalness of the material.
-    #[serde(default, rename = "metallicFactor")]
+    #[serde(rename = "metallicFactor")]
     pub metallic_factor: StrengthFactor,
 
     /// The roughness of the material.
     ///
     /// * A value of 1.0 means the material is completely rough.
     /// * A value of 0.0 means the material is completely smooth.
-    #[serde(default, rename = "roughnessFactor")]
+    #[serde(rename = "roughnessFactor")]
     pub roughness_factor: StrengthFactor,
 
     /// The metallic-roughness texture.
@@ -140,11 +153,9 @@ pub struct PbrMetallicRoughness {
     pub metallic_roughness_texture: Option<texture::Info>,
 
     /// Extension specific data.
-    #[serde(default)]
     pub extensions: extensions::material::PbrMetallicRoughness,
 
     /// Optional application specific data.
-    #[serde(default)]
     pub extras: Extras,
 }
 
