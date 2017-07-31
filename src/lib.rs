@@ -160,4 +160,15 @@ pub mod prelude {
     pub use ::texture::Texture;
 }
 
-pub use self::prelude::*;
+pub use self::prelude::Animation;
+pub use self::prelude::Accessor;
+pub use self::prelude::Buffer;
+pub use self::prelude::Camera;
+pub use self::prelude::Gltf;
+pub use self::prelude::Image;
+pub use self::prelude::{Data, DynamicImage, Import};
+pub use self::prelude::Material;
+pub use self::prelude::{Mesh, Primitive};
+pub use self::prelude::{Node, Scene};
+pub use self::prelude::Skin;
+pub use self::prelude::Texture;
