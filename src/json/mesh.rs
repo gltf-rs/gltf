@@ -53,7 +53,7 @@ pub const VALID_MORPH_TARGETS: &'static [&'static str] = &[
 ];
 
 /// The type of primitives to render.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
 pub enum Mode {
     /// Corresponds to `GL_POINTS`.
     Points = 1,
