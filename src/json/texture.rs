@@ -105,7 +105,7 @@ pub enum MinFilter {
 }
 
 impl MinFilter {
-    /// OpenGL enum
+    /// Returns the corresponding OpenGL enum value.
     pub fn as_gl_enum(&self) -> i32 {
         match *self {
             MinFilter::Nearest => NEAREST as i32,
@@ -132,7 +132,7 @@ pub enum WrappingMode {
 }
 
 impl WrappingMode {
-    /// OpenGL enum
+    /// Returns the corresponding OpenGL enum value.
     pub fn as_gl_enum(&self) -> i32 {
         match *self {
             WrappingMode::ClampToEdge => CLAMP_TO_EDGE as i32,
@@ -143,7 +143,8 @@ impl WrappingMode {
 }
 
 /// Texture sampler properties for filtering and wrapping modes.
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Validate)]
+#[serde(default)]
 pub struct Sampler {
     /// Magnification filter.
     #[serde(rename = "magFilter")]

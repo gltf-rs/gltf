@@ -438,10 +438,11 @@ impl<'a> Primitive<'a> {
     }
 
     /// The material to apply to this primitive when rendering
-    pub fn material(&self) -> Option<material::Material<'a>> {
-        self.json.material.as_ref().map(|index| {
-            self.mesh.gltf.materials().nth(index.value()).unwrap()
-        })
+    pub fn material(&self) -> material::Material<'a> {
+        self.json.material
+            .as_ref()
+            .map(|index| self.mesh.gltf.materials().nth(index.value()).unwrap())
+            .unwrap_or_else(|| material::Material::default(self.mesh.gltf))
     }
 
     /// The type of primitives to render.

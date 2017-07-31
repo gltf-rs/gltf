@@ -12,13 +12,17 @@ use {extensions, json, texture, Gltf};
 
 pub use json::material::AlphaMode;
 
-///  The material appearance of a primitive.
+lazy_static! {
+    static ref DEFAULT_MATERIAL: json::material::Material = Default::default();
+}
+
+/// The material appearance of a primitive.
 pub struct Material<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
-    /// The corresponding JSON index.
-    index: usize,
+    /// The corresponding JSON index - `None` when the default material.
+    index: Option<usize>,
 
     /// The corresponding JSON struct.
     json: &'a json::material::Material,
@@ -26,16 +30,31 @@ pub struct Material<'a> {
 
 impl<'a> Material<'a> {
     /// Constructs a `Material`.
-    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::material::Material) -> Self {
+    pub fn new(
+        gltf: &'a Gltf,
+        index: usize,
+        json: &'a json::material::Material,
+    ) -> Self {
         Self {
             gltf: gltf,
-            index: index,
+            index: Some(index),
             json: json,
         }
     }
 
-    /// Returns the internal JSON index.
-    pub fn index(&self) -> usize {
+    /// Constructs the default `Material`.
+    pub fn default(gltf: &'a Gltf) -> Self {
+        Self {
+            gltf: gltf,
+            index: None,
+            json: &DEFAULT_MATERIAL,
+        }
+    }
+
+    /// Returns the internal JSON index if this `Material` was explicity defined.
+    ///
+    /// This function returns `None` if the `Material` is the default material.
+    pub fn index(&self) -> Option<usize> {
         self.index
     }
 
@@ -79,10 +98,8 @@ impl<'a> Material<'a> {
     ///  A set of parameter values that are used to define the metallic-roughness
     /// material model from Physically-Based Rendering (PBR) methodology. When not
     /// specified, all the default values of `pbrMetallicRoughness` apply.
-    pub fn pbr_metallic_roughness(&self) -> Option<PbrMetallicRoughness<'a>> {
-        self.json.pbr_metallic_roughness.as_ref().map(|json| {
-            PbrMetallicRoughness::new(self.gltf, json)
-        })
+    pub fn pbr_metallic_roughness(&self) -> PbrMetallicRoughness<'a> {
+        PbrMetallicRoughness::new(self.gltf, &self.json.pbr_metallic_roughness)
     }
 
     ///  A tangent space normal map. The texture contains RGB components in linear

@@ -12,6 +12,10 @@ use {extensions, image, json, Gltf};
 
 pub use json::texture::{MagFilter, MinFilter, WrappingMode};
 
+lazy_static! {
+    static ref DEFAULT_SAMPLER: json::texture::Sampler = Default::default();
+}
+
 /// A reference to a `Texture`.
 #[derive(Clone, Debug)]
 pub struct Info<'a> {
@@ -29,8 +33,8 @@ pub struct Sampler<'a> {
     #[allow(dead_code)]
     gltf: &'a Gltf,
 
-    /// The corresponding JSON index.
-    index: usize,
+    /// The corresponding JSON index - `None` when the default sampler.
+    index: Option<usize>,
 
     /// The corresponding JSON struct.
     json: &'a json::texture::Sampler,
@@ -51,16 +55,29 @@ pub struct Texture<'a> {
 
 impl<'a> Sampler<'a> {
     /// Constructs a `Sampler`.
-    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::texture::Sampler) -> Self {
+    pub fn new(
+        gltf: &'a Gltf,
+        index: usize,
+        json: &'a json::texture::Sampler,
+    ) -> Self {
         Self {
             gltf: gltf,
-            index: index,
+            index: Some(index),
             json: json,
         }
     }
 
+    /// Constructs the default `Sampler`.
+    pub fn default(gltf: &'a Gltf) -> Self {
+        Self {
+            gltf: gltf,
+            index: None,
+            json: &DEFAULT_SAMPLER,
+        }
+    }
+
     /// Returns the internal JSON index.
-    pub fn index(&self) -> usize {
+    pub fn index(&self) -> Option<usize> {
         self.index
     }
 
@@ -111,7 +128,11 @@ impl<'a> Sampler<'a> {
 
 impl<'a> Texture<'a> {
     /// Constructs a `Texture`.
-    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::texture::Texture) -> Self {
+    pub fn new(
+        gltf: &'a Gltf,
+        index: usize,
+        json: &'a json::texture::Texture,
+    ) -> Self {
         Self {
             gltf: gltf,
             index: index,
@@ -136,10 +157,11 @@ impl<'a> Texture<'a> {
     }
 
     /// The index of the sampler used by this texture.
-    pub fn sampler(&self) -> Option<Sampler<'a>> {
-        self.json.sampler.as_ref().map(|index| {
-            self.gltf.samplers().nth(index.value() as usize).unwrap()
-        })
+    pub fn sampler(&self) -> Sampler<'a> {
+        self.json.sampler
+            .as_ref()
+            .map(|index| self.gltf.samplers().nth(index.value() as usize).unwrap())
+            .unwrap_or_else(|| Sampler::default(self.gltf))
     }
 
     /// The index of the image used by this texture.
