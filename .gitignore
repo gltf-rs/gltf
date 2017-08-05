@@ -1,5 +1,5 @@
 /target/
 Cargo.lock
-src/derive/target/
-src/derive/Cargo.lock
+gltf-derive/target/
+gltf-derive/Cargo.lock
 *.bk
