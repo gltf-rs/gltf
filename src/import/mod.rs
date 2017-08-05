@@ -18,9 +18,7 @@
 //! schemes such as `http`.
 
 use futures::future;
-use json;
-use validation;
-use serde_json;
+use json::{self, validation};
 use std::{self, fmt};
 
 use image_crate::ImageError;
@@ -83,7 +81,7 @@ pub enum Error<S: Source> {
     MalformedGlb(String),
 
     /// Failure when deserializing .gltf or .glb JSON.
-    MalformedJson(serde_json::error::Error),
+    MalformedJson(json::Error),
     
     /// Data source error.
     Shared(future::SharedError<Error<S>>),
@@ -143,8 +141,8 @@ impl<S: Source> From<ImageError> for Error<S> {
     }
 }
 
-impl<S: Source> From<serde_json::Error> for Error<S> {
-    fn from(err: serde_json::Error) -> Error<S> {
+impl<S: Source> From<json::Error> for Error<S> {
+    fn from(err: json::Error) -> Error<S> {
         Error::MalformedJson(err)
     }
 }

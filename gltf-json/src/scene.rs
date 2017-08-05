@@ -7,8 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use json::{camera, extensions, mesh, scene, skin, Extras, Index, Root, Path};
 use validation::{Error, Validate};
+use {camera, extensions, mesh, scene, skin, Extras, Index, Root, Path};
 
 /// A node in the node hierarchy.  When the node contains `skin`, all
 /// `mesh.primitives` must contain `JOINTS_0` and `WEIGHTS_0` attributes.

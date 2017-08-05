@@ -9,8 +9,8 @@
 
 use serde::de;
 use std::fmt;
-use json::{extensions, texture, Extras, Index, Root, Path};
 use validation::{Checked, Error, Validate};
+use {extensions, texture, Extras, Index, Root, Path};
 
 /// All valid alpha modes.
 pub const VALID_ALPHA_MODES: &'static [&'static str] = &[

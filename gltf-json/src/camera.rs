@@ -9,8 +9,8 @@
 
 use serde::de;
 use std::fmt;
-use json::{extensions, Extras, Root, Path};
 use validation::{Checked, Error, Validate};
+use {extensions, Extras, Root, Path};
 
 /// All valid camera types.
 pub const VALID_CAMERA_TYPES: &'static [&'static str] = &[

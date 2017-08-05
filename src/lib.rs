@@ -88,15 +88,12 @@
 
 extern crate base64;
 extern crate futures;
-#[macro_use]
-extern crate gltf_derive;
 extern crate image as image_crate;
 #[macro_use]
 extern crate lazy_static;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
+
+/// Contains (de)serializable data structures that match the glTF JSON text.
+pub extern crate gltf_json as json;
 
 /// Contains `Accessor` and other related data structures.
 pub mod accessor;
@@ -122,9 +119,6 @@ pub mod image;
 /// Contains functions for importing glTF 2.0 assets.
 pub mod import;
 
-/// Contains (de)serializable data structures that match the glTF JSON text.
-pub mod json;
-
 /// Contains `Material` and other related data structures.
 pub mod material;
 
@@ -142,9 +136,6 @@ pub mod skin;
 
 /// Contains `Texture`, `Sampler`, and other related data structures.
 pub mod texture;
-
-/// Contains functions that validate glTF JSON data against the specification.
-pub mod validation;
 
 pub use self::gltf::Gltf;
 pub use self::import::{Data, DynamicImage, Import};

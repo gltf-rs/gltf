@@ -9,8 +9,8 @@
 
 use serde::de;
 use std::fmt;
-use json::{extensions, image, Extras, Index};
 use validation::Checked;
+use {extensions, image, Extras, Index};
 
 /// Corresponds to `GL_NEAREST`.
 pub const NEAREST: u32 = 9728;

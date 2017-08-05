@@ -9,7 +9,7 @@
 
 use futures::{self, future};
 use import::{self, config, data};
-use json;
+use json::{self, validation};
 
 use futures::{Future, Poll};
 use image_crate::{load_from_memory, load_from_memory_with_format};
@@ -307,7 +307,7 @@ fn validate<S: Source>(
     strategy: config::ValidationStrategy, 
     has_blob: bool,
 ) -> Box<Future<Item = Root, Error = import::Error<S>>> {
-    use validation::{Error as Reason, Validate};
+    use self::validation::{Error as Reason, Validate};
     Box::new(future::lazy(move || {
         let mut errs = vec![];
         match strategy {

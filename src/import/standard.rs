@@ -16,10 +16,10 @@ use image_crate::{load_from_memory, load_from_memory_with_format};
 use image_crate::ImageFormat as Format;
 use image_crate::ImageResult;
 use image_crate::ImageFormat::{JPEG as Jpeg, PNG as Png};
+use json::validation::Validate;
 use root::Root;
 use std::boxed::Box;
 use std::io::Cursor;
-use validation::Validate;
 
 use {Data, DynamicImage, Gltf};
 

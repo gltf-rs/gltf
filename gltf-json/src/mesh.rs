@@ -10,8 +10,8 @@
 use serde::de;
 use std::collections::HashMap;
 use std::fmt;
-use json::{accessor, extensions, material, Extras, Index};
 use validation::Checked;
+use {accessor, extensions, material, Extras, Index};
 
 /// Corresponds to `GL_POINTS`.
 pub const POINTS: u32 = 0;

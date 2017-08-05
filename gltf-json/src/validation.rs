@@ -9,9 +9,10 @@
 use serde_json;
 use std;
 
-use json::*;
 use std::collections::HashMap;
 use std::hash::Hash;
+
+use {Path, Root};
 
 /// Trait for validating glTF JSON data against the 2.0 specification.
 pub trait Validate {

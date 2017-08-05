@@ -9,8 +9,8 @@
 
 use serde::de;
 use std::fmt;
-use json::{accessor, extensions, scene, Extras, Index, Path, Root};
 use validation::{Checked, Error, Validate};
+use {accessor, extensions, scene, Extras, Index, Path, Root};
 
 /// All valid interpolation algorithms.
 pub const VALID_INTERPOLATION_ALGORITHMS: &'static [&'static str] = &[

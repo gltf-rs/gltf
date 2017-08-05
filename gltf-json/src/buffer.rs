@@ -9,8 +9,8 @@
 
 use serde::de;
 use std::fmt;
-use json::{extensions, Extras, Index, Root, Path};
 use validation::{Checked, Error, Validate};
+use {extensions, Extras, Index, Root, Path};
 
 /// Corresponds to `GL_ARRAY_BUFFER`.
 pub const ARRAY_BUFFER: u32 = 34962;
