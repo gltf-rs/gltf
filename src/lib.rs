@@ -151,14 +151,6 @@ pub trait Source: std::fmt::Debug {
     fn source_buffer(&self, buffer: &Buffer) -> &[u8];
 }
 
-/// Converts a `glTF` data structure into a loaded data structure.
-pub trait Load
-    where Self: std::marker::Sized
-{
-    /// Converts the item into a loaded item.
-    fn load(self, source: &Source) -> Loaded<Self>;
-}
-
 /// Wrapper type for data structures with their data ready.
 #[derive(Clone, Debug)]
 pub struct Loaded<'a, T> {
