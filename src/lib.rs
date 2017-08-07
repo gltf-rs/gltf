@@ -116,8 +116,8 @@ pub mod gltf;
 /// Contains `Image` and other related data structures.
 pub mod image;
 
-/// Contains functions for importing glTF 2.0 assets.
-pub mod import;
+// Contains functions for importing glTF 2.0 assets.
+//pub mod import;
 
 /// Contains `Material` and other related data structures.
 pub mod material;
@@ -143,7 +143,6 @@ pub use self::buffer::Buffer;
 pub use self::camera::Camera;
 pub use self::gltf::Gltf;
 pub use self::image::Image;
-pub use self::import::{Data, DynamicImage, Import};
 pub use self::material::Material;
 pub use self::mesh::{Mesh, Primitive};
 pub use self::scene::{Node, Scene};
@@ -151,18 +150,34 @@ pub use self::skin::Skin;
 pub use self::texture::Texture;
 
 /// Represents sources of buffer data.
-pub trait Source {
+pub trait Source: std::fmt::Debug {
     /// Return the buffer data referenced by the given `Buffer`.
     ///
     /// This method must not fail.
     fn source_buffer(&self, buffer: &Buffer) -> &[u8];
 }
 
+/// Converts a `glTF` data structure into a loaded data structure.
+pub trait Load
+    where Self: std::marker::Sized
+{
+    /// Converts the item into a loaded item.
+    fn load(self, source: &Source) -> Loaded<Self>;
+}
+
 /// Wrapper type for data structures with their data ready.
+#[derive(Clone, Debug)]
 pub struct Loaded<'a, T> {
     /// The wrapper item.
     item: T,
 
     /// The data source for this item.
     source: &'a Source,
+}
+
+impl<'a, T> std::ops::Deref for Loaded<'a, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.item
+    }
 }

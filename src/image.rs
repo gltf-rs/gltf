@@ -7,8 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use {extensions, json};
-use {DynamicImage, Gltf};
+use {extensions, buffer, json};
+use {Gltf, Loaded};
 
 /// Image data used to create a texture.
 pub struct Image<'a> {
@@ -20,9 +20,27 @@ pub struct Image<'a> {
 
     /// The corresponding JSON struct.
     json: &'a json::image::Image,
+}
 
-    /// The corresponding decoded image data.
-    data: &'a DynamicImage,
+/// Return type of `Loaded<Image>::data`.
+pub enum Data<'a> {
+    /// Image data is contained in a buffer view.
+    FromBufferView {
+        /// The buffer view containing the encoded image data.
+        buffer_view: Loaded<'a, buffer::View<'a>>,
+
+        /// The image data MIME type.
+        mime_type: &'a str,
+    },
+
+    /// Image data is contained in an external data source.
+    External {
+        /// The URI of the external data source.
+        uri: &'a str,
+
+        /// The image data MIME type, if provided.
+        mime_type: Option<&'a str>,
+    },
 }
 
 impl<'a> Image<'a> {
@@ -32,12 +50,10 @@ impl<'a> Image<'a> {
         index: usize,
         json: &'a json::image::Image,
     ) -> Self {
-        let data = gltf.image_data(index);
         Self {
             gltf: gltf,
             index: index,
             json: json,
-            data: data,
         }
     }
     
@@ -57,11 +73,6 @@ impl<'a> Image<'a> {
         self.json.name.as_ref().map(String::as_str)
     }
 
-    /// Returns the raw image data.
-    pub fn data(&self) -> &DynamicImage {
-        self.data
-    }
-
     /// Extension specific data.
     pub fn extensions(&self) -> extensions::image::Image<'a> {
         extensions::image::Image::new(
@@ -73,5 +84,24 @@ impl<'a> Image<'a> {
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
+    }
+}
+
+impl<'a> Loaded<'a, Image<'a>> {
+    /// Returns the raw image data.
+    pub fn data(&self) -> Data<'a> {
+        if let Some(index) = self.json.buffer_view.as_ref() {
+            let buffer_view = self.gltf
+                .views()
+                .nth(index.value())
+                .unwrap()
+                .loaded(self.source);
+            let mime_type = self.json.mime_type.as_ref().map(|x| x.0.as_str()).unwrap();
+            Data::FromBufferView { buffer_view, mime_type }
+        } else {
+            let uri = self.json.uri.as_ref().unwrap();
+            let mime_type = self.json.mime_type.as_ref().map(|x| x.0.as_str());
+            Data::External { uri, mime_type }
+        }
     }
 }

@@ -8,9 +8,9 @@
 // except according to those terms.
 
 use std::{marker, mem};
-use {buffer, extensions, import, json};
+use {buffer, extensions, json};
 
-use Gltf;
+use {Gltf, Loaded, Source};
 
 pub use json::accessor::ComponentType as DataType;
 pub use json::accessor::Type as Dimensions;
@@ -26,11 +26,14 @@ pub struct Accessor<'a> {
 
     /// The corresponding JSON struct.
     json: &'a json::accessor::Accessor,
+
+    /// The buffer view this accessor reads from.
+    view: buffer::View<'a>,
 }
 
 /// An `Iterator` that iterates over the members of an accessor.
-#[derive(Debug)]
-pub struct Iter<T> {
+#[derive(Clone, Debug)]
+pub struct Iter<'a, T> {
     /// Number of iterations left.
     count: usize,
 
@@ -40,56 +43,45 @@ pub struct Iter<T> {
     /// The number of bytes to advance `ptr` by per iteration.
     stride: usize,
 
-    /// The buffer view data we're iterating over.
-    data: import::Data,
-
     /// Consumes the data type we're returning at each iteration.
-    _mk: marker::PhantomData<T>,
+    _consume_data_type: marker::PhantomData<T>,
+
+    /// Consumes the lifetime of `ptr`.
+    _consume_lifetime: marker::PhantomData<&'a ()>,
 }
 
 impl<'a> Accessor<'a> {
     /// Constructs an `Accessor`.
-    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::accessor::Accessor) -> Self {
+    pub fn new(
+        gltf: &'a Gltf,
+        index: usize,
+        json: &'a json::accessor::Accessor,
+    ) -> Self {
+        let view = gltf.views().nth(index).unwrap();
         Self {
-            gltf: gltf,
-            index: index,
-            json: json,
+            gltf,
+            index,
+            json,
+            view,
         }
     }
 
+    /// Converts an `Accessor` into a `Loaded<Accessor>`.
+    pub fn loaded(self, source: &'a Source) -> Loaded<'a, Accessor<'a>> {
+        Loaded {
+            item: self,
+            source,
+        }
+    }
+    
     /// Returns the internal JSON index.
     pub fn index(&self) -> usize {
         self.index
     }
     
     /// Returns the size of each component that this accessor describes.
-    #[allow(dead_code)]
-    fn size(&self) -> usize {
+    pub fn size(&self) -> usize {
         self.data_type().size() * self.dimensions().multiplicity()
-    }
-
-    /// Returns an `Iterator` that interprets the data pointed to by the accessor
-    /// as the given type.
-    /// 
-    /// The data referenced by the accessor is guaranteed to be appropriately
-    /// aligned for any standard Rust type.
-    ///
-    /// # Panics
-    ///
-    /// If the size of an individual `T` does not match the accessor component size.
-    pub unsafe fn iter<T>(&self) -> Iter<T> {
-        let count = self.count();
-        let offset = self.offset() as isize;
-        let stride = self.view().stride().unwrap_or(mem::size_of::<T>());
-        let data = self.view().data();
-        let ptr = data.as_ptr().offset(offset);
-        Iter {
-            count: count,
-            ptr: ptr,
-            stride: stride,
-            data: data,
-            _mk: marker::PhantomData,
-        }
     }
 
     /// Returns the internal JSON item.
@@ -165,8 +157,36 @@ impl<'a> Accessor<'a> {
     }
 }
 
-impl<T> ExactSizeIterator for Iter<T> {}
-impl<T> Iterator for Iter<T> {
+impl<'a> Loaded<'a, Accessor<'a>> {
+    /// Returns an `Iterator` that interprets the data pointed to by the accessor
+    /// as the given type.
+    /// 
+    /// The data referenced by the accessor is guaranteed to be appropriately
+    /// aligned for any standard Rust type.
+    ///
+    /// # Panics
+    ///
+    /// If the size of an individual `T` does not match the accessor component size.
+    pub unsafe fn iter<T>(&self) -> Iter<'a, T> {
+        assert_eq!(self.size(), mem::size_of::<T>());
+        let count = self.count();
+        let offset = self.offset() as isize;
+        let view = self.view.clone().loaded(self.source);
+        let stride = view.stride().unwrap_or(mem::size_of::<T>());
+        let data = view.data();
+        let ptr = data.as_ptr().offset(offset);
+        Iter {
+            count: count,
+            ptr: ptr,
+            stride: stride,
+            _consume_data_type: marker::PhantomData,
+            _consume_lifetime: marker::PhantomData,
+        }
+    }
+}
+
+impl<'a, T> ExactSizeIterator for Iter<'a, T> {}
+impl<'a, T> Iterator for Iter<'a, T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
         if self.count > 0 {

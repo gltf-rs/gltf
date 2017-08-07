@@ -7,13 +7,32 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::ops;
 use {extensions, json};
 
-use {Data, Gltf};
+use {Gltf, Loaded, Source};
 
 pub use json::buffer::Target;
 
+/// Buffer data.
+#[derive(Clone, Debug)]
+pub struct Data<'a> {
+    /// Parent `Buffer`.
+    parent: Loaded<'a, Buffer<'a>>,
+
+    /// Buffer range.
+    range: ops::Range<usize>,
+}
+
+impl<'a> ops::Deref for Data<'a> {
+    type Target = [u8];
+    fn deref(&self) -> &Self::Target {
+        &self.parent.source.source_buffer(&self.parent.item)[self.range.clone()]
+    }
+}
+
 /// A buffer points to binary data representing geometry, animations, or skins.
+#[derive(Clone, Debug)]
 pub struct Buffer<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
@@ -26,6 +45,7 @@ pub struct Buffer<'a> {
 }
 
 /// A view into a buffer generally representing a subset of the buffer.
+#[derive(Clone, Debug)]
 pub struct View<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
@@ -35,6 +55,9 @@ pub struct View<'a> {
 
     /// The corresponding JSON struct.
     json: &'a json::buffer::View,
+
+    /// The parent `Buffer`.
+    parent: Buffer<'a>,
 }
 
 impl<'a> Buffer<'a> {
@@ -51,6 +74,14 @@ impl<'a> Buffer<'a> {
         }
     }
 
+    /// Converts `View` into a `Loaded<View>`.
+    pub fn loaded(self, source: &'a Source) -> Loaded<'a, Buffer<'a>> {
+        Loaded {
+            item: self,
+            source,
+        }
+    }
+
     /// Returns the internal JSON index.
     pub fn index(&self) -> usize {
         self.index
@@ -64,11 +95,6 @@ impl<'a> Buffer<'a> {
     /// The length of the buffer in bytes.
     pub fn length(&self) -> usize {
         self.json.byte_length as usize
-    }
-
-    /// The buffer data.
-    pub fn data(&self) -> Data {
-        self.gltf.buffer_data(self.index())
     }
 
     /// Optional user-defined name for this object.
@@ -91,6 +117,18 @@ impl<'a> Buffer<'a> {
     }
 }
 
+impl<'a> Loaded<'a, Buffer<'a>> {
+    /// Returns the buffer data.
+    pub fn data(&self) -> Data {
+        let parent = self.clone();
+        let range = 0..self.length();
+        Data {
+            parent,
+            range,
+        }
+    }
+}
+
 impl<'a> View<'a> {
     /// Constructs a `View`.
     pub fn new(
@@ -98,10 +136,20 @@ impl<'a> View<'a> {
         index: usize,
         json: &'a json::buffer::View,
     ) -> Self {
+        let parent = gltf.buffers().nth(json.buffer.value()).unwrap();
         Self {
-            gltf: gltf,
-            index: index,
-            json: json,
+            gltf,
+            index,
+            json,
+            parent,
+        }
+    }
+
+    /// Converts `View` into a `Loaded<View>`.
+    pub fn loaded(self, source: &'a Source) -> Loaded<'a, View<'a>> {
+        Loaded {
+            item: self,
+            source,
         }
     }
 
@@ -136,11 +184,6 @@ impl<'a> View<'a> {
         self.json.byte_stride.map(|x| x.0 as usize)
     }
 
-    /// Returns the buffer view data.
-    pub fn data(&self) -> Data {
-        self.buffer().data().subview(self.offset(), self.length())
-    }
-
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&str> {
@@ -165,3 +208,17 @@ impl<'a> View<'a> {
         &self.json.extras
     }
 }
+impl<'a> Loaded<'a, View<'a>> {
+    /// Returns the buffer view data.
+    pub fn data(&self) -> Data {
+        let begin = self.offset();
+        let end = self.length();
+        let range = begin..end;
+        let parent = self.parent.clone().loaded(self.source);
+        Data {
+            parent,
+            range,
+        }
+    }
+}
+
