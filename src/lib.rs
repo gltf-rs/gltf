@@ -137,5 +137,32 @@ pub mod skin;
 /// Contains `Texture`, `Sampler`, and other related data structures.
 pub mod texture;
 
+pub use self::animation::Animation;
+pub use self::accessor::Accessor;
+pub use self::buffer::Buffer;
+pub use self::camera::Camera;
 pub use self::gltf::Gltf;
+pub use self::image::Image;
 pub use self::import::{Data, DynamicImage, Import};
+pub use self::material::Material;
+pub use self::mesh::{Mesh, Primitive};
+pub use self::scene::{Node, Scene};
+pub use self::skin::Skin;
+pub use self::texture::Texture;
+
+/// Represents sources of buffer data.
+pub trait Source {
+    /// Return the buffer data referenced by the given `Buffer`.
+    ///
+    /// This method must not fail.
+    fn source_buffer(&self, buffer: &Buffer) -> &[u8];
+}
+
+/// Wrapper type for data structures with their data ready.
+pub struct Loaded<'a, T> {
+    /// The wrapper item.
+    item: T,
+
+    /// The data source for this item.
+    source: &'a Source,
+}
