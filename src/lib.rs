@@ -86,9 +86,6 @@
 //! # }
 //! ```
 
-extern crate base64;
-extern crate futures;
-extern crate image as image_crate;
 #[macro_use]
 extern crate lazy_static;
 
@@ -115,9 +112,6 @@ pub mod gltf;
 
 /// Contains `Image` and other related data structures.
 pub mod image;
-
-// Contains functions for importing glTF 2.0 assets.
-//pub mod import;
 
 /// Contains `Material` and other related data structures.
 pub mod material;

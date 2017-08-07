@@ -17,13 +17,7 @@ include = [
 [badges]
 travis-ci = { repository = "alteous/gltf" }
 
-[dev-dependencies]
-futures-cpupool = "0.1"
-
 [dependencies]
-base64 = "0.6"
-futures = "0.1"
-image = "0.14"
 lazy_static = "0.2"
 
 [dependencies.gltf-json]
