@@ -268,7 +268,10 @@ fn validate_binary(
 ) -> Result<(), Error> {
     use self::json::validation::Error as Reason;
     let mut errs = vec![];
-    let _ = validate_standard(json, config);
+    let _ = validate_standard(json, config)?;
+    if config.validation_strategy == config::ValidationStrategy::Skip {
+        return Ok(());
+    }
 
     // Required for the `Minimal` and `Complete` validation strategies.
     for (index, buffer) in json.buffers.iter().enumerate() {

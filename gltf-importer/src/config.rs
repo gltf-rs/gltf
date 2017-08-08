@@ -8,7 +8,7 @@
 // except according to those terms.
 
 /// Describes the validation strategy of an `Importer`.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ValidationStrategy {
     /// Validate the whole glTF against the 2.0 specification.
     ///
