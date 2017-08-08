@@ -9,7 +9,7 @@
 
 use std::collections::hash_map;
 use std::{iter, slice};
-use {accessor, extensions, json, material};
+use {accessor, json, material};
 
 use accessor::{Accessor, DataType, Dimensions, Iter};
 use {Gltf, Loaded};
@@ -230,14 +230,6 @@ impl<'a> Mesh<'a>  {
         self.json
     }
 
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::mesh::Mesh<'a> {
-        extensions::mesh::Mesh::new(
-            self.gltf,
-            &self.json.extensions,
-        )
-    }
-
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -359,14 +351,6 @@ impl<'a> Primitive<'a> {
     /// Returns the internal JSON item.
     pub fn as_json(&self) ->  &json::mesh::Primitive {
         self.json
-    }
-
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::mesh::Primitive<'a> {
-        extensions::mesh::Primitive::new(
-            self.mesh,
-            &self.json.extensions,
-        )
     }
 
     /// Optional application specific data.

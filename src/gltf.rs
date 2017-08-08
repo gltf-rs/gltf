@@ -160,7 +160,7 @@ pub struct Textures<'a> {
     gltf: &'a Gltf,
 }
 
-impl<'a> Loaded<'a, Gltf> {
+impl<'a> Loaded<'a, &'a Gltf> {
     /// Returns an `Iterator` that visits the accessors of the glTF asset.
     pub fn accessors(&'a self) -> Loaded<'a, Accessors<'a>> {
         Loaded {
@@ -276,7 +276,7 @@ impl Gltf {
     }
 
     /// Converts `Gltf` into `Loaded<Gltf>`.
-    pub fn loaded<'a>(&'a self, source: &'a Source) -> Loaded<&'a Self> {
+    pub fn loaded<'a>(&'a self, source: &'a Source) -> Loaded<'a, &'a Self> {
         Loaded {
             item: self,
             source,
@@ -389,13 +389,13 @@ impl Gltf {
     }
 }
 
-impl fmt::Debug for Gltf {
+impl<'a> fmt::Debug for Gltf {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self.root)
     }
 }
 
-impl ops::Deref for Gltf {
+impl<'a> ops::Deref for Gltf {
     type Target = root::Root;
     fn deref(&self) -> &Self::Target {
         &self.root

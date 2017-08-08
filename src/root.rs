@@ -7,8 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::slice;
 use json;
+use std::slice;
 
 /// Iterator over extension strings.
 #[derive(Clone, Debug)]
@@ -23,19 +23,19 @@ impl Root {
     pub fn new(json: json::root::Root) -> Self {
         Root(json)
     }
-    
+
     /// Returns the internal JSON item.
     pub fn as_json(&self) -> &json::root::Root {
         &self.0
     }
     
     /// Returns the extensions referenced in this .gltf file.
-    pub fn extensions_used<'a>(&'a self) -> Extensions<'a> {
+    pub fn extensions_used(&self) -> Extensions {
         Extensions(self.0.extensions_used.iter())
     }
 
     /// Returns the extensions required to load and render this asset.
-    pub fn extensions_required<'a>(&'a self) -> Extensions<'a> {
+    pub fn extensions_required(&self) -> Extensions {
         Extensions(self.0.extensions_required.iter())
     }
 }

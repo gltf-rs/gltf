@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use std::slice;
-use {accessor, extensions, json, scene, Gltf};
+use {accessor, json, scene, Gltf};
 
 pub use json::animation::{InterpolationAlgorithm, TrsProperty};
 
@@ -63,14 +63,6 @@ impl<'a> Animation<'a> {
     /// Returns the internal JSON index.
     pub fn index(&self) -> usize {
         self.index
-    }
-
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::animation::Animation<'a> {
-        extensions::animation::Animation::new(
-            self.gltf,
-            &self.json.extensions,
-        )
     }
 
     /// Optional application specific data.
@@ -144,14 +136,6 @@ impl<'a> Channel<'a> {
         Target::new(self.anim.clone(), &self.json.target)
     }
 
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::animation::Channel<'a> {
-        extensions::animation::Channel::new(
-            self.anim.clone(),
-            &self.json.extensions,
-        )
-    }
-
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -185,14 +169,6 @@ impl<'a> Target<'a> {
     /// Returns the internal JSON item.
     pub fn as_json(&self) ->  &json::animation::Target {
         self.json
-    }
-
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::animation::Target<'a> {
-        extensions::animation::Target::new(
-            self.anim.clone(),
-            &self.json.extensions,
-        )
     }
 
     /// Optional application specific data.
@@ -239,14 +215,6 @@ impl<'a> Sampler<'a> {
     /// Returns the internal JSON item.
     pub fn as_json(&self) ->  &json::animation::Sampler {
         self.json
-    }
-
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::animation::Sampler<'a> {
-        extensions::animation::Sampler::new(
-            self.anim.clone(),
-            &self.json.extensions,
-        )
     }
 
     /// Optional application specific data.

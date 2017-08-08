@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use std::slice;
-use {accessor, extensions, json, scene};
+use {accessor, json, scene};
 
 use {Gltf, Loaded};
 
@@ -57,14 +57,6 @@ impl<'a> Skin<'a> {
     /// Returns the internal JSON item.
     pub fn as_json(&self) ->  &json::skin::Skin {
         self.json
-    }
-
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::skin::Skin {
-        extensions::skin::Skin::new(
-            self.gltf,
-            &self.json.extensions,
-        )
     }
 
     /// Optional application specific data.

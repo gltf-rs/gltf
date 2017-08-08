@@ -104,9 +104,6 @@ pub mod buffer;
 /// Contains `Camera` and other related data structures.
 pub mod camera;
 
-/// Contains extension specific data structures.
-pub mod extensions;
-
 /// Contains `Gltf`, and other related data structures.
 pub mod gltf;
 

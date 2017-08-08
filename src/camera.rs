@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use {extensions, json, Gltf};
+use {json, Gltf};
 
 /// A camera's projection.
 #[derive(Clone, Debug)]
@@ -93,14 +93,6 @@ impl<'a> Camera<'a> {
         }
     } 
 
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::camera::Camera<'a> {
-        extensions::camera::Camera::new(
-            self.gltf,
-            &self.json.extensions,
-        )
-    }
-
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -141,14 +133,6 @@ impl<'a> Orthographic<'a> {
         self.json.znear
     }
 
-    ///  Extension specific data.
-    pub fn extensions(&self) -> extensions::camera::Orthographic<'a> {
-        extensions::camera::Orthographic::new(
-            self.gltf,
-            &self.json.extensions,
-        )
-    }
-
     ///  Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -187,14 +171,6 @@ impl<'a> Perspective<'a> {
     ///  The distance to the near clipping plane.
     pub fn znear(&self) -> f32 {
         self.json.znear
-    }
-
-    ///  Extension specific data.
-    pub fn extensions(&self) -> extensions::camera::Perspective<'a> {
-        extensions::camera::Perspective::new(
-            self.gltf,
-            &self.json.extensions,
-        )
     }
 
     ///  Optional application specific data.

@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use std::ops::Deref;
-use {extensions, json, texture, Gltf};
+use {json, texture, Gltf};
 
 pub use json::material::AlphaMode;
 
@@ -142,14 +142,6 @@ impl<'a> Material<'a> {
         self.json.emissive_factor.0
     }
 
-    ///  Extension specific data.
-    pub fn extensions(&self) -> extensions::material::Material<'a> {
-        extensions::material::Material::new(
-            self.gltf,
-            &self.json.extensions,
-        )
-    }
-
     ///  Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -218,14 +210,6 @@ impl<'a> PbrMetallicRoughness<'a> {
         })
     }
 
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::material::PbrMetallicRoughness<'a> {
-        extensions::material::PbrMetallicRoughness::new(
-            self.gltf,
-            &self.json.extensions,
-        )
-    }
-
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -269,14 +253,6 @@ impl<'a> NormalTexture<'a> {
         self.json.tex_coord
     }
 
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::material::NormalTexture<'a> {
-        extensions::material::NormalTexture::new(
-            self.texture.clone(),
-            &self.json.extensions,
-        )
-    }
-
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -316,14 +292,6 @@ impl<'a> OcclusionTexture<'a> {
     /// The set index of the texture's `TEXCOORD` attribute.
     pub fn tex_coord(&self) -> u32 {
         self.json.tex_coord
-    }
-
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::material::OcclusionTexture<'a> {
-        extensions::material::OcclusionTexture::new(
-            self.texture.clone(),
-            &self.json.extensions,
-        )
     }
 
     /// Optional application specific data.

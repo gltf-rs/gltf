@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use std::ops::Deref;
-use {extensions, image, json, Gltf};
+use {image, json, Gltf};
 
 pub use json::texture::{MagFilter, MinFilter, WrappingMode};
 
@@ -114,14 +114,6 @@ impl<'a> Sampler<'a> {
         self.json.wrap_t.unwrap()
     }
 
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::texture::Sampler<'a> {
-        extensions::texture::Sampler::new(
-            self.gltf,
-            &self.json.extensions,
-        )
-    }
-
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -171,14 +163,6 @@ impl<'a> Texture<'a> {
         self.gltf.images().nth(self.json.source.value() as usize).unwrap()
     }
 
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::texture::Texture<'a> {
-        extensions::texture::Texture::new(
-            self.gltf,
-            &self.json.extensions,
-        )
-    }
-
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -202,14 +186,6 @@ impl<'a> Info<'a> {
     /// The set index of the texture's `TEXCOORD` attribute.
     pub fn tex_coord(&self) -> u32 {
         self.json.tex_coord
-    }
-
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::texture::Info<'a> {
-        extensions::texture::Info::new(
-            self.texture.clone(),
-            &self.json.extensions,
-        )
     }
 
     /// Optional application specific data.

@@ -9,15 +9,15 @@
 
 extern crate gltf;
 
+use gltf::json;
+use std::{fs, io};
+
 fn main() {
     if let Some(path) = std::env::args().nth(1) {
-        let source = gltf::import::FromPath::new(&path);
-        let config = Default::default();
-        let import = gltf::Import::custom(source, config);
-        match import.sync() {
-            Ok(gltf) => println!("{:#?}", gltf),
-            Err(err) => println!("Invalid glTF ({:?})", err),
-        }
+        let file = fs::File::open(&path).expect("I/O error");
+        let buf_reader = io::BufReader::new(file);
+        let json: json::Root = json::from_reader(buf_reader).expect("I/O error");
+        println!("{:#?}", json);
     } else {
         println!("usage: gltf-display <PATH>");
     }

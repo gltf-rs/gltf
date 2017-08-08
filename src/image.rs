@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use {extensions, buffer, json};
+use {buffer, json};
 use {Gltf, Loaded};
 
 /// Image data used to create a texture.
@@ -73,13 +73,6 @@ impl<'a> Image<'a> {
         self.json.name.as_ref().map(String::as_str)
     }
 
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::image::Image<'a> {
-        extensions::image::Image::new(
-            self.gltf,
-            &self.json.extensions,
-        )
-    }
 
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {

@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use std::ops;
-use {extensions, json};
+use json;
 
 use {Gltf, Loaded, Source};
 
@@ -103,14 +103,6 @@ impl<'a> Buffer<'a> {
         self.json.name.as_ref().map(String::as_str)
     }
 
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::buffer::Buffer<'a> {
-        extensions::buffer::Buffer::new(
-            self.gltf,
-            &self.json.extensions,
-        )
-    }
-
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -193,14 +185,6 @@ impl<'a> View<'a> {
     /// Optional target the buffer should be bound to.
     pub fn target(&self) -> Option<Target> {
         self.json.target.map(|target| target.unwrap())
-    }
-
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::buffer::View<'a> {
-        extensions::buffer::View::new(
-            self.gltf,
-            &self.json.extensions,
-        )
     }
 
     /// Optional application specific data.

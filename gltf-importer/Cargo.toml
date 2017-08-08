@@ -1,0 +1,15 @@
+[package]
+name = "gltf-importer"
+version = "0.1.0"
+authors = ["alteous <alteous@outlook.com>"]
+description = "Reference importer for the gltf crate"
+repository = "https://github.com/alteous/gltf"
+license = "MIT/Apache-2.0"
+
+[dependencies]
+gltf = { path = ".." }
+
+[features]
+default = []
+names = ["gltf/names"]
+extras = ["gltf/extras"]
