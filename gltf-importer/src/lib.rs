@@ -211,10 +211,10 @@ fn read_to_end<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, Error> {
 fn load_external_buffers(
     base_path: &Path,
     root: &gltf::root::Root,
-    is_glb: bool,
+    has_blob: bool,
 ) -> Result<Vec<Vec<u8>>, Error> {
     let mut iter = root.as_json().buffers.iter();
-    if is_glb {
+    if has_blob {
         let _ = iter.next();
     }
     iter
@@ -307,8 +307,8 @@ fn import_standard<'a>(
     let json: gltf::json::Root = gltf::json::from_slice(data)?;
     let _ = validate_standard(&json, &config);
     let root = gltf::root::Root::new(json);
-    let is_glb = false;
-    let buffers = load_external_buffers(base_path, &root, is_glb)?;
+    let has_blob = false;
+    let buffers = load_external_buffers(base_path, &root, has_blob)?;
     Ok((Gltf::new(root), buffers))
 }
 
@@ -330,8 +330,7 @@ fn import_binary<'a>(
     if let Some(buffer) = blob {
         buffers.push(buffer);
     }
-    let is_glb = true;
-    for buffer in load_external_buffers(base_path, &root, is_glb)? {
+    for buffer in load_external_buffers(base_path, &root, has_blob)? {
         buffers.push(buffer);
     }
     Ok((Gltf::new(root), buffers))
