@@ -10,7 +10,7 @@
 use std::ops;
 use json;
 
-use {Gltf, Loaded, Source};
+use {Gltf, Loaded};
 
 pub use json::buffer::Target;
 
@@ -78,14 +78,6 @@ impl<'a> Buffer<'a> {
         }
     }
 
-    /// Converts `View` into a `Loaded<View>`.
-    pub fn loaded(self, source: &'a Source) -> Loaded<'a, Buffer<'a>> {
-        Loaded {
-            item: self,
-            source,
-        }
-    }
-
     /// Returns the internal JSON index.
     pub fn index(&self) -> usize {
         self.index
@@ -141,14 +133,6 @@ impl<'a> View<'a> {
         }
     }
 
-    /// Converts `View` into a `Loaded<View>`.
-    pub fn loaded(self, source: &'a Source) -> Loaded<'a, View<'a>> {
-        Loaded {
-            item: self,
-            source,
-        }
-    }
-
     /// Returns the internal JSON index.
     pub fn index(&self) -> usize {
         self.index
@@ -198,11 +182,14 @@ impl<'a> View<'a> {
 }
 impl<'a> Loaded<'a, View<'a>> {
     /// Returns the buffer view data.
-    pub fn data(&self) -> Data {
+    pub fn data(&'a self) -> Data<'a> {
         let begin = self.offset();
         let end = begin + self.length();
         let range = Some(begin..end);
-        let parent = self.parent.clone().loaded(self.source);
+        let parent = Loaded {
+            item: self.parent.clone(),
+            source: self.source,
+        };
         Data {
             parent,
             range,

@@ -84,11 +84,15 @@ impl<'a> Loaded<'a, Image<'a>> {
     /// Returns the raw image data.
     pub fn data(&self) -> Data<'a> {
         if let Some(index) = self.json.buffer_view.as_ref() {
-            let buffer_view = self.gltf
-                .views()
-                .nth(index.value())
-                .unwrap()
-                .loaded(self.source);
+            let buffer_view = Loaded {
+                item: {
+                    self.gltf
+                        .views()
+                        .nth(index.value())
+                        .unwrap()
+                },
+                source: self.source,
+            };
             let mime_type = self.json.mime_type.as_ref().map(|x| x.0.as_str()).unwrap();
             Data::FromBufferView { buffer_view, mime_type }
         } else {

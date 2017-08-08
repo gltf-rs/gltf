@@ -462,7 +462,10 @@ impl<'a> Iterator for Loaded<'a, Buffers<'a>> {
         self.item.iter
             .next()
             .map(|(index, json)| {
-                Buffer::new(self.gltf, index, json).loaded(self.source)
+                Loaded {
+                    item: Buffer::new(self.gltf, index, json),
+                    source: self.source,
+                }
             })
     }
 }
@@ -480,7 +483,10 @@ impl<'a> Iterator for Loaded<'a, Views<'a>> {
         self.item.iter
             .next()
             .map(|(index, json)| {
-                View::new(self.gltf, index, json).loaded(self.source)
+                Loaded {
+                    item: View::new(self.gltf, index, json),
+                    source: self.source,
+                }
             })
     }
 }

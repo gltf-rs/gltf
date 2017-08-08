@@ -33,21 +33,24 @@ pub struct Accessor<'a> {
 
 /// An `Iterator` that iterates over the members of an accessor.
 #[derive(Clone, Debug)]
-pub struct Iter<'a, T> {
-    /// Number of iterations left.
+pub struct Iter<'a, T: Copy> {
+    /// The total number of iterations left.
     count: usize,
 
-    /// The address of the value yielded from the last iteration.
-    ptr: *const u8,
+    /// The index of the next iteration.
+    index: usize,
 
-    /// The number of bytes to advance `ptr` by per iteration.
+    /// The number of bytes between each item.
     stride: usize,
+
+    /// Byte offset into the buffer view where the items begin.
+    offset: usize,
+    
+    /// The accessor we're iterating over.
+    accessor: Loaded<'a, Accessor<'a>>,
 
     /// Consumes the data type we're returning at each iteration.
     _consume_data_type: marker::PhantomData<T>,
-
-    /// Consumes the lifetime of `ptr`.
-    _consume_lifetime: marker::PhantomData<&'a ()>,
 }
 
 impl<'a> Accessor<'a> {
@@ -159,36 +162,36 @@ impl<'a> Loaded<'a, Accessor<'a>> {
     /// # Panics
     ///
     /// If the size of an individual `T` does not match the accessor component size.
-    pub unsafe fn iter<T>(&self) -> Iter<'a, T> {
+    pub unsafe fn iter<T: Copy>(&self) -> Iter<'a, T> {
         assert_eq!(self.size(), mem::size_of::<T>());
         let count = self.count();
-        let offset = self.offset() as isize;
-        let view = self.view.clone().loaded(self.source);
-        let stride = view.stride().unwrap_or(mem::size_of::<T>());
-        let data = view.data();
-        let ptr = data.as_ptr().offset(offset);
+        let offset = self.offset();
+        let stride = self.view.stride().unwrap_or(mem::size_of::<T>());
         Iter {
-            count: count,
-            ptr: ptr,
-            stride: stride,
+            accessor: self.clone(),
+            count,
+            offset,
+            stride,
+            index: 0,
             _consume_data_type: marker::PhantomData,
-            _consume_lifetime: marker::PhantomData,
         }
     }
 }
 
-impl<'a, T> ExactSizeIterator for Iter<'a, T> {}
-impl<'a, T> Iterator for Iter<'a, T> {
+impl<'a, T: Copy> ExactSizeIterator for Iter<'a, T> {}
+impl<'a, T: Copy> Iterator for Iter<'a, T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
-        if self.count > 0 {
-            let value: T = unsafe {
-                mem::transmute_copy(&*self.ptr)
+        if self.index < self.count {
+            let ptr_offset = self.offset + self.index * self.stride;
+            let view = Loaded {
+                item: self.accessor.view(),
+                source: self.accessor.source,
             };
-            self.count -= 1;
-            unsafe {
-                self.ptr = self.ptr.offset(self.stride as isize);
-            }
+            let data = view.data();
+            let ptr = unsafe { data.as_ptr().offset(ptr_offset as isize) };
+            let value: T = unsafe { mem::transmute_copy(&*ptr) };
+            self.index += 1;
             Some(value)
         } else {
             None
@@ -196,7 +199,8 @@ impl<'a, T> Iterator for Iter<'a, T> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        (self.count as usize, Some(self.count as usize))
+        let hint = self.count - self.index;
+        (hint, Some(hint))
     }
 }
 
