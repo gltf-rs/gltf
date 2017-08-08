@@ -193,6 +193,7 @@ impl<'a> Scene<'a> {
     }
 }
 
+impl<'a> ExactSizeIterator for Nodes<'a> {}
 impl<'a> Iterator for Nodes<'a> {
     type Item = Node<'a>;
     fn next(&mut self) -> Option<Self::Item> {
@@ -200,8 +201,13 @@ impl<'a> Iterator for Nodes<'a> {
             .next()
             .map(|index| self.gltf.nodes().nth(index.value()).unwrap())
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
 }
 
+impl<'a> ExactSizeIterator for Children<'a> {}
 impl<'a> Iterator for Children<'a> {
     type Item = Node<'a>;
     fn next(&mut self) -> Option<Self::Item> {
@@ -209,6 +215,8 @@ impl<'a> Iterator for Children<'a> {
             .next()
             .map(|index| self.parent.gltf.nodes().nth(index.value()).unwrap())
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
 }
-
-
