@@ -28,36 +28,6 @@
 //!
 //! ## Examples
 //!
-//! ### Loading glTF from the file system
-//!
-//! The crate provides a `from_path` method whereby one can import glTF from the
-//! system.
-//!
-//! ```
-//! extern crate gltf;
-//!
-//! fn main() {
-//!     # #[allow(unused_variables)]
-//!     let path = "path/to/asset.gltf";
-//!     # let path = "./glTF-Sample-Models/2.0/Box/glTF/Box.gltf";
-//!     // This creates a `Future` that drives the loading
-//!     // of glTF and all of its data.
-//!     let import = gltf::Import::from_path(path);
-//!     // The simpliest way of working with futures is to
-//!     // block the thread until the glTF is ready.
-//!     match import.sync() {
-//!         Ok(gltf) => println!("{:#?}", gltf),
-//!         Err(err) => println!("error: {:?}", err),
-//!     }
-//! }
-//! ```
-//!
-//! An [`Import`] resolves to [`Gltf`], a data structure that provides helpful utilities
-//! such as iterators for working with glTF.
-//!
-//! [`Import`]: import/struct.Import.html
-//! [`Gltf`]: gltf/struct.Gltf.html
-//!
 //! ### Walking the node hierarchy
 //!
 //! Below demonstates visiting the root [`Node`]s of every [`Scene`], printing the
@@ -66,9 +36,14 @@
 //! [`Node`]: scene/struct.Node.html
 //! [`Scene`]: scene/struct.Scene.html
 //! ```
+//! # use gltf::json;
+//! # use gltf::Gltf;
 //! # fn run() -> Result<(), Box<std::error::Error>> {
 //! # let path = "./glTF-Sample-Models/2.0/Box/glTF/Box.gltf";
-//! let gltf = gltf::Import::from_path(path).sync()?;
+//! let file = std::fs::File::open(path)?;
+//! let reader = std::io::BufReader::new(file);
+//! let json = json::from_reader(reader)?;
+//! let gltf = Gltf::from_json(json);
 //! for scene in gltf.scenes() {
 //!     for node in scene.nodes() {
 //!         // Do something with this node

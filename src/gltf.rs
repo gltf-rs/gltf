@@ -268,13 +268,21 @@ impl<'a> Loaded<'a, &'a Gltf> {
 }
 
 impl Gltf {
-    /// Constructor for a complete lazy-loaded glTF asset.
+    /// Constructs the `Gltf` wrapper from JSON.
+    #[doc(hidden)]
     pub fn new(root: root::Root) -> Self {
         Self {
             root: root,
         }
     }
 
+    /// Constructs the `Gltf` wrapper from JSON.
+    pub fn from_json(json: json::Root) -> Self {
+        Self {
+            root: root::Root::new(json),
+        }
+    }
+    
     /// Converts `Gltf` into `Loaded<Gltf>`.
     pub fn loaded<'a>(&'a self, source: &'a Source) -> Loaded<'a, &'a Self> {
         Loaded {
