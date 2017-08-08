@@ -21,13 +21,17 @@ pub struct Data<'a> {
     parent: Loaded<'a, Buffer<'a>>,
 
     /// Buffer range.
-    range: ops::Range<usize>,
+    range: Option<ops::Range<usize>>,
 }
 
 impl<'a> ops::Deref for Data<'a> {
     type Target = [u8];
     fn deref(&self) -> &Self::Target {
-        &self.parent.source.source_buffer(&self.parent.item)[self.range.clone()]
+        let slice = self.parent.source.source_buffer(&self.parent.item);
+        match self.range.clone() {
+            Some(range) => &slice[range],
+            None => &slice[..],
+        }
     }
 }
 
@@ -113,7 +117,7 @@ impl<'a> Loaded<'a, Buffer<'a>> {
     /// Returns the buffer data.
     pub fn data(&self) -> Data {
         let parent = self.clone();
-        let range = 0..self.length();
+        let range = None;
         Data {
             parent,
             range,
@@ -196,8 +200,8 @@ impl<'a> Loaded<'a, View<'a>> {
     /// Returns the buffer view data.
     pub fn data(&self) -> Data {
         let begin = self.offset();
-        let end = self.length();
-        let range = begin..end;
+        let end = begin + self.length();
+        let range = Some(begin..end);
         let parent = self.parent.clone().loaded(self.source);
         Data {
             parent,

@@ -255,6 +255,16 @@ impl<'a> Mesh<'a>  {
     }
 }
 
+impl<'a> Loaded<'a, Mesh<'a>> {
+    /// Defines the geometry to be renderered with a material.
+    pub fn primitives(&'a self) -> Loaded<'a, Primitives<'a>> {
+        Loaded {
+            item: self.item.primitives(),
+            source: self.source,
+        }
+    }
+}
+    
 impl<'a> Colors<'a> {
     fn from_accessor(accessor: Loaded<'a, Accessor<'a>>) -> Colors<'a> {
         unsafe {
@@ -358,7 +368,7 @@ impl<'a> Primitive<'a> {
         &self.json.extras
     }
 
-    /// The material to apply to this primitive when rendering
+    /// Returns the material to apply to this primitive when rendering
     pub fn material(&self) -> material::Material<'a> {
         self.json.material
             .as_ref()
@@ -449,6 +459,14 @@ impl<'a> Loaded<'a, Primitive<'a>> {
                     .loaded(self.source)
             })
     }
+
+    /// Returns the material to apply to this primitive when rendering
+    pub fn material(&self) -> Loaded<'a, material::Material<'a>> {
+        Loaded {
+            item: self.item.material(),
+            source: self.source,
+        }
+    }
 }
 
 impl<'a> Iterator for Positions<'a> {
@@ -490,6 +508,20 @@ impl<'a> Iterator for TangentDisplacements<'a> {
     type Item = [f32; 3];
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
+    }
+}
+
+impl<'a> Iterator for Loaded<'a, Primitives<'a>> {
+    type Item = Loaded<'a, Primitive<'a>>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.item
+            .next()
+            .map(|primitive| {
+                Loaded {
+                    item: primitive,
+                    source: self.source,
+                }
+            })
     }
 }
 

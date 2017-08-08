@@ -34,6 +34,9 @@ pub use self::config::Config;
 /// Error encountered when importing a glTF 2.0 asset.
 #[derive(Debug)]
 pub enum Error {
+    /// A loaded glTF buffer is not of the required length.
+    BufferLength(json::Path),
+
     /// A glTF extension required by the asset has not been enabled by the user.
     ExtensionDisabled(String),
 
@@ -213,15 +216,19 @@ fn load_external_buffers(
     root: &gltf::root::Root,
     has_blob: bool,
 ) -> Result<Vec<Vec<u8>>, Error> {
-    let mut iter = root.as_json().buffers.iter();
+    let mut iter = root.as_json().buffers.iter().enumerate();
     if has_blob {
         let _ = iter.next();
     }
     iter
-        .map(|buffer| {
+        .map(|(index, buffer)| {
             let uri = buffer.uri.as_ref().unwrap();
             let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
             let data = read_to_end(&path)?;
+            if data.len() != buffer.byte_length as usize {
+                let path = json::Path::new().field("buffers").index(index);
+                return Err(Error::BufferLength(path));
+            }
             Ok(data)
         })
         .collect()
@@ -395,22 +402,23 @@ impl fmt::Display for Error {
 impl StdError for Error {
     fn description(&self) -> &str {
         use self::Error::*;
-        match self {
-            &ExtensionDisabled(_) => "Asset requires a disabled extension",
-            &ExtensionUnsupported(_) => "Assets requires an unsupported extension",
-            &IncompatibleVersion(_) => "Asset is not glTF version 2.0",
-            &Io(_) => "I/O error",
-            &MalformedGlb(_) => "Malformed .glb file",
-            &MalformedJson(_) => "Malformed .gltf / .glb JSON",
-            &Validation(_) => "Asset failed validation tests",
+        match *self {
+            BufferLength(_) => "Loaded buffer does not match required length",
+            ExtensionDisabled(_) => "Asset requires a disabled extension",
+            ExtensionUnsupported(_) => "Assets requires an unsupported extension",
+            IncompatibleVersion(_) => "Asset is not glTF version 2.0",
+            Io(_) => "I/O error",
+            MalformedGlb(_) => "Malformed .glb file",
+            MalformedJson(_) => "Malformed .gltf / .glb JSON",
+            Validation(_) => "Asset failed validation tests",
         }
     }
 
     fn cause(&self) -> Option<&StdError> {
         use self::Error::*;
-        match self {
-            &MalformedJson(ref err) => Some(err),
-            &Io(ref err) => Some(err),
+        match *self {
+            MalformedJson(ref err) => Some(err),
+            Io(ref err) => Some(err),
             _ => None,
         }
     }
