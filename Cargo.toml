@@ -18,10 +18,8 @@ include = [
 travis-ci = { repository = "alteous/gltf" }
 
 [dependencies]
+gltf-json = "0.1"
 lazy_static = "0.2"
-
-[dependencies.gltf-json]
-path = "./gltf-json"
 
 [features]
 default = []
