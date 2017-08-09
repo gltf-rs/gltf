@@ -70,7 +70,7 @@
 //!
 //! [`Source`]: trait.Source.html
 //! [`Loaded`]: struct.Loaded.html
-//! [`gltf-importer`]: docs.rs/gltf-importer
+//! [`gltf-importer`]: https://docs.rs/gltf-importer
 //! ```
 //! # use gltf::json;
 //! # use gltf::Gltf;
