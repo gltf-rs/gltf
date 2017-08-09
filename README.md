@@ -24,7 +24,7 @@ This crate is intended to load [glTF 2.0](https://www.khronos.org/gltf), a file 
 
 ### Usage
 
-See the [crate documentation](docs.rs/gltf) for example usage.
+See the [crate documentation](https://docs.rs/gltf) for example usage.
 
 ### Extras and Names
 
