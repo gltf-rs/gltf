@@ -1,6 +1,6 @@
 [package]
 name = "gltf"
-version = "0.7.0"
+version = "0.8.0"
 authors = ["alteous <alteous@outlook.com>"]
 description = "glTF 2.0 loader"
 documentation = "https://docs.rs/gltf"
