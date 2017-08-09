@@ -7,15 +7,22 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+//! The reference loader implementation for the `gltf` crate.
 //!
-//! glTF JSON, buffers, and images may come from a range of external sources, so
-//! customization is an important design goal of the import module. The `Source`
-//! trait is provided to facilitate customization of the data loading process.
+//! # Examples 
 //!
-//! For convenience, the library contains one implementation of the `Source` trait,
-//! namely `FromPath`, which allows loading from file system and also from embedded
-//! base64 encoded data. This implementation may be used as reference for other
-//! schemes such as `http`.
+//! ### Importing some `glTF` 2.0
+//!
+//! ```rust
+//! # #[allow(unused_variables)]
+//! let path = "path/to/asset.gltf";
+//! # let path = "../examples/Box.gltf";
+//! let mut importer = gltf_importer::Importer::new(path);
+//! match importer.import() {
+//!     Ok(gltf) => println!("{:#?}", gltf.as_json()),
+//!     Err(err) => println!("error: {:?}", err),
+//! }
+//! ```
 
 extern crate gltf;
 
@@ -26,7 +33,7 @@ use gltf::{Gltf, Loaded};
 use std::error::Error as StdError;
 use std::path::{Path, PathBuf};
 
-/// Contains data structures for import configuration.
+/// Contains parameters for import configuration.
 pub mod config;
 
 pub use self::config::Config;
@@ -59,7 +66,7 @@ pub enum Error {
     Validation(Vec<(json::Path, validation::Error)>),
 }
 
-/// A `Future` that drives the importation of glTF.
+/// An `Importer` loads `glTF` and all of its buffer data from the file system.
 #[derive(Debug)]
 pub struct Importer {
     path: PathBuf,
@@ -368,7 +375,7 @@ impl Importer {
         Ok(self.gltf.as_ref().unwrap().loaded(self))
     }
 
-    /// Returns the path to the glTF.
+    /// Returns the path to the `glTF`.
     pub fn path(&self) -> &Path {
         &self.path
     }
