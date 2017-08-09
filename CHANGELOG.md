@@ -1,12 +1,18 @@
 ### Changelog
 
+0.8.0 (09/08/17)
+
+ * Redesigned the `Source` trait so that it no longer performs I/O.
+ * Added the `Loaded` type, which provides `glTF` objects with buffer data.
+ * Moved the `json` module into its own crate, namely `gltf-json`.
+
 0.7.0 (28/07/17)
 
  * Image::data now returns a `DynamicImage`, allowing for image post-processing.
 
 0.6.1 (15/07/17)
 
- * Removed the Send and Sync requirements from the Source trait
+ * Removed the `Send` and `Sync` requirements from the `Source` trait.
 
 0.6.0 (15/07/17)
 
