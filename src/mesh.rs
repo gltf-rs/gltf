@@ -17,32 +17,32 @@ use {Gltf, Loaded};
 pub use json::mesh::{Mode, Semantic};
 
 /// XYZ vertex normals of type `[f32; 3]`.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Normals<'a>(Iter<'a, [f32; 3]>);
 
 /// XYZ vertex normal displacements of type `[f32; 3]`.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct NormalDisplacements<'a>(Iter<'a, [f32; 3]>);
 
 /// XYZ vertex positions of type `[f32; 3]`.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Positions<'a>(Iter<'a, [f32; 3]>);
 
 /// XYZ vertex position displacements of type `[f32; 3]`.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct PositionDisplacements<'a>(Iter<'a, [f32; 3]>);
 
 /// XYZW vertex tangents of type `[f32; 4]` where the `w` component is a
 /// sign value (-1 or +1) indicating the handedness of the tangent basis.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Tangents<'a>(Iter<'a, [f32; 4]>);
 
 /// XYZ vertex tangent displacements of type `[f32; 3]`.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct TangentDisplacements<'a>(Iter<'a, [f32; 3]>);
 
 /// Vertex colors.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Colors<'a> {
     /// RGB vertex color of type `[u8; 3]>`.
     RgbU8(Iter<'a, [u8; 3]>),
@@ -64,7 +64,7 @@ pub enum Colors<'a> {
 }
 
 /// Index data.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Indices<'a> {
     /// Index data of type U8
     U8(Iter<'a, u8>),
@@ -74,10 +74,18 @@ pub enum Indices<'a> {
     U32(Iter<'a, u32>),
 }
 
+/// Index data coerced into `u32` values.
+#[derive(Clone, Debug)]
+pub struct IndicesU32<'a>(Indices<'a>);
+
+/// Texture co-ordinates coerced into `[f32; 2]` values.
+#[derive(Clone, Debug)]
+pub struct TexCoordsF32<'a>(TexCoords<'a>);
+
 /// Vertex joints.
 /// Refer to the documentation on morph targets and skins for more
 /// information.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Joints<'a> {
     /// Joints of type `[u8; 4]`.
     /// Refer to the documentation on morph targets and skins for more
@@ -91,7 +99,7 @@ pub enum Joints<'a> {
 }
 
 /// UV texture co-ordinates.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum TexCoords<'a> {
     /// UV texture co-ordinates of type `[f32; 2]`.
     F32(Iter<'a, [f32; 2]>),
@@ -105,7 +113,7 @@ pub enum TexCoords<'a> {
 
 /// Weights,
 /// Refer to the documentation on morph targets for more information.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Weights<'a> {
     /// Weights of type `[f32; 4]`.
     F32(Iter<'a, [f32; 4]>),
@@ -118,7 +126,7 @@ pub enum Weights<'a> {
 }
 
 /// Vertex attribute data.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Attribute<'a> {
     /// Vertex colors.
     Colors(u32, Colors<'a>),
@@ -151,7 +159,7 @@ pub enum Attribute<'a> {
 }
 
 /// Morph targets.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct MorphTargets<'a> {
     /// XYZ vertex position displacements.
     positions: Option<PositionDisplacements<'a>>,
@@ -395,6 +403,12 @@ impl<'a> Loaded<'a, Primitive<'a>> {
             .map(|accessor| TexCoords::from_accessor(accessor))
     }
 
+    /// Returns the vertex texture co-ordinates of the given set, coerced into
+    /// `[f32; 2]` values.
+    pub fn tex_coords_f32(&self, set: u32) -> Option<TexCoordsF32> {
+        self.tex_coords(set).map(TexCoordsF32)
+    }
+
     /// Returns the joint indices of the given set.
     pub fn joints(&self, set: u32) -> Option<Joints> {
         self.find_accessor_with_semantic(Semantic::Joints(set))
@@ -417,6 +431,11 @@ impl<'a> Loaded<'a, Primitive<'a>> {
                 .loaded(self.source);
             Indices::from_accessor(accessor)
         })
+    }
+
+    /// Returns the primitive indices, coerced into `u32` values.
+    pub fn indices_u32(&self) -> Option<IndicesU32> {
+        self.indices().map(IndicesU32)
     }
 
     /// Returns the primitive positions.
@@ -465,6 +484,32 @@ impl<'a> Loaded<'a, Primitive<'a>> {
         Loaded {
             item: self.item.material(),
             source: self.source,
+        }
+    }
+}
+
+impl<'a> Iterator for IndicesU32<'a> {
+    type Item = u32;
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.0 {
+            Indices::U8(ref mut i) => i.next().map(|x| x as u32),
+            Indices::U16(ref mut i) => i.next().map(|x| x as u32),
+            Indices::U32(ref mut i) => i.next(),
+        }
+    }
+}
+
+impl<'a> Iterator for TexCoordsF32<'a> {
+    type Item = [f32; 2];
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.0 {
+            TexCoords::U8(ref mut i) => {
+                i.next().map(|x| [x[0] as f32 / 255.0, x[1] as f32 / 255.0])
+            },
+            TexCoords::U16(ref mut i) => {
+                i.next().map(|x| [x[0] as f32 / 65535.0, x[1] as f32 / 65535.0])
+            },
+            TexCoords::F32(ref mut i) => i.next(),
         }
     }
 }

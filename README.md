@@ -24,18 +24,7 @@ This crate is intended to load [glTF 2.0](https://www.khronos.org/gltf), a file 
 
 ### Usage
 
-#### Import some glTF 2.0
-
-```rust
-extern crate gltf;
-
-fn main() {
-    match gltf::Import::from_path("path/to/asset.gltf").sync() {
-        Ok(gltf) => println!("{:#?}", gltf),
-        Err(err) => println!("Invalid glTF ({:?})", err),
-    }
-}
-```
+See the [crate documentation](docs.rs/gltf) for example usage.
 
 ### Extras and Names
 

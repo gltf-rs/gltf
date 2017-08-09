@@ -19,11 +19,11 @@
 //!
 //! ## Installation
 //!
-//! Add `gltf` version 0.6 to your `Cargo.toml`.
+//! Add `gltf` version 0.8 to your `Cargo.toml`.
 //!
 //! ```toml
 //! [dependencies.gltf]
-//! version = "0.6"
+//! version = "0.8"
 //! ```
 //!
 //! ## Examples
@@ -36,22 +36,73 @@
 //! [`Node`]: scene/struct.Node.html
 //! [`Scene`]: scene/struct.Scene.html
 //! ```
-//! # use gltf::json;
-//! # use gltf::Gltf;
 //! # fn run() -> Result<(), Box<std::error::Error>> {
-//! # let path = "./glTF-Sample-Models/2.0/Box/glTF/Box.gltf";
-//! let file = std::fs::File::open(path)?;
+//! let file = std::fs::File::open("examples/Box.gltf")?;
 //! let reader = std::io::BufReader::new(file);
-//! let json = json::from_reader(reader)?;
-//! let gltf = Gltf::from_json(json);
+//! let json = gltf::json::from_reader(reader)?;
+//! let gltf = gltf::Gltf::from_json(json);
 //! for scene in gltf.scenes() {
 //!     for node in scene.nodes() {
-//!         // Do something with this node
+//!         // Do something with this node.
 //!         println!(
 //!             "Node {} has {} children",
 //!             node.index(),
 //!             node.children().count(),
 //!         );
+//!     }
+//! }
+//! # Ok(())
+//! # }
+//! # fn main() {
+//! #    let _ = run().expect("No runtime errors");
+//! # }
+//! ```
+//!
+//! ### Providing `Gltf` with external buffer data
+//!
+//! The [`Source`] trait provides `glTF` objects with their buffer data. This allows
+//! the crate to provide more abstractions such as iterating over the positions of
+//! a `Primitive`. See the documentation of [`Loaded`] for all the methods available
+//! for loaded `glTF`.
+//!
+//! The [`gltf-importer`] crate contains the reference implementation of the
+//! `Source` trait and may be used to read buffer data from the file system.
+//!
+//! [`Source`]: trait.Source.html
+//! [`Loaded`]: struct.Loaded.html
+//! [`gltf-importer`]: docs.rs/gltf-importer
+//! ```
+//! # use gltf::json;
+//! # use gltf::Gltf;
+//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! # let path = "./glTF-Sample-Models/2.0/Box/glTF/Box.gltf";
+//! # let file = std::fs::File::open(path)?;
+//! # let reader = std::io::BufReader::new(file);
+//! # let json = json::from_reader(reader)?;
+//! # let gltf = Gltf::from_json(json);
+//! #[derive(Debug)]
+//! struct BoxExampleData(&'static [u8]);
+//!
+//! impl gltf::Source for BoxExampleData {
+//!     fn source_buffer(&self, _: &gltf::Buffer) -> &[u8] {
+//!         // In a real implementation, the `Source` must provide all the data
+//!         // necessary to load the object, and must not fail.
+//!         //
+//!         // This example meets the above criteria, since it provides all the data
+//!         // for the 'Box' sample model, which has exactly one external buffer.
+//!         self.0
+//!     }
+//! }
+//!
+//! let data = BoxExampleData(include_bytes!("examples/Box0.bin"));
+//! let loaded_gltf = gltf.loaded(&data);
+//! for mesh in loaded_gltf.meshes() {
+//!     for primitive in mesh.primitives() {
+//!         if let Some(iter) = primitive.indices_u32() {
+//!             // Do something with the primitive data.
+//!             let indices: Vec<u32> = iter.collect();
+//!             println!("{:?}", indices);
+//!         }
 //!     }
 //! }
 //! # Ok(())
@@ -116,6 +167,12 @@ pub use self::skin::Skin;
 pub use self::texture::Texture;
 
 /// Represents sources of buffer data.
+///
+/// The user is expected to implement this trait in order to unlock the abstractions
+/// provided by the [`Loaded`] type. The `gltf-importer` crate provides a useable
+/// reference implementation.
+///
+/// [`Loaded`]: struct.Loaded.html
 pub trait Source: std::fmt::Debug {
     /// Return the buffer data referenced by the given `Buffer`.
     ///
@@ -123,13 +180,14 @@ pub trait Source: std::fmt::Debug {
     fn source_buffer(&self, buffer: &Buffer) -> &[u8];
 }
 
-/// Wrapper type for data structures with their data ready.
+/// Wrapper type representing a `glTF` object whose data is immediately ready for
+/// use.
 #[derive(Clone, Debug)]
 pub struct Loaded<'a, T> {
-    /// The wrapper item.
+    /// The wrapped item.
     item: T,
 
-    /// The data source for this item.
+    /// The data source for this item and all of its children.
     source: &'a Source,
 }
 
