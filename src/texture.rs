@@ -7,8 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::ops::Deref;
-use {extensions, image, json, Gltf};
+use {image, json, Gltf, Loaded};
 
 pub use json::texture::{MagFilter, MinFilter, WrappingMode};
 
@@ -114,14 +113,6 @@ impl<'a> Sampler<'a> {
         self.json.wrap_t.unwrap()
     }
 
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::texture::Sampler<'a> {
-        extensions::texture::Sampler::new(
-            self.gltf,
-            &self.json.extensions,
-        )
-    }
-
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -158,7 +149,7 @@ impl<'a> Texture<'a> {
         self.json.name.as_ref().map(String::as_str)
     }
 
-    /// The index of the sampler used by this texture.
+    /// The sampler used by this texture.
     pub fn sampler(&self) -> Sampler<'a> {
         self.json.sampler
             .as_ref()
@@ -166,22 +157,24 @@ impl<'a> Texture<'a> {
             .unwrap_or_else(|| Sampler::default(self.gltf))
     }
 
-    /// The index of the image used by this texture.
+    /// The image used by this texture.
     pub fn source(&self) -> image::Image<'a> {
         self.gltf.images().nth(self.json.source.value() as usize).unwrap()
-    }
-
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::texture::Texture<'a> {
-        extensions::texture::Texture::new(
-            self.gltf,
-            &self.json.extensions,
-        )
     }
 
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
+    }
+}
+
+impl<'a> Loaded<'a, Texture<'a>> {
+    /// The index of the image used by this texture.
+    pub fn source(&self) -> Loaded<'a, image::Image<'a>> {
+        Loaded {
+            item: self.item.source(),
+            source: self.source,
+        }
     }
 }
 
@@ -204,12 +197,9 @@ impl<'a> Info<'a> {
         self.json.tex_coord
     }
 
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::texture::Info<'a> {
-        extensions::texture::Info::new(
-            self.texture.clone(),
-            &self.json.extensions,
-        )
+    /// The referenced `Texture`.
+    pub fn texture(&self) -> Texture<'a> {
+        self.texture.clone()
     }
 
     /// Optional application specific data.
@@ -218,9 +208,12 @@ impl<'a> Info<'a> {
     }
 }
 
-impl<'a> Deref for Info<'a> {
-    type Target = Texture<'a>;
-    fn deref(&self) -> &Self::Target {
-        &self.texture
+impl<'a> Loaded<'a, Info<'a>> {
+    /// The referenced `Texture`.
+    pub fn texture(&self) -> Loaded<'a, Texture<'a>> {
+        Loaded {
+            item: self.item.texture(),
+            source: self.source,
+        }
     }
 }

@@ -8,9 +8,9 @@
 // except according to those terms.
 
 use std::{marker, mem};
-use {buffer, extensions, import, json};
+use {buffer, json};
 
-use Gltf;
+use {Gltf, Loaded, Source};
 
 pub use json::accessor::ComponentType as DataType;
 pub use json::accessor::Type as Dimensions;
@@ -26,70 +26,65 @@ pub struct Accessor<'a> {
 
     /// The corresponding JSON struct.
     json: &'a json::accessor::Accessor,
+
+    /// The buffer view this accessor reads from.
+    view: buffer::View<'a>,
 }
 
 /// An `Iterator` that iterates over the members of an accessor.
-#[derive(Debug)]
-pub struct Iter<T> {
-    /// Number of iterations left.
+#[derive(Clone, Debug)]
+pub struct Iter<'a, T: Copy> {
+    /// The total number of iterations left.
     count: usize,
 
-    /// The address of the value yielded from the last iteration.
-    ptr: *const u8,
+    /// The index of the next iteration.
+    index: usize,
 
-    /// The number of bytes to advance `ptr` by per iteration.
+    /// The number of bytes between each item.
     stride: usize,
 
-    /// The buffer view data we're iterating over.
-    data: import::Data,
+    /// Byte offset into the buffer view where the items begin.
+    offset: usize,
+    
+    /// The accessor we're iterating over.
+    accessor: Loaded<'a, Accessor<'a>>,
 
     /// Consumes the data type we're returning at each iteration.
-    _mk: marker::PhantomData<T>,
+    _consume_data_type: marker::PhantomData<T>,
 }
 
 impl<'a> Accessor<'a> {
     /// Constructs an `Accessor`.
-    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::accessor::Accessor) -> Self {
+    pub fn new(
+        gltf: &'a Gltf,
+        index: usize,
+        json: &'a json::accessor::Accessor,
+    ) -> Self {
+        let view = gltf.views().nth(index).unwrap();
         Self {
-            gltf: gltf,
-            index: index,
-            json: json,
+            gltf,
+            index,
+            json,
+            view,
         }
     }
 
+    /// Converts an `Accessor` into a `Loaded<Accessor>`.
+    pub fn loaded(self, source: &'a Source) -> Loaded<'a, Accessor<'a>> {
+        Loaded {
+            item: self,
+            source,
+        }
+    }
+    
     /// Returns the internal JSON index.
     pub fn index(&self) -> usize {
         self.index
     }
     
     /// Returns the size of each component that this accessor describes.
-    #[allow(dead_code)]
-    fn size(&self) -> usize {
+    pub fn size(&self) -> usize {
         self.data_type().size() * self.dimensions().multiplicity()
-    }
-
-    /// Returns an `Iterator` that interprets the data pointed to by the accessor
-    /// as the given type.
-    /// 
-    /// The data referenced by the accessor is guaranteed to be appropriately
-    /// aligned for any standard Rust type.
-    ///
-    /// # Panics
-    ///
-    /// If the size of an individual `T` does not match the accessor component size.
-    pub unsafe fn iter<T>(&self) -> Iter<T> {
-        let count = self.count();
-        let offset = self.offset() as isize;
-        let stride = self.view().stride().unwrap_or(mem::size_of::<T>());
-        let data = self.view().data();
-        let ptr = data.as_ptr().offset(offset);
-        Iter {
-            count: count,
-            ptr: ptr,
-            stride: stride,
-            data: data,
-            _mk: marker::PhantomData,
-        }
     }
 
     /// Returns the internal JSON item.
@@ -116,14 +111,6 @@ impl<'a> Accessor<'a> {
     /// The data type of components in the attribute.
     pub fn data_type(&self) -> DataType {
         self.json.component_type.unwrap().0
-    }
-
-    /// Extension specific data.
-    pub fn extensions(&self) -> extensions::accessor::Accessor<'a> {
-        extensions::accessor::Accessor::new(
-            self.gltf,
-            &self.json.extensions,
-        )
     }
 
     /// Optional application specific data.
@@ -165,18 +152,46 @@ impl<'a> Accessor<'a> {
     }
 }
 
-impl<T> ExactSizeIterator for Iter<T> {}
-impl<T> Iterator for Iter<T> {
+impl<'a> Loaded<'a, Accessor<'a>> {
+    /// Returns an `Iterator` that interprets the data pointed to by the accessor
+    /// as the given type.
+    /// 
+    /// The data referenced by the accessor is guaranteed to be appropriately
+    /// aligned for any standard Rust type.
+    ///
+    /// # Panics
+    ///
+    /// If the size of an individual `T` does not match the accessor component size.
+    pub unsafe fn iter<T: Copy>(&self) -> Iter<'a, T> {
+        assert_eq!(self.size(), mem::size_of::<T>());
+        let count = self.count();
+        let offset = self.offset();
+        let stride = self.view.stride().unwrap_or(mem::size_of::<T>());
+        Iter {
+            accessor: self.clone(),
+            count,
+            offset,
+            stride,
+            index: 0,
+            _consume_data_type: marker::PhantomData,
+        }
+    }
+}
+
+impl<'a, T: Copy> ExactSizeIterator for Iter<'a, T> {}
+impl<'a, T: Copy> Iterator for Iter<'a, T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
-        if self.count > 0 {
-            let value: T = unsafe {
-                mem::transmute_copy(&*self.ptr)
+        if self.index < self.count {
+            let ptr_offset = self.offset + self.index * self.stride;
+            let view = Loaded {
+                item: self.accessor.view(),
+                source: self.accessor.source,
             };
-            self.count -= 1;
-            unsafe {
-                self.ptr = self.ptr.offset(self.stride as isize);
-            }
+            let data = view.data();
+            let ptr = unsafe { data.as_ptr().offset(ptr_offset as isize) };
+            let value: T = unsafe { mem::transmute_copy(&*ptr) };
+            self.index += 1;
             Some(value)
         } else {
             None
@@ -184,14 +199,15 @@ impl<T> Iterator for Iter<T> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        (self.count as usize, Some(self.count as usize))
+        let hint = self.count - self.index;
+        (hint, Some(hint))
     }
 }
 
 /// Contains data structures for sparse storage.
 pub mod sparse {
     use Gltf;
-    use {buffer, extensions, json};
+    use {buffer, json};
 
     /// The index data type.
     #[derive(Clone, Debug)]
@@ -254,13 +270,6 @@ pub mod sparse {
             }
         }
 
-        /// Extension specific data.
-        pub fn extensions(&self) -> extensions::accessor::sparse::Indices<'a> {
-            extensions::accessor::sparse::Indices::new(
-                self.gltf,
-                &self.json.extensions,
-            )
-        }
 
         /// Optional application specific data.
         pub fn extras(&self) -> &json::Extras {
@@ -314,14 +323,6 @@ pub mod sparse {
             Values::new(self.gltf, &self.json.values)
         }
 
-        ///  Extension specific data.
-        pub fn extensions(&self) -> extensions::accessor::sparse::Sparse<'a> {
-            extensions::accessor::sparse::Sparse::new(
-                self.gltf,
-                &self.json.extensions,
-            )
-        }
-
         ///  Optional application specific data.
         pub fn extras(&self) -> &json::Extras {
             &self.json.extras
@@ -365,14 +366,6 @@ pub mod sparse {
         /// The offset relative to the start of the parent buffer view in bytes.
         pub fn offset(&self) -> u32 {
             self.json.byte_offset
-        }
-
-        /// Extension specific data.
-        pub fn extensions(&self) -> extensions::accessor::sparse::Values<'a> {
-            extensions::accessor::sparse::Values::new(
-                self.gltf,
-                &self.json.extensions,
-            )
         }
 
         /// Optional application specific data.

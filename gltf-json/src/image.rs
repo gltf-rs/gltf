@@ -7,8 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use json::{buffer, extensions, Extras, Index, Root, Path};
 use validation::{Error, Validate};
+use {buffer, extensions, Extras, Index, Root, Path};
 
 /// All valid MIME types.
 pub const VALID_MIME_TYPES: &'static [&'static str] = &[

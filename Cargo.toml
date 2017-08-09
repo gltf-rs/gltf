@@ -17,23 +17,16 @@ include = [
 [badges]
 travis-ci = { repository = "alteous/gltf" }
 
-[dev-dependencies]
-futures-cpupool = "0.1"
-
 [dependencies]
-base64 = "0.6"
-futures = "0.1"
-gltf-derive = "0.1"
-image = "0.14"
 lazy_static = "0.2"
-serde = "1.0"
-serde_derive = "1.0"
-serde_json = "1.0"
+
+[dependencies.gltf-json]
+path = "./gltf-json"
 
 [features]
 default = []
-extras = []
-names = []
+extras = ["gltf-json/names"]
+names = ["gltf-json/extras"]
 
 [[example]]
 name = "gltf-display"

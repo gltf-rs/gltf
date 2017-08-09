@@ -70,12 +70,12 @@ fn expand(ast: &syn::MacroInput) -> quote::Tokens {
         {
             fn validate_minimally<P, R>(
                 &self,
-                _root: &::json::Root,
+                _root: &::Root,
                 _path: P,
                 _report: &mut R
             ) where
-                P: Fn() -> ::json::Path,
-                R: FnMut(&Fn() -> ::json::Path, ::validation::Error),
+                P: Fn() -> ::Path,
+                R: FnMut(&Fn() -> ::Path, ::validation::Error),
             {
                 #(
                     #minimal_validations;
@@ -84,12 +84,12 @@ fn expand(ast: &syn::MacroInput) -> quote::Tokens {
 
             fn validate_completely<P, R>(
                 &self,
-                _root: &::json::Root,
+                _root: &::Root,
                 _path: P,
                 _report: &mut R
             ) where
-                P: Fn() -> ::json::Path,
-                R: FnMut(&Fn() -> ::json::Path, ::validation::Error),
+                P: Fn() -> ::Path,
+                R: FnMut(&Fn() -> ::Path, ::validation::Error),
             {
                 #(
                     #complete_validations;

@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use json::{buffer, extensions, Extras, Index};
+use {buffer, extensions, Extras, Index};
 use serde::de;
 use std::fmt;
 use validation::Checked;
@@ -108,7 +108,7 @@ pub const VALID_ACCESSOR_TYPES: &'static [&'static str] = &[
 /// Contains data structures for sparse storage.
 pub mod sparse {
     use super::*;
-    use json::extensions;
+    use ::extensions;
 
     /// Indices of those attributes that deviate from their initialization value.
     #[derive(Clone, Debug, Deserialize, Validate)]

@@ -7,6 +7,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#[macro_use]
+extern crate gltf_derive;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
+
 /// Contains `Accessor` and other related data structures.
 pub mod accessor;
 
@@ -53,7 +60,23 @@ pub mod skin;
 /// Contains `Texture`, `Sampler`, and other related data structures.
 pub mod texture;
 
+/// Contains functions that validate glTF JSON data against the specification.
+pub mod validation;
+
+pub use accessor::Accessor;
+pub use animation::Animation;
+pub use asset::Asset;
+pub use buffer::Buffer;
+pub use camera::Camera;
+pub use image::Image;
+pub use material::Material;
+pub use mesh::Mesh;
+pub use scene::{Node, Scene};
+pub use skin::Skin;
+pub use texture::Texture;
+
 pub use self::extras::Extras;
 pub use self::path::Path;
 pub use self::root::{Index, Root};
 pub use serde_json::{from_reader, from_slice, from_str, from_value};
+pub use serde_json::Error;

@@ -28,36 +28,6 @@
 //!
 //! ## Examples
 //!
-//! ### Loading glTF from the file system
-//!
-//! The crate provides a `from_path` method whereby one can import glTF from the
-//! system.
-//!
-//! ```
-//! extern crate gltf;
-//!
-//! fn main() {
-//!     # #[allow(unused_variables)]
-//!     let path = "path/to/asset.gltf";
-//!     # let path = "./glTF-Sample-Models/2.0/Box/glTF/Box.gltf";
-//!     // This creates a `Future` that drives the loading
-//!     // of glTF and all of its data.
-//!     let import = gltf::Import::from_path(path);
-//!     // The simpliest way of working with futures is to
-//!     // block the thread until the glTF is ready.
-//!     match import.sync() {
-//!         Ok(gltf) => println!("{:#?}", gltf),
-//!         Err(err) => println!("error: {:?}", err),
-//!     }
-//! }
-//! ```
-//!
-//! An [`Import`] resolves to [`Gltf`], a data structure that provides helpful utilities
-//! such as iterators for working with glTF.
-//!
-//! [`Import`]: import/struct.Import.html
-//! [`Gltf`]: gltf/struct.Gltf.html
-//!
 //! ### Walking the node hierarchy
 //!
 //! Below demonstates visiting the root [`Node`]s of every [`Scene`], printing the
@@ -66,9 +36,14 @@
 //! [`Node`]: scene/struct.Node.html
 //! [`Scene`]: scene/struct.Scene.html
 //! ```
+//! # use gltf::json;
+//! # use gltf::Gltf;
 //! # fn run() -> Result<(), Box<std::error::Error>> {
 //! # let path = "./glTF-Sample-Models/2.0/Box/glTF/Box.gltf";
-//! let gltf = gltf::Import::from_path(path).sync()?;
+//! let file = std::fs::File::open(path)?;
+//! let reader = std::io::BufReader::new(file);
+//! let json = json::from_reader(reader)?;
+//! let gltf = Gltf::from_json(json);
 //! for scene in gltf.scenes() {
 //!     for node in scene.nodes() {
 //!         // Do something with this node
@@ -86,17 +61,11 @@
 //! # }
 //! ```
 
-extern crate base64;
-extern crate futures;
-#[macro_use]
-extern crate gltf_derive;
-extern crate image as image_crate;
 #[macro_use]
 extern crate lazy_static;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
+
+/// Contains (de)serializable data structures that match the glTF JSON text.
+pub extern crate gltf_json as json;
 
 /// Contains `Accessor` and other related data structures.
 pub mod accessor;
@@ -110,20 +79,11 @@ pub mod buffer;
 /// Contains `Camera` and other related data structures.
 pub mod camera;
 
-/// Contains extension specific data structures.
-pub mod extensions;
-
 /// Contains `Gltf`, and other related data structures.
 pub mod gltf;
 
 /// Contains `Image` and other related data structures.
 pub mod image;
-
-/// Contains functions for importing glTF 2.0 assets.
-pub mod import;
-
-/// Contains (de)serializable data structures that match the glTF JSON text.
-pub mod json;
 
 /// Contains `Material` and other related data structures.
 pub mod material;
@@ -143,8 +103,39 @@ pub mod skin;
 /// Contains `Texture`, `Sampler`, and other related data structures.
 pub mod texture;
 
-/// Contains functions that validate glTF JSON data against the specification.
-pub mod validation;
-
+pub use self::animation::Animation;
+pub use self::accessor::Accessor;
+pub use self::buffer::Buffer;
+pub use self::camera::Camera;
 pub use self::gltf::Gltf;
-pub use self::import::{Data, DynamicImage, Import};
+pub use self::image::Image;
+pub use self::material::Material;
+pub use self::mesh::{Mesh, Primitive};
+pub use self::scene::{Node, Scene};
+pub use self::skin::Skin;
+pub use self::texture::Texture;
+
+/// Represents sources of buffer data.
+pub trait Source: std::fmt::Debug {
+    /// Return the buffer data referenced by the given `Buffer`.
+    ///
+    /// This method must not fail.
+    fn source_buffer(&self, buffer: &Buffer) -> &[u8];
+}
+
+/// Wrapper type for data structures with their data ready.
+#[derive(Clone, Debug)]
+pub struct Loaded<'a, T> {
+    /// The wrapper item.
+    item: T,
+
+    /// The data source for this item.
+    source: &'a Source,
+}
+
+impl<'a, T> std::ops::Deref for Loaded<'a, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.item
+    }
+}
