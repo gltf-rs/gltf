@@ -46,3 +46,11 @@ Demonstrates how the glTF JSON is deserialized.
 cargo run --example gltf-display path/to/asset.gltf
 ```
 
+#### gltf-tree
+
+Visualises the scene heirarchy of a glTF asset, which is a strict tree of nodes.
+
+```sh
+cargo run --example gltf-tree path/to/asset.gltf
+```
+
