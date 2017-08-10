@@ -8,9 +8,9 @@
 // except according to those terms.
 
 use std::slice;
-use {accessor, json, scene};
+use {accessor, json};
 
-use {Gltf, Loaded};
+use {Gltf, Loaded, Node};
 
 /// Joints and matrices defining a skin.
 #[derive(Clone, Debug)]
@@ -64,9 +64,8 @@ impl<'a> Skin<'a> {
         &self.json.extras
     }
 
-    /// Indices of skeleton nodes used as joints in this skin.  The array length
-    /// must be the same as the `count` property of the `inverse_bind_matrices`
-    /// `Accessor` (when defined).
+    /// Returns an `Iterator` that visits the skeleton nodes used as joints in
+    /// this skin.
     pub fn joints(&self) -> Joints<'a> {
         Joints {
             gltf: self.gltf,
@@ -80,9 +79,9 @@ impl<'a> Skin<'a> {
         self.json.name.as_ref().map(String::as_str)
     }
 
-    /// The index of the node used as a skeleton root.  When `None`, joints
+    /// Returns the node used as the skeleton root. When `None`, joints
     /// transforms resolve to scene root.
-    pub fn skeleton(&self) -> Option<scene::Node<'a>> {
+    pub fn skeleton(&self) -> Option<Node<'a>> {
         self.json.skeleton.as_ref().map(|index| {
             self.gltf.nodes().nth(index.value()).unwrap()
         })
@@ -90,20 +89,44 @@ impl<'a> Skin<'a> {
 }
 
 impl<'a> Loaded<'a, Skin<'a>> {
-    /// The index of the accessor containing the 4x4 inverse-bind matrices.  When
-    /// `None`,each matrix is assumed to be the 4x4 identity matrix which implies
+    /// Returns an `Iterator` that visits the 4x4 inverse-bind matrices. When
+    /// `None`, each matrix is assumed to be the 4x4 identity matrix which implies
     /// that the inverse-bind matrices were pre-applied.
     pub fn inverse_bind_matrices(&self) -> Option<InverseBindMatrices<'a>> {
-        self.json.inverse_bind_matrices.as_ref().map(|index| {
-            let accessor = self.gltf
-                .accessors()
-                .nth(index.value())
-                .unwrap()
-                .loaded(self.source);
-            unsafe {
-                InverseBindMatrices(accessor.iter())
-            }
-        })
+        self.json.inverse_bind_matrices
+            .as_ref()
+            .map(|index| {
+                let accessor = self.gltf
+                    .accessors()
+                    .nth(index.value())
+                    .unwrap()
+                    .loaded(self.source);
+                unsafe {
+                    InverseBindMatrices(accessor.iter())
+                }
+            })
+    }
+
+    /// Returns an `Iterator` that visits the skeleton nodes used as joints in
+    /// this skin.
+    pub fn joints(&self) -> Loaded<'a, Joints<'a>> {
+        Loaded {
+            item: self.item.joints(),
+            source: self.source,
+        }
+    }
+
+    /// Returns the node used as the skeleton root. When `None`, joints
+    /// transforms resolve to scene root.
+    pub fn skeleton(&self) -> Option<Loaded<'a, Node<'a>>> {
+        self.item
+            .skeleton()
+            .map(|item| {
+                Loaded {
+                    item,
+                    source: self.source,
+                }
+            })
     }
 }
 
@@ -115,10 +138,24 @@ impl<'a> Iterator for InverseBindMatrices<'a> {
 }
 
 impl<'a> Iterator for Joints<'a>  {
-    type Item = scene::Node<'a>;
+    type Item = Node<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
             .map(|index| self.gltf.nodes().nth(index.value()).unwrap())
+    }
+}
+
+impl<'a> Iterator for Loaded<'a, Joints<'a>>  {
+    type Item = Loaded<'a, Node<'a>>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.item
+            .next()
+            .map(|item| {
+                Loaded {
+                    item,
+                    source: self.source,
+                }
+            })
     }
 }
