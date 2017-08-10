@@ -30,3 +30,7 @@ names = ["gltf-json/names"]
 name = "gltf-display"
 path = "examples/display/main.rs"
 
+[[example]]
+name = "gltf-tree"
+path = "examples/tree/main.rs"
+required-features = ["names"]

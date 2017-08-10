@@ -15,11 +15,32 @@ use std::{fs, io};
 use std::boxed::Box;
 use std::error::Error as StdError;
 
+fn print_tree(node: &gltf::Node, depth: i32) {
+    for _ in 0..(depth - 1) {
+        print!("  ");
+    }
+    print!(" -");
+    let index = node.index();
+    let name = node.name().unwrap_or("<Unnamed>");
+    println!(" Node {} ({})", index, name);
+    for child in node.children() {
+        print_tree(&child, depth + 1);
+    }
+}
+
 fn run(path: &str) -> Result<(), Box<StdError>> {
     let file = fs::File::open(&path)?;
     let buf_reader = io::BufReader::new(file);
     let json: json::Root = json::from_reader(buf_reader)?;
-    println!("{:#?}", json);
+    let gltf = gltf::Gltf::from_json(json);
+    for scene in gltf.scenes() {
+        let index = scene.index();
+        let name = scene.name().unwrap_or("<Unnamed>");
+        println!("Scene {} ({})", index, name);
+        for node in scene.nodes() {
+            print_tree(&node, 1);
+        }
+    }
     Ok(())
 }
 
@@ -27,6 +48,6 @@ fn main() {
     if let Some(path) = std::env::args().nth(1) {
         let _ = run(&path).expect("runtime error");
     } else {
-        println!("usage: gltf-display <FILE>");
+        println!("usage: gltf-tree <FILE>");
     }
 }
