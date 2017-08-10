@@ -1,6 +1,6 @@
 [package]
 name = "gltf"
-version = "0.8.2"
+version = "0.8.3"
 authors = ["alteous <alteous@outlook.com>"]
 description = "glTF 2.0 loader"
 documentation = "https://docs.rs/gltf"
@@ -23,8 +23,8 @@ lazy_static = "0.2"
 
 [features]
 default = []
-extras = ["gltf-json/names"]
-names = ["gltf-json/extras"]
+extras = ["gltf-json/extras"]
+names = ["gltf-json/names"]
 
 [[example]]
 name = "gltf-display"
