@@ -7,15 +7,22 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+//! The reference loader implementation for the `gltf` crate.
 //!
-//! glTF JSON, buffers, and images may come from a range of external sources, so
-//! customization is an important design goal of the import module. The `Source`
-//! trait is provided to facilitate customization of the data loading process.
+//! # Examples 
 //!
-//! For convenience, the library contains one implementation of the `Source` trait,
-//! namely `FromPath`, which allows loading from file system and also from embedded
-//! base64 encoded data. This implementation may be used as reference for other
-//! schemes such as `http`.
+//! ### Importing some `glTF` 2.0
+//!
+//! ```rust
+//! # #[allow(unused_variables)]
+//! let path = "path/to/asset.gltf";
+//! # let path = "../examples/Box.gltf";
+//! let mut importer = gltf_importer::Importer::new(path);
+//! match importer.import() {
+//!     Ok(gltf) => println!("{:#?}", gltf.as_json()),
+//!     Err(err) => println!("error: {:?}", err),
+//! }
+//! ```
 
 extern crate gltf;
 
@@ -26,7 +33,7 @@ use gltf::{Gltf, Loaded};
 use std::error::Error as StdError;
 use std::path::{Path, PathBuf};
 
-/// Contains data structures for import configuration.
+/// Contains parameters for import configuration.
 pub mod config;
 
 pub use self::config::Config;
@@ -59,7 +66,7 @@ pub enum Error {
     Validation(Vec<(json::Path, validation::Error)>),
 }
 
-/// A `Future` that drives the importation of glTF.
+/// An `Importer` loads `glTF` and all of its buffer data from the file system.
 #[derive(Debug)]
 pub struct Importer {
     path: PathBuf,
@@ -213,10 +220,10 @@ fn read_to_end<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, Error> {
 
 fn load_external_buffers(
     base_path: &Path,
-    root: &gltf::root::Root,
+    gltf: &Gltf,
     has_blob: bool,
 ) -> Result<Vec<Vec<u8>>, Error> {
-    let mut iter = root.as_json().buffers.iter().enumerate();
+    let mut iter = gltf.as_json().buffers.iter().enumerate();
     if has_blob {
         let _ = iter.next();
     }
@@ -313,10 +320,10 @@ fn import_standard<'a>(
 ) -> Result<(Gltf, Vec<Vec<u8>>), Error> {
     let json: gltf::json::Root = gltf::json::from_slice(data)?;
     let _ = validate_standard(&json, &config);
-    let root = gltf::root::Root::new(json);
+    let gltf = Gltf::from_json(json);
     let has_blob = false;
-    let buffers = load_external_buffers(base_path, &root, has_blob)?;
-    Ok((Gltf::new(root), buffers))
+    let buffers = load_external_buffers(base_path, &gltf, has_blob)?;
+    Ok((gltf, buffers))
 }
 
 fn import_binary<'a>(
@@ -332,15 +339,15 @@ fn import_binary<'a>(
     let blob = blob_chunk.map(|chunk| glb.slice(chunk).to_vec());
     let has_blob = blob.is_some();
     let _ = validate_binary(&json, &config, has_blob)?;
-    let root = gltf::root::Root::new(json);
+    let gltf = Gltf::from_json(json);
     let mut buffers = vec![];
     if let Some(buffer) = blob {
         buffers.push(buffer);
     }
-    for buffer in load_external_buffers(base_path, &root, has_blob)? {
+    for buffer in load_external_buffers(base_path, &gltf, has_blob)? {
         buffers.push(buffer);
     }
-    Ok((Gltf::new(root), buffers))
+    Ok((gltf, buffers))
 }
 
 impl Importer {
@@ -368,7 +375,7 @@ impl Importer {
         Ok(self.gltf.as_ref().unwrap().loaded(self))
     }
 
-    /// Returns the path to the glTF.
+    /// Returns the path to the `glTF`.
     pub fn path(&self) -> &Path {
         &self.path
     }
