@@ -60,7 +60,7 @@ impl<'a> Accessor<'a> {
         index: usize,
         json: &'a json::accessor::Accessor,
     ) -> Self {
-        let view = gltf.views().nth(index).unwrap();
+        let view = gltf.views().nth(json.buffer_view.value()).unwrap();
         Self {
             gltf,
             index,
@@ -76,7 +76,7 @@ impl<'a> Accessor<'a> {
             source,
         }
     }
-    
+
     /// Returns the internal JSON index.
     pub fn index(&self) -> usize {
         self.index
