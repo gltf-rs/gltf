@@ -20,7 +20,7 @@
 
 This crate is intended to load [glTF 2.0](https://www.khronos.org/gltf), a file format designed for the efficient transmission of 3D assets.
 
-`rustc` version 1.15 or above is required.
+`rustc` version 1.18 or above is required.
 
 ### Usage
 
@@ -44,5 +44,13 @@ Demonstrates how the glTF JSON is deserialized.
 
 ```sh
 cargo run --example gltf-display path/to/asset.gltf
+```
+
+#### gltf-tree
+
+Visualises the scene heirarchy of a glTF asset, which is a strict tree of nodes.
+
+```sh
+cargo run --example gltf-tree path/to/asset.gltf
 ```
 

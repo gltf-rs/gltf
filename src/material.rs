@@ -29,7 +29,7 @@ pub struct Material<'a> {
 
 impl<'a> Material<'a> {
     /// Constructs a `Material`.
-    pub fn new(
+    pub(crate) fn new(
         gltf: &'a Gltf,
         index: usize,
         json: &'a json::material::Material,
@@ -218,7 +218,7 @@ pub struct PbrMetallicRoughness<'a> {
 
 impl<'a> PbrMetallicRoughness<'a> {
     /// Constructs a `PbrMetallicRoughness`.
-    pub fn new(
+    pub(crate) fn new(
         gltf: &'a Gltf,
         json: &'a json::material::PbrMetallicRoughness,
     ) -> Self {
@@ -316,7 +316,7 @@ pub struct NormalTexture<'a> {
 
 impl<'a> NormalTexture<'a> {
     /// Constructs a `NormalTexture`.
-    pub fn new(
+    pub(crate) fn new(
         texture: texture::Texture<'a>,
         json: &'a json::material::NormalTexture,
     ) -> Self {
@@ -374,7 +374,7 @@ pub struct OcclusionTexture<'a> {
 
 impl<'a> OcclusionTexture<'a> {
     /// Constructs a `OcclusionTexture`.
-    pub fn new(
+    pub(crate) fn new(
         texture: texture::Texture<'a>,
         json: &'a json::material::OcclusionTexture,
     ) -> Self {

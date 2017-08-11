@@ -55,12 +55,12 @@ pub struct Iter<'a, T: Copy> {
 
 impl<'a> Accessor<'a> {
     /// Constructs an `Accessor`.
-    pub fn new(
+    pub(crate) fn new(
         gltf: &'a Gltf,
         index: usize,
         json: &'a json::accessor::Accessor,
     ) -> Self {
-        let view = gltf.views().nth(index).unwrap();
+        let view = gltf.views().nth(json.buffer_view.value()).unwrap();
         Self {
             gltf,
             index,
@@ -76,7 +76,7 @@ impl<'a> Accessor<'a> {
             source,
         }
     }
-    
+
     /// Returns the internal JSON index.
     pub fn index(&self) -> usize {
         self.index
@@ -92,23 +92,23 @@ impl<'a> Accessor<'a> {
         self.json
     }
 
-    /// The parent buffer view this accessor reads from.
+    /// Returns the buffer view this accessor reads from.
     pub fn view(&self) -> buffer::View<'a> {
         self.gltf.views().nth(self.json.buffer_view.value()).unwrap()
     }
 
-    /// The offset relative to the start of the parent buffer view in bytes.
+    /// Returns the offset relative to the start of the parent buffer view in bytes.
     pub fn offset(&self) -> usize {
         self.json.byte_offset as usize
     }
 
-    /// The number of components within the buffer view - not to be confused with
-    /// the number of bytes in the buffer view.
+    /// Returns the number of components within the buffer view - not to be confused
+    /// with the number of bytes in the buffer view.
     pub fn count(&self) -> usize {
         self.json.count as usize
     }
 
-    /// The data type of components in the attribute.
+    /// Returns the data type of components in the attribute.
     pub fn data_type(&self) -> DataType {
         self.json.component_type.unwrap().0
     }
@@ -123,12 +123,12 @@ impl<'a> Accessor<'a> {
         self.json.type_.unwrap()
     }
 
-    /// Minimum value of each component in this attribute.
+    /// Returns the minimum value of each component in this attribute.
     pub fn min(&self) -> &[f32] {
         &self.json.min
     }
 
-    /// Maximum value of each component in this attribute.
+    /// Returns the maximum value of each component in this attribute.
     pub fn max(&self) -> &[f32] {
         &self.json.max
     }
@@ -144,7 +144,8 @@ impl<'a> Accessor<'a> {
         self.json.normalized
     }
 
-    /// Sparse storage of attributes that deviate from their initialization value.
+    /// Returns sparse storage of attributes that deviate from their initialization
+    /// value.
     pub fn sparse(&self) -> Option<sparse::Sparse> {
         self.json.sparse.as_ref().map(|json| {
             sparse::Sparse::new(self.gltf, json)
@@ -174,6 +175,27 @@ impl<'a> Loaded<'a, Accessor<'a>> {
             stride,
             index: 0,
             _consume_data_type: marker::PhantomData,
+        }
+    }
+
+    /// Returns sparse storage of attributes that deviate from their initialization
+    /// value.
+    pub fn sparse(&'a self) -> Option<Loaded<'a, sparse::Sparse<'a>>> {
+        self.item
+            .sparse()
+            .map(|item| {
+                Loaded {
+                    item,
+                    source: self.source,
+                }
+            })
+    }
+
+    /// Returns the buffer view this accessor reads from.
+    pub fn view(&'a self) -> Loaded<'a, buffer::View<'a>> {
+        Loaded {
+            item: self.item.view(),
+            source: self.source,
         }
     }
 }
@@ -206,7 +228,7 @@ impl<'a, T: Copy> Iterator for Iter<'a, T> {
 
 /// Contains data structures for sparse storage.
 pub mod sparse {
-    use Gltf;
+    use {Gltf, Loaded};
     use {buffer, json};
 
     /// The index data type.
@@ -222,7 +244,7 @@ pub mod sparse {
         U32 = 5125,
     }
     
-    ///  Indices of those attributes that deviate from their initialization value.
+    /// Indices of those attributes that deviate from their initialization value.
     pub struct Indices<'a> {
         /// The parent `Gltf` struct.
         gltf: &'a Gltf,
@@ -232,8 +254,8 @@ pub mod sparse {
     }
 
     impl<'a> Indices<'a> {
-        /// Constructs a `Indices`.
-        pub fn new(
+        /// Constructs `sparse::Indices`.
+        pub(crate) fn new(
             gltf: &'a Gltf,
             json: &'a json::accessor::sparse::Indices,
         ) -> Self {
@@ -248,9 +270,7 @@ pub mod sparse {
             self.json
         }
 
-        /// The parent buffer view containing the sparse indices.  The referenced
-        /// buffer view must not have `ARRAY_BUFFER` nor `ELEMENT_ARRAY_BUFFER` as
-        /// its target.
+        /// Returns the buffer view containing the sparse indices.
         pub fn view(&self) -> buffer::View<'a> {
             self.gltf.views().nth(self.json.buffer_view.value()).unwrap()
         }
@@ -277,6 +297,16 @@ pub mod sparse {
         }
     }
     
+    impl<'a> Loaded<'a, Indices<'a>> {
+        /// Returns the buffer view containing the sparse indices.
+        pub fn view(&self) -> Loaded<'a, buffer::View<'a>> {
+            Loaded {
+                item: self.item.view(),
+                source: self.source,
+            }
+        }
+    }
+        
     /// Sparse storage of attributes that deviate from their initialization value.
     pub struct Sparse<'a> {
         /// The parent `Gltf` struct.
@@ -287,8 +317,8 @@ pub mod sparse {
     }
 
     impl<'a> Sparse<'a> {
-        /// Constructs a `Sparse`.
-        pub fn new(
+        /// Constructs `Sparse`.
+        pub(crate) fn new(
             gltf: &'a Gltf,
             json: &'a json::accessor::sparse::Sparse,
         ) -> Self {
@@ -303,32 +333,49 @@ pub mod sparse {
             self.json
         }
 
-        /// The number of attributes encoded in this sparse accessor.
+        /// Returns the number of attributes encoded in this sparse accessor.
         pub fn count(&self) -> u32 {
             self.json.count
         }
 
-        /// Index array of size `count` that points to those accessor attributes
-        /// that deviate from their initialization value.  Indices must strictly
-        /// increase.
+        /// Returns an index array of size `count` that points to those accessor
+        /// attributes that deviate from their initialization value.
         pub fn indices(&self) -> Indices<'a> {
             Indices::new(self.gltf, &self.json.indices)
         }
 
-        /// Array of size `count * number_of_components` storing the displaced
-        /// accessor attributes pointed by `indices`.  Substituted values must have
-        /// the same `component_type` and number of components as the base
-        /// `Accessor`.
+        /// Returns an array of size `count * number_of_components`, storing the
+        /// displaced accessor attributes pointed by `indices`.
         pub fn values(&self) -> Values<'a> {
             Values::new(self.gltf, &self.json.values)
         }
 
-        ///  Optional application specific data.
+        /// Optional application specific data.
         pub fn extras(&self) -> &json::Extras {
             &self.json.extras
         }
     }
 
+    impl<'a> Loaded<'a, Sparse<'a>> {
+        /// Returns an index array of size `count` that points to those accessor
+        /// attributes that deviate from their initialization value.
+        pub fn indices(&'a self) -> Loaded<'a, Indices<'a>> {
+            Loaded {
+                item: self.item.indices(),
+                source: self.source,
+            }
+        }
+
+        /// Returns an array of size `count * number_of_components`, storing the
+        /// displaced accessor attributes pointed by `indices`.
+        pub fn values(&'a self) -> Loaded<'a, Values<'a>> {
+            Loaded {
+                item: self.item.values(),
+                source: self.source,
+            }
+        }
+    }
+    
     /// Array of size `count * number_of_components` storing the displaced accessor
     /// attributes pointed by `accessor::sparse::Indices`.
     pub struct Values<'a> {
@@ -340,8 +387,8 @@ pub mod sparse {
     }
 
     impl<'a> Values<'a> {
-        /// Constructs a `Values`.
-        pub fn new(
+        /// Constructs `sparse::Values`.
+        pub(crate) fn new(
             gltf: &'a Gltf,
             json: &'a json::accessor::sparse::Values,
         ) -> Self {
@@ -356,9 +403,7 @@ pub mod sparse {
             self.json
         }
 
-        /// The parent buffer view containing the sparse indices.  The referenced
-        /// buffer view must not have `ARRAY_BUFFER` nor `ELEMENT_ARRAY_BUFFER` as
-        /// its target.
+        /// Returns the buffer view containing the sparse values.
         pub fn view(&self) -> buffer::View {
             self.gltf.views().nth(self.json.buffer_view.value()).unwrap()
         }
@@ -371,6 +416,17 @@ pub mod sparse {
         /// Optional application specific data.
         pub fn extras(&self) -> &json::Extras {
             &self.json.extras
+        }
+    }
+
+    
+    impl<'a> Loaded<'a, Values<'a>> {
+        /// Returns the buffer view containing the sparse values.
+        pub fn view(&'a self) -> Loaded<'a, buffer::View> {
+            Loaded {
+                item: self.item.view(),
+                source: self.source,
+            }
         }
     }
 

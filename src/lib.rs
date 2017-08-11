@@ -65,12 +65,11 @@
 //! a `Primitive`. See the documentation of [`Loaded`] for all the methods available
 //! for loaded `glTF`.
 //!
-//! The [`gltf-importer`] crate contains the reference implementation of the
+//! The `gltf-importer` crate contains the reference implementation of the
 //! `Source` trait and may be used to read buffer data from the file system.
 //!
 //! [`Source`]: trait.Source.html
 //! [`Loaded`]: struct.Loaded.html
-//! [`gltf-importer`]: https://docs.rs/gltf-importer
 //! ```
 //! # use gltf::json;
 //! # use gltf::Gltf;

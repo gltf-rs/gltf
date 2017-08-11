@@ -55,7 +55,7 @@ pub struct Perspective<'a> {
 
 impl<'a> Camera<'a> {
     /// Constructs a `Camera`.
-    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::camera::Camera) -> Self {
+    pub(crate) fn new(gltf: &'a Gltf, index: usize, json: &'a json::camera::Camera) -> Self {
         Self {
             gltf: gltf,
             index: index,
@@ -101,7 +101,7 @@ impl<'a> Camera<'a> {
 
 impl<'a> Orthographic<'a> {
     /// Constructs a `Orthographic` camera projection.
-    pub fn new(gltf: &'a Gltf, json: &'a json::camera::Orthographic) -> Self {
+    pub(crate) fn new(gltf: &'a Gltf, json: &'a json::camera::Orthographic) -> Self {
         Self {
             gltf: gltf,
             json: json,
@@ -141,7 +141,7 @@ impl<'a> Orthographic<'a> {
 
 impl<'a> Perspective<'a> {
     /// Constructs a `Perspective` camera projection.
-    pub fn new(gltf: &'a Gltf, json: &'a json::camera::Perspective) -> Self {
+    pub(crate) fn new(gltf: &'a Gltf, json: &'a json::camera::Perspective) -> Self {
         Self {
             gltf: gltf,
             json: json,

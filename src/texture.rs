@@ -54,7 +54,7 @@ pub struct Texture<'a> {
 
 impl<'a> Sampler<'a> {
     /// Constructs a `Sampler`.
-    pub fn new(
+    pub(crate) fn new(
         gltf: &'a Gltf,
         index: usize,
         json: &'a json::texture::Sampler,
@@ -121,7 +121,7 @@ impl<'a> Sampler<'a> {
 
 impl<'a> Texture<'a> {
     /// Constructs a `Texture`.
-    pub fn new(
+    pub(crate) fn new(
         gltf: &'a Gltf,
         index: usize,
         json: &'a json::texture::Texture,
@@ -180,7 +180,7 @@ impl<'a> Loaded<'a, Texture<'a>> {
 
 impl<'a> Info<'a> {
     /// Constructs a reference to a `Texture`.
-    pub fn new(texture: Texture<'a>, json: &'a json::texture::Info) -> Self {
+    pub(crate) fn new(texture: Texture<'a>, json: &'a json::texture::Info) -> Self {
         Self {
             texture: texture,
             json: json,
