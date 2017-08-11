@@ -1,6 +1,6 @@
 [package]
 name = "gltf-importer"
-version = "0.1.1"
+version = "0.8.0"
 authors = ["alteous <alteous@outlook.com>"]
 description = "Reference importer for the gltf crate"
 repository = "https://github.com/alteous/gltf"

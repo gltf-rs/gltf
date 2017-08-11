@@ -220,10 +220,10 @@ fn read_to_end<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, Error> {
 
 fn load_external_buffers(
     base_path: &Path,
-    root: &gltf::root::Root,
+    gltf: &Gltf,
     has_blob: bool,
 ) -> Result<Vec<Vec<u8>>, Error> {
-    let mut iter = root.as_json().buffers.iter().enumerate();
+    let mut iter = gltf.as_json().buffers.iter().enumerate();
     if has_blob {
         let _ = iter.next();
     }
@@ -320,10 +320,10 @@ fn import_standard<'a>(
 ) -> Result<(Gltf, Vec<Vec<u8>>), Error> {
     let json: gltf::json::Root = gltf::json::from_slice(data)?;
     let _ = validate_standard(&json, &config);
-    let root = gltf::root::Root::new(json);
+    let gltf = Gltf::from_json(json);
     let has_blob = false;
-    let buffers = load_external_buffers(base_path, &root, has_blob)?;
-    Ok((Gltf::new(root), buffers))
+    let buffers = load_external_buffers(base_path, &gltf, has_blob)?;
+    Ok((gltf, buffers))
 }
 
 fn import_binary<'a>(
@@ -339,15 +339,15 @@ fn import_binary<'a>(
     let blob = blob_chunk.map(|chunk| glb.slice(chunk).to_vec());
     let has_blob = blob.is_some();
     let _ = validate_binary(&json, &config, has_blob)?;
-    let root = gltf::root::Root::new(json);
+    let gltf = Gltf::from_json(json);
     let mut buffers = vec![];
     if let Some(buffer) = blob {
         buffers.push(buffer);
     }
-    for buffer in load_external_buffers(base_path, &root, has_blob)? {
+    for buffer in load_external_buffers(base_path, &gltf, has_blob)? {
         buffers.push(buffer);
     }
-    Ok((Gltf::new(root), buffers))
+    Ok((gltf, buffers))
 }
 
 impl Importer {
