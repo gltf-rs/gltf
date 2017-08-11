@@ -55,7 +55,7 @@ pub struct Iter<'a, T: Copy> {
 
 impl<'a> Accessor<'a> {
     /// Constructs an `Accessor`.
-    pub fn new(
+    pub(crate) fn new(
         gltf: &'a Gltf,
         index: usize,
         json: &'a json::accessor::Accessor,
@@ -255,7 +255,7 @@ pub mod sparse {
 
     impl<'a> Indices<'a> {
         /// Constructs `sparse::Indices`.
-        pub fn new(
+        pub(crate) fn new(
             gltf: &'a Gltf,
             json: &'a json::accessor::sparse::Indices,
         ) -> Self {
@@ -318,7 +318,7 @@ pub mod sparse {
 
     impl<'a> Sparse<'a> {
         /// Constructs `Sparse`.
-        pub fn new(
+        pub(crate) fn new(
             gltf: &'a Gltf,
             json: &'a json::accessor::sparse::Sparse,
         ) -> Self {
@@ -388,7 +388,7 @@ pub mod sparse {
 
     impl<'a> Values<'a> {
         /// Constructs `sparse::Values`.
-        pub fn new(
+        pub(crate) fn new(
             gltf: &'a Gltf,
             json: &'a json::accessor::sparse::Values,
         ) -> Self {

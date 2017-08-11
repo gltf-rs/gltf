@@ -45,7 +45,7 @@ pub enum Data<'a> {
 
 impl<'a> Image<'a> {
     /// Constructs an `Image` from owned data.
-    pub fn new(
+    pub(crate) fn new(
         gltf: &'a Gltf,
         index: usize,
         json: &'a json::image::Image,

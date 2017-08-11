@@ -69,7 +69,7 @@ pub struct Children<'a> {
 
 impl<'a> Node<'a> {
     /// Constructs a `Node`.
-    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::scene::Node) -> Self {
+    pub(crate) fn new(gltf: &'a Gltf, index: usize, json: &'a json::scene::Node) -> Self {
         Self {
             gltf: gltf,
             index: index,
@@ -156,7 +156,7 @@ impl<'a> Node<'a> {
 
 impl<'a> Scene<'a> {
     /// Constructs a `Scene`.
-    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::scene::Scene) -> Self {
+    pub(crate) fn new(gltf: &'a Gltf, index: usize, json: &'a json::scene::Scene) -> Self {
         Self {
             gltf: gltf,
             index: index,

@@ -220,7 +220,7 @@ pub struct Primitives<'a>  {
 
 impl<'a> Mesh<'a>  {
     /// Constructs a `Mesh`.
-    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::mesh::Mesh) -> Self {
+    pub(crate) fn new(gltf: &'a Gltf, index: usize, json: &'a json::mesh::Mesh) -> Self {
         Self {
             gltf: gltf,
             index: index,
@@ -354,7 +354,7 @@ impl<'a> Weights<'a> {
 
 impl<'a> Primitive<'a> {
     /// Constructs a `Primitive`.
-    pub fn new(
+    pub(crate) fn new(
         mesh: &'a Mesh<'a>,
         index: usize,
         json: &'a json::mesh::Primitive,

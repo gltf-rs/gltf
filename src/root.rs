@@ -20,7 +20,7 @@ pub struct Root(json::root::Root);
 
 impl Root {
     /// Constructs a `Camera`.
-    pub fn new(json: json::root::Root) -> Self {
+    pub(crate) fn new(json: json::root::Root) -> Self {
         Root(json)
     }
 

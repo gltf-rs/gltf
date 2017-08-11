@@ -41,7 +41,7 @@ pub struct Joints<'a> {
 
 impl<'a> Skin<'a> {
     /// Constructs a `Skin`.
-    pub fn new(gltf: &'a Gltf, index: usize, json: &'a json::skin::Skin) -> Self {
+    pub(crate) fn new(gltf: &'a Gltf, index: usize, json: &'a json::skin::Skin) -> Self {
         Self {
             gltf: gltf,
             index: index,

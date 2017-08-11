@@ -66,7 +66,7 @@ pub struct View<'a> {
 
 impl<'a> Buffer<'a> {
     /// Constructs a `Buffer`.
-    pub fn new(
+    pub(crate) fn new(
         gltf: &'a Gltf,
         index: usize,
         json: &'a json::buffer::Buffer,
@@ -119,7 +119,7 @@ impl<'a> Loaded<'a, Buffer<'a>> {
 
 impl<'a> View<'a> {
     /// Constructs a `View`.
-    pub fn new(
+    pub(crate) fn new(
         gltf: &'a Gltf,
         index: usize,
         json: &'a json::buffer::View,
