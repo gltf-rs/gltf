@@ -133,48 +133,27 @@ pub struct Primitive {
     pub targets: Option<Vec<MorphTargets>>,
 }
 
-    impl ::validation::Validate for Primitive {
+    impl Validate for Primitive {
         fn validate_minimally<P, R>(&self, root: &::Root, path: P, report: &mut R)
         where
             P: Fn() -> ::Path,
             R: FnMut(&Fn() -> ::Path, ::validation::Error),
         {
             // Generated part
-            self.attributes.validate_minimally(
-                root,
-                || path().field("attributes"),
-                report,
-            );
-            self.extensions.validate_minimally(
-                root,
-                || path().field("extensions"),
-                report,
-            );
-            self.extras.validate_minimally(
-                root,
-                || path().field("extras"),
-                report,
-            );
-            self.indices.validate_minimally(
-                root,
-                || path().field("indices"),
-                report,
-            );
-            self.material.validate_minimally(
-                root,
-                || path().field("material"),
-                report,
-            );
-            self.mode.validate_minimally(
-                root,
-                || path().field("mode"),
-                report,
-            );
-            self.targets.validate_minimally(
-                root,
-                || path().field("targets"),
-                report,
-            );
+            self.attributes
+                .validate_minimally(root, || path().field("attributes"), report);
+            self.extensions
+                .validate_minimally(root, || path().field("extensions"), report);
+            self.extras
+                .validate_minimally(root, || path().field("extras"), report);
+            self.indices
+                .validate_minimally(root, || path().field("indices"), report);
+            self.material
+                .validate_minimally(root, || path().field("material"), report);
+            self.mode
+                .validate_minimally(root, || path().field("mode"), report);
+            self.targets
+                .validate_minimally(root, || path().field("targets"), report);
 
             // Custom part
             if let Some(pos_accessor_index) = self.attributes.get(&Checked::Valid(Semantic::Positions)) {
@@ -208,41 +187,20 @@ pub struct Primitive {
             P: Fn() -> ::Path,
             R: FnMut(&Fn() -> ::Path, ::validation::Error),
         {
-            self.attributes.validate_completely(
-                root,
-                || path().field("attributes"),
-                report,
-            );
-            self.extensions.validate_completely(
-                root,
-                || path().field("extensions"),
-                report,
-            );
-            self.extras.validate_completely(
-                root,
-                || path().field("extras"),
-                report,
-            );
-            self.indices.validate_completely(
-                root,
-                || path().field("indices"),
-                report,
-            );
-            self.material.validate_completely(
-                root,
-                || path().field("material"),
-                report,
-            );
-            self.mode.validate_completely(
-                root,
-                || path().field("mode"),
-                report,
-            );
-            self.targets.validate_completely(
-                root,
-                || path().field("targets"),
-                report,
-            );
+            self.attributes
+                .validate_completely(root, || path().field("attributes"), report);
+            self.extensions
+                .validate_completely(root, || path().field("extensions"), report);
+            self.extras
+                .validate_completely(root, || path().field("extras"), report);
+            self.indices
+                .validate_completely(root, || path().field("indices"), report);
+            self.material
+                .validate_completely(root, || path().field("material"), report);
+            self.mode
+                .validate_completely(root, || path().field("mode"), report);
+            self.targets
+                .validate_completely(root, || path().field("targets"), report);
         }
     }
 
