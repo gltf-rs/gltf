@@ -10,7 +10,7 @@
 use serde::de;
 use std::collections::HashMap;
 use std::fmt;
-use validation::{Checked, Error};
+use validation::{Checked, Error, Validate};
 use {accessor, extensions, material, Extras, Index};
 
 /// Corresponds to `GL_POINTS`.
@@ -157,26 +157,27 @@ pub struct Primitive {
 
             // Custom part
             if let Some(pos_accessor_index) = self.attributes.get(&Checked::Valid(Semantic::Positions)) {
+                // spec: POSITION accessor **must** have `min` and `max` properties defined.
                 let pos_accessor = &root.accessors[pos_accessor_index.value()];
+
+                let min_path = &|| path().field("attributes").key("POSITION").field("min");
                 if let Some(ref min) = pos_accessor.min {
                     if min.len() != 3 {
-                        report(&|| path().field("attributes").key("positions").field("min"),
-                            Error::Invalid);
+                        report(min_path, Error::Invalid);
                     }
                 }
                 else {
-                    report(&|| path().field("attributes").key("positions").field("min"),
-                        Error::Missing);
+                    report(min_path, Error::Missing);
                 }
-                if let Some(ref max) = pos_accessor.min {
+
+                let max_path = &|| path().field("attributes").key("POSITION").field("max");
+                if let Some(ref max) = pos_accessor.max {
                     if max.len() != 3 {
-                        report(&|| path().field("attributes").key("positions").field("min"),
-                            Error::Invalid);
+                        report(max_path, Error::Invalid);
                     }
                 }
                 else {
-                    report(&|| path().field("attributes").key("positions").field("max"),
-                        Error::Invalid);
+                    report(max_path, Error::Missing);
                 }
             }
         }
