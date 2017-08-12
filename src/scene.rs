@@ -10,7 +10,7 @@
 use json;
 use std::slice;
 
-use {Camera, Gltf, Loaded, Mesh, Skin};
+use {Camera, Gltf, Mesh, Skin};
 
 ///  A node in the node hierarchy. When the node contains `skin`, all
 /// `mesh.primitives` must contain `JOINTS_0` and `WEIGHTS_0` attributes. A node can
@@ -194,56 +194,6 @@ impl<'a> Scene<'a> {
     }
 }
 
-impl<'a> Loaded<'a, Node<'a>> {
-    /// Returns the camera referenced by this node.
-    pub fn camera(&'a self) -> Option<Loaded<'a, Camera<'a>>> {
-        self.item.camera().map(|item| {
-            Loaded {
-                item,
-                source: self.source,
-            }
-        })
-    }
-
-    /// Returns an `Iterator` that visits the node's children.
-    pub fn children(&'a self) -> Loaded<'a, Children<'a>> {
-        Loaded {
-            item: self.item.children(),
-            source: self.source,
-        }
-    }
-
-    /// Returns the mesh referenced by this node.
-    pub fn mesh(&'a self) -> Option<Loaded<'a, Mesh<'a>>> {
-        self.item.mesh().map(|item| {
-            Loaded {
-                item,
-                source: self.source,
-            }
-        })
-    }
-
-    /// Returns the skin referenced by this node.
-    pub fn skin(&self) -> Option<Loaded<'a, Skin<'a>>> {
-        self.item.skin().map(|item| {
-            Loaded {
-                item,
-                source: self.source,
-            }
-        })
-    }
-}
-
-impl<'a> Loaded<'a, Scene<'a>> {
-    /// Returns an `Iterator` that visits each root node of the scene.
-    pub fn nodes(&'a self) -> Loaded<'a, Nodes<'a>> {
-        Loaded {
-            item: self.item.nodes(),
-            source: self.source,
-        }
-    }
-}
-
 impl<'a> ExactSizeIterator for Nodes<'a> {}
 impl<'a> Iterator for Nodes<'a> {
     type Item = Node<'a>;
@@ -258,23 +208,6 @@ impl<'a> Iterator for Nodes<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for Loaded<'a, Nodes<'a>> {}
-impl<'a> Iterator for Loaded<'a, Nodes<'a>> {
-    type Item = Loaded<'a, Node<'a>>;
-    fn next(&mut self) -> Option<Self::Item> {
-        self.item.next().map(|item| {
-            Loaded {
-                item,
-                source: self.source,
-            }
-        })
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.item.size_hint()
-    }
-}
-
 impl<'a> ExactSizeIterator for Children<'a> {}
 impl<'a> Iterator for Children<'a> {
     type Item = Node<'a>;
@@ -286,23 +219,6 @@ impl<'a> Iterator for Children<'a> {
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
-    }
-}
-
-impl<'a> ExactSizeIterator for Loaded<'a, Children<'a>> {}
-impl<'a> Iterator for Loaded<'a, Children<'a>> {
-    type Item = Loaded<'a, Node<'a>>;
-    fn next(&mut self) -> Option<Self::Item> {
-        self.item.next().map(|item| {
-            Loaded {
-                item,
-                source: self.source,
-            }
-        })
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.item.size_hint()
     }
 }
 

@@ -164,35 +164,3 @@ pub use self::mesh::{Mesh, Primitive};
 pub use self::scene::{Node, Scene};
 pub use self::skin::Skin;
 pub use self::texture::Texture;
-
-/// Represents sources of buffer data.
-///
-/// The user is expected to implement this trait in order to unlock the abstractions
-/// provided by the [`Loaded`] type. The `gltf-importer` crate provides a useable
-/// reference implementation.
-///
-/// [`Loaded`]: struct.Loaded.html
-pub trait Source: std::fmt::Debug {
-    /// Return the buffer data referenced by the given `Buffer`.
-    ///
-    /// This method must not fail.
-    fn source_buffer(&self, buffer: &Buffer) -> &[u8];
-}
-
-/// Wrapper type representing a `glTF` object whose data is immediately ready for
-/// use.
-#[derive(Clone, Debug)]
-pub struct Loaded<'a, T> {
-    /// The wrapped item.
-    item: T,
-
-    /// The data source for this item and all of its children.
-    source: &'a Source,
-}
-
-impl<'a, T> std::ops::Deref for Loaded<'a, T> {
-    type Target = T;
-    fn deref(&self) -> &Self::Target {
-        &self.item
-    }
-}

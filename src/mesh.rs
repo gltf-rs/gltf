@@ -9,166 +9,53 @@
 
 use std::collections::hash_map;
 use std::{iter, slice};
-use {accessor, json, material};
+use {json, material};
 
-use accessor::{Accessor, DataType, Dimensions, Iter};
-use {Gltf, Loaded};
+use accessor::Accessor;
+use Gltf;
 
 pub use json::mesh::{Mode, Semantic};
-
-/// XYZ vertex normals of type `[f32; 3]`.
-#[derive(Clone, Debug)]
-pub struct Normals<'a>(Iter<'a, [f32; 3]>);
-
-/// XYZ vertex normal displacements of type `[f32; 3]`.
-#[derive(Clone, Debug)]
-pub struct NormalDisplacements<'a>(Iter<'a, [f32; 3]>);
-
-/// XYZ vertex positions of type `[f32; 3]`.
-#[derive(Clone, Debug)]
-pub struct Positions<'a>(Iter<'a, [f32; 3]>);
-
-/// XYZ vertex position displacements of type `[f32; 3]`.
-#[derive(Clone, Debug)]
-pub struct PositionDisplacements<'a>(Iter<'a, [f32; 3]>);
-
-/// XYZW vertex tangents of type `[f32; 4]` where the `w` component is a
-/// sign value (-1 or +1) indicating the handedness of the tangent basis.
-#[derive(Clone, Debug)]
-pub struct Tangents<'a>(Iter<'a, [f32; 4]>);
-
-/// XYZ vertex tangent displacements of type `[f32; 3]`.
-#[derive(Clone, Debug)]
-pub struct TangentDisplacements<'a>(Iter<'a, [f32; 3]>);
-
-/// Vertex colors.
-#[derive(Clone, Debug)]
-pub enum Colors<'a> {
-    /// RGB vertex color of type `[u8; 3]>`.
-    RgbU8(Iter<'a, [u8; 3]>),
-
-    /// RGBA vertex color of type `[u8; 4]>`.
-    RgbaU8(Iter<'a, [u8; 4]>),
-
-    /// RGB vertex color of type `[u16; 3]>`.
-    RgbU16(Iter<'a, [u16; 3]>),
-
-    /// RGBA vertex color of type `[u16; 4]>`.
-    RgbaU16(Iter<'a, [u16; 4]>),
-
-    /// RGB vertex color of type `[f32; 3]`.
-    RgbF32(Iter<'a, [f32; 3]>),
-
-    /// RGBA vertex color of type `[f32; 4]`.
-    RgbaF32(Iter<'a, [f32; 4]>),
-}
-
-/// Index data.
-#[derive(Clone, Debug)]
-pub enum Indices<'a> {
-    /// Index data of type U8
-    U8(Iter<'a, u8>),
-    /// Index data of type U16
-    U16(Iter<'a, u16>),
-    /// Index data of type U32
-    U32(Iter<'a, u32>),
-}
-
-/// Index data coerced into `u32` values.
-#[derive(Clone, Debug)]
-pub struct IndicesU32<'a>(Indices<'a>);
-
-/// Texture co-ordinates coerced into `[f32; 2]` values.
-#[derive(Clone, Debug)]
-pub struct TexCoordsF32<'a>(TexCoords<'a>);
-
-/// Vertex joints.
-/// Refer to the documentation on morph targets and skins for more
-/// information.
-#[derive(Clone, Debug)]
-pub enum Joints<'a> {
-    /// Joints of type `[u8; 4]`.
-    /// Refer to the documentation on morph targets and skins for more
-    /// information.
-    U8(Iter<'a, [u8; 4]>),
-    
-    /// Joints of type `[u16; 4]`.
-    /// Refer to the documentation on morph targets and skins for more
-    /// information.
-    U16(Iter<'a, [u16; 4]>),
-}
-
-/// UV texture co-ordinates.
-#[derive(Clone, Debug)]
-pub enum TexCoords<'a> {
-    /// UV texture co-ordinates of type `[f32; 2]`.
-    F32(Iter<'a, [f32; 2]>),
-
-    /// UV texture co-ordinates of type `[u8; 2]>`.
-    U8(Iter<'a, [u8; 2]>),
-
-    /// UV texture co-ordinates of type `[u16; 2]>`.
-    U16(Iter<'a, [u16; 2]>),
-}
-
-/// Weights,
-/// Refer to the documentation on morph targets for more information.
-#[derive(Clone, Debug)]
-pub enum Weights<'a> {
-    /// Weights of type `[f32; 4]`.
-    F32(Iter<'a, [f32; 4]>),
-
-    /// Weights of type `[u8; 4]`.
-    U8(Iter<'a, [u8; 4]>),
-
-    /// Weights of type `[u16; 4]`.
-    U16(Iter<'a, [u16; 4]>),
-}
 
 /// Vertex attribute data.
 #[derive(Clone, Debug)]
 pub enum Attribute<'a> {
     /// Vertex colors.
-    Colors(u32, Colors<'a>),
+    Colors(u32, Accessor<'a>),
 
-    // TODO: Handle extras (needs to be handled elsewhere to avoid taking lifetime)
-    // #[cfg(feature = "extras")]
-    // Extras(&'a str, accessor::Accessor),
+    #[cfg(feature = "extras")]
+    Extras(&'a str, Accessor<'a>),
 
     /// Vertex joints.
-    /// Refer to the documentation on morph targets and skins for more
-    /// information.
-    Joints(u32, Joints<'a>),
+    Joints(u32, Accessor<'a>),
 
     /// XYZ vertex positions of type `[f32; 3]`.
-    Positions(Positions<'a>),
+    Positions(Accessor<'a>),
 
     /// XYZ vertex normals of type `[f32; 3]`.
-    Normals(Normals<'a>),
+    Normals(Accessor<'a>),
 
     /// XYZW vertex tangents of type `[f32; 4]` where the `w` component is a
     /// sign value (-1 or +1) indicating the handedness of the tangent basis.
-    Tangents(Tangents<'a>),
+    Tangents(Accessor<'a>),
 
     /// UV texture co-ordinates.
-    TexCoords(u32, TexCoords<'a>),
+    TexCoords(u32, Accessor<'a>),
 
     /// Weights.
-    /// Refer to the documentation on morph targets for more information.
-    Weights(u32, Weights<'a>),
+    Weights(u32, Accessor<'a>),
 }
 
 /// Morph targets.
 #[derive(Clone, Debug)]
 pub struct MorphTargets<'a> {
     /// XYZ vertex position displacements.
-    positions: Option<PositionDisplacements<'a>>,
+    positions: Option<Accessor<'a>>,
 
     /// XYZ vertex normal displacements.
-    normals: Option<NormalDisplacements<'a>>,
+    normals: Option<Accessor<'a>>,
 
     /// XYZ vertex tangent displacements.
-    tangents: Option<TangentDisplacements<'a>>,
+    tangents: Option<Accessor<'a>>,
 }
 
 /// A set of primitives to be rendered.  A node can contain one or more meshes and
@@ -220,7 +107,11 @@ pub struct Primitives<'a>  {
 
 impl<'a> Mesh<'a>  {
     /// Constructs a `Mesh`.
-    pub(crate) fn new(gltf: &'a Gltf, index: usize, json: &'a json::mesh::Mesh) -> Self {
+    pub(crate) fn new(
+        gltf: &'a Gltf,
+        index: usize,
+        json: &'a json::mesh::Mesh,
+    ) -> Self {
         Self {
             gltf: gltf,
             index: index,
@@ -263,95 +154,6 @@ impl<'a> Mesh<'a>  {
     }
 }
 
-impl<'a> Loaded<'a, Mesh<'a>> {
-    /// Defines the geometry to be renderered with a material.
-    pub fn primitives(&'a self) -> Loaded<'a, Primitives<'a>> {
-        Loaded {
-            item: self.item.primitives(),
-            source: self.source,
-        }
-    }
-}
-    
-impl<'a> Colors<'a> {
-    fn from_accessor(accessor: Loaded<'a, Accessor<'a>>) -> Colors<'a> {
-        unsafe {
-            match (accessor.dimensions(), accessor.data_type()) {
-                (Dimensions::Vec3, DataType::U8) => {
-                    Colors::RgbU8(accessor.iter())
-                },
-                (Dimensions::Vec4, DataType::U8) => {
-                    Colors::RgbaU8(accessor.iter())
-                },
-                (Dimensions::Vec3, DataType::U16) => {
-                    Colors::RgbU16(accessor.iter())
-                },
-                (Dimensions::Vec4, DataType::U16) => {
-                    Colors::RgbaU16(accessor.iter())
-                },
-                (Dimensions::Vec3, DataType::F32) => {
-                    Colors::RgbF32(accessor.iter())
-                },
-                (Dimensions::Vec4, DataType::F32) => {
-                    Colors::RgbaF32(accessor.iter())
-                },
-                _ => unreachable!(),
-            }
-        }
-    }
-}
-
-impl<'a> TexCoords<'a> {
-    fn from_accessor(accessor: Loaded<'a, Accessor<'a>>) -> TexCoords<'a> {
-        unsafe {
-            match accessor.data_type() {
-                DataType::U8 => TexCoords::U8(accessor.iter()),
-                DataType::U16 => TexCoords::U16(accessor.iter()),
-                DataType::F32 => TexCoords::F32(accessor.iter()),
-                _ => unreachable!(),
-            }
-        }
-    }
-}
-
-impl<'a> Indices<'a> {
-    fn from_accessor(accessor: Loaded<'a, Accessor<'a>>) -> Indices<'a> {
-        unsafe {
-            match accessor.data_type() {
-                DataType::U8 => Indices::U8(accessor.iter()),
-                DataType::U16 => Indices::U16(accessor.iter()),
-                DataType::U32 => Indices::U32(accessor.iter()),
-                _ => unreachable!(),
-            }
-        }
-    }
-}
-
-impl<'a> Joints<'a> {
-    fn from_accessor(accessor: Loaded<'a, Accessor<'a>>) -> Joints<'a> {
-        unsafe {
-            match accessor.data_type() {
-                DataType::U8 => Joints::U8(accessor.iter()),
-                DataType::U16 => Joints::U16(accessor.iter()),
-                _ => unreachable!(),
-            }
-        }
-    }
-}
-
-impl<'a> Weights<'a> {
-    fn from_accessor(accessor: Loaded<'a, Accessor<'a>>) -> Weights<'a> {
-        unsafe {
-            match accessor.data_type() {
-                DataType::U8 => Weights::U8(accessor.iter()),
-                DataType::U16 => Weights::U16(accessor.iter()),
-                DataType::F32 => Weights::F32(accessor.iter()),
-                _ => unreachable!(),
-            }
-        }
-    }
-}
-
 impl<'a> Primitive<'a> {
     /// Constructs a `Primitive`.
     pub(crate) fn new(
@@ -387,186 +189,6 @@ impl<'a> Primitive<'a> {
     /// The type of primitives to render.
     pub fn mode(&self) -> Mode {
         self.json.mode.unwrap()
-    }
-}
-
-impl<'a> Loaded<'a, Primitive<'a>> {
-    /// Returns the vertex colors of the given set.
-    pub fn colors(&self, set: u32) -> Option<Colors> {
-        self.find_accessor_with_semantic(Semantic::Colors(set))
-            .map(|accessor| Colors::from_accessor(accessor))
-    }
-
-    /// Returns the vertex texture co-ordinates of the given set.
-    pub fn tex_coords(&self, set: u32) -> Option<TexCoords> {
-        self.find_accessor_with_semantic(Semantic::TexCoords(set))
-            .map(|accessor| TexCoords::from_accessor(accessor))
-    }
-
-    /// Returns the vertex texture co-ordinates of the given set, coerced into
-    /// `[f32; 2]` values.
-    pub fn tex_coords_f32(&self, set: u32) -> Option<TexCoordsF32> {
-        self.tex_coords(set).map(TexCoordsF32)
-    }
-
-    /// Returns the joint indices of the given set.
-    pub fn joints(&self, set: u32) -> Option<Joints> {
-        self.find_accessor_with_semantic(Semantic::Joints(set))
-            .map(|accessor| Joints::from_accessor(accessor))
-    }
-    
-    /// Returns the joint weights of the given set.
-    pub fn weights(&self, set: u32) -> Option<Weights> {
-        self.find_accessor_with_semantic(Semantic::Weights(set))
-            .map(|accessor| Weights::from_accessor(accessor))
-    }
-
-    /// Returns the primitive indices.
-    pub fn indices(&self) -> Option<Indices> {
-        self.json.indices.as_ref().map(|index| {
-            let accessor = self.mesh.gltf
-                .accessors()
-                .nth(index.value())
-                .unwrap()
-                .loaded(self.source);
-            Indices::from_accessor(accessor)
-        })
-    }
-
-    /// Returns the primitive indices, coerced into `u32` values.
-    pub fn indices_u32(&self) -> Option<IndicesU32> {
-        self.indices().map(IndicesU32)
-    }
-
-    /// Returns the primitive positions.
-    pub fn positions(&self) -> Option<Positions> {
-        self.find_accessor_with_semantic(Semantic::Positions)
-            .map(|accessor| unsafe {
-                Positions(accessor.iter())
-            })
-    }
-
-    /// Returns the primitive normals.
-    pub fn normals(&self) -> Option<Normals> {
-        self.find_accessor_with_semantic(Semantic::Normals)
-            .map(|accessor| unsafe {
-                Normals(accessor.iter())
-            })
-    }
-
-    /// Returns the primitive tangents.
-    pub fn tangents(&self) -> Option<Tangents> {
-        self.find_accessor_with_semantic(Semantic::Tangents)
-            .map(|accessor| unsafe {
-                Tangents(accessor.iter())
-            })
-    }
-
-    /// Returns the attribute with the given semantic value.
-    fn find_accessor_with_semantic(
-        &self,
-        semantic: Semantic,
-    ) -> Option<Loaded<'a, accessor::Accessor<'a>>> {
-        self.json.attributes
-            .iter()
-            .find(|&(ref key, _)| key.as_ref().unwrap() == &semantic)
-            .map(|(_, index)| {
-                self.mesh.gltf
-                    .accessors()
-                    .nth(index.value())
-                    .unwrap()
-                    .loaded(self.source)
-            })
-    }
-
-    /// Returns the material to apply to this primitive when rendering
-    pub fn material(&self) -> Loaded<'a, material::Material<'a>> {
-        Loaded {
-            item: self.item.material(),
-            source: self.source,
-        }
-    }
-}
-
-impl<'a> Iterator for IndicesU32<'a> {
-    type Item = u32;
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.0 {
-            Indices::U8(ref mut i) => i.next().map(|x| x as u32),
-            Indices::U16(ref mut i) => i.next().map(|x| x as u32),
-            Indices::U32(ref mut i) => i.next(),
-        }
-    }
-}
-
-impl<'a> Iterator for TexCoordsF32<'a> {
-    type Item = [f32; 2];
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.0 {
-            TexCoords::U8(ref mut i) => {
-                i.next().map(|x| [x[0] as f32 / 255.0, x[1] as f32 / 255.0])
-            },
-            TexCoords::U16(ref mut i) => {
-                i.next().map(|x| [x[0] as f32 / 65535.0, x[1] as f32 / 65535.0])
-            },
-            TexCoords::F32(ref mut i) => i.next(),
-        }
-    }
-}
-
-impl<'a> Iterator for Positions<'a> {
-    type Item = [f32; 3];
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.next()
-    }
-}
-
-impl<'a> Iterator for PositionDisplacements<'a> {
-    type Item = [f32; 3];
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.next()
-    }
-}
-
-impl<'a> Iterator for Normals<'a> {
-    type Item = [f32; 3];
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.next()
-    }
-}
- 
-impl<'a> Iterator for NormalDisplacements<'a> {
-    type Item = [f32; 3];
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.next()
-    }
-}
-
-impl<'a> Iterator for Tangents<'a> {
-    type Item = [f32; 4];
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.next()
-    }
-}
-
-impl<'a> Iterator for TangentDisplacements<'a> {
-    type Item = [f32; 3];
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.next()
-    }
-}
-
-impl<'a> Iterator for Loaded<'a, Primitives<'a>> {
-    type Item = Loaded<'a, Primitive<'a>>;
-    fn next(&mut self) -> Option<Self::Item> {
-        self.item
-            .next()
-            .map(|primitive| {
-                Loaded {
-                    item: primitive,
-                    source: self.source,
-                }
-            })
     }
 }
 

@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use {buffer, json};
-use {Gltf, Loaded};
+use Gltf;
 
 /// Image data used to create a texture.
 pub struct Image<'a> {
@@ -27,7 +27,7 @@ pub enum Data<'a> {
     /// Image data is contained in a buffer view.
     FromBufferView {
         /// The buffer view containing the encoded image data.
-        buffer_view: Loaded<'a, buffer::View<'a>>,
+        buffer_view: buffer::View<'a>,
 
         /// The image data MIME type.
         mime_type: &'a str,
@@ -73,32 +73,27 @@ impl<'a> Image<'a> {
         self.json.name.as_ref().map(String::as_str)
     }
 
-
-    /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
-        &self.json.extras
-    }
-}
-
-impl<'a> Loaded<'a, Image<'a>> {
     /// Returns the raw image data.
     pub fn data(&self) -> Data<'a> {
         if let Some(index) = self.json.buffer_view.as_ref() {
-            let buffer_view = Loaded {
-                item: {
-                    self.gltf
-                        .views()
-                        .nth(index.value())
-                        .unwrap()
-                },
-                source: self.source,
-            };
-            let mime_type = self.json.mime_type.as_ref().map(|x| x.0.as_str()).unwrap();
+            let buffer_view = self.gltf
+                .views()
+                .nth(index.value())
+                .unwrap();
+            let mime_type = self.json.mime_type
+                .as_ref()
+                .map(|x| x.0.as_str())
+                .unwrap();
             Data::FromBufferView { buffer_view, mime_type }
         } else {
             let uri = self.json.uri.as_ref().unwrap();
             let mime_type = self.json.mime_type.as_ref().map(|x| x.0.as_str());
             Data::External { uri, mime_type }
         }
+    }
+
+    /// Optional application specific data.
+    pub fn extras(&self) -> &json::Extras {
+        &self.json.extras
     }
 }

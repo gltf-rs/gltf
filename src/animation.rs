@@ -47,7 +47,10 @@ pub struct Samplers<'a> {
 
 impl<'a> Animation<'a> {
     /// Constructs an `Animation`.
-    pub(crate) fn new(gltf: &'a Gltf, index: usize, json: &'a json::animation::Animation) -> Self {
+    pub(crate) fn new(
+        gltf: &'a Gltf, index: usize,
+        json: &'a json::animation::Animation,
+    ) -> Self {
         Self {
             gltf: gltf,
             index: index,
@@ -108,7 +111,10 @@ pub struct Channel<'a> {
 
 impl<'a> Channel<'a> {
     /// Constructs a `Channel`.
-    pub(crate) fn new(anim: Animation<'a>, json: &'a json::animation::Channel) -> Self {
+    pub(crate) fn new(
+        anim: Animation<'a>,
+        json: &'a json::animation::Channel,
+    ) -> Self {
         Self {
             anim: anim,
             json: json,
@@ -154,7 +160,10 @@ pub struct Target<'a> {
 
 impl<'a> Target<'a> {
     /// Constructs a `Target`.
-    pub(crate) fn new(anim: Animation<'a>, json: &'a json::animation::Target) -> Self {
+    pub(crate) fn new(
+        anim: Animation<'a>,
+        json: &'a json::animation::Target,
+    ) -> Self {
         Self {
             anim: anim,
             json: json,
@@ -200,7 +209,10 @@ pub struct Sampler<'a> {
 
 impl<'a> Sampler<'a> {
     /// Constructs a `Sampler`.
-    pub(crate) fn new(anim: Animation<'a>, json: &'a json::animation::Sampler) -> Self {
+    pub(crate) fn new(
+        anim: Animation<'a>,
+        json: &'a json::animation::Sampler,
+    ) -> Self {
         Self {
             anim: anim,
             json: json,

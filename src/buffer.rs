@@ -7,33 +7,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::ops;
 use json;
 
-use {Gltf, Loaded};
+use Gltf;
 
 pub use json::buffer::Target;
-
-/// Buffer data.
-#[derive(Clone, Debug)]
-pub struct Data<'a> {
-    /// Parent `Buffer`.
-    parent: Loaded<'a, Buffer<'a>>,
-
-    /// Buffer range.
-    range: Option<ops::Range<usize>>,
-}
-
-impl<'a> ops::Deref for Data<'a> {
-    type Target = [u8];
-    fn deref(&self) -> &Self::Target {
-        let slice = self.parent.source.source_buffer(&self.parent.item);
-        match self.range.clone() {
-            Some(range) => &slice[range],
-            None => &slice[..],
-        }
-    }
-}
 
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Clone, Debug)]
@@ -105,18 +83,6 @@ impl<'a> Buffer<'a> {
     }
 }
 
-impl<'a> Loaded<'a, Buffer<'a>> {
-    /// Returns the buffer data.
-    pub fn data(&self) -> Data {
-        let parent = self.clone();
-        let range = None;
-        Data {
-            parent,
-            range,
-        }
-    }
-}
-
 impl<'a> View<'a> {
     /// Constructs a `View`.
     pub(crate) fn new(
@@ -180,20 +146,3 @@ impl<'a> View<'a> {
         &self.json.extras
     }
 }
-impl<'a> Loaded<'a, View<'a>> {
-    /// Returns the buffer view data.
-    pub fn data(&'a self) -> Data<'a> {
-        let begin = self.offset();
-        let end = begin + self.length();
-        let range = Some(begin..end);
-        let parent = Loaded {
-            item: self.parent.clone(),
-            source: self.source,
-        };
-        Data {
-            parent,
-            range,
-        }
-    }
-}
-
