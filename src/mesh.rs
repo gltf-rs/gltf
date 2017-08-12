@@ -14,6 +14,7 @@ use json;
 use {Accessor, Gltf, Material};
 
 pub use json::mesh::{Mode, Semantic};
+use json::validation::Checked;
 
 /// Vertex attribute data.
 #[derive(Clone, Debug)]
@@ -90,7 +91,7 @@ pub struct Primitive<'a>  {
 pub struct Attributes<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
-    
+
     /// The parent `Primitive` struct.
     prim: &'a Primitive<'a>,
 
@@ -161,6 +162,13 @@ impl<'a> Mesh<'a>  {
     }
 }
 
+/// Accessor bounds
+#[derive(Debug)]
+pub struct Bounds {
+    min: [f32; 3],
+    max: [f32; 3]
+}
+
 impl<'a> Primitive<'a> {
     /// Constructs a `Primitive`.
     pub(crate) fn new(
@@ -178,6 +186,22 @@ impl<'a> Primitive<'a> {
     /// Returns the internal JSON item.
     pub fn as_json(&self) ->  &json::mesh::Primitive {
         self.json
+    }
+
+    /// Returns the min and max of the POSITION attribute if there is one.
+    pub fn bounds(&self) -> Option<Bounds> {
+        if let Some(pos_accessor_index) = self.json.attributes.get(&Checked::Valid(Semantic::Positions)) {
+            let pos_accessor = self.mesh.gltf.accessors().nth(pos_accessor_index.value()).unwrap();
+            let min: [f32; 3] = json::from_value(pos_accessor.min().unwrap()).unwrap();
+            let max: [f32; 3] = json::from_value(pos_accessor.max().unwrap()).unwrap();
+            Some(Bounds {
+                min: [min[0], min[1], min[2]],
+                max: [max[0], max[1], max[2]]
+            })
+        }
+        else {
+            None
+        }
     }
 
     /// Optional application specific data.
