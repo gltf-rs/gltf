@@ -10,7 +10,7 @@
 use serde::de;
 use std::collections::HashMap;
 use std::fmt;
-use validation::Checked;
+use validation::{Checked, Error};
 use {accessor, extensions, material, Extras, Index};
 
 /// Corresponds to `GL_POINTS`.
@@ -71,7 +71,7 @@ pub enum Mode {
     Triangles,
 
     /// Corresponds to `GL_TRIANGLE_STRIP`.
-    TriangleStrip, 
+    TriangleStrip,
 
     /// Corresponds to `GL_TRIANGLE_FAN`.
     TriangleFan,
@@ -86,15 +86,15 @@ pub struct Mesh {
     /// Extension specific data.
     #[serde(default)]
     pub extensions: extensions::mesh::Mesh,
-    
+
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
-    
+
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
     pub name: Option<String>,
-    
+
     /// Defines the geometry to be renderered with a material.
     pub primitives: Vec<Primitive>,
 
@@ -103,35 +103,148 @@ pub struct Mesh {
 }
 
 /// Geometry to be rendered with the given material.
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Primitive {
     /// Maps attribute semantic names to the `Accessor`s containing the
     /// corresponding attribute data.
     pub attributes: HashMap<Checked<Semantic>, Index<accessor::Accessor>>,
-    
+
     /// Extension specific data.
     #[serde(default)]
     pub extensions: extensions::mesh::Primitive,
-    
+
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
-    
+
     /// The index of the accessor that contains the indices.
     pub indices: Option<Index<accessor::Accessor>>,
-    
+
     /// The index of the material to apply to this primitive when rendering
     pub material: Option<Index<material::Material>>,
-    
+
     /// The type of primitives to render.
     #[serde(default)]
     pub mode: Checked<Mode>,
-    
+
     /// An array of Morph Targets, each  Morph Target is a dictionary mapping
     /// attributes (only `POSITION`, `NORMAL`, and `TANGENT` supported) to their
     /// deviations in the Morph Target.
     pub targets: Option<Vec<MorphTargets>>,
 }
+
+    impl ::validation::Validate for Primitive {
+        fn validate_minimally<P, R>(&self, root: &::Root, path: P, report: &mut R)
+        where
+            P: Fn() -> ::Path,
+            R: FnMut(&Fn() -> ::Path, ::validation::Error),
+        {
+            // Generated part
+            self.attributes.validate_minimally(
+                root,
+                || path().field("attributes"),
+                report,
+            );
+            self.extensions.validate_minimally(
+                root,
+                || path().field("extensions"),
+                report,
+            );
+            self.extras.validate_minimally(
+                root,
+                || path().field("extras"),
+                report,
+            );
+            self.indices.validate_minimally(
+                root,
+                || path().field("indices"),
+                report,
+            );
+            self.material.validate_minimally(
+                root,
+                || path().field("material"),
+                report,
+            );
+            self.mode.validate_minimally(
+                root,
+                || path().field("mode"),
+                report,
+            );
+            self.targets.validate_minimally(
+                root,
+                || path().field("targets"),
+                report,
+            );
+
+            // Custom part
+            if let Some(pos_accessor_index) = self.attributes.get(&Checked::Valid(Semantic::Positions)) {
+                let pos_accessor = &root.accessors[pos_accessor_index.value()];
+                if let Some(ref min) = pos_accessor.min {
+                    if min.len() != 3 {
+                        report(&|| path().field("attributes").key("positions").field("min"),
+                            Error::Invalid);
+                    }
+                }
+                else {
+                    report(&|| path().field("attributes").key("positions").field("min"),
+                        Error::Missing);
+                }
+                if let Some(ref max) = pos_accessor.min {
+                    if max.len() != 3 {
+                        report(&|| path().field("attributes").key("positions").field("min"),
+                            Error::Invalid);
+                    }
+                }
+                else {
+                    report(&|| path().field("attributes").key("positions").field("max"),
+                        Error::Invalid);
+                }
+            }
+        }
+
+        // Generated validation
+        fn validate_completely<P, R>(&self, root: &::Root, path: P, report: &mut R)
+        where
+            P: Fn() -> ::Path,
+            R: FnMut(&Fn() -> ::Path, ::validation::Error),
+        {
+            self.attributes.validate_completely(
+                root,
+                || path().field("attributes"),
+                report,
+            );
+            self.extensions.validate_completely(
+                root,
+                || path().field("extensions"),
+                report,
+            );
+            self.extras.validate_completely(
+                root,
+                || path().field("extras"),
+                report,
+            );
+            self.indices.validate_completely(
+                root,
+                || path().field("indices"),
+                report,
+            );
+            self.material.validate_completely(
+                root,
+                || path().field("material"),
+                report,
+            );
+            self.mode.validate_completely(
+                root,
+                || path().field("mode"),
+                report,
+            );
+            self.targets.validate_completely(
+                root,
+                || path().field("targets"),
+                report,
+            );
+        }
+    }
 
 /// A dictionary mapping attributes to their deviations in the Morph Target.
 #[derive(Clone, Debug, Deserialize, Validate)]

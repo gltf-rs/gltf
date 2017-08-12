@@ -163,10 +163,12 @@ impl<'a> Mesh<'a>  {
 }
 
 /// Accessor bounds
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Bounds {
-    min: [f32; 3],
-    max: [f32; 3]
+    /// Min
+    pub min: [f32; 3],
+    /// Max
+    pub max: [f32; 3]
 }
 
 impl<'a> Primitive<'a> {
@@ -189,9 +191,12 @@ impl<'a> Primitive<'a> {
     }
 
     /// Returns the min and max of the POSITION attribute if there is one.
+    /// May panic for invalid glTF files. Use gltf_json::validation::Validate::validate_minimally
+    /// to handle this gracefully.
     pub fn bounds(&self) -> Option<Bounds> {
         if let Some(pos_accessor_index) = self.json.attributes.get(&Checked::Valid(Semantic::Positions)) {
             let pos_accessor = self.mesh.gltf.accessors().nth(pos_accessor_index.value()).unwrap();
+            // NOTE: cannot panic if validated "minimally"
             let min: [f32; 3] = json::from_value(pos_accessor.min().unwrap()).unwrap();
             let max: [f32; 3] = json::from_value(pos_accessor.max().unwrap()).unwrap();
             Some(Bounds {

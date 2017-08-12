@@ -10,8 +10,8 @@
 use std::fmt;
 
 /// An immutable JSON source path.
-#[derive(Clone, Debug)]
-pub struct Path(String);
+#[derive(Clone, Debug, PartialEq)]
+pub struct Path(pub String);
 
 impl Path {
     /// Creates an empty JSON source path.
