@@ -188,6 +188,8 @@ pub struct Primitive {
             P: Fn() -> ::Path,
             R: FnMut(&Fn() -> ::Path, ::validation::Error),
         {
+            self.validate_minimally(root, || path(), report);
+
             self.attributes
                 .validate_completely(root, || path().field("attributes"), report);
             self.extensions
