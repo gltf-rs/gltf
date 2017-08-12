@@ -25,11 +25,13 @@
 //! ```
 
 extern crate gltf;
+extern crate gltf_utils;
 
 use gltf::json::{self, validation};
 use std::{fmt, fs, io};
 
-use gltf::{Gltf, Loaded};
+use gltf::Gltf;
+use gltf_utils::Source;
 use std::error::Error as StdError;
 use std::path::{Path, PathBuf};
 
@@ -76,10 +78,38 @@ pub struct Importer {
     config: Config,
 }
 
-impl gltf::Source for Importer {
+/// Buffer data returned from `import`.
+#[derive(Clone, Debug)]
+pub struct Buffers(Vec<Vec<u8>>);
+
+impl Source for Buffers {
     fn source_buffer(&self, buffer: &gltf::Buffer) -> &[u8] {
-        &self.buffers[buffer.index()]
+        &self.0[buffer.index()]
     }
+}
+
+impl Buffers {
+    /// Take the loaded buffer data.
+    pub fn take(self) -> Vec<Vec<u8>> {
+        self.0
+    }
+}
+
+fn import_impl(path: &Path, config: Config) -> Result<(Gltf, Buffers), Error> {
+    let data = read_to_end(path)?;
+    let (gltf, buffers) = if data.starts_with(b"glTF") {
+        import_binary(&data, &config, path)
+    } else {
+        import_standard(&data, &config, path)
+    }?;
+    Ok((gltf, Buffers(buffers)))
+}   
+
+/// Imports glTF 2.0
+pub fn import<P>(path: P) -> Result<(Gltf, Buffers), Error>
+    where P: AsRef<Path>
+{
+    import_impl(path.as_ref(), Default::default())
 }
 
 /// The contents of a .glb file.
@@ -348,37 +378,6 @@ fn import_binary<'a>(
         buffers.push(buffer);
     }
     Ok((gltf, buffers))
-}
-
-impl Importer {
-    /// Constructs an `Importer`.
-    pub fn new<P: Into<PathBuf>>(path: P) -> Self {
-        Self {
-            path: path.into(),
-            data: vec![],
-            gltf: None,
-            buffers: vec![],
-            config: Default::default(),
-        }
-    }
-
-    /// Imports the `glTF`.
-    pub fn import(&mut self) -> Result<Loaded<&Gltf>, Error> {
-        self.data = read_to_end(&self.path)?;
-        let (gltf, buffers) = if self.data.starts_with(b"glTF") {
-            import_binary(&self.data, &self.config, &self.path)
-        } else {
-            import_standard(&self.data, &self.config, &self.path)
-        }?;
-        self.buffers = buffers;
-        self.gltf = Some(gltf);
-        Ok(self.gltf.as_ref().unwrap().loaded(self))
-    }
-
-    /// Returns the path to the `glTF`.
-    pub fn path(&self) -> &Path {
-        &self.path
-    }
 }
 
 impl From<json::Error> for Error {
