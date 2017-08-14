@@ -164,7 +164,7 @@ pub use self::glb::Glb;
 pub use self::gltf::{Gltf, Unvalidated};
 pub use self::image::Image;
 pub use self::material::Material;
-pub use self::mesh::{Mesh, Primitive};
+pub use self::mesh::{Attribute, Mesh, Primitive, Semantic};
 pub use self::scene::{Node, Scene};
 pub use self::skin::Skin;
 pub use self::texture::Texture;

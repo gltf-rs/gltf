@@ -9,6 +9,7 @@
 
 use {buffer, extensions, Extras, Index};
 use serde::de;
+use serde_json::Value;
 use std::fmt;
 use validation::Checked;
 
@@ -216,10 +217,12 @@ pub struct Accessor {
     pub type_: Checked<Type>,
 
     /// Minimum value of each component in this attribute.
-    pub min: Vec<f32>,
+    #[serde(default)]
+    pub min: Option<Value>,
 
     /// Maximum value of each component in this attribute.
-    pub max: Vec<f32>,
+    #[serde(default)]
+    pub max: Option<Value>,
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
@@ -231,6 +234,7 @@ pub struct Accessor {
     
     /// Sparse storage of attributes that deviate from their initialization
     /// value.
+    #[serde(default)]
     pub sparse: Option<sparse::Sparse>,
 }
 

@@ -9,19 +9,133 @@
 
 extern crate gltf;
 
-use std::marker;
+use std::{fmt, marker, mem};
+
+use gltf::accessor::{DataType, Dimensions};
+
+/// Helper trait for denormalizing integer types.
+pub trait Denormalize {
+    /// The denormalized version of this type.
+    type Denormalized;
+
+    /// Returns the denormalized equivalent of the value.
+    fn denormalize(&self) -> Self::Denormalized;
+}
 
 /// Represents sources of buffer data.
-pub trait Source: std::fmt::Debug {
+pub trait Source: fmt::Debug {
     /// Return the buffer data referenced by the given `Buffer`.
     ///
     /// This method must not fail.
     fn source_buffer(&self, buffer: &gltf::Buffer) -> &[u8];
 }
 
+/// Extra methods for working with `gltf::Primitive`.
+pub trait PrimitiveIterators<'a> {
+    fn positions<S>(&'a self, source: &'a S) -> Option<Positions<'a>>
+        where S: Source;
+
+    fn normals<S>(&'a self, source: &'a S) -> Option<Normals<'a>>
+        where S: Source;
+    
+    fn tangents<S>(&'a self, source: &'a S) -> Option<Tangents<'a>>
+        where S: Source;
+    
+    fn tex_coords_f32<S>(
+        &'a self,
+        source: &'a S,
+        set: u32,
+    ) -> Option<TexCoordsF32<'a>>
+        where S: Source;
+    
+    fn colors_rgba_f32<S>(
+        &'a self,
+        source: &'a S,
+        set: u32,
+        default_alpha: f32,
+    ) -> Option<ColorsRgbaF32<'a>>
+        where S: Source;
+    
+    fn indices_u32<S>(&'a self, source: &'a S) -> Option<IndicesU32<'a>>
+        where S: Source;
+
+    fn joints_u16<S: Source>(&'a self, source: &'a S, set: u32) -> Option<JointsU16<'a>>
+        where S: Source;
+   
+    fn weights_f32<S: Source>(&'a self, source: &'a S, set: u32) -> Option<WeightsF32<'a>>
+        where S: Source;
+}
+
+impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
+    fn positions<S>(&'a self, source: &'a S) -> Option<Positions<'a>>
+        where S: Source
+    {
+        self.get(&gltf::Semantic::Positions)
+            .map(|accessor| Positions(AccessorIter::new(accessor, source)))
+    }
+
+    fn normals<S>(&'a self, source: &'a S) -> Option<Normals<'a>>
+        where S: Source
+    {
+        self.get(&gltf::Semantic::Normals)
+            .map(|accessor| Normals(AccessorIter::new(accessor, source)))
+    }
+
+    fn tangents<S>(&'a self, source: &'a S) -> Option<Tangents<'a>>
+        where S: Source
+    {
+        self.get(&gltf::Semantic::Tangents)
+            .map(|accessor| Tangents(AccessorIter::new(accessor, source)))
+    }
+
+    fn tex_coords_f32<S>(&'a self, source: &'a S, set: u32) -> Option<TexCoordsF32<'a>>
+        where S: Source
+    {
+        self.get(&gltf::Semantic::TexCoords(set))
+            .map(|accessor| TexCoordsF32(TexCoords::new(accessor, source)))
+    }
+    
+    fn colors_rgba_f32<S>(
+        &'a self,
+        source: &'a S,
+        set: u32,
+        default_alpha: f32,
+    ) -> Option<ColorsRgbaF32<'a>>
+        where S: Source
+    {
+        self.get(&gltf::Semantic::Colors(set))
+            .map(|accessor| {
+                ColorsRgbaF32 {
+                    iter: Colors::new(accessor, source),
+                    default_alpha,
+                }
+            })
+    }
+
+    fn indices_u32<S>(&'a self, source: &'a S) -> Option<IndicesU32<'a>>
+        where S: Source
+    {
+        self.indices().map(|accessor| IndicesU32(Indices::new(accessor, source)))
+    }
+    
+    fn joints_u16<S>(&'a self, source: &'a S, set: u32) -> Option<JointsU16<'a>>
+        where S: Source
+    {
+        self.get(&gltf::Semantic::Colors(set))
+            .map(|accessor| JointsU16(Joints::new(accessor, source)))
+    }
+
+    fn weights_f32<S>(&'a self, source: &'a S, set: u32) -> Option<WeightsF32<'a>>
+        where S: Source
+    {
+        self.get(&gltf::Semantic::Weights(set))
+            .map(|accessor| WeightsF32(Weights::new(accessor, source)))
+    }
+}
+
 /// Visits the items in an `Accessor`.
 #[derive(Clone, Debug)]
-pub struct Iter<'a, T> {
+struct AccessorIter<'a, T> {
     /// The total number of iterations left.
     count: usize,
 
@@ -34,63 +148,120 @@ pub struct Iter<'a, T> {
     /// Byte offset into the buffer view where the items begin.
     offset: usize,
     
+    /// The data we're iterating over.
+    data: &'a [u8],
+
     /// The accessor we're iterating over.
     accessor: gltf::Accessor<'a>,
-
+    
     /// Consumes the data type we're returning at each iteration.
     _marker: marker::PhantomData<T>,
 }
 
-pub fn normals<'a, S>(primitive: &gltf::Primitive, source: &S) -> Option<Normals<'a>>
-    where S: Source
-{
-    unimplemented!()
+impl<'a, T> AccessorIter<'a, T> {
+    fn new<S>(accessor: gltf::Accessor<'a>, source: &'a S) -> AccessorIter<'a, T>
+        where S: Source
+    {
+        let view = accessor.view();
+        let buffer = view.buffer();
+        let buffer_data = source.source_buffer(&buffer);
+        let view_data = &buffer_data[view.offset()..(view.offset() + view.length())];
+        AccessorIter {
+            index: 0,
+            stride: view.stride().unwrap_or(mem::size_of::<T>()),
+            offset: accessor.offset(),
+            count: accessor.count(),
+            accessor: accessor,
+            data: view_data,
+            _marker: marker::PhantomData,
+        }
+    }
 }
 
 /// XYZ vertex normals of type `[f32; 3]`.
 #[derive(Clone, Debug)]
-pub struct Normals<'a>(Iter<'a, [f32; 3]>);
+pub struct Normals<'a>(AccessorIter<'a, [f32; 3]>);
 
 /// XYZ vertex positions of type `[f32; 3]`.
 #[derive(Clone, Debug)]
-pub struct Positions<'a>(Iter<'a, [f32; 3]>);
+pub struct Positions<'a>(AccessorIter<'a, [f32; 3]>);
 
 /// XYZW vertex tangents of type `[f32; 4]` where the `w` component is a
 /// sign value (-1 or +1) indicating the handedness of the tangent basis.
 #[derive(Clone, Debug)]
-pub struct Tangents<'a>(Iter<'a, [f32; 4]>);
+pub struct Tangents<'a>(AccessorIter<'a, [f32; 4]>);
 
 /// Vertex colors.
 #[derive(Clone, Debug)]
-pub enum Colors<'a> {
+enum Colors<'a> {
     /// RGB vertex color of type `[u8; 3]>`.
-    RgbU8(Iter<'a, [u8; 3]>),
+    RgbU8(AccessorIter<'a, [u8; 3]>),
 
     /// RGBA vertex color of type `[u8; 4]>`.
-    RgbaU8(Iter<'a, [u8; 4]>),
+    RgbaU8(AccessorIter<'a, [u8; 4]>),
 
     /// RGB vertex color of type `[u16; 3]>`.
-    RgbU16(Iter<'a, [u16; 3]>),
+    RgbU16(AccessorIter<'a, [u16; 3]>),
 
     /// RGBA vertex color of type `[u16; 4]>`.
-    RgbaU16(Iter<'a, [u16; 4]>),
+    RgbaU16(AccessorIter<'a, [u16; 4]>),
 
     /// RGB vertex color of type `[f32; 3]`.
-    RgbF32(Iter<'a, [f32; 3]>),
+    RgbF32(AccessorIter<'a, [f32; 3]>),
 
     /// RGBA vertex color of type `[f32; 4]`.
-    RgbaF32(Iter<'a, [f32; 4]>),
+    RgbaF32(AccessorIter<'a, [f32; 4]>),
 }
 
 /// Index data.
 #[derive(Clone, Debug)]
-pub enum Indices<'a> {
+enum Indices<'a> {
     /// Index data of type U8
-    U8(Iter<'a, u8>),
+    U8(AccessorIter<'a, u8>),
     /// Index data of type U16
-    U16(Iter<'a, u16>),
+    U16(AccessorIter<'a, u16>),
     /// Index data of type U32
-    U32(Iter<'a, u32>),
+    U32(AccessorIter<'a, u32>),
+}
+
+/// Vertex joints.
+#[derive(Clone, Debug)]
+enum Joints<'a> {
+    /// Joints of type `[u8; 4]`.
+    /// Refer to the documentation on morph targets and skins for more
+    /// information.
+    U8(AccessorIter<'a, [u8; 4]>),
+    
+    /// Joints of type `[u16; 4]`.
+    /// Refer to the documentation on morph targets and skins for more
+    /// information.
+    U16(AccessorIter<'a, [u16; 4]>),
+}
+
+/// UV texture co-ordinates.
+#[derive(Clone, Debug)]
+enum TexCoords<'a> {
+    /// UV texture co-ordinates of type `[f32; 2]`.
+    F32(AccessorIter<'a, [f32; 2]>),
+
+    /// UV texture co-ordinates of type `[u8; 2]>`.
+    U8(AccessorIter<'a, [u8; 2]>),
+
+    /// UV texture co-ordinates of type `[u16; 2]>`.
+    U16(AccessorIter<'a, [u16; 2]>),
+}
+
+/// Weights,
+#[derive(Clone, Debug)]
+enum Weights<'a> {
+    /// Weights of type `[f32; 4]`.
+    F32(AccessorIter<'a, [f32; 4]>),
+
+    /// Weights of type `[u8; 4]`.
+    U8(AccessorIter<'a, [u8; 4]>),
+
+    /// Weights of type `[u16; 4]`.
+    U16(AccessorIter<'a, [u16; 4]>),
 }
 
 /// Index data coerced into `u32` values.
@@ -101,45 +272,272 @@ pub struct IndicesU32<'a>(Indices<'a>);
 #[derive(Clone, Debug)]
 pub struct TexCoordsF32<'a>(TexCoords<'a>);
 
-/// Vertex joints.
-/// Refer to the documentation on morph targets and skins for more
-/// information.
+/// Joint indices co-coerced into `[u16; 4]` values.
 #[derive(Clone, Debug)]
-pub enum Joints<'a> {
-    /// Joints of type `[u8; 4]`.
-    /// Refer to the documentation on morph targets and skins for more
-    /// information.
-    U8(Iter<'a, [u8; 4]>),
-    
-    /// Joints of type `[u16; 4]`.
-    /// Refer to the documentation on morph targets and skins for more
-    /// information.
-    U16(Iter<'a, [u16; 4]>),
+pub struct JointsU16<'a>(Joints<'a>);
+
+/// Joint weights co-coerced into `[f32; 4]` values.
+#[derive(Clone, Debug)]
+pub struct WeightsF32<'a>(Weights<'a>);
+
+/// Vertex colors coerced into `[f32; 4]` (RGBA) values.
+#[derive(Clone, Debug)]
+pub struct ColorsRgbaF32<'a> {
+    /// Internal iterator type.
+    iter: Colors<'a>,
+
+    /// Default alpha value.
+    default_alpha: f32,
 }
 
-/// UV texture co-ordinates.
-#[derive(Clone, Debug)]
-pub enum TexCoords<'a> {
-    /// UV texture co-ordinates of type `[f32; 2]`.
-    F32(Iter<'a, [f32; 2]>),
-
-    /// UV texture co-ordinates of type `[u8; 2]>`.
-    U8(Iter<'a, [u8; 2]>),
-
-    /// UV texture co-ordinates of type `[u16; 2]>`.
-    U16(Iter<'a, [u16; 2]>),
+/// Returns `true` if the slice begins with the `b"glTF"` magic string.
+pub fn is_glb(slice: &[u8]) -> bool {
+    slice.starts_with(b"glTF")
 }
 
-/// Weights,
-/// Refer to the documentation on morph targets for more information.
-#[derive(Clone, Debug)]
-pub enum Weights<'a> {
-    /// Weights of type `[f32; 4]`.
-    F32(Iter<'a, [f32; 4]>),
+impl<'a> Positions<'a> {
+    /// Returns the `(min, max)` bounds of the `POSITION` vertex attribute.
+    ///
+    /// # Panics
+    ///
+    /// Panics for `POSITION` accessors which are un-bounded.
+    ///
+    /// Use `json::validation::Validate::validate_minimally`
+    /// to handle this gracefully.
+    pub fn bounds(&self) -> ([f32; 3], [f32; 3]) {
+        let min = gltf::json::from_value(self.0.accessor.min().unwrap()).unwrap();
+        let max = gltf::json::from_value(self.0.accessor.max().unwrap()).unwrap();
+        (min, max)
+    }
+}
 
-    /// Weights of type `[u8; 4]`.
-    U8(Iter<'a, [u8; 4]>),
+impl<'a, T: Copy> ExactSizeIterator for AccessorIter<'a, T> {}
+impl<'a, T: Copy> Iterator for AccessorIter<'a, T> {
+    type Item = T;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.count {
+            let offset = self.offset + self.index * self.stride;
+            let ptr = unsafe { self.data.as_ptr().offset(offset as isize) };
+            let value: T = unsafe { mem::transmute_copy(&*ptr) };
+            self.index += 1;
+            Some(value)
+        } else {
+            None
+        }
+    }
 
-    /// Weights of type `[u16; 4]`.
-    U16(Iter<'a, [u16; 4]>),
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let hint = self.count - self.index;
+        (hint, Some(hint))
+    }
+}
+
+impl<'a> Colors<'a> {
+    fn new<S: Source>(accessor: gltf::Accessor<'a>, source: &'a S) -> Colors<'a> {
+        match (accessor.dimensions(), accessor.data_type()) {
+            (Dimensions::Vec3, DataType::U8) => {
+                Colors::RgbU8(AccessorIter::new(accessor, source))
+            },
+            (Dimensions::Vec4, DataType::U8) => {
+                Colors::RgbaU8(AccessorIter::new(accessor, source))
+            },
+            (Dimensions::Vec3, DataType::U16) => {
+                Colors::RgbU16(AccessorIter::new(accessor, source))
+            },
+            (Dimensions::Vec4, DataType::U16) => {
+                Colors::RgbaU16(AccessorIter::new(accessor, source))
+            },
+            (Dimensions::Vec3, DataType::F32) => {
+                Colors::RgbF32(AccessorIter::new(accessor, source))
+            },
+            (Dimensions::Vec4, DataType::F32) => {
+                Colors::RgbaF32(AccessorIter::new(accessor, source))
+            },
+            _ => unreachable!(),
+        }
+    }
+}
+impl<'a> TexCoords<'a> {
+    fn new<S: Source>(accessor: gltf::Accessor<'a>, source: &'a S) -> TexCoords<'a> {
+        match accessor.data_type() {
+            DataType::U8 => TexCoords::U8(AccessorIter::new(accessor, source)),
+            DataType::U16 => TexCoords::U16(AccessorIter::new(accessor, source)),
+            DataType::F32 => TexCoords::F32(AccessorIter::new(accessor, source)),
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl<'a> Indices<'a> {
+    fn new<S: Source>(accessor: gltf::Accessor<'a>, source: &'a S) -> Indices<'a> {
+        match accessor.data_type() {
+            DataType::U8 => Indices::U8(AccessorIter::new(accessor, source)),
+            DataType::U16 => Indices::U16(AccessorIter::new(accessor, source)),
+            DataType::U32 => Indices::U32(AccessorIter::new(accessor, source)),
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl<'a> Joints<'a> {
+    fn new<S: Source>(accessor: gltf::Accessor<'a>, source: &'a S) -> Joints<'a> {
+        match accessor.data_type() {
+            DataType::U8 => Joints::U8(AccessorIter::new(accessor, source)),
+            DataType::U16 => Joints::U16(AccessorIter::new(accessor, source)),
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl<'a> Weights<'a> {
+    fn new<S: Source>(accessor: gltf::Accessor<'a>, source: &'a S) -> Weights<'a> {
+        match accessor.data_type() {
+            DataType::U8 => Weights::U8(AccessorIter::new(accessor, source)),
+            DataType::U16 => Weights::U16(AccessorIter::new(accessor, source)),
+            DataType::F32 => Weights::F32(AccessorIter::new(accessor, source)),
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl<'a> Iterator for IndicesU32<'a> {
+    type Item = u32;
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.0 {
+            Indices::U8(ref mut i) => i.next().map(|x| x as u32),
+            Indices::U16(ref mut i) => i.next().map(|x| x as u32),
+            Indices::U32(ref mut i) => i.next(),
+        }
+    }
+}
+
+impl<'a> Iterator for JointsU16<'a> {
+    type Item = [u16; 4];
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.0 {
+            Joints::U8(ref mut i) => {
+                i.next()
+                    .map(|x| [x[0] as u16, x[1] as u16, x[2] as u16, x[3] as u16])
+            },
+            Joints::U16(ref mut i) => i.next(),
+        }
+    }
+}
+
+impl<'a> Iterator for ColorsRgbaF32<'a> {
+    type Item = [f32; 4];
+    fn next(&mut self) -> Option<Self::Item> {
+        let default_alpha = self.default_alpha;
+        match self.iter {
+            Colors::RgbU8(ref mut i) => {
+                i.next().map(|x| {
+                    let rgb = x.denormalize();
+                    [rgb[0], rgb[1], rgb[2], default_alpha]
+                })
+            },
+            Colors::RgbU16(ref mut i) => {
+                i.next().map(|x| {
+                    let rgb = x.denormalize();
+                    [rgb[0], rgb[1], rgb[2], default_alpha]
+                })
+            },
+            Colors::RgbF32(ref mut i) => {
+                i.next().map(|rgb| [rgb[0], rgb[1], rgb[2], default_alpha])
+            },
+            Colors::RgbaU8(ref mut i) => i.next().map(|x| x.denormalize()),
+            Colors::RgbaU16(ref mut i) => i.next().map(|x| x.denormalize()),
+            Colors::RgbaF32(ref mut i) => i.next(),
+        }
+    }
+}
+
+impl<'a> Iterator for TexCoordsF32<'a> {
+    type Item = [f32; 2];
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.0 {
+            TexCoords::U8(ref mut i) => i.next().map(|x| x.denormalize()),
+            TexCoords::U16(ref mut i) => i.next().map(|x| x.denormalize()),
+            TexCoords::F32(ref mut i) => i.next(),
+        }
+    }
+}
+
+impl<'a> Iterator for WeightsF32<'a> {
+    type Item = [f32; 4];
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.0 {
+            Weights::U8(ref mut i) => i.next().map(|x| x.denormalize()),
+            Weights::U16(ref mut i) => i.next().map(|x| x.denormalize()),
+            Weights::F32(ref mut i) => i.next(),
+        }
+    }
+}
+
+
+impl<'a> Iterator for Positions<'a> {
+    type Item = [f32; 3];
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+}
+
+impl<'a> Iterator for Normals<'a> {
+    type Item = [f32; 3];
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+}
+ 
+impl<'a> Iterator for Tangents<'a> {
+    type Item = [f32; 4];
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+}
+
+impl Denormalize for u8 {
+    type Denormalized = f32;
+    fn denormalize(&self) -> Self::Denormalized {
+        *self as f32 / 255.0
+    }
+}
+
+impl Denormalize for u16 {
+    type Denormalized = f32;
+    fn denormalize(&self) -> Self::Denormalized {
+        *self as f32 / 65535.0
+    }
+}
+
+impl<T: Copy + Denormalize> Denormalize for [T; 2] {
+    type Denormalized = [T::Denormalized; 2];
+    fn denormalize(&self) -> Self::Denormalized {
+        [
+            self[0].denormalize(),
+            self[1].denormalize(),
+        ]
+    }
+}
+
+impl<T: Copy + Denormalize> Denormalize for [T; 3] {
+    type Denormalized = [T::Denormalized; 3];
+    fn denormalize(&self) -> Self::Denormalized {
+        [
+            self[0].denormalize(),
+            self[1].denormalize(),
+            self[2].denormalize(),
+        ]
+    }
+}
+
+impl<T: Copy + Denormalize> Denormalize for [T; 4] {
+    type Denormalized = [T::Denormalized; 4];
+    fn denormalize(&self) -> Self::Denormalized {
+        [
+            self[0].denormalize(),
+            self[1].denormalize(),
+            self[2].denormalize(),
+            self[3].denormalize(),
+        ]
+    }
 }

@@ -93,18 +93,18 @@ impl<'a> Accessor<'a> {
     }
 
     /// Returns the minimum value of each component in this attribute.
-    pub fn min(&self) -> &[f32] {
-        &self.json.min
+    pub fn min(&self) -> Option<json::Value> {
+        self.json.min.clone()
     }
 
     /// Returns the maximum value of each component in this attribute.
-    pub fn max(&self) -> &[f32] {
-        &self.json.max
+    pub fn max(&self) -> Option<json::Value> {
+        self.json.max.clone()
     }
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
-    pub fn name(&self) -> Option<&'a str> {
+    pub fn name(&self) -> Option<&str> {
         self.json.name.as_ref().map(String::as_str)
     }
 

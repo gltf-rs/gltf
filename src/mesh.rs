@@ -185,6 +185,21 @@ impl<'a> Primitive<'a> {
         &self.json.extras
     }
 
+    /// Return the accessor with the given semantic.
+    pub fn get(&self, semantic: &Semantic) -> Option<Accessor> {
+        self.json.attributes
+            .iter()
+            .find(|&(key, _)| key.as_ref().unwrap() == semantic)
+            .map(|(_, index)| self.mesh.gltf.accessors().nth(index.value()).unwrap())
+    }
+
+    /// Returns the accessor containing the primitive indices, if provided.
+    pub fn indices(&self) -> Option<Accessor> {
+        self.json.indices
+            .as_ref()
+            .map(|index| self.mesh.gltf.accessors().nth(index.value()).unwrap())
+    }
+
     /// Returns an `Iterator` that visits the vertex attributes.
     pub fn attributes(&self) -> Attributes {
         Attributes {
