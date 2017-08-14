@@ -79,6 +79,21 @@ impl Source for Buffers {
 }
 
 impl Buffers {
+    /// Obtain the contents of a loaded buffer.
+    pub fn buffer(&self, buffer: &gltf::Buffer) -> Option<&[u8]> {
+        self.0.get(buffer.index()).map(Vec::as_slice)
+    }
+
+    /// Obtain the contents of a loaded buffer view.
+    pub fn view(&self, view: &gltf::buffer::View) -> Option<&[u8]> {
+        self.buffer(&view.buffer())
+            .map(|data| {
+                let begin = view.offset();
+                let end = view.length();
+                &data[begin..end]
+            })
+    }
+
     /// Take the loaded buffer data.
     pub fn take(self) -> Vec<Vec<u8>> {
         self.0
