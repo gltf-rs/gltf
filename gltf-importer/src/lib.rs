@@ -14,12 +14,12 @@
 //! ### Importing some `glTF` 2.0
 //!
 //! ```rust
+//! use gltf_importer::import;
 //! # #[allow(unused_variables)]
 //! let path = "path/to/asset.gltf";
 //! # let path = "../examples/Box.gltf";
-//! let mut importer = gltf_importer::Importer::new(path);
-//! match importer.import() {
-//!     Ok(gltf) => println!("{:#?}", gltf.as_json()),
+//! match import(path) {
+//!     Ok((gltf, _)) => println!("{:#?}", gltf.as_json()),
 //!     Err(err) => println!("error: {:?}", err),
 //! }
 //! ```
@@ -33,7 +33,7 @@ use std::{fmt, fs, io};
 use gltf::Gltf;
 use gltf_utils::Source;
 use std::error::Error as StdError;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// Contains parameters for import configuration.
 pub mod config;
@@ -68,16 +68,6 @@ pub enum Error {
     Validation(Vec<(json::Path, validation::Error)>),
 }
 
-/// An `Importer` loads `glTF` and all of its buffer data from the file system.
-#[derive(Debug)]
-pub struct Importer {
-    path: PathBuf,
-    data: Vec<u8>,
-    gltf: Option<Gltf>,
-    buffers: Vec<Vec<u8>>,
-    config: Config,
-}
-
 /// Buffer data returned from `import`.
 #[derive(Clone, Debug)]
 pub struct Buffers(Vec<Vec<u8>>);
@@ -97,12 +87,11 @@ impl Buffers {
 
 fn import_impl(path: &Path, config: Config) -> Result<(Gltf, Buffers), Error> {
     let data = read_to_end(path)?;
-    let (gltf, buffers) = if data.starts_with(b"glTF") {
+    if data.starts_with(b"glTF") {
         import_binary(&data, &config, path)
     } else {
         import_standard(&data, &config, path)
-    }?;
-    Ok((gltf, Buffers(buffers)))
+    }
 }   
 
 /// Imports glTF 2.0
@@ -347,12 +336,15 @@ fn import_standard<'a>(
     data: &'a [u8],
     config: &Config,
     base_path: &Path,
-) -> Result<(Gltf, Vec<Vec<u8>>), Error> {
+) -> Result<(Gltf, Buffers), Error> {
     let json: gltf::json::Root = gltf::json::from_slice(data)?;
     let _ = validate_standard(&json, &config);
     let gltf = Gltf::from_json(json);
     let has_blob = false;
-    let buffers = load_external_buffers(base_path, &gltf, has_blob)?;
+    let mut buffers = Buffers(vec![]);
+    for buffer in load_external_buffers(base_path, &gltf, has_blob)? {
+        buffers.0.push(buffer);
+    }
     Ok((gltf, buffers))
 }
 
@@ -360,7 +352,7 @@ fn import_binary<'a>(
     data: &'a [u8],
     config: &Config,
     base_path: &Path,
-) -> Result<(Gltf, Vec<Vec<u8>>), Error> {
+) -> Result<(Gltf, Buffers), Error> {
     let glb = Glb(data);
     let (_, json_chunk, blob_chunk) = glb.split()?;
     let begin = json_chunk.offset;
@@ -370,12 +362,12 @@ fn import_binary<'a>(
     let has_blob = blob.is_some();
     let _ = validate_binary(&json, &config, has_blob)?;
     let gltf = Gltf::from_json(json);
-    let mut buffers = vec![];
+    let mut buffers = Buffers(vec![]);
     if let Some(buffer) = blob {
-        buffers.push(buffer);
+        buffers.0.push(buffer);
     }
     for buffer in load_external_buffers(base_path, &gltf, has_blob)? {
-        buffers.push(buffer);
+        buffers.0.push(buffer);
     }
     Ok((gltf, buffers))
 }

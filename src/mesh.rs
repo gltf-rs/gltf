@@ -9,10 +9,9 @@
 
 use std::collections::hash_map;
 use std::{iter, slice};
-use {json, material};
+use json;
 
-use accessor::Accessor;
-use Gltf;
+use {Accessor, Gltf, Material};
 
 pub use json::mesh::{Mode, Semantic};
 
@@ -22,6 +21,7 @@ pub enum Attribute<'a> {
     /// Vertex colors.
     Colors(u32, Accessor<'a>),
 
+    /// User specific data.
     #[cfg(feature = "extras")]
     Extras(&'a str, Accessor<'a>),
 
@@ -88,11 +88,18 @@ pub struct Primitive<'a>  {
 /// An `Iterator` that visits the attributes of a `Primitive`.
 #[derive(Clone, Debug)]
 pub struct Attributes<'a> {
+    /// The parent `Gltf` struct.
+    gltf: &'a Gltf,
+    
     /// The parent `Primitive` struct.
     prim: &'a Primitive<'a>,
 
     /// The internal attribute iterIterator.
-    iter: hash_map::Iter<'a, json::mesh::Semantic, json::Index<json::accessor::Accessor>>,
+    iter: hash_map::Iter<
+        'a,
+        json::validation::Checked<json::mesh::Semantic>,
+        json::Index<json::accessor::Accessor>,
+    >,
 }
 
 /// An `Iterator` that visits the primitives of a `Mesh`.
@@ -178,17 +185,50 @@ impl<'a> Primitive<'a> {
         &self.json.extras
     }
 
+    /// Returns an `Iterator` that visits the vertex attributes.
+    pub fn attributes(&self) -> Attributes {
+        Attributes {
+            gltf: self.mesh.gltf,
+            prim: self,
+            iter: self.json.attributes.iter(),
+        }
+    }
+
     /// Returns the material to apply to this primitive when rendering
-    pub fn material(&self) -> material::Material<'a> {
+    pub fn material(&self) -> Material {
         self.json.material
             .as_ref()
             .map(|index| self.mesh.gltf.materials().nth(index.value()).unwrap())
-            .unwrap_or_else(|| material::Material::default(self.mesh.gltf))
+            .unwrap_or_else(|| Material::default(self.mesh.gltf))
     }
 
     /// The type of primitives to render.
     pub fn mode(&self) -> Mode {
         self.json.mode.unwrap()
+    }
+}
+
+impl<'a> Iterator for Attributes<'a> {
+    type Item = Attribute<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        use self::Semantic::*;
+        self.iter
+            .next()
+            .map(|(ref key, ref index)| {
+                let semantic = key.as_ref().unwrap();
+                let accessor = self.gltf.accessors().nth(index.value()).unwrap();
+                match *semantic {
+                    Positions => Attribute::Positions(accessor),
+                    Normals => Attribute::Normals(accessor),
+                    Tangents => Attribute::Tangents(accessor),
+                    Colors(set) => Attribute::Colors(set, accessor),
+                    TexCoords(set) => Attribute::TexCoords(set, accessor),
+                    Joints(set) => Attribute::Joints(set, accessor),
+                    Weights(set) => Attribute::Weights(set, accessor),
+                    #[cfg(feature = "extras")]
+                    Extras(ref id) => Attribute::Extras(id, accessor),
+                }
+            })
     }
 }
 
