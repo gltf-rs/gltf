@@ -168,3 +168,50 @@ pub use self::mesh::{Mesh, Primitive};
 pub use self::scene::{Node, Scene};
 pub use self::skin::Skin;
 pub use self::texture::Texture;
+
+/// Returns `true` if the data begins with the `b"glTF"` magic string.
+pub fn is_glb(slice: &[u8]) -> bool {
+    slice.starts_with(b"glTF")
+}
+
+/// Represents a runtime error.
+#[derive(Debug)]
+pub enum Error {
+    /// JSON deserialization error.
+    Deserialize(json::Error),
+
+    /// GLB parsing error.
+    Glb(String),
+
+    /// `glTF` validation error.
+    Validation(Vec<(json::Path, json::validation::Error)>),
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        use std::error::Error;
+        write!(f, "{}", self.description())
+    }
+}
+
+impl std::error::Error for Error {
+    fn description(&self) -> &str {
+         match *self {
+            Error::Deserialize(_) => "deserialization error",
+            Error::Glb(_) => "invalid .glb format",
+            Error::Validation(_) => "invalid glTF JSON",
+        }
+    }
+}
+
+impl From<json::Error> for Error {
+    fn from(err: json::Error) -> Self {
+        Error::Deserialize(err)
+    }
+}
+
+impl From<Vec<(json::Path, json::validation::Error)>> for Error {
+    fn from(errs: Vec<(json::Path, json::validation::Error)>) -> Self {
+        Error::Validation(errs)
+    }
+}

@@ -22,11 +22,7 @@ use scene::{Node, Scene};
 use skin::Skin;
 use texture::{Sampler, Texture};
 
-/// `glTF` parsing error.
-pub type ParseError = json::Error;
-
-/// `glTF` validation error.
-pub type ValidationError = (json::Path, json::validation::Error);
+use Error;
 
 /// A loaded glTF complete with its data.
 pub struct Gltf {
@@ -34,8 +30,8 @@ pub struct Gltf {
     root: root::Root,
 }
 
-/// Wrapper type representing `Gltf` that hasn't been validated yet.
-pub struct Unvalidated(json::Root);
+/// Represents `glTF` that hasn't been validated yet.
+pub struct Unvalidated(Gltf);
 
 /// An `Iterator` that visits every accessor in a glTF asset.
 #[derive(Clone, Debug)]
@@ -168,45 +164,51 @@ pub struct Textures<'a> {
 }
 
 impl Unvalidated {
-    /// Skips the validation stage (not recommended).
+    /// Skips validation (not recommended).
     pub unsafe fn skip_validation(self) -> Gltf {
-        Gltf::from_json(self.0)
+        self.0
     }
 
     /// Validates only the invariants required for the library to function safely.
-    pub fn validate_minimally(self) -> Result<Gltf, Vec<ValidationError>> {
+    pub fn validate_minimally(self) -> Result<Gltf, Error> {
         use json::validation::Validate;
-        let mut errs: Vec<ValidationError> = vec![];
-        self.0.validate_minimally(
-            &self.0,
-            || json::Path::new(),
-            &mut |path, err| errs.push((path(), err)),
-        );
+        let mut errs = vec![];
+        {
+            let json = self.0.root.as_json();
+            json.validate_minimally(
+                json,
+                || json::Path::new(),
+                &mut |path, err| errs.push((path(), err)),
+            );
+        }
         if errs.is_empty() {
-            Ok(Gltf::from_json(self.0))
+            Ok(self.0)
         } else {
-            Err(errs)
+            Err(Error::Validation(errs))
         }
     }
 
     /// Validates the data against the `glTF` 2.0 specification.
-    pub fn validate_completely(self) -> Result<Gltf, Vec<ValidationError>> {
+    pub fn validate_completely(self) -> Result<Gltf, Error> {
         use json::validation::Validate;
         let mut errs = vec![];
-        self.0.validate_minimally(
-            &self.0,
-            || json::Path::new(),
-            &mut |path, err| errs.push((path(), err)),
-        );
-        self.0.validate_completely(
-            &self.0,
-            || json::Path::new(),
-            &mut |path, err| errs.push((path(), err)),
-        );
+        {
+            let json = self.0.root.as_json();
+            json.validate_minimally(
+                json,
+                || json::Path::new(),
+                &mut |path, err| errs.push((path(), err)),
+            );
+            json.validate_completely(
+                json,
+                || json::Path::new(),
+                &mut |path, err| errs.push((path(), err)),
+            );
+        }
         if errs.is_empty() {
-            Ok(Gltf::from_json(self.0))
+            Ok(self.0)
         } else {
-            Err(errs)
+            Err(Error::Validation(errs))
         }
     }
 }
@@ -220,9 +222,9 @@ impl Gltf {
     }
 
     /// Constructs the `Gltf` wrapper from a data slice.
-    pub fn from_slice(slice: &[u8]) -> Result<Unvalidated, ParseError> {
+    pub fn from_slice(slice: &[u8]) -> Result<Unvalidated, Error> {
         let json: json::Root = json::from_slice(slice)?;
-        Ok(Unvalidated(json))
+        Ok(Unvalidated(Gltf::from_json(json)))
     }
 
     /// Returns an `Iterator` that visits the accessors of the glTF asset.

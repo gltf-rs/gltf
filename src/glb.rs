@@ -7,13 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::fmt;
-
-use std::error::Error as StdError;
-
-/// Binary `glTF` parsing error.
-#[derive(Clone, Debug)]
-pub struct ParseError(String);
+use Error;
 
 /// The contents of a .glb file.
 #[derive(Clone, Debug)]
@@ -61,9 +55,9 @@ impl<'a> Glb<'a> {
     /// * Mandatory GLB header.
     /// * Mandatory JSON chunk.
     /// * Optional BIN chunk.
-    fn from_slice(data: &'a [u8]) -> Result<Self, ParseError> {
+    fn from_slice(data: &'a [u8]) -> Result<Self, Error> {
         use std::mem::{size_of, transmute};
-        let err = |reason: &str| Err(ParseError(reason.to_string()));
+        let err = |reason: &str| Err(Error::Glb(reason.to_string()));
         let ptr = data.as_ptr();
         if data.len() < size_of::<Header>() + size_of::<ChunkInfo>() {
             return err("GLB missing header");
@@ -127,17 +121,5 @@ impl<'a> Glb<'a> {
             json,
             bin,
         })
-    }
-}
-
-impl fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl StdError for ParseError {
-    fn description(&self) -> &str {
-        &self.0
     }
 }
