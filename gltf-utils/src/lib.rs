@@ -11,8 +11,6 @@ extern crate gltf;
 
 use std::marker;
 
-use std::ops::Range;
-
 /// Represents sources of buffer data.
 pub trait Source: std::fmt::Debug {
     /// Return the buffer data referenced by the given `Buffer`.

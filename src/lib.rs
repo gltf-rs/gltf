@@ -161,7 +161,7 @@ pub use self::accessor::Accessor;
 pub use self::buffer::Buffer;
 pub use self::camera::Camera;
 pub use self::glb::Glb;
-pub use self::gltf::Gltf;
+pub use self::gltf::{Gltf, Unvalidated};
 pub use self::image::Image;
 pub use self::material::Material;
 pub use self::mesh::{Mesh, Primitive};

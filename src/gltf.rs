@@ -164,6 +164,11 @@ pub struct Textures<'a> {
 }
 
 impl Unvalidated {
+    /// Returns the unvalidated JSON.
+    pub fn as_json(&self) -> &json::Root {
+        self.0.root.as_json()
+    }
+    
     /// Skips validation (not recommended).
     pub unsafe fn skip_validation(self) -> Gltf {
         self.0
@@ -174,7 +179,7 @@ impl Unvalidated {
         use json::validation::Validate;
         let mut errs = vec![];
         {
-            let json = self.0.root.as_json();
+            let json = self.as_json();
             json.validate_minimally(
                 json,
                 || json::Path::new(),
@@ -193,7 +198,7 @@ impl Unvalidated {
         use json::validation::Validate;
         let mut errs = vec![];
         {
-            let json = self.0.root.as_json();
+            let json = self.as_json();
             json.validate_minimally(
                 json,
                 || json::Path::new(),

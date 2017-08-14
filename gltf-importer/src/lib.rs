@@ -58,8 +58,8 @@ pub enum Error {
     /// Standard I/O error.
     Io(std::io::Error),
 
-    /// Failure when parsing a .glb file.
-    MalformedGlb(String),
+    /// `gltf` crate error.
+    Gltf(gltf::Error),
 
     /// Failure when deserializing .gltf or .glb JSON.
     MalformedJson(json::Error),
@@ -117,10 +117,10 @@ fn read_to_end<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, Error> {
 fn load_external_buffers(
     base_path: &Path,
     gltf: &Gltf,
-    has_blob: bool,
+    has_bin: bool,
 ) -> Result<Vec<Vec<u8>>, Error> {
     let mut iter = gltf.as_json().buffers.iter().enumerate();
-    if has_blob {
+    if has_bin {
         let _ = iter.next();
     }
     iter
@@ -137,73 +137,58 @@ fn load_external_buffers(
         .collect()
 }
 
-fn validate_standard(json: &gltf::json::Root, config: &Config) -> Result<(), Error> {
+fn validate_standard(
+    unvalidated: gltf::Unvalidated,
+    config: &Config,
+) -> Result<Gltf, Error> {
     use config::ValidationStrategy;
-    use gltf::json::validation::Validate;
-    match config.validation_strategy {
-        ValidationStrategy::Skip => Ok(()),
-        ValidationStrategy::Minimal => {
-            let mut errs = vec![];
-            json.validate_minimally(
-                &json,
-                || json::Path::new(),
-                &mut |path, err| errs.push((path(), err)),
-            );
-            if errs.is_empty() {
-                Ok(())
-            } else {
-                Err(Error::Validation(errs))
-            }
-        },
-        ValidationStrategy::Complete => {
-            let mut errs = vec![];
-            json.validate_completely(
-                &json,
-                || json::Path::new(),
-                &mut |path, err| errs.push((path(), err)),
-            );
-            if errs.is_empty() {
-                Ok(())
-            } else {
-                Err(Error::Validation(errs))
-            }
-        },
-    }
+    Ok(match config.validation_strategy {
+        ValidationStrategy::Skip => unsafe { unvalidated.skip_validation() },
+        ValidationStrategy::Minimal => unvalidated.validate_minimally()?,
+        ValidationStrategy::Complete => unvalidated.validate_completely()?,
+    })
 }
 
 fn validate_binary(
-    json: &gltf::json::Root,
+    unvalidated: gltf::Unvalidated,
     config: &Config,
-    has_blob: bool,
-) -> Result<(), Error> {
-    use self::json::validation::Error as Reason;
-    let mut errs = vec![];
-    let _ = validate_standard(json, config)?;
-    if config.validation_strategy == config::ValidationStrategy::Skip {
-        return Ok(());
+    has_bin: bool,
+) -> Result<Gltf, Error> {
+    use config::ValidationStrategy;
+    use json::validation::Error as Reason;
+
+    if config.validation_strategy == ValidationStrategy::Skip {
+        return Ok(unsafe { unvalidated.skip_validation() });
     }
 
-    // Required for the `Minimal` and `Complete` validation strategies.
-    for (index, buffer) in json.buffers.iter().enumerate() {
-        let path = || {
-            json::Path::new()
-                .field("buffers")
-                .index(index)
-                .field("uri")
-        };
-        match index {
-            0 if has_blob => if buffer.uri.is_some() {
-                errs.push((path(), Reason::Missing));
-            },
-            _ if buffer.uri.is_none() => {
-                errs.push((path(), Reason::Missing));
-            },
-            _ => {},
+    let mut errs = vec![];
+    {
+        let json = unvalidated.as_json();
+        for (index, buffer) in json.buffers.iter().enumerate() {
+            let path = || {
+                json::Path::new()
+                    .field("buffers")
+                    .index(index)
+                    .field("uri")
+            };
+            match index {
+                0 if has_bin => if buffer.uri.is_some() {
+                    errs.push((path(), Reason::Missing));
+                },
+                _ if buffer.uri.is_none() => {
+                    errs.push((path(), Reason::Missing));
+                },
+                _ => {},
+            }
         }
     }
 
     if errs.is_empty() {
-        Ok(())
+        Ok(match config.validation_strategy {
+            ValidationStrategy::Minimal => unvalidated.validate_minimally()?,
+            ValidationStrategy::Complete => unvalidated.validate_completely()?,
+            ValidationStrategy::Skip => unreachable!(),
+        })
     } else {
         Err(Error::Validation(errs))
     }
@@ -214,12 +199,11 @@ fn import_standard<'a>(
     config: &Config,
     base_path: &Path,
 ) -> Result<(Gltf, Buffers), Error> {
-    let json: gltf::json::Root = gltf::json::from_slice(data)?;
-    let _ = validate_standard(&json, &config);
-    let gltf = Gltf::from_json(json);
-    let has_blob = false;
+    let unvalidated = Gltf::from_slice(data)?;
+    let gltf = validate_standard(unvalidated, &config)?;
+    let has_bin = false;
     let mut buffers = Buffers(vec![]);
-    for buffer in load_external_buffers(base_path, &gltf, has_blob)? {
+    for buffer in load_external_buffers(base_path, &gltf, has_bin)? {
         buffers.0.push(buffer);
     }
     Ok((gltf, buffers))
@@ -230,20 +214,15 @@ fn import_binary<'a>(
     config: &Config,
     base_path: &Path,
 ) -> Result<(Gltf, Buffers), Error> {
-    let glb = Glb(data);
-    let (_, json_chunk, blob_chunk) = glb.split()?;
-    let begin = json_chunk.offset;
-    let end = begin + json_chunk.length;
-    let json: gltf::json::Root = gltf::json::from_slice(&glb.0[begin..end])?;
-    let blob = blob_chunk.map(|chunk| glb.slice(chunk).to_vec());
-    let has_blob = blob.is_some();
-    let _ = validate_binary(&json, &config, has_blob)?;
-    let gltf = Gltf::from_json(json);
+    let gltf::Glb { header: _, json, bin } = gltf::Glb::from_slice(data)?;
+    let unvalidated = Gltf::from_slice(json)?;
+    let has_bin = bin.is_some();
+    let gltf = validate_binary(unvalidated, &config, has_bin)?;
     let mut buffers = Buffers(vec![]);
-    if let Some(buffer) = blob {
-        buffers.0.push(buffer);
+    if let Some(buffer) = bin {
+        buffers.0.push(buffer.to_vec());
     }
-    for buffer in load_external_buffers(base_path, &gltf, has_blob)? {
+    for buffer in load_external_buffers(base_path, &gltf, has_bin)? {
         buffers.0.push(buffer);
     }
     Ok((gltf, buffers))
@@ -267,6 +246,15 @@ impl From<Vec<(json::Path, validation::Error)>> for Error {
     }
 }
 
+impl From<gltf::Error> for Error {
+    fn from(err: gltf::Error) -> Error {
+        match err {
+            gltf::Error::Validation(errs) => Error::Validation(errs),
+            _ => Error::Gltf(err),
+        }
+    }
+}
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use std::error::Error;
@@ -283,7 +271,7 @@ impl StdError for Error {
             ExtensionUnsupported(_) => "Assets requires an unsupported extension",
             IncompatibleVersion(_) => "Asset is not glTF version 2.0",
             Io(_) => "I/O error",
-            MalformedGlb(_) => "Malformed .glb file",
+            Gltf(_) => "Error from gltf crate",
             MalformedJson(_) => "Malformed .gltf / .glb JSON",
             Validation(_) => "Asset failed validation tests",
         }

@@ -55,7 +55,7 @@ impl<'a> Glb<'a> {
     /// * Mandatory GLB header.
     /// * Mandatory JSON chunk.
     /// * Optional BIN chunk.
-    fn from_slice(data: &'a [u8]) -> Result<Self, Error> {
+    pub fn from_slice(data: &'a [u8]) -> Result<Self, Error> {
         use std::mem::{size_of, transmute};
         let err = |reason: &str| Err(Error::Glb(reason.to_string()));
         let ptr = data.as_ptr();
