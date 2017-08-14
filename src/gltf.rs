@@ -22,11 +22,20 @@ use scene::{Node, Scene};
 use skin::Skin;
 use texture::{Sampler, Texture};
 
+/// `glTF` parsing error.
+pub type ParseError = json::Error;
+
+/// `glTF` validation error.
+pub type ValidationError = (json::Path, json::validation::Error);
+
 /// A loaded glTF complete with its data.
 pub struct Gltf {
     /// The root glTF struct (and also `Deref` target).
     root: root::Root,
 }
+
+/// Wrapper type representing `Gltf` that hasn't been validated yet.
+pub struct Unvalidated(json::Root);
 
 /// An `Iterator` that visits every accessor in a glTF asset.
 #[derive(Clone, Debug)]
@@ -158,12 +167,62 @@ pub struct Textures<'a> {
     gltf: &'a Gltf,
 }
 
+impl Unvalidated {
+    /// Skips the validation stage (not recommended).
+    pub unsafe fn skip_validation(self) -> Gltf {
+        Gltf::from_json(self.0)
+    }
+
+    /// Validates only the invariants required for the library to function safely.
+    pub fn validate_minimally(self) -> Result<Gltf, Vec<ValidationError>> {
+        use json::validation::Validate;
+        let mut errs: Vec<ValidationError> = vec![];
+        self.0.validate_minimally(
+            &self.0,
+            || json::Path::new(),
+            &mut |path, err| errs.push((path(), err)),
+        );
+        if errs.is_empty() {
+            Ok(Gltf::from_json(self.0))
+        } else {
+            Err(errs)
+        }
+    }
+
+    /// Validates the data against the `glTF` 2.0 specification.
+    pub fn validate_completely(self) -> Result<Gltf, Vec<ValidationError>> {
+        use json::validation::Validate;
+        let mut errs = vec![];
+        self.0.validate_minimally(
+            &self.0,
+            || json::Path::new(),
+            &mut |path, err| errs.push((path(), err)),
+        );
+        self.0.validate_completely(
+            &self.0,
+            || json::Path::new(),
+            &mut |path, err| errs.push((path(), err)),
+        );
+        if errs.is_empty() {
+            Ok(Gltf::from_json(self.0))
+        } else {
+            Err(errs)
+        }
+    }
+}
+
 impl Gltf {
-    /// Constructs the `Gltf` wrapper from JSON.
-    pub fn from_json(json: json::Root) -> Self {
-        Self {
+    /// Constructs the `Gltf` wrapper from deserialized JSON.
+    fn from_json(json: json::Root) -> Self {
+        Gltf {
             root: root::Root::new(json),
         }
+    }
+
+    /// Constructs the `Gltf` wrapper from a data slice.
+    pub fn from_slice(slice: &[u8]) -> Result<Unvalidated, ParseError> {
+        let json: json::Root = json::from_slice(slice)?;
+        Ok(Unvalidated(json))
     }
 
     /// Returns an `Iterator` that visits the accessors of the glTF asset.

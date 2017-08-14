@@ -22,19 +22,19 @@ pub struct Image<'a> {
     json: &'a json::image::Image,
 }
 
-/// Return type of `Loaded<Image>::data`.
+/// The data referenced by an `Image`.
 pub enum Data<'a> {
     /// Image data is contained in a buffer view.
-    FromBufferView {
+    View {
         /// The buffer view containing the encoded image data.
-        buffer_view: buffer::View<'a>,
+        view: buffer::View<'a>,
 
         /// The image data MIME type.
         mime_type: &'a str,
     },
 
     /// Image data is contained in an external data source.
-    External {
+    Uri {
         /// The URI of the external data source.
         uri: &'a str,
 
@@ -73,10 +73,10 @@ impl<'a> Image<'a> {
         self.json.name.as_ref().map(String::as_str)
     }
 
-    /// Returns the raw image data.
+    /// Returns references to image data.
     pub fn data(&self) -> Data<'a> {
         if let Some(index) = self.json.buffer_view.as_ref() {
-            let buffer_view = self.gltf
+            let view = self.gltf
                 .views()
                 .nth(index.value())
                 .unwrap();
@@ -84,11 +84,11 @@ impl<'a> Image<'a> {
                 .as_ref()
                 .map(|x| x.0.as_str())
                 .unwrap();
-            Data::FromBufferView { buffer_view, mime_type }
+            Data::View { view, mime_type }
         } else {
             let uri = self.json.uri.as_ref().unwrap();
             let mime_type = self.json.mime_type.as_ref().map(|x| x.0.as_str());
-            Data::External { uri, mime_type }
+            Data::Uri { uri, mime_type }
         }
     }
 
