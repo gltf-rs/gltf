@@ -188,9 +188,8 @@ impl<'a> Primitive<'a> {
     /// Return the accessor with the given semantic.
     pub fn get(&self, semantic: &Semantic) -> Option<Accessor> {
         self.json.attributes
-            .iter()
-            .find(|&(key, _)| key.as_ref().unwrap() == semantic)
-            .map(|(_, index)| self.mesh.gltf.accessors().nth(index.value()).unwrap())
+            .get(&json::validation::Checked::Valid(semantic.clone()))
+            .map(|index| self.mesh.gltf.accessors().nth(index.value()).unwrap())
     }
 
     /// Returns the accessor containing the primitive indices, if provided.
