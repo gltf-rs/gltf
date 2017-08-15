@@ -66,6 +66,17 @@ impl<'a> Buffer<'a> {
         self.json
     }
 
+    /// Returns the uniform resource identifier for the buffer data.
+    ///
+    /// # Notes
+    ///
+    /// When the `glTF` comes from a .glb file and the .glb file has a BIN chunk,
+    /// then this function will return `#bin` for the first buffer entry. This is not
+    /// standard behaviour in the `glTF` schema.
+    pub fn uri(&self) -> &str {
+        self.json.uri.as_ref().map(String::as_str).unwrap_or("#bin")
+    }
+    
     /// The length of the buffer in bytes.
     pub fn length(&self) -> usize {
         self.json.byte_length as usize
