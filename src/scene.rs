@@ -53,7 +53,7 @@ pub struct Nodes<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
-    /// The internal node index iterIterator.
+    /// The internal node index iterator.
     iter: slice::Iter<'a, json::Index<json::scene::Node>>,
 }
 
@@ -63,7 +63,7 @@ pub struct Children<'a> {
     /// The parent `Node` struct.
     parent: &'a Node<'a>,
 
-    /// The internal node index iterIterator.
+    /// The internal node index iterator.
     iter: slice::Iter<'a, json::Index<json::scene::Node>>,
 }
 

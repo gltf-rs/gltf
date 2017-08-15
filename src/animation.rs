@@ -31,7 +31,7 @@ pub struct Channels<'a> {
     /// The parent `Animation` struct.
     anim: Animation<'a>,
 
-    /// The internal channel iterIterator.
+    /// The internal channel iterator.
     iter: slice::Iter<'a, json::animation::Channel>,
 }
 
@@ -41,7 +41,7 @@ pub struct Samplers<'a> {
     /// The parent `Channel` struct.
     anim: Animation<'a>,
 
-    /// The internal channel iterIterator.
+    /// The internal channel iterator.
     iter: slice::Iter<'a, json::animation::Sampler>,
 }
 

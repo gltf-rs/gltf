@@ -94,7 +94,7 @@ pub struct Attributes<'a> {
     /// The parent `Primitive` struct.
     prim: &'a Primitive<'a>,
 
-    /// The internal attribute iterIterator.
+    /// The internal attribute iterator.
     iter: hash_map::Iter<
         'a,
         json::validation::Checked<json::mesh::Semantic>,
@@ -108,7 +108,7 @@ pub struct Primitives<'a>  {
     /// The parent `Mesh` struct.
     mesh: &'a Mesh<'a>,
 
-    /// The internal JSON primitive iterIterator.
+    /// The internal JSON primitive iterator.
     iter: iter::Enumerate<slice::Iter<'a, json::mesh::Primitive>>,
 }
 

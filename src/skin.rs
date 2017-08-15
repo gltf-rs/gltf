@@ -31,7 +31,7 @@ pub struct Joints<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
 
-    /// The internal node index iterIterator.
+    /// The internal node index iterator.
     iter: slice::Iter<'a, json::Index<json::scene::Node>>,
 }
 
@@ -64,7 +64,7 @@ impl<'a> Skin<'a> {
         &self.json.extras
     }
 
-    /// Returns the accessor containing the visits the 4x4 inverse-bind matrices.
+    /// Returns the accessor containing the 4x4 inverse-bind matrices.
     ///
     /// When `None`, each matrix is assumed to be the 4x4 identity matrix which
     /// implies that the inverse-bind matrices were pre-applied.
