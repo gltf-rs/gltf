@@ -169,11 +169,6 @@ pub use self::scene::{Node, Scene};
 pub use self::skin::Skin;
 pub use self::texture::Texture;
 
-/// Returns `true` if the data begins with the `b"glTF"` magic string.
-pub fn is_glb(slice: &[u8]) -> bool {
-    slice.starts_with(b"glTF")
-}
-
 /// Represents a runtime error.
 #[derive(Debug)]
 pub enum Error {
