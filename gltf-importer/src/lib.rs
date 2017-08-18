@@ -89,7 +89,7 @@ impl Buffers {
         self.buffer(&view.buffer())
             .map(|data| {
                 let begin = view.offset();
-                let end = view.length();
+                let end = begin + view.length();
                 &data[begin..end]
             })
     }
