@@ -11,19 +11,18 @@ extern crate gltf_importer;
 
 use std::{fs, path};
 
-use gltf_importer::{Error as ImportError, Importer};
+use gltf_importer::{import, Error as ImportError};
 use std::boxed::Box;
 use std::error::Error as StdError;
 
 fn import_from_path(path: &path::Path) -> Result<(), ImportError> {
-    let mut importer = Importer::new(path);
-    match importer.import() {
+    match import(path) {
         Ok(_) => {
-            println!("{:?}: Ok", importer.path());
+            println!("{:?}: Ok", path);
             Ok(())
         },
         Err(err) => {
-            println!("{:?}: Err({:?})", importer.path(), err);
+            println!("{:?}: Err({:?})", path, err);
             Err(err)
         },
     }
@@ -55,6 +54,6 @@ fn run() -> Result<(), Box<StdError>> {
 }
 
 #[test]
-fn import() {
+fn import_examples() {
     let _ = run().expect("no errors");
 }

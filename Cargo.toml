@@ -1,6 +1,6 @@
 [package]
 name = "gltf"
-version = "0.8.5"
+version = "0.9.0"
 authors = ["alteous <alteous@outlook.com>"]
 description = "glTF 2.0 loader"
 documentation = "https://docs.rs/gltf"
@@ -18,7 +18,7 @@ include = [
 travis-ci = { repository = "alteous/gltf" }
 
 [dependencies]
-gltf-json = "0.1"
+gltf-json = { path = "gltf-json", version = "0.9" }
 lazy_static = "0.2"
 
 [features]

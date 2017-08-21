@@ -79,4 +79,4 @@ pub use self::extras::Extras;
 pub use self::path::Path;
 pub use self::root::{Index, Root};
 pub use serde_json::{from_reader, from_slice, from_str, from_value};
-pub use serde_json::Error;
+pub use serde_json::{Error, Value};

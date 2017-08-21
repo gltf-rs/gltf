@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use {image, json, Gltf, Loaded};
+use {image, json, Gltf};
 
 pub use json::texture::{MagFilter, MinFilter, WrappingMode};
 
@@ -149,7 +149,7 @@ impl<'a> Texture<'a> {
         self.json.name.as_ref().map(String::as_str)
     }
 
-    /// The sampler used by this texture.
+    /// Returns the sampler used by this texture.
     pub fn sampler(&self) -> Sampler<'a> {
         self.json.sampler
             .as_ref()
@@ -157,7 +157,7 @@ impl<'a> Texture<'a> {
             .unwrap_or_else(|| Sampler::default(self.gltf))
     }
 
-    /// The image used by this texture.
+    /// Returns the image used by this texture.
     pub fn source(&self) -> image::Image<'a> {
         self.gltf.images().nth(self.json.source.value() as usize).unwrap()
     }
@@ -168,15 +168,6 @@ impl<'a> Texture<'a> {
     }
 }
 
-impl<'a> Loaded<'a, Texture<'a>> {
-    /// The index of the image used by this texture.
-    pub fn source(&self) -> Loaded<'a, image::Image<'a>> {
-        Loaded {
-            item: self.item.source(),
-            source: self.source,
-        }
-    }
-}
 
 impl<'a> Info<'a> {
     /// Constructs a reference to a `Texture`.
@@ -197,7 +188,7 @@ impl<'a> Info<'a> {
         self.json.tex_coord
     }
 
-    /// The referenced `Texture`.
+    /// Returns the referenced `Texture`.
     pub fn texture(&self) -> Texture<'a> {
         self.texture.clone()
     }
@@ -205,15 +196,5 @@ impl<'a> Info<'a> {
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
-    }
-}
-
-impl<'a> Loaded<'a, Info<'a>> {
-    /// The referenced `Texture`.
-    pub fn texture(&self) -> Loaded<'a, Texture<'a>> {
-        Loaded {
-            item: self.item.texture(),
-            source: self.source,
-        }
     }
 }

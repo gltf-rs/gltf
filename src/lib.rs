@@ -129,6 +129,9 @@ pub mod buffer;
 /// Contains `Camera` and other related data structures.
 pub mod camera;
 
+/// Contains `Glb` and its parsing implementation.
+pub mod glb;
+
 /// Contains `Gltf`, and other related data structures.
 pub mod gltf;
 
@@ -157,42 +160,53 @@ pub use self::animation::Animation;
 pub use self::accessor::Accessor;
 pub use self::buffer::Buffer;
 pub use self::camera::Camera;
-pub use self::gltf::Gltf;
+pub use self::glb::Glb;
+pub use self::gltf::{Gltf, Unvalidated};
 pub use self::image::Image;
 pub use self::material::Material;
-pub use self::mesh::{Mesh, Primitive};
+pub use self::mesh::{Attribute, Mesh, Primitive, Semantic};
 pub use self::scene::{Node, Scene};
 pub use self::skin::Skin;
 pub use self::texture::Texture;
 
-/// Represents sources of buffer data.
-///
-/// The user is expected to implement this trait in order to unlock the abstractions
-/// provided by the [`Loaded`] type. The `gltf-importer` crate provides a useable
-/// reference implementation.
-///
-/// [`Loaded`]: struct.Loaded.html
-pub trait Source: std::fmt::Debug {
-    /// Return the buffer data referenced by the given `Buffer`.
-    ///
-    /// This method must not fail.
-    fn source_buffer(&self, buffer: &Buffer) -> &[u8];
+/// Represents a runtime error.
+#[derive(Debug)]
+pub enum Error {
+    /// JSON deserialization error.
+    Deserialize(json::Error),
+
+    /// GLB parsing error.
+    Glb(String),
+
+    /// `glTF` validation error.
+    Validation(Vec<(json::Path, json::validation::Error)>),
 }
 
-/// Wrapper type representing a `glTF` object whose data is immediately ready for
-/// use.
-#[derive(Clone, Debug)]
-pub struct Loaded<'a, T> {
-    /// The wrapped item.
-    item: T,
-
-    /// The data source for this item and all of its children.
-    source: &'a Source,
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        use std::error::Error;
+        write!(f, "{}", self.description())
+    }
 }
 
-impl<'a, T> std::ops::Deref for Loaded<'a, T> {
-    type Target = T;
-    fn deref(&self) -> &Self::Target {
-        &self.item
+impl std::error::Error for Error {
+    fn description(&self) -> &str {
+         match *self {
+            Error::Deserialize(_) => "deserialization error",
+            Error::Glb(_) => "invalid .glb format",
+            Error::Validation(_) => "invalid glTF JSON",
+        }
+    }
+}
+
+impl From<json::Error> for Error {
+    fn from(err: json::Error) -> Self {
+        Error::Deserialize(err)
+    }
+}
+
+impl From<Vec<(json::Path, json::validation::Error)>> for Error {
+    fn from(errs: Vec<(json::Path, json::validation::Error)>) -> Self {
+        Error::Validation(errs)
     }
 }

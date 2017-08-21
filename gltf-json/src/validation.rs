@@ -26,12 +26,16 @@ pub trait Validate {
     }
 
     /// Validates the data against the glTF 2.0 specification.
-    fn validate_completely<P, R>(&self, root: &Root, path: P, report: &mut R)
+    ///
+    /// # Notes
+    ///
+    /// The caller must also call `validate_minimally()` for full validation.
+    fn validate_completely<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
     where
         P: Fn() -> Path,
         R: FnMut(&Fn() -> Path, Error),
     {
-        self.validate_minimally(root, path, report)
+        // nop
     }
 }
 

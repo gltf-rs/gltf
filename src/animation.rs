@@ -31,7 +31,7 @@ pub struct Channels<'a> {
     /// The parent `Animation` struct.
     anim: Animation<'a>,
 
-    /// The internal channel iterIterator.
+    /// The internal channel iterator.
     iter: slice::Iter<'a, json::animation::Channel>,
 }
 
@@ -41,13 +41,16 @@ pub struct Samplers<'a> {
     /// The parent `Channel` struct.
     anim: Animation<'a>,
 
-    /// The internal channel iterIterator.
+    /// The internal channel iterator.
     iter: slice::Iter<'a, json::animation::Sampler>,
 }
 
 impl<'a> Animation<'a> {
     /// Constructs an `Animation`.
-    pub(crate) fn new(gltf: &'a Gltf, index: usize, json: &'a json::animation::Animation) -> Self {
+    pub(crate) fn new(
+        gltf: &'a Gltf, index: usize,
+        json: &'a json::animation::Animation,
+    ) -> Self {
         Self {
             gltf: gltf,
             index: index,
@@ -70,9 +73,9 @@ impl<'a> Animation<'a> {
         &self.json.extras
     }
 
-    /// An array of channels, each of which targets an animation's sampler at a
-    /// node's property.  Different channels of the same animation must not have
-    /// equal targets.
+    /// Returns an `Iterator` over the animation channels.
+    ///
+    /// Each channel targets an animation's sampler at a node's property.
     pub fn channels(&self) -> Channels<'a> {
         Channels {
             anim: self.clone(),
@@ -86,7 +89,9 @@ impl<'a> Animation<'a> {
         self.json.name.as_ref().map(String::as_str)
     }
 
-    /// An array of samplers that combine input and output accessors with an
+    /// Returns an `Iterator` over the animation samplers.
+    ///
+    /// Each sampler combines input and output accessors with an
     /// interpolation algorithm to define a keyframe graph (but not its target).
     pub fn samplers(&self) -> Samplers<'a> {
         Samplers {
@@ -96,7 +101,7 @@ impl<'a> Animation<'a> {
     }
 }
 
-///  Targets an animation's sampler at a node's property.
+/// Targets an animation's sampler at a node's property.
 #[derive(Clone, Debug)]
 pub struct Channel<'a> {
     /// The parent `Animation` struct.
@@ -108,7 +113,10 @@ pub struct Channel<'a> {
 
 impl<'a> Channel<'a> {
     /// Constructs a `Channel`.
-    pub(crate) fn new(anim: Animation<'a>, json: &'a json::animation::Channel) -> Self {
+    pub(crate) fn new(
+        anim: Animation<'a>,
+        json: &'a json::animation::Channel,
+    ) -> Self {
         Self {
             anim: anim,
             json: json,
@@ -154,7 +162,10 @@ pub struct Target<'a> {
 
 impl<'a> Target<'a> {
     /// Constructs a `Target`.
-    pub(crate) fn new(anim: Animation<'a>, json: &'a json::animation::Target) -> Self {
+    pub(crate) fn new(
+        anim: Animation<'a>,
+        json: &'a json::animation::Target,
+    ) -> Self {
         Self {
             anim: anim,
             json: json,
@@ -176,19 +187,19 @@ impl<'a> Target<'a> {
         &self.json.extras
     }
 
-    /// The node to target.
+    /// Returns the target node.
     pub fn node(&self) -> scene::Node {
         self.anim.gltf.nodes().nth(self.json.node.value()).unwrap()
     }
 
-    /// The name of the node's TRS property to modify or the 'weights' of the morph
+    /// Returns the node's TRS property to modify or the 'weights' of the morph
     /// targets it instantiates.
     pub fn path(&self) -> TrsProperty {
         self.json.path.unwrap()
     }
 }
 
-/// Defines a keyframe graph but not its target.
+/// Defines a keyframe graph (but not its target).
 #[derive(Clone, Debug)]
 pub struct Sampler<'a> {
     /// The parent `Animation` struct.
@@ -200,7 +211,10 @@ pub struct Sampler<'a> {
 
 impl<'a> Sampler<'a> {
     /// Constructs a `Sampler`.
-    pub(crate) fn new(anim: Animation<'a>, json: &'a json::animation::Sampler) -> Self {
+    pub(crate) fn new(
+        anim: Animation<'a>,
+        json: &'a json::animation::Sampler,
+    ) -> Self {
         Self {
             anim: anim,
             json: json,
@@ -222,17 +236,17 @@ impl<'a> Sampler<'a> {
         &self.json.extras
     }
 
-    /// The index of an accessor containing keyframe input values, e.g., time.
+    /// Returns the accessor containing the keyframe input values (e.g. time).
     pub fn input(&self) -> accessor::Accessor<'a> {
         self.anim.gltf.accessors().nth(self.json.input.value()).unwrap()
     }
 
-    /// The interpolation algorithm.
+    /// Returns the keyframe interpolation algorithm.
     pub fn interpolation(&self) -> InterpolationAlgorithm {
         self.json.interpolation.unwrap()
     }
 
-    /// The index of an accessor containing keyframe output values.
+    /// Returns the accessor containing the keyframe output values.
     pub fn output(&self) -> accessor::Accessor<'a> {
         self.anim.gltf.accessors().nth(self.json.output.value()).unwrap()
     }
