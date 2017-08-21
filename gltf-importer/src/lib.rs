@@ -109,7 +109,14 @@ fn import_impl(path: &Path, config: Config) -> Result<(Gltf, Buffers), Error> {
     }
 }   
 
-/// Imports glTF 2.0
+/// Imports glTF 2.0 with custom configuration.
+pub fn import_with_config<P>(path: P, config: Config) -> Result<(Gltf, Buffers), Error>
+    where P: AsRef<Path>
+{
+    import_impl(path.as_ref(), config)
+}
+
+/// Imports glTF 2.0 with default configuration.
 pub fn import<P>(path: P) -> Result<(Gltf, Buffers), Error>
     where P: AsRef<Path>
 {
