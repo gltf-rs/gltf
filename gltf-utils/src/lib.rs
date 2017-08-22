@@ -295,22 +295,6 @@ pub fn is_glb(slice: &[u8]) -> bool {
     slice.starts_with(b"glTF")
 }
 
-impl<'a> Positions<'a> {
-    /// Returns the `(min, max)` bounds of the `POSITION` vertex attribute.
-    ///
-    /// # Panics
-    ///
-    /// Panics for `POSITION` accessors which are un-bounded.
-    ///
-    /// Use `json::validation::Validate::validate_minimally`
-    /// to handle this gracefully.
-    pub fn bounds(&self) -> ([f32; 3], [f32; 3]) {
-        let min = gltf::json::from_value(self.0.accessor.min().unwrap()).unwrap();
-        let max = gltf::json::from_value(self.0.accessor.max().unwrap()).unwrap();
-        (min, max)
-    }
-}
-
 impl<'a, T: Copy> ExactSizeIterator for AccessorIter<'a, T> {}
 impl<'a, T: Copy> Iterator for AccessorIter<'a, T> {
     type Item = T;

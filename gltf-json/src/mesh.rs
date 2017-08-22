@@ -8,6 +8,7 @@
 // except according to those terms.
 
 use serde::de;
+use serde_json::from_value;
 use std::collections::HashMap;
 use std::fmt;
 use validation::{Checked, Error, Validate};
@@ -162,7 +163,7 @@ pub struct Primitive {
 
                 let min_path = &|| path().field("attributes").key("POSITION").field("min");
                 if let Some(ref min) = pos_accessor.min {
-                    if min.len() != 3 {
+                    if from_value::<[f32; 3]>(min.clone()).is_err() {
                         report(min_path, Error::Invalid);
                     }
                 }
@@ -172,7 +173,7 @@ pub struct Primitive {
 
                 let max_path = &|| path().field("attributes").key("POSITION").field("max");
                 if let Some(ref max) = pos_accessor.max {
-                    if max.len() != 3 {
+                    if from_value::<[f32; 3]>(max.clone()).is_err() {
                         report(max_path, Error::Invalid);
                     }
                 }
@@ -180,30 +181,6 @@ pub struct Primitive {
                     report(max_path, Error::Missing);
                 }
             }
-        }
-
-        // Generated validation
-        fn validate_completely<P, R>(&self, root: &::Root, path: P, report: &mut R)
-        where
-            P: Fn() -> ::Path,
-            R: FnMut(&Fn() -> ::Path, ::validation::Error),
-        {
-            self.validate_minimally(root, || path(), report);
-
-            self.attributes
-                .validate_completely(root, || path().field("attributes"), report);
-            self.extensions
-                .validate_completely(root, || path().field("extensions"), report);
-            self.extras
-                .validate_completely(root, || path().field("extras"), report);
-            self.indices
-                .validate_completely(root, || path().field("indices"), report);
-            self.material
-                .validate_completely(root, || path().field("material"), report);
-            self.mode
-                .validate_completely(root, || path().field("mode"), report);
-            self.targets
-                .validate_completely(root, || path().field("targets"), report);
         }
     }
 

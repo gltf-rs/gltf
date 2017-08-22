@@ -19,7 +19,7 @@ fn test_accessor_bounds() {
     let gltf = gltf::Gltf::from_json(import_json("tests/minimal_accessor_min_max.gltf"));
     let mesh = &gltf.meshes().nth(0).unwrap();
     let prim = mesh.primitives().nth(0).unwrap();
-    let bounds = prim.bounds();
+    let bounds = prim.position_bounds();
     assert_eq!(bounds, Some(Bounds { min: [-0.03, -0.04, -0.05], max: [1.0, 1.01, 0.02]}));
 }
 

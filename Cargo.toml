@@ -21,9 +21,6 @@ travis-ci = { repository = "alteous/gltf" }
 gltf-json = { path = "gltf-json", version = "0.9" }
 lazy_static = "0.2"
 
-[patch.crates-io]
-gltf-json = { path = "gltf-json" }
-
 [features]
 default = []
 extras = ["gltf-json/extras"]
