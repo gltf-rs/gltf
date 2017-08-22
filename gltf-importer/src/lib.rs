@@ -24,6 +24,7 @@
 //! }
 //! ```
 
+extern crate base64;
 extern crate gltf;
 extern crate gltf_utils;
 
@@ -46,6 +47,9 @@ pub enum Error {
     /// A loaded glTF buffer is not of the required length.
     BufferLength(json::Path),
 
+    /// Base 64 decoding error.
+    Base64Decoding(base64::DecodeError),
+    
     /// A glTF extension required by the asset has not been enabled by the user.
     ExtensionDisabled(String),
 
@@ -100,6 +104,13 @@ impl Buffers {
     }
 }
 
+fn next_multiple_of_4(mut x: usize) -> usize {
+    while x % 4 != 0 {
+        x += 1;
+    }
+    x
+}
+
 fn import_impl(path: &Path, config: Config) -> Result<(Gltf, Buffers), Error> {
     let data = read_to_end(path)?;
     if data.starts_with(b"glTF") {
@@ -136,27 +147,36 @@ fn read_to_end<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, Error> {
     read_to_end_impl(path.as_ref())
 }
 
+fn parse_data_uri(uri: &str) -> Result<Vec<u8>, Error> {
+    let encoded = uri.split(",").nth(1).unwrap();
+    let decoded = base64::decode(&encoded)?;
+    Ok(decoded)
+}
+    
 fn load_external_buffers(
     base_path: &Path,
     gltf: &Gltf,
-    has_bin: bool,
+    mut bin: Option<Vec<u8>>,
 ) -> Result<Vec<Vec<u8>>, Error> {
-    let mut iter = gltf.as_json().buffers.iter().enumerate();
-    if has_bin {
-        let _ = iter.next();
-    }
-    iter
-        .map(|(index, buffer)| {
-            let uri = buffer.uri.as_ref().unwrap();
+    let mut buffers = vec![];
+    for (index, buffer) in gltf.buffers().enumerate() {
+        let uri = buffer.uri();
+        let data = if uri == "#bin" {
+            Ok(bin.take().unwrap())
+        } else if uri.starts_with("data:") {
+            Ok(parse_data_uri(uri)?)
+        } else {
             let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
-            let data = read_to_end(&path)?;
-            if data.len() != buffer.byte_length as usize {
-                let path = json::Path::new().field("buffers").index(index);
-                return Err(Error::BufferLength(path));
-            }
-            Ok(data)
-        })
-        .collect()
+            read_to_end(&path)
+        }?;
+        let buffer_length_including_padding = next_multiple_of_4(buffer.length());
+        if data.len() != buffer_length_including_padding {
+            let path = json::Path::new().field("buffers").index(index);
+            return Err(Error::BufferLength(path));
+        }
+        buffers.push(data);
+    }
+    Ok(buffers)
 }
 
 fn validate_standard(
@@ -223,9 +243,9 @@ fn import_standard<'a>(
 ) -> Result<(Gltf, Buffers), Error> {
     let unvalidated = Gltf::from_slice(data)?;
     let gltf = validate_standard(unvalidated, &config)?;
-    let has_bin = false;
+    let bin = None;
     let mut buffers = Buffers(vec![]);
-    for buffer in load_external_buffers(base_path, &gltf, has_bin)? {
+    for buffer in load_external_buffers(base_path, &gltf, bin)? {
         buffers.0.push(buffer);
     }
     Ok((gltf, buffers))
@@ -238,13 +258,10 @@ fn import_binary<'a>(
 ) -> Result<(Gltf, Buffers), Error> {
     let gltf::Glb { header: _, json, bin } = gltf::Glb::from_slice(data)?;
     let unvalidated = Gltf::from_slice(json)?;
-    let has_bin = bin.is_some();
-    let gltf = validate_binary(unvalidated, &config, has_bin)?;
+    let bin = bin.map(|x| x.to_vec());
+    let gltf = validate_binary(unvalidated, &config, bin.is_some())?;
     let mut buffers = Buffers(vec![]);
-    if let Some(buffer) = bin {
-        buffers.0.push(buffer.to_vec());
-    }
-    for buffer in load_external_buffers(base_path, &gltf, has_bin)? {
+    for buffer in load_external_buffers(base_path, &gltf, bin)? {
         buffers.0.push(buffer);
     }
     Ok((gltf, buffers))
@@ -277,6 +294,12 @@ impl From<gltf::Error> for Error {
     }
 }
 
+impl From<base64::DecodeError> for Error {
+    fn from(err: base64::DecodeError) -> Error {
+        Error::Base64Decoding(err)
+    }
+}
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use std::error::Error;
@@ -288,6 +311,7 @@ impl StdError for Error {
     fn description(&self) -> &str {
         use self::Error::*;
         match *self {
+            Base64Decoding(_) => "Base 64 decoding failed",
             BufferLength(_) => "Loaded buffer does not match required length",
             ExtensionDisabled(_) => "Asset requires a disabled extension",
             ExtensionUnsupported(_) => "Assets requires an unsupported extension",
