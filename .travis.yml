@@ -8,8 +8,8 @@ rust:
 sudo: false
 
 script:
-    - cargo build --verbose --all-features
-    - cargo test --verbose --all-features
+    - cargo build --verbose --all-features --all
+    - cargo test --verbose --all-features --all
 
 addons:
     apt:

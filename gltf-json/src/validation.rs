@@ -40,7 +40,7 @@ pub trait Validate {
 }
 
 /// Specifies what kind of error occured during validation.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Error {
     /// An index was found to be out of bounds.
     IndexOutOfBounds,
