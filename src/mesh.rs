@@ -7,7 +7,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::collections::hash_map;
 use std::{iter, slice};
 use {accessor, json, material};
 
@@ -125,39 +124,6 @@ pub enum Weights<'a> {
     U16(Iter<'a, [u16; 4]>),
 }
 
-/// Vertex attribute data.
-#[derive(Clone, Debug)]
-pub enum Attribute<'a> {
-    /// Vertex colors.
-    Colors(u32, Colors<'a>),
-
-    // TODO: Handle extras (needs to be handled elsewhere to avoid taking lifetime)
-    // #[cfg(feature = "extras")]
-    // Extras(&'a str, accessor::Accessor),
-
-    /// Vertex joints.
-    /// Refer to the documentation on morph targets and skins for more
-    /// information.
-    Joints(u32, Joints<'a>),
-
-    /// XYZ vertex positions of type `[f32; 3]`.
-    Positions(Positions<'a>),
-
-    /// XYZ vertex normals of type `[f32; 3]`.
-    Normals(Normals<'a>),
-
-    /// XYZW vertex tangents of type `[f32; 4]` where the `w` component is a
-    /// sign value (-1 or +1) indicating the handedness of the tangent basis.
-    Tangents(Tangents<'a>),
-
-    /// UV texture co-ordinates.
-    TexCoords(u32, TexCoords<'a>),
-
-    /// Weights.
-    /// Refer to the documentation on morph targets for more information.
-    Weights(u32, Weights<'a>),
-}
-
 /// Morph targets.
 #[derive(Clone, Debug)]
 pub struct MorphTargets<'a> {
@@ -196,16 +162,6 @@ pub struct Primitive<'a>  {
 
     /// The corresponding JSON struct.
     json: &'a json::mesh::Primitive,
-}
-
-/// An `Iterator` that visits the attributes of a `Primitive`.
-#[derive(Clone, Debug)]
-pub struct Attributes<'a> {
-    /// The parent `Primitive` struct.
-    prim: &'a Primitive<'a>,
-
-    /// The internal attribute iterIterator.
-    iter: hash_map::Iter<'a, json::mesh::Semantic, json::Index<json::accessor::Accessor>>,
 }
 
 /// An `Iterator` that visits the primitives of a `Mesh`.
@@ -488,6 +444,7 @@ impl<'a> Loaded<'a, Primitive<'a>> {
     }
 }
 
+impl<'a> ExactSizeIterator for IndicesU32<'a> {}
 impl<'a> Iterator for IndicesU32<'a> {
     type Item = u32;
     fn next(&mut self) -> Option<Self::Item> {
@@ -497,8 +454,17 @@ impl<'a> Iterator for IndicesU32<'a> {
             Indices::U32(ref mut i) => i.next(),
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self.0 {
+            Indices::U8(ref i) => i.size_hint(),
+            Indices::U16(ref i) => i.size_hint(),
+            Indices::U32(ref i) => i.size_hint(),
+        }
+    }
 }
 
+impl<'a> ExactSizeIterator for TexCoordsF32<'a> {}
 impl<'a> Iterator for TexCoordsF32<'a> {
     type Item = [f32; 2];
     fn next(&mut self) -> Option<Self::Item> {
@@ -512,50 +478,89 @@ impl<'a> Iterator for TexCoordsF32<'a> {
             TexCoords::F32(ref mut i) => i.next(),
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self.0 {
+            TexCoords::U8(ref i) => i.size_hint(),
+            TexCoords::U16(ref i) => i.size_hint(),
+            TexCoords::F32(ref i) => i.size_hint(),
+        }
+    }
 }
 
+impl<'a> ExactSizeIterator for Positions<'a> {}
 impl<'a> Iterator for Positions<'a> {
     type Item = [f32; 3];
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
 }
 
+impl<'a> ExactSizeIterator for PositionDisplacements<'a> {}
 impl<'a> Iterator for PositionDisplacements<'a> {
     type Item = [f32; 3];
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
 }
 
+impl<'a> ExactSizeIterator for Normals<'a> {}
 impl<'a> Iterator for Normals<'a> {
     type Item = [f32; 3];
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
 }
  
+impl<'a> ExactSizeIterator for NormalDisplacements<'a> {}
 impl<'a> Iterator for NormalDisplacements<'a> {
     type Item = [f32; 3];
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
 }
 
+impl<'a> ExactSizeIterator for Tangents<'a> {}
 impl<'a> Iterator for Tangents<'a> {
     type Item = [f32; 4];
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
 }
 
+impl<'a> ExactSizeIterator for TangentDisplacements<'a> {}
 impl<'a> Iterator for TangentDisplacements<'a> {
     type Item = [f32; 3];
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
 }
 
+impl<'a> ExactSizeIterator for Loaded<'a, Primitives<'a>> {}
 impl<'a> Iterator for Loaded<'a, Primitives<'a>> {
     type Item = Loaded<'a, Primitive<'a>>;
     fn next(&mut self) -> Option<Self::Item> {
@@ -568,11 +573,20 @@ impl<'a> Iterator for Loaded<'a, Primitives<'a>> {
                 }
             })
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.item.size_hint()
+    }
 }
 
+impl<'a> ExactSizeIterator for Primitives<'a> {}
 impl<'a> Iterator for Primitives<'a> {
     type Item = Primitive<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, json)| Primitive::new(self.mesh, index, json))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
     }
 }
