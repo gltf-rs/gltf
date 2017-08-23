@@ -20,7 +20,7 @@ impl Path {
     ///
     /// Basic usage:
     ///
-    /// ```
+    /// ```rust,ignore
     /// # use gltf::json::Path;
     /// let path = Path::new();
     /// assert_eq!("", path.as_str());
@@ -35,7 +35,7 @@ impl Path {
     ///
     /// Basic usage:
     ///
-    /// ```
+    /// ```rust,ignore
     /// # use gltf::json::Path;
     /// let path = Path::new().field("foo");
     /// assert_eq!("foo", path.as_str());
@@ -55,7 +55,7 @@ impl Path {
     ///
     /// Basic usage:
     ///
-    /// ```
+    /// ```rust,ignore
     /// # use gltf::json::Path;
     /// let path = Path::new().field("foo");
     /// assert_eq!("foo[123]", path.index(123).as_str());
@@ -70,7 +70,7 @@ impl Path {
     ///
     /// Basic usage:
     ///
-    /// ```
+    /// ```rust,ignore
     /// # use gltf::json::Path;
     /// let path = Path::new().field("foo");
     /// assert_eq!("foo[\"bar\"]", path.key("bar").as_str());
