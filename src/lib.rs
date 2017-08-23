@@ -93,7 +93,8 @@
 //!     }
 //! }
 //!
-//! let data = BoxExampleData(include_bytes!("examples/Box0.bin"));
+//! let buffer_data = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/Box0.bin"));
+//! let data = BoxExampleData(buffer_data);
 //! let loaded_gltf = gltf.loaded(&data);
 //! for mesh in loaded_gltf.meshes() {
 //!     for primitive in mesh.primitives() {
