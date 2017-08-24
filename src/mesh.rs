@@ -14,6 +14,7 @@ use json;
 use {Accessor, Gltf, Material};
 
 pub use json::mesh::{Mode, Semantic};
+use json::validation::Checked;
 
 /// Vertex attribute data.
 #[derive(Clone, Debug)]
@@ -90,7 +91,7 @@ pub struct Primitive<'a>  {
 pub struct Attributes<'a> {
     /// The parent `Gltf` struct.
     gltf: &'a Gltf,
-    
+
     /// The parent `Primitive` struct.
     prim: &'a Primitive<'a>,
 
@@ -161,6 +162,15 @@ impl<'a> Mesh<'a>  {
     }
 }
 
+/// Accessor bounds
+#[derive(Debug, PartialEq)]
+pub struct Bounds<T> {
+    /// Minimum
+    pub min: T,
+    /// Maximum
+    pub max: T
+}
+
 impl<'a> Primitive<'a> {
     /// Constructs a `Primitive`.
     pub(crate) fn new(
@@ -178,6 +188,35 @@ impl<'a> Primitive<'a> {
     /// Returns the internal JSON item.
     pub fn as_json(&self) ->  &json::mesh::Primitive {
         self.json
+    }
+
+    /// Returns the bounds (min/max) of the POSITION attribute if there is one, otherwise `None`.
+    /// May panic for invalid glTF files. Use json::validation::Validate::validate_minimally
+    /// to handle this gracefully.
+
+    /// Returns the `(min, max)` bounds of the `POSITION` vertex attribute
+    /// if there is one, otherwise `None`.
+    ///
+    /// # Panics
+    ///
+    /// Panics for `POSITION` accessors with missing or invalid bounds.
+    ///
+    /// Use `json::validation::Validate::validate_minimally`
+    /// to handle this gracefully.
+    pub fn position_bounds(&self) -> Option<Bounds<[f32; 3]>> {
+        if let Some(pos_accessor_index) = self.json.attributes.get(&Checked::Valid(Semantic::Positions)) {
+            let pos_accessor = self.mesh.gltf.accessors().nth(pos_accessor_index.value()).unwrap();
+            // NOTE: cannot panic if validated "minimally"
+            let min: [f32; 3] = json::from_value(pos_accessor.min().unwrap()).unwrap();
+            let max: [f32; 3] = json::from_value(pos_accessor.max().unwrap()).unwrap();
+            Some(Bounds {
+                min: [min[0], min[1], min[2]],
+                max: [max[0], max[1], max[2]]
+            })
+        }
+        else {
+            None
+        }
     }
 
     /// Optional application specific data.

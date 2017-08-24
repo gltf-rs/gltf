@@ -38,9 +38,11 @@
 //! ```
 //! # fn run() -> Result<(), Box<std::error::Error>> {
 //! let file = std::fs::File::open("examples/Box.gltf")?;
-//! let reader = std::io::BufReader::new(file);
-//! let json = gltf::json::from_reader(reader)?;
-//! let gltf = gltf::Gltf::from_json(json);
+//! use std::io::Read;
+//! let mut reader = std::io::BufReader::new(file);
+//! let mut buffer = vec![];
+//! let _ = reader.read_to_end(&mut buffer)?;
+//! let gltf = gltf::Gltf::from_slice(&buffer)?.validate_completely()?;
 //! for scene in gltf.scenes() {
 //!     for node in scene.nodes() {
 //!         // Do something with this node.
@@ -70,7 +72,7 @@
 //!
 //! [`Source`]: trait.Source.html
 //! [`Loaded`]: struct.Loaded.html
-//! ```
+//! ```rust,ignore
 //! # use gltf::json;
 //! # use gltf::Gltf;
 //! # fn run() -> Result<(), Box<std::error::Error>> {
@@ -93,7 +95,7 @@
 //!     }
 //! }
 //!
-//! let data = BoxExampleData(include_bytes!("examples/Box0.bin"));
+//! let data = BoxExampleData(include_bytes!("../examples/Box0.bin"));
 //! let loaded_gltf = gltf.loaded(&data);
 //! for mesh in loaded_gltf.meshes() {
 //!     for primitive in mesh.primitives() {

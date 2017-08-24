@@ -50,7 +50,7 @@ impl<'a> Accessor<'a> {
     pub fn index(&self) -> usize {
         self.index
     }
-    
+
     /// Returns the size of each component that this accessor describes.
     pub fn size(&self) -> usize {
         self.data_type().size() * self.dimensions().multiplicity()
@@ -139,7 +139,7 @@ pub mod sparse {
         /// Corresponds to `GL_UNSIGNED_INT`.
         U32 = 5125,
     }
-    
+
     /// Indices of those attributes that deviate from their initialization value.
     pub struct Indices<'a> {
         /// The parent `Gltf` struct.
@@ -192,7 +192,7 @@ pub mod sparse {
             &self.json.extras
         }
     }
-        
+
     /// Sparse storage of attributes that deviate from their initialization value.
     pub struct Sparse<'a> {
         /// The parent `Gltf` struct.
@@ -285,7 +285,7 @@ pub mod sparse {
         }
     }
 
-    
+
     impl IndexType {
         /// Returns the number of bytes this value represents.
         pub fn size(&self) -> usize {

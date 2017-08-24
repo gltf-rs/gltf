@@ -9,8 +9,8 @@
 
 extern crate gltf;
 
-use gltf::json;
 use std::{fs, io};
+use std::io::Read;
 
 use std::boxed::Box;
 use std::error::Error as StdError;
@@ -30,9 +30,10 @@ fn print_tree(node: &gltf::Node, depth: i32) {
 
 fn run(path: &str) -> Result<(), Box<StdError>> {
     let file = fs::File::open(&path)?;
-    let buf_reader = io::BufReader::new(file);
-    let json: json::Root = json::from_reader(buf_reader)?;
-    let gltf = gltf::Gltf::from_json(json);
+    let mut buf_reader = io::BufReader::new(file);
+    let mut buffer = vec![];
+    buf_reader.read_to_end(&mut buffer).unwrap();
+    let gltf = gltf::Gltf::from_slice(&buffer)?.validate_completely()?;
     for scene in gltf.scenes() {
         let index = scene.index();
         let name = scene.name().unwrap_or("<Unnamed>");
