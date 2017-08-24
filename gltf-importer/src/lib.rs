@@ -39,6 +39,7 @@ use std::path::Path;
 pub mod config;
 
 pub use self::config::Config;
+pub use self::config::ValidationStrategy;
 
 /// Error encountered when importing a glTF 2.0 asset.
 #[derive(Debug)]
