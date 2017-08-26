@@ -10,8 +10,8 @@
 extern crate gltf;
 
 use std::{fs, io};
-use std::io::Read;
 
+use gltf::{Glb, Gltf};
 use std::boxed::Box;
 use std::error::Error as StdError;
 
@@ -29,11 +29,17 @@ fn print_tree(node: &gltf::Node, depth: i32) {
 }
 
 fn run(path: &str) -> Result<(), Box<StdError>> {
+    use io::Read;
     let file = fs::File::open(&path)?;
-    let mut buf_reader = io::BufReader::new(file);
-    let mut buffer = vec![];
-    buf_reader.read_to_end(&mut buffer).unwrap();
-    let gltf = gltf::Gltf::from_slice(&buffer)?.validate_completely()?;
+    let mut data = Vec::with_capacity(file.metadata()?.len() as usize);
+    let mut reader = io::BufReader::new(file);
+    let _ = reader.read_to_end(&mut data)?;
+    let gltf = if gltf::is_binary(&data) {
+        let glb = Glb::from_slice(&data)?;
+        Gltf::from_slice(glb.json)
+    } else {
+        Gltf::from_slice(&data)
+    }?.validate_completely()?;
     for scene in gltf.scenes() {
         let index = scene.index();
         let name = scene.name().unwrap_or("<Unnamed>");
