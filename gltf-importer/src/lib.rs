@@ -105,13 +105,6 @@ impl Buffers {
     }
 }
 
-fn next_multiple_of_4(mut x: usize) -> usize {
-    while x % 4 != 0 {
-        x += 1;
-    }
-    x
-}
-
 fn import_impl(path: &Path, config: Config) -> Result<(Gltf, Buffers), Error> {
     let data = read_to_end(path)?;
     if data.starts_with(b"glTF") {
@@ -170,8 +163,7 @@ fn load_external_buffers(
             let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
             read_to_end(&path)
         }?;
-        let buffer_length_including_padding = next_multiple_of_4(buffer.length());
-        if data.len() != buffer_length_including_padding {
+        if data.len() != buffer.length() {
             let path = json::Path::new().field("buffers").index(index);
             return Err(Error::BufferLength(path));
         }
