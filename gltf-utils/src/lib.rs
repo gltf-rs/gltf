@@ -390,6 +390,7 @@ impl<'a> Weights<'a> {
     }
 }
 
+impl<'a> ExactSizeIterator for IndicesU32<'a> {}
 impl<'a> Iterator for IndicesU32<'a> {
     type Item = u32;
     fn next(&mut self) -> Option<Self::Item> {
@@ -399,8 +400,17 @@ impl<'a> Iterator for IndicesU32<'a> {
             Indices::U32(ref mut i) => i.next(),
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self.0 {
+            Indices::U8(ref i) => i.size_hint(),
+            Indices::U16(ref i) => i.size_hint(),
+            Indices::U32(ref i) => i.size_hint(),
+        }
+    }
 }
 
+impl<'a> ExactSizeIterator for JointsU16<'a> {}
 impl<'a> Iterator for JointsU16<'a> {
     type Item = [u16; 4];
     fn next(&mut self) -> Option<Self::Item> {
@@ -412,8 +422,16 @@ impl<'a> Iterator for JointsU16<'a> {
             Joints::U16(ref mut i) => i.next(),
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self.0 {
+            Joints::U8(ref i) => i.size_hint(),
+            Joints::U16(ref i) => i.size_hint(),
+        }
+    }
 }
 
+impl<'a> ExactSizeIterator for ColorsRgbaF32<'a> {}
 impl<'a> Iterator for ColorsRgbaF32<'a> {
     type Item = [f32; 4];
     fn next(&mut self) -> Option<Self::Item> {
@@ -439,8 +457,20 @@ impl<'a> Iterator for ColorsRgbaF32<'a> {
             Colors::RgbaF32(ref mut i) => i.next(),
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self.iter {
+            Colors::RgbU8(ref i) => i.size_hint(),
+            Colors::RgbU16(ref i) => i.size_hint(),
+            Colors::RgbF32(ref i) => i.size_hint(),
+            Colors::RgbaU8(ref i) => i.size_hint(),
+            Colors::RgbaU16(ref i) => i.size_hint(),
+            Colors::RgbaF32(ref i) => i.size_hint(),
+        }
+    }
 }
 
+impl<'a> ExactSizeIterator for TexCoordsF32<'a> {}
 impl<'a> Iterator for TexCoordsF32<'a> {
     type Item = [f32; 2];
     fn next(&mut self) -> Option<Self::Item> {
@@ -450,8 +480,17 @@ impl<'a> Iterator for TexCoordsF32<'a> {
             TexCoords::F32(ref mut i) => i.next(),
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self.0 {
+            TexCoords::U8(ref i) => i.size_hint(),
+            TexCoords::U16(ref i) => i.size_hint(),
+            TexCoords::F32(ref i) => i.size_hint(),
+        }
+    }
 }
 
+impl<'a> ExactSizeIterator for WeightsF32<'a> {}
 impl<'a> Iterator for WeightsF32<'a> {
     type Item = [f32; 4];
     fn next(&mut self) -> Option<Self::Item> {
@@ -461,27 +500,49 @@ impl<'a> Iterator for WeightsF32<'a> {
             Weights::F32(ref mut i) => i.next(),
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self.0 {
+            Weights::U8(ref i) => i.size_hint(),
+            Weights::U16(ref i) => i.size_hint(),
+            Weights::F32(ref i) => i.size_hint(),
+        }
+    }
 }
 
-
+impl<'a> ExactSizeIterator for Positions<'a> {}
 impl<'a> Iterator for Positions<'a> {
     type Item = [f32; 3];
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
 }
 
+impl<'a> ExactSizeIterator for Normals<'a> {}
 impl<'a> Iterator for Normals<'a> {
     type Item = [f32; 3];
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
 }
  
+impl<'a> ExactSizeIterator for Tangents<'a> {}
 impl<'a> Iterator for Tangents<'a> {
     type Item = [f32; 4];
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
     }
 }
 
