@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{iter, slice};
+use std::{collections, iter, slice};
 use json;
 
 use {Accessor, Gltf, Material};
@@ -95,7 +95,7 @@ pub struct Attributes<'a> {
     prim: &'a Primitive<'a>,
 
     /// The internal attribute iterator.
-    iter: hash_map::Iter<
+    iter: collections::hash_map::Iter<
         'a,
         json::validation::Checked<json::mesh::Semantic>,
         json::Index<json::accessor::Accessor>,
