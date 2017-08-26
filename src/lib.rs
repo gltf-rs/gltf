@@ -58,43 +58,6 @@
 //! #    let _ = run().expect("No runtime errors");
 //! # }
 //! ```
-//!
-//! ### Iterating over the indices of primitives
-//!
-//! The `Source` trait of the `gltf-utils` crate provides `glTF` objects with
-//! their buffer data. This allows the `gltf-utils` crate to provide extra
-//! abstractions such as iterating over the positions of a `Primitive`.
-//!
-//! See the documentation of the `gltf-utils` for more details.
-//!
-//! The `gltf-importer` crate contains a reference implementation of the
-//! `Source` trait and may be used to read buffer data from the file system.
-//!
-//! ```rust
-//! extern crate gltf_utils;
-//! # use gltf::Gltf;
-//! # use std::{fs, io};
-//! # fn run() -> Result<(), Box<std::error::Error>> {
-//! # let path = "./glTF-Sample-Models/2.0/Box/glTF/Box.gltf";
-//! # let file = fs::File::open(path)?;
-//! # let gltf = Gltf::from_reader(io::BufReader::new(file))?.validate_minimally()?;
-//! let buffers = &[include_bytes!("examples/Box0.bin")];
-//! for mesh in gltf.meshes() {
-//!     for primitive in mesh.primitives() {
-//!         use gltf_utils::PrimitiveIterators;
-//!         if let Some(iter) = primitive.indices_u32(&buffers) {
-//!             // Do something with the primitive data.
-//!             let indices: Vec<u32> = iter.collect();
-//!             println!("{:?}", indices);
-//!         }
-//!     }
-//! }
-//! # Ok(())
-//! # }
-//! # fn main() {
-//! #    let _ = run().expect("No runtime errors");
-//! # }
-//! ```
 
 #[macro_use]
 extern crate lazy_static;

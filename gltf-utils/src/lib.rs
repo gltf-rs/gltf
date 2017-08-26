@@ -14,6 +14,24 @@ use std::{fmt, marker, mem};
 use gltf::accessor::{DataType, Dimensions};
 
 /// Helper trait for denormalizing integer types.
+///
+/// # Examples
+///
+/// Denormalize a single `u16`.
+///
+/// ```rust
+/// use gltf_utils::Denormalize;
+/// let x: u16 = 65535;
+/// assert_eq!(1.0, x.denormalize());
+/// ```
+///
+/// Denormalize an array of integers.
+///
+/// ```rust
+/// use gltf_utils::Denormalize;
+/// let rgb: [u8; 3] = [0, 120, 255];
+/// assert_eq!([0.0, 120.0 / 255.0, 1.0], rgb.denormalize());
+/// ```
 pub trait Denormalize {
     /// The denormalized version of this type.
     type Denormalized;
@@ -23,6 +41,9 @@ pub trait Denormalize {
 }
 
 /// Represents sources of buffer data.
+///
+/// See the `Buffers` type in the `gltf-importer` crate for the reference
+/// implementation.
 pub trait Source: fmt::Debug {
     /// Return the buffer data referenced by the given `Buffer`.
     ///
@@ -30,45 +51,86 @@ pub trait Source: fmt::Debug {
     fn source_buffer(&self, buffer: &gltf::Buffer) -> &[u8];
 }
 
-impl<'a, T: 'a + AsRef<[u8]> + fmt::Debug> Source for &'a [T] {
-    fn source_buffer(&self, buffer: &gltf::Buffer) -> &[u8] {
-        self[buffer.index()].as_ref()
-    }
-}
-
 /// Extra methods for working with `gltf::Primitive`.
+///
+/// # Examples
+///
+/// Collecting the indices of a primitive into a `Vec`.
+///
+/// ```rust
+/// # extern crate gltf;
+/// # extern crate gltf_utils;
+/// # use gltf::Gltf;
+/// # use gltf_utils::Source;
+/// # use std::{fs, io};
+/// # fn run() -> Result<(), Box<std::error::Error>> {
+/// # let path = "../examples/Box.gltf";
+/// # let file = fs::File::open(path)?;
+/// # let gltf = Gltf::from_reader(io::BufReader::new(file))?.validate_minimally()?;
+/// /// Contains the single buffer necessary to render the box model.
+/// #[derive(Debug)]
+/// struct BoxData(&'static [u8]);
+/// impl Source for BoxData {
+///     fn source_buffer(&self, buffer: &gltf::Buffer) -> &[u8] {
+///         assert_eq!(0, buffer.index());
+///         self.0   
+///     }
+/// }
+///
+/// let box_data = BoxData(include_bytes!("../examples/Box0.bin"));
+/// let mesh = gltf.meshes().nth(0).unwrap();
+/// let primitive = mesh.primitives().nth(0).unwrap();
+/// 
+/// use gltf_utils::PrimitiveIterators;
+/// let iter = primitive.indices_u32(&box_data).unwrap();
+/// let indices: Vec<u32> = iter.collect();
+/// # let _ = indices;
+/// # Ok(())
+/// # }
+/// # fn main() {
+/// #    let _ = run().expect("No runtime errors");
+/// # }
+/// ```
 pub trait PrimitiveIterators<'a> {
+    /// Visits the vertex positions of a primitive.
     fn positions<S>(&'a self, source: &'a S) -> Option<Positions<'a>>
         where S: Source;
 
+    /// Visits the vertex normals of a primitive.
     fn normals<S>(&'a self, source: &'a S) -> Option<Normals<'a>>
         where S: Source;
     
+    /// Visits the vertex tangents of a primitive.
     fn tangents<S>(&'a self, source: &'a S) -> Option<Tangents<'a>>
         where S: Source;
     
+    /// Visits the vertex texture co-ordinates of a primitive.
     fn tex_coords_f32<S>(
         &'a self,
-        source: &'a S,
         set: u32,
+        source: &'a S,
     ) -> Option<TexCoordsF32<'a>>
         where S: Source;
     
+    /// Visits the vertex colors of a primitive.
     fn colors_rgba_f32<S>(
         &'a self,
-        source: &'a S,
         set: u32,
         default_alpha: f32,
+        source: &'a S,
     ) -> Option<ColorsRgbaF32<'a>>
         where S: Source;
-    
+
+    /// Visits the vertex draw sequence of a primitive.
     fn indices_u32<S>(&'a self, source: &'a S) -> Option<IndicesU32<'a>>
         where S: Source;
 
-    fn joints_u16<S: Source>(&'a self, source: &'a S, set: u32) -> Option<JointsU16<'a>>
+    /// Visits the joint indices of the primitive.
+    fn joints_u16<S: Source>(&'a self, set: u32, source: &'a S) -> Option<JointsU16<'a>>
         where S: Source;
-   
-    fn weights_f32<S: Source>(&'a self, source: &'a S, set: u32) -> Option<WeightsF32<'a>>
+
+    /// Visits the joint weights of the primitive.
+    fn weights_f32<S: Source>(&'a self, set: u32, source: &'a S) -> Option<WeightsF32<'a>>
         where S: Source;
 }
 
@@ -94,18 +156,18 @@ impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
             .map(|accessor| Tangents(AccessorIter::new(accessor, source)))
     }
 
-    fn tex_coords_f32<S>(&'a self, source: &'a S, set: u32) -> Option<TexCoordsF32<'a>>
+    fn tex_coords_f32<S>(&'a self, set: u32, source: &'a S) -> Option<TexCoordsF32<'a>>
         where S: Source
     {
         self.get(&gltf::Semantic::TexCoords(set))
             .map(|accessor| TexCoordsF32(TexCoords::new(accessor, source)))
     }
-    
+
     fn colors_rgba_f32<S>(
         &'a self,
-        source: &'a S,
         set: u32,
         default_alpha: f32,
+        source: &'a S,
     ) -> Option<ColorsRgbaF32<'a>>
         where S: Source
     {
@@ -124,14 +186,14 @@ impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
         self.indices().map(|accessor| IndicesU32(Indices::new(accessor, source)))
     }
     
-    fn joints_u16<S>(&'a self, source: &'a S, set: u32) -> Option<JointsU16<'a>>
+    fn joints_u16<S>(&'a self, set: u32, source: &'a S) -> Option<JointsU16<'a>>
         where S: Source
     {
         self.get(&gltf::Semantic::Colors(set))
             .map(|accessor| JointsU16(Joints::new(accessor, source)))
     }
 
-    fn weights_f32<S>(&'a self, source: &'a S, set: u32) -> Option<WeightsF32<'a>>
+    fn weights_f32<S>(&'a self, set: u32, source: &'a S) -> Option<WeightsF32<'a>>
         where S: Source
     {
         self.get(&gltf::Semantic::Weights(set))
@@ -297,6 +359,13 @@ pub struct ColorsRgbaF32<'a> {
 }
 
 /// Returns `true` if the slice begins with the `b"glTF"` magic string.
+///
+/// # Examples
+///
+/// ```rust
+/// assert_eq!(false, gltf_utils::is_glb(include_bytes!("../examples/Box.gltf")));
+/// assert_eq!(true, gltf_utils::is_glb(include_bytes!("../examples/Box.glb")));
+/// ```
 pub fn is_glb(slice: &[u8]) -> bool {
     slice.starts_with(b"glTF")
 }
