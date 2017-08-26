@@ -198,3 +198,9 @@ impl<'a> Info<'a> {
         &self.json.extras
     }
 }
+
+impl<'a> AsRef<Texture<'a>> for Info<'a> {
+    fn as_ref(&self) -> &Texture<'a> {
+        &self.texture
+    }
+}

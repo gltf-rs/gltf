@@ -310,3 +310,15 @@ impl<'a> OcclusionTexture<'a> {
         &self.json.extras
     }
 }
+
+impl<'a> AsRef<texture::Texture<'a>> for NormalTexture<'a> {
+    fn as_ref(&self) -> &texture::Texture<'a> {
+        &self.texture
+    }
+}
+
+impl<'a> AsRef<texture::Texture<'a>> for OcclusionTexture<'a> {
+    fn as_ref(&self) -> &texture::Texture<'a> {
+        &self.texture
+    }
+}
