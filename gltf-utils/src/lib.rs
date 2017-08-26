@@ -30,6 +30,12 @@ pub trait Source: fmt::Debug {
     fn source_buffer(&self, buffer: &gltf::Buffer) -> &[u8];
 }
 
+impl<'a, T: 'a + fmt::Debug + AsRef<[u8]>> Source for &'a [T] {
+    fn source_buffer(&self, buffer: &gltf::Buffer) -> &[u8] {
+        self[buffer.index()].as_ref()
+    }
+}
+
 /// Extra methods for working with `gltf::Primitive`.
 pub trait PrimitiveIterators<'a> {
     fn positions<S>(&'a self, source: &'a S) -> Option<Positions<'a>>
