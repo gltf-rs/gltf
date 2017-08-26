@@ -9,7 +9,7 @@
 
 use json;
 use root;
-use std::{fmt, iter, ops, slice};
+use std::{fmt, io, iter, ops, slice};
 
 use accessor::Accessor;
 use animation::Animation;
@@ -226,9 +226,29 @@ impl Gltf {
         }
     }
 
-    /// Constructs the `Gltf` wrapper from a data slice.
+    /// Constructs the `Gltf` wrapper from a reader.
+    pub fn from_reader<R>(reader: R) -> Result<Unvalidated, Error>
+        where R: io::Read
+    {
+        let json: json::Root = json::from_reader(reader)?;
+        Ok(Unvalidated(Gltf::from_json(json)))
+    }
+
+    /// Constructs the `Gltf` wrapper from a slice of bytes.
     pub fn from_slice(slice: &[u8]) -> Result<Unvalidated, Error> {
         let json: json::Root = json::from_slice(slice)?;
+        Ok(Unvalidated(Gltf::from_json(json)))
+    }
+
+    /// Constructs the `Gltf` wrapper from a string slice.
+    pub fn from_str(slice: &str) -> Result<Unvalidated, Error> {
+        let json: json::Root = json::from_str(slice)?;
+        Ok(Unvalidated(Gltf::from_json(json)))
+    }
+
+    /// Constructs the `Gltf` wrapper from a `gltf_json::Value`.
+    pub fn from_value(value: json::Value) -> Result<Unvalidated, Error> {
+        let json: json::Root = json::from_value(value)?;
         Ok(Unvalidated(Gltf::from_json(json)))
     }
 
