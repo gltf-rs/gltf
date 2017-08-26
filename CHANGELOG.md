@@ -1,72 +1,172 @@
-### Changelog
+# Changelog
 
-0.8.0 (09/08/17)
+Notable changes to this project are documented in this file.
 
- * Redesigned the `Source` trait so that it no longer performs I/O.
- * Added the `Loaded` type, which provides `glTF` objects with buffer data.
- * Moved the `json` module into its own crate, namely `gltf-json`.
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-0.7.0 (28/07/17)
+The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). Please note that the `gltf-json` crates does not, but its version always matches that of `gltf`.
 
- * Image::data now returns a `DynamicImage`, allowing for image post-processing.
+## Unreleased
 
-0.6.1 (15/07/17)
+### Added
 
- * Removed the `Send` and `Sync` requirements from the `Source` trait.
+- New `gltf-utils` crate, which removes the need for the `Loaded` wrapper struct.
+- New `Attributes` iterator, which visits all vertex attributes of a `Primitive`.
+- New `glb` module, containing functions for parsing .glb (binary glTF) files.
+- New 'explicit' validation strategy with the `gltf::Unvalidated` type.
+- New `Bounds` type describing the minimum and maximum values of accessors.
+- New `Accessor::position_bounds` convenience function.
 
-0.6.0 (15/07/17)
+### Removed
 
- * Added the wrapper interface.
- * Added the `Source` trait, which allows for customizing the import process.
- * Added the reference `Source` trait implementation, namely `FromPath`, that can
-   read from the file system and decode embedded base64 data URIs.
- * Added support for binary glTF.
- * Added the `Validate` trait, which validates glTF JSON metadata.
- * Added the `Import` struct which drives the asynchronous loading of glTF data.
- * Implemented "poor man's zero-copy deserialization".
- * Moved all extension data structures into a new `extensions` module.
- * Removed the `v1` module.
- * Made the `Get` trait behave the same as the `TryGet` trait.
- * Removed the `TryGet` trait.
+- Removed the `Loaded` struct in favour of new traits in the `gltf-utils` crate.
 
-0.5.0 (10/06/17)
+## [0.8.6] - 2017-08-26
 
- * Added the `v2` module, containing all glTF 2.0 data structures.
- * Initial implementation of the glTF 2.0 data structures.
+### Added
 
-0.4.1 (06/05/17)
+- Implemented `ExactSizeIterator` for primitive iterators.
 
- * Internal improvements to decrease the crate build time.
+## [0.8.5] - 2017-08-11
 
-0.4.0 (24/04/17)
+### Changed
 
- * Added the `v1` module, containing all glTF 1.0 data structures.
- * glTF objects are now categorised in submodules.
- * Completed implementation of the glTF 1.0 data structures.
- * Removed the `gl` crate dependency.
+- Fixed incorrect buffer view slicing from accessors.
+- Wrapper struct constructors now use `pub(crate)` instead of `#[doc(hidden)]`.
+- Hence the crate now requires `rustc` version 1.18 or above to build.
 
-0.3.1 (17/03/17)
+## [0.8.4] - 2017-08-10
 
- * Updated hyperlinks to the official glTF documentation.
+### Added
 
-0.3.0 (16/02/17)
+- Added the `gltf-tree` example which displays the node heirarchies of scenes.
 
- * Allowed the crate to build on the latest stable `rustc` (1.15) 
-   using the new `serde` frontend, i.e. with the serde `proc_macro`.
+## [0.8.3] - 2017-08-10
 
-0.2.1 (17/11/16)
+### Changed
 
- * Allowed the crate to build on the latest stable `rustc` (1.14) 
-   using the old `serde` frontend, i.e. with `serde_codegen`.
+- Fixed mismatched `names` and `extras` feature flags.
 
-0.2.0 (15/11/16)
+## [0.8.2] - 2017-08-09
 
- * Added `Technique` for glTF 1.0.
+### Removed
 
-0.1.1 (13/11/16)
+- Removed broken link to `gltf-importer` in the crate documentation.
 
- * Added documentation for glTF 1.0.
+## [0.8.1] - 2017-08-09
 
-0.1.0 (13/11/16)
+### Changed
 
- * Initial (incomplete) glTF 1.0 implementation.
+- No concrete changes (unsuccessful update to documentation).
+
+## [0.8.0]- 2017-08-09
+
+### Added
+
+- New `Loaded` type, which provides `glTF` objects with buffer data.
+- New `gltf-json` crate which replaces the `json` module. This is intended to
+  improve build times.
+- Exported `names` and `extras` features from the new `gltf-json` crate.
+
+### Changed
+
+- Redesign of the `Source` trait so that it no longer performs I/O.
+
+## [0.7.0]- 2017-07-28
+
+### Added
+
+- `Image::data` now returns a `DynamicImage`, allowing for post-processing.
+
+## [0.6.1]- 2017-07-15
+
+## Changed
+
+- `Send` and `Sync` are no longer required by the `Source` trait.
+
+## [0.6.0]- 2017-07-15
+
+### Added
+
+- New wrapper interface.
+- `Source` trait, which allows for customizing the import process.
+- Reference `Source` trait implementation, namely `FromPath`, that can
+  read from the file system and decode embedded base64 data URIs.
+- Support for binary glTF.
+- `Validate` trait, which validates glTF JSON metadata.
+- `Import` struct which drives the asynchronous loading of glTF data.
+- "Poor man's zero-copy deserialization".
+
+### Changed
+
+- Moved all extension data structures into a new `extensions` module.
+- Made the `Get` trait behave the same as the `TryGet` trait.
+
+### Removed
+
+- Removed the `v1` module, as the crate no longer supports glTF 1.0.
+- Removed the `TryGet` trait in favour of the redesigned `Get` trait.
+
+## [0.5.0]- 2017-06-10
+
+### Added
+
+- New `v2` module, containing all glTF 2.0 data structures.
+- Initial implementation of the glTF 2.0 data structures.
+
+## [0.4.1]- 2017-05-06
+
+### Changed
+
+- Internal improvements to decrease the crate build time.
+
+## [0.4.0] - 2017-04-24
+
+### Added
+
+- New `v1` module, containing all glTF 1.0 data structures.
+- glTF objects are now categorised in submodules.
+- Complete implementation of the glTF 1.0 data structures.
+
+### Removed
+
+- Removed `gl` crate dependency.
+
+## [0.3.1] - 2017-03-17
+
+### Changed
+
+- Updated links to the official glTF documentation.
+
+## [0.3.0] - 2017-02-16
+
+### Changed
+
+- Allowed the crate to build on the latest stable `rustc` (1.15) 
+  using the new `serde` frontend, i.e. with the serde `proc_macro`.
+
+## [0.2.1] - 2016-11-17
+
+### Changed
+
+- Allowed the crate to build on the latest stable `rustc` (1.14) 
+  using the `serde_codegen` crate.
+
+## [0.2.0] - 2016-11-15
+
+### Added
+
+- Added `Technique` data structure for glTF 1.0.
+
+## [0.1.1] - 2016-11-13
+
+### Added
+
+- New documentation for glTF 1.0.
+
+## [0.1.0] - 2016-11-13
+
+### Added
+
+- Initial (incomplete) glTF 1.0 implementation.
+
