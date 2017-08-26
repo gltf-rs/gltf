@@ -7,7 +7,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::collections::hash_map;
 use std::{iter, slice};
 use json;
 
@@ -113,6 +112,15 @@ pub struct Primitives<'a>  {
     iter: iter::Enumerate<slice::Iter<'a, json::mesh::Primitive>>,
 }
 
+/// Accessor bounds
+#[derive(Clone, Debug, PartialEq)]
+pub struct Bounds<T> {
+    /// Minimum
+    pub min: T,
+    /// Maximum
+    pub max: T
+}
+
 impl<'a> Mesh<'a>  {
     /// Constructs a `Mesh`.
     pub(crate) fn new(
@@ -162,15 +170,6 @@ impl<'a> Mesh<'a>  {
     }
 }
 
-/// Accessor bounds
-#[derive(Debug, PartialEq)]
-pub struct Bounds<T> {
-    /// Minimum
-    pub min: T,
-    /// Maximum
-    pub max: T
-}
-
 impl<'a> Primitive<'a> {
     /// Constructs a `Primitive`.
     pub(crate) fn new(
@@ -213,8 +212,7 @@ impl<'a> Primitive<'a> {
                 min: [min[0], min[1], min[2]],
                 max: [max[0], max[1], max[2]]
             })
-        }
-        else {
+        } else {
             None
         }
     }
@@ -261,6 +259,7 @@ impl<'a> Primitive<'a> {
     }
 }
 
+impl<'a> ExactSizeIterator for Attributes<'a> {}
 impl<'a> Iterator for Attributes<'a> {
     type Item = Attribute<'a>;
     fn next(&mut self) -> Option<Self::Item> {
@@ -283,11 +282,20 @@ impl<'a> Iterator for Attributes<'a> {
                 }
             })
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
 }
 
+impl<'a> ExactSizeIterator for Primitives<'a> {}
 impl<'a> Iterator for Primitives<'a> {
     type Item = Primitive<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, json)| Primitive::new(self.mesh, index, json))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
     }
 }
