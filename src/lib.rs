@@ -19,11 +19,11 @@
 //!
 //! ## Installation
 //!
-//! Add `gltf` version 0.8 to your `Cargo.toml`.
+//! Add `gltf` version 0.9 to your `Cargo.toml`.
 //!
 //! ```toml
 //! [dependencies.gltf]
-//! version = "0.8"
+//! version = "0.9"
 //! ```
 //!
 //! ## Examples
@@ -37,12 +37,11 @@
 //! [`Scene`]: scene/struct.Scene.html
 //! ```
 //! # fn run() -> Result<(), Box<std::error::Error>> {
-//! let file = std::fs::File::open("examples/Box.gltf")?;
-//! use std::io::Read;
-//! let mut reader = std::io::BufReader::new(file);
-//! let mut buffer = vec![];
-//! let _ = reader.read_to_end(&mut buffer)?;
-//! let gltf = gltf::Gltf::from_slice(&buffer)?.validate_completely()?;
+//! # use std::{fs, io};
+//! # let path = "examples/Box.gltf";
+//! use gltf::Gltf;
+//! let file = fs::File::open(path)?;
+//! let gltf = Gltf::from_reader(io::BufReader::new(file))?.validate_minimally()?;
 //! for scene in gltf.scenes() {
 //!     for node in scene.nodes() {
 //!         // Do something with this node.
@@ -51,59 +50,6 @@
 //!             node.index(),
 //!             node.children().count(),
 //!         );
-//!     }
-//! }
-//! # Ok(())
-//! # }
-//! # fn main() {
-//! #    let _ = run().expect("No runtime errors");
-//! # }
-//! ```
-//!
-//! ### Providing `Gltf` with external buffer data
-//!
-//! The [`Source`] trait provides `glTF` objects with their buffer data. This allows
-//! the crate to provide more abstractions such as iterating over the positions of
-//! a `Primitive`. See the documentation of [`Loaded`] for all the methods available
-//! for loaded `glTF`.
-//!
-//! The `gltf-importer` crate contains the reference implementation of the
-//! `Source` trait and may be used to read buffer data from the file system.
-//!
-//! [`Source`]: trait.Source.html
-//! [`Loaded`]: struct.Loaded.html
-//! ```rust,ignore
-//! # use gltf::json;
-//! # use gltf::Gltf;
-//! # fn run() -> Result<(), Box<std::error::Error>> {
-//! # let path = "./glTF-Sample-Models/2.0/Box/glTF/Box.gltf";
-//! # let file = std::fs::File::open(path)?;
-//! # let reader = std::io::BufReader::new(file);
-//! # let json = json::from_reader(reader)?;
-//! # let gltf = Gltf::from_json(json);
-//! #[derive(Debug)]
-//! struct BoxExampleData(&'static [u8]);
-//!
-//! impl gltf::Source for BoxExampleData {
-//!     fn source_buffer(&self, _: &gltf::Buffer) -> &[u8] {
-//!         // In a real implementation, the `Source` must provide all the data
-//!         // necessary to load the object, and must not fail.
-//!         //
-//!         // This example meets the above criteria, since it provides all the data
-//!         // for the 'Box' sample model, which has exactly one external buffer.
-//!         self.0
-//!     }
-//! }
-//!
-//! let data = BoxExampleData(include_bytes!("../examples/Box0.bin"));
-//! let loaded_gltf = gltf.loaded(&data);
-//! for mesh in loaded_gltf.meshes() {
-//!     for primitive in mesh.primitives() {
-//!         if let Some(iter) = primitive.indices_u32() {
-//!             // Do something with the primitive data.
-//!             let indices: Vec<u32> = iter.collect();
-//!             println!("{:?}", indices);
-//!         }
 //!     }
 //! }
 //! # Ok(())
@@ -182,6 +128,19 @@ pub enum Error {
 
     /// `glTF` validation error.
     Validation(Vec<(json::Path, json::validation::Error)>),
+}
+
+/// Returns `true` if the slice begins with the `b"glTF"` magic string, indicating
+/// a binary `glTF` asset.
+///
+/// # Examples
+///
+/// ```rust
+/// assert_eq!(false, gltf::is_binary(include_bytes!("examples/Box.gltf")));
+/// assert_eq!(true, gltf::is_binary(include_bytes!("examples/Box.glb")));
+/// ```
+pub fn is_binary(slice: &[u8]) -> bool {
+    slice.starts_with(b"glTF")
 }
 
 impl std::fmt::Display for Error {

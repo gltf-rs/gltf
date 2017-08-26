@@ -16,9 +16,17 @@ use std::boxed::Box;
 use std::error::Error as StdError;
 
 fn run(path: &str) -> Result<(), Box<StdError>> {
+    use io::Read;
     let file = fs::File::open(&path)?;
-    let buf_reader = io::BufReader::new(file);
-    let json: json::Root = json::from_reader(buf_reader)?;
+    let mut data = Vec::with_capacity(file.metadata()?.len() as usize);
+    let mut reader = io::BufReader::new(file);
+    let _ = reader.read_to_end(&mut data)?;
+    let json: json::Root = if gltf::is_binary(&data) {
+        let glb = gltf::Glb::from_slice(&data)?;
+        json::from_slice(glb.json)
+    } else {
+        json::from_slice(&data)
+    }?;
     println!("{:#?}", json);
     Ok(())
 }
