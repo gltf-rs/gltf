@@ -130,6 +130,19 @@ pub enum Error {
     Validation(Vec<(json::Path, json::validation::Error)>),
 }
 
+/// Returns `true` if the slice begins with the `b"glTF"` magic string, indicating
+/// a binary `glTF` asset.
+///
+/// # Examples
+///
+/// ```rust
+/// assert_eq!(false, gltf::is_binary(include_bytes!("examples/Box.gltf")));
+/// assert_eq!(true, gltf::is_binary(include_bytes!("examples/Box.glb")));
+/// ```
+pub fn is_binary(slice: &[u8]) -> bool {
+    slice.starts_with(b"glTF")
+}
+
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         use std::error::Error;

@@ -358,18 +358,6 @@ pub struct ColorsRgbaF32<'a> {
     default_alpha: f32,
 }
 
-/// Returns `true` if the slice begins with the `b"glTF"` magic string.
-///
-/// # Examples
-///
-/// ```rust
-/// assert_eq!(false, gltf_utils::is_glb(include_bytes!("../examples/Box.gltf")));
-/// assert_eq!(true, gltf_utils::is_glb(include_bytes!("../examples/Box.glb")));
-/// ```
-pub fn is_glb(slice: &[u8]) -> bool {
-    slice.starts_with(b"glTF")
-}
-
 impl<'a, T: Copy> ExactSizeIterator for AccessorIter<'a, T> {}
 impl<'a, T: Copy> Iterator for AccessorIter<'a, T> {
     type Item = T;
