@@ -1,15 +1,15 @@
 [package]
-name = "gltf-extensions"
+name = "gltf-utils"
 version = "0.1.0"
 authors = ["alteous <alteous@outlook.com>"]
-description = "Extensions the gltf crate"
+description = "Utilities to complement the gltf crate"
 repository = "https://github.com/alteous/gltf"
 license = "MIT/Apache-2.0"
 
 [dependencies]
-gltf-json = { path = "../gltf-json" }
+gltf = { path = "..", version = "0.9" }
 
 [features]
 default = []
-names = ["gltf-json/names"]
-extras = ["gltf-json/extras"]
+names = []
+extras = []

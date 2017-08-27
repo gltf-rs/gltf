@@ -10,18 +10,18 @@
 use std::fmt;
 
 /// An immutable JSON source path.
-#[derive(Clone, Debug)]
-pub struct Path(String);
+#[derive(Clone, Debug, PartialEq)]
+pub struct Path(pub String);
 
 impl Path {
     /// Creates an empty JSON source path.
     ///
     /// # Examples
     ///
-    /// Basic usage:
+    /// Basic usage
     ///
-    /// ```
-    /// # use gltf::json::Path;
+    /// ```rust
+    /// # use gltf_json::Path;
     /// let path = Path::new();
     /// assert_eq!("", path.as_str());
     /// ```
@@ -33,10 +33,10 @@ impl Path {
     ///
     /// # Examples
     ///
-    /// Basic usage:
+    /// Basic usage
     ///
-    /// ```
-    /// # use gltf::json::Path;
+    /// ```rust
+    /// # use gltf_json::Path;
     /// let path = Path::new().field("foo");
     /// assert_eq!("foo", path.as_str());
     /// assert_eq!("foo.bar", path.field("bar").as_str());
@@ -53,10 +53,10 @@ impl Path {
     ///
     /// # Examples
     ///
-    /// Basic usage:
+    /// Basic usage
     ///
-    /// ```
-    /// # use gltf::json::Path;
+    /// ```rust
+    /// # use gltf_json::Path;
     /// let path = Path::new().field("foo");
     /// assert_eq!("foo[123]", path.index(123).as_str());
     /// ```
@@ -68,10 +68,10 @@ impl Path {
     ///
     /// # Examples
     ///
-    /// Basic usage:
+    /// Basic usage
     ///
-    /// ```
-    /// # use gltf::json::Path;
+    /// ```rust
+    /// # use gltf_json::Path;
     /// let path = Path::new().field("foo");
     /// assert_eq!("foo[\"bar\"]", path.key("bar").as_str());
     /// ```

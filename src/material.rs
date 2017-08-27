@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use {json, texture, Gltf, Loaded};
+use {json, texture, Gltf};
 
 pub use json::material::AlphaMode;
 
@@ -147,65 +147,6 @@ impl<'a> Material<'a> {
     }
 }
 
-impl<'a> Loaded<'a, Material<'a>> {
-    ///  A set of parameter values that are used to define the metallic-roughness
-    /// material model from Physically-Based Rendering (PBR) methodology. When not
-    /// specified, all the default values of `pbrMetallicRoughness` apply.
-    pub fn pbr_metallic_roughness(&self) -> Loaded<'a, PbrMetallicRoughness<'a>> {
-        Loaded {
-            item: self.item.pbr_metallic_roughness(),
-            source: self.source,
-        }
-    }
-
-    ///  A tangent space normal map. The texture contains RGB components in linear
-    /// space. Each texel represents the XYZ components of a normal vector in tangent
-    /// space. Red [0 to 255] maps to X [-1 to 1]. Green [0 to 255] maps to Y
-    /// [-1 to 1]. Blue [128 to 255] maps to Z [1/255 to 1]. The normal vectors use
-    /// OpenGL conventions where +X is right and +Y is up. +Z points toward the
-    /// viewer.
-    pub fn normal_texture(&self) -> Option<Loaded<'a, NormalTexture<'a>>> {
-        self.item
-            .normal_texture()
-            .map(|item| {
-                Loaded {
-                    item,
-                    source: self.source,
-                }
-            })
-    }
-
-    ///  The occlusion map texture. The occlusion values are sampled from the R
-    /// channel. Higher values indicate areas that should receive full indirect
-    /// lighting and lower values indicate no indirect lighting. These values are
-    /// linear. If other channels are present (GBA), they are ignored for occlusion
-    /// calculations.
-    pub fn occlusion_texture(&self) -> Option<Loaded<'a, OcclusionTexture<'a>>> {
-        self.item
-            .occlusion_texture()
-            .map(|item| {
-                Loaded {
-                    item,
-                    source: self.source,
-                }
-            })
-    }
-
-    ///  The emissive map controls the color and intensity of the light being emitted
-    /// by the material. This texture contains RGB components in sRGB color space. If
-    /// a fourth component (A) is present, it is ignored.
-    pub fn emissive_texture(&self) -> Option<Loaded<'a, texture::Info<'a>>> {
-        self.item
-            .emissive_texture()
-            .map(|item| {
-                Loaded {
-                    item,
-                    source: self.source,
-                }
-            })
-    }
-}
-
 ///  A set of parameter values that are used to define the metallic-roughness
 /// material model from Physically-Based Rendering (PBR) methodology.
 pub struct PbrMetallicRoughness<'a> {
@@ -275,36 +216,6 @@ impl<'a> PbrMetallicRoughness<'a> {
     }
 }
 
-impl<'a> Loaded<'a, PbrMetallicRoughness<'a>> {
-    /// The base color texture.
-    pub fn base_color_texture(&self) -> Option<Loaded<'a, texture::Info<'a>>> {
-        self.item
-            .base_color_texture()
-            .map(|item| {
-                Loaded {
-                    item,
-                    source: self.source,
-                }
-            })
-    }
-
-    /// The metallic-roughness texture.  This texture has two components: * The
-    /// first component (R) contains the metallic-ness of the material. * The second
-    /// component (G) contains the roughness of the material. * If the third
-    /// component (B) and/or the fourth component (A) are present then they are
-    /// ignored.
-    pub fn metallic_roughness_texture(&self) -> Option<Loaded<'a, texture::Info<'a>>> {
-        self.item
-            .metallic_roughness_texture()
-            .map(|item| {
-                Loaded {
-                    item,
-                    source: self.source,
-                }
-            })
-    }
-}
-
 ///  Defines the normal texture of a material.
 pub struct NormalTexture<'a> {
     /// The parent `Texture` struct.
@@ -350,16 +261,6 @@ impl<'a> NormalTexture<'a> {
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
-    }
-}
-
-impl<'a> Loaded<'a, NormalTexture<'a>> {
-    /// Returns the referenced `Texture`.
-    pub fn texture(&self) -> Loaded<'a, texture::Texture<'a>> {
-        Loaded {
-            item: self.item.texture(),
-            source: self.source,
-        }
     }
 }
 
@@ -410,12 +311,14 @@ impl<'a> OcclusionTexture<'a> {
     }
 }
 
-impl<'a> Loaded<'a, OcclusionTexture<'a>> {
-    /// Returns the referenced `Texture`.
-    pub fn texture(&self) -> Loaded<'a, texture::Texture<'a>> {
-        Loaded {
-            item: self.item.texture(),
-            source: self.source,
-        }
+impl<'a> AsRef<texture::Texture<'a>> for NormalTexture<'a> {
+    fn as_ref(&self) -> &texture::Texture<'a> {
+        &self.texture
+    }
+}
+
+impl<'a> AsRef<texture::Texture<'a>> for OcclusionTexture<'a> {
+    fn as_ref(&self) -> &texture::Texture<'a> {
+        &self.texture
     }
 }

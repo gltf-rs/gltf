@@ -7,10 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{marker, mem};
 use {buffer, json};
 
-use {Gltf, Loaded, Source};
+use Gltf;
 
 pub use json::accessor::ComponentType as DataType;
 pub use json::accessor::Type as Dimensions;
@@ -31,28 +30,6 @@ pub struct Accessor<'a> {
     view: buffer::View<'a>,
 }
 
-/// An `Iterator` that iterates over the members of an accessor.
-#[derive(Clone, Debug)]
-pub struct Iter<'a, T: Copy> {
-    /// The total number of iterations left.
-    count: usize,
-
-    /// The index of the next iteration.
-    index: usize,
-
-    /// The number of bytes between each item.
-    stride: usize,
-
-    /// Byte offset into the buffer view where the items begin.
-    offset: usize,
-    
-    /// The accessor we're iterating over.
-    accessor: Loaded<'a, Accessor<'a>>,
-
-    /// Consumes the data type we're returning at each iteration.
-    _consume_data_type: marker::PhantomData<T>,
-}
-
 impl<'a> Accessor<'a> {
     /// Constructs an `Accessor`.
     pub(crate) fn new(
@@ -69,19 +46,11 @@ impl<'a> Accessor<'a> {
         }
     }
 
-    /// Converts an `Accessor` into a `Loaded<Accessor>`.
-    pub fn loaded(self, source: &'a Source) -> Loaded<'a, Accessor<'a>> {
-        Loaded {
-            item: self,
-            source,
-        }
-    }
-
     /// Returns the internal JSON index.
     pub fn index(&self) -> usize {
         self.index
     }
-    
+
     /// Returns the size of each component that this accessor describes.
     pub fn size(&self) -> usize {
         self.data_type().size() * self.dimensions().multiplicity()
@@ -124,18 +93,18 @@ impl<'a> Accessor<'a> {
     }
 
     /// Returns the minimum value of each component in this attribute.
-    pub fn min(&self) -> &[f32] {
-        &self.json.min
+    pub fn min(&self) -> Option<json::Value> {
+        self.json.min.clone()
     }
 
     /// Returns the maximum value of each component in this attribute.
-    pub fn max(&self) -> &[f32] {
-        &self.json.max
+    pub fn max(&self) -> Option<json::Value> {
+        self.json.max.clone()
     }
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
-    pub fn name(&self) -> Option<&'a str> {
+    pub fn name(&self) -> Option<&str> {
         self.json.name.as_ref().map(String::as_str)
     }
 
@@ -153,82 +122,9 @@ impl<'a> Accessor<'a> {
     }
 }
 
-impl<'a> Loaded<'a, Accessor<'a>> {
-    /// Returns an `Iterator` that interprets the data pointed to by the accessor
-    /// as the given type.
-    /// 
-    /// The data referenced by the accessor is guaranteed to be appropriately
-    /// aligned for any standard Rust type.
-    ///
-    /// # Panics
-    ///
-    /// If the size of an individual `T` does not match the accessor component size.
-    pub unsafe fn iter<T: Copy>(&self) -> Iter<'a, T> {
-        assert_eq!(self.size(), mem::size_of::<T>());
-        let count = self.count();
-        let offset = self.offset();
-        let stride = self.view.stride().unwrap_or(mem::size_of::<T>());
-        Iter {
-            accessor: self.clone(),
-            count,
-            offset,
-            stride,
-            index: 0,
-            _consume_data_type: marker::PhantomData,
-        }
-    }
-
-    /// Returns sparse storage of attributes that deviate from their initialization
-    /// value.
-    pub fn sparse(&'a self) -> Option<Loaded<'a, sparse::Sparse<'a>>> {
-        self.item
-            .sparse()
-            .map(|item| {
-                Loaded {
-                    item,
-                    source: self.source,
-                }
-            })
-    }
-
-    /// Returns the buffer view this accessor reads from.
-    pub fn view(&'a self) -> Loaded<'a, buffer::View<'a>> {
-        Loaded {
-            item: self.item.view(),
-            source: self.source,
-        }
-    }
-}
-
-impl<'a, T: Copy> ExactSizeIterator for Iter<'a, T> {}
-impl<'a, T: Copy> Iterator for Iter<'a, T> {
-    type Item = T;
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.count {
-            let ptr_offset = self.offset + self.index * self.stride;
-            let view = Loaded {
-                item: self.accessor.view(),
-                source: self.accessor.source,
-            };
-            let data = view.data();
-            let ptr = unsafe { data.as_ptr().offset(ptr_offset as isize) };
-            let value: T = unsafe { mem::transmute_copy(&*ptr) };
-            self.index += 1;
-            Some(value)
-        } else {
-            None
-        }
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        let hint = self.count - self.index;
-        (hint, Some(hint))
-    }
-}
-
 /// Contains data structures for sparse storage.
 pub mod sparse {
-    use {Gltf, Loaded};
+    use Gltf;
     use {buffer, json};
 
     /// The index data type.
@@ -243,7 +139,7 @@ pub mod sparse {
         /// Corresponds to `GL_UNSIGNED_INT`.
         U32 = 5125,
     }
-    
+
     /// Indices of those attributes that deviate from their initialization value.
     pub struct Indices<'a> {
         /// The parent `Gltf` struct.
@@ -296,17 +192,7 @@ pub mod sparse {
             &self.json.extras
         }
     }
-    
-    impl<'a> Loaded<'a, Indices<'a>> {
-        /// Returns the buffer view containing the sparse indices.
-        pub fn view(&self) -> Loaded<'a, buffer::View<'a>> {
-            Loaded {
-                item: self.item.view(),
-                source: self.source,
-            }
-        }
-    }
-        
+
     /// Sparse storage of attributes that deviate from their initialization value.
     pub struct Sparse<'a> {
         /// The parent `Gltf` struct.
@@ -356,26 +242,6 @@ pub mod sparse {
         }
     }
 
-    impl<'a> Loaded<'a, Sparse<'a>> {
-        /// Returns an index array of size `count` that points to those accessor
-        /// attributes that deviate from their initialization value.
-        pub fn indices(&'a self) -> Loaded<'a, Indices<'a>> {
-            Loaded {
-                item: self.item.indices(),
-                source: self.source,
-            }
-        }
-
-        /// Returns an array of size `count * number_of_components`, storing the
-        /// displaced accessor attributes pointed by `indices`.
-        pub fn values(&'a self) -> Loaded<'a, Values<'a>> {
-            Loaded {
-                item: self.item.values(),
-                source: self.source,
-            }
-        }
-    }
-    
     /// Array of size `count * number_of_components` storing the displaced accessor
     /// attributes pointed by `accessor::sparse::Indices`.
     pub struct Values<'a> {
@@ -419,16 +285,6 @@ pub mod sparse {
         }
     }
 
-    
-    impl<'a> Loaded<'a, Values<'a>> {
-        /// Returns the buffer view containing the sparse values.
-        pub fn view(&'a self) -> Loaded<'a, buffer::View> {
-            Loaded {
-                item: self.item.view(),
-                source: self.source,
-            }
-        }
-    }
 
     impl IndexType {
         /// Returns the number of bytes this value represents.

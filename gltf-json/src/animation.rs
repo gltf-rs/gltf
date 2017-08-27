@@ -168,7 +168,7 @@ pub struct Sampler {
 }
 
 impl Validate for Animation {
-    fn validate_minimally<P, R>(&self, root: &Root, path: P, mut report: &mut R)
+    fn validate_minimally<P, R>(&self, root: &Root, path: P, report: &mut R)
     where
         P: Fn() -> Path,
         R: FnMut(&Fn() -> Path, Error),

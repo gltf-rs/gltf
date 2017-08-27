@@ -4,18 +4,20 @@ Notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). Please note that the `gltf-json` crates does not, but its version always matches that of `gltf`.
+The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.9.0] - 2017-08-27
 
 ### Added
 
 - New `gltf-utils` crate, which removes the need for the `Loaded` wrapper struct.
 - New `Attributes` iterator, which visits all vertex attributes of a `Primitive`.
 - New `glb` module, containing functions for parsing .glb (binary glTF) files.
+- New `is_binary` function, which tests for the glTF magic string.
 - New 'explicit' validation strategy with the `gltf::Unvalidated` type.
 - New `Bounds` type describing the minimum and maximum values of accessors.
 - New `Accessor::position_bounds` convenience function.
+- `Info`, `NormalTexture`, and `OcclusionTexture` now implement `AsRef<Texture>`.
 
 ### Removed
 
