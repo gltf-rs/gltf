@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). Please note that the `gltf-json` crates does not, but its version always matches that of `gltf`.
 
-## Unreleased
+## [0.9.0] - 2017-08-27
 
 ### Added
 
