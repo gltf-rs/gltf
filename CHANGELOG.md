@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- New `scene::Transform` type, returned by `Node::transform`.
+
+
+### Deprecated
+
+- `Node::matrix/translation/rotation/scale` in favour of `Node::transform`.
+
 ## [0.9.0] - 2017-08-27
 
 ### Added
