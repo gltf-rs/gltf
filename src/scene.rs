@@ -24,7 +24,10 @@ const IDENTITY: [f32; 16] = {
 #[derive(Clone, Debug)]
 pub enum Transform {
     /// 4x4 transformation matrix in column-major order.
-    Matrix([[f32; 4]; 4]),
+    Matrix {
+        /// 4x4 matrix.
+        matrix: [[f32; 4]; 4],
+    },
 
     /// Decomposed TRS properties.
     Decomposed {
