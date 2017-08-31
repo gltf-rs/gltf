@@ -155,19 +155,19 @@ impl<'a> Node<'a> {
 
     /// Returns the node's unit quaternion rotation in the order `[x, y, z, w]`,
     /// where `w` is the scalar.
-    #[deprecated(since = "0.9.1", note = "use Node::transform instead")]
+    #[deprecated(since = "0.9.1", note = "Use Node::transform instead.")]
     pub fn rotation(&self) -> [f32; 4] {
         self.json.rotation.0
     }
 
     /// Returns the node's non-uniform scale.
-    #[deprecated(since = "0.9.1", note = "use Node::transform instead")]
+    #[deprecated(since = "0.9.1", note = "Use Node::transform instead.")]
     pub fn scale(&self) -> [f32; 3] {
         self.json.scale
     }
 
     /// Returns the node's translation.
-    #[deprecated(since = "0.9.1", note = "use Node::transform instead")]
+    #[deprecated(since = "0.9.1", note = "Use Node::transform instead.")]
     pub fn translation(&self) -> [f32; 3] {
         self.json.translation
     }
