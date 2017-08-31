@@ -8,11 +8,38 @@
 // except according to those terms.
 
 use json;
-use std::slice;
+use std::{mem, slice};
 
 use {Camera, Gltf, Mesh, Skin};
 
-///  A node in the node hierarchy. When the node contains `skin`, all
+/// 4x4 identity matrix.
+const IDENTITY: [f32; 16] = {
+    [1.0, 0.0, 0.0, 0.0, 
+     0.0, 1.0, 0.0, 0.0, 
+     0.0, 0.0, 1.0, 0.0, 
+     0.0, 0.0, 0.0, 1.0]
+};
+
+/// The transform for a `Node`.
+#[derive(Clone, Debug)]
+pub enum Transform {
+    /// 4x4 transformation matrix in column-major order.
+    Matrix([[f32; 4]; 4]),
+
+    /// Decomposed TRS properties.
+    Decomposed {
+        /// `[x, y, z]` vector.
+        translation: [f32; 3],
+
+        /// `[x, y, z, w]` quaternion, where `w` is the scalar.
+        rotation: [f32; 4],
+
+        /// `[x, y, z]` vector.
+        scale: [f32; 3],
+    },
+}
+
+/// A node in the node hierarchy. When the node contains `skin`, all
 /// `mesh.primitives` must contain `JOINTS_0` and `WEIGHTS_0` attributes. A node can
 /// have either a `matrix` or any combination of `translation`/`rotation`/`scale`
 /// (TRS) properties. TRS properties are converted to matrices and postmultiplied in
@@ -108,8 +135,9 @@ impl<'a> Node<'a> {
     }
 
     /// Returns the 4x4 column-major transformation matrix.
+    #[deprecated(since = "0.9.1", note = "use Node::transform instead")]
     pub fn matrix(&self) -> [f32; 16] {
-        self.json.matrix
+        self.json.matrix.unwrap_or(IDENTITY)
     }
 
     /// Returns the mesh referenced by this node.
@@ -127,18 +155,36 @@ impl<'a> Node<'a> {
 
     /// Returns the node's unit quaternion rotation in the order `[x, y, z, w]`,
     /// where `w` is the scalar.
+    #[deprecated(since = "0.9.1", note = "use Node::transform instead")]
     pub fn rotation(&self) -> [f32; 4] {
         self.json.rotation.0
     }
 
     /// Returns the node's non-uniform scale.
+    #[deprecated(since = "0.9.1", note = "use Node::transform instead")]
     pub fn scale(&self) -> [f32; 3] {
         self.json.scale
     }
 
     /// Returns the node's translation.
+    #[deprecated(since = "0.9.1", note = "use Node::transform instead")]
     pub fn translation(&self) -> [f32; 3] {
         self.json.translation
+    }
+
+    /// Returns the node's transform.
+    pub fn transform(&self) -> Transform {
+        if let Some(matrix) = self.json.matrix.clone() {
+            unsafe {
+                Transform::Matrix(mem::transmute(matrix))
+            }
+        } else {
+            Transform::Decomposed {
+                translation: self.json.translation,
+                rotation: self.json.rotation.0,
+                scale: self.json.scale,
+            }
+        }
     }
 
     /// Returns the skin referenced by this node.

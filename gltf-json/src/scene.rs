@@ -37,8 +37,7 @@ pub struct Node {
     pub extras: Extras,
     
     /// 4x4 column-major transformation matrix.
-    #[serde(default = "node_matrix_default")]
-    pub matrix: [f32; 16],
+    pub matrix: Option<[f32; 16]>,
 
     /// The index of the mesh in this node.
     pub mesh: Option<Index<mesh::Mesh>>,
@@ -66,13 +65,6 @@ pub struct Node {
     /// The weights of the instantiated Morph Target. Number of elements must match
     /// the number of Morph Targets of used mesh.
     pub weights: Option<Vec<f32>>,
-}
-
-fn node_matrix_default() -> [f32; 16] {
-    [1.0, 0.0, 0.0, 0.0, 
-     0.0, 1.0, 0.0, 0.0, 
-     0.0, 0.0, 1.0, 0.0, 
-     0.0, 0.0, 0.0, 1.0]
 }
 
 fn node_scale_default() -> [f32; 3] {
