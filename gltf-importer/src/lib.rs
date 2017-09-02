@@ -163,7 +163,7 @@ fn load_external_buffers(
             let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
             read_to_end(&path)
         }?;
-        if data.len() != buffer.length() {
+        if data.len() < buffer.length() {
             let path = json::Path::new().field("buffers").index(index);
             return Err(Error::BufferLength(path));
         }
