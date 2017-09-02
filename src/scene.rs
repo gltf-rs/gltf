@@ -7,10 +7,17 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use cgmath;
+use cgmath::prelude::*;
 use json;
 use std::{mem, slice};
 
 use {Camera, Gltf, Mesh, Skin};
+
+type Matrix3 = cgmath::Matrix3<f32>;
+type Matrix4 = cgmath::Matrix4<f32>;
+type Quaternion = cgmath::Quaternion<f32>;
+type Vector3 = cgmath::Vector3<f32>;
 
 /// 4x4 identity matrix.
 const IDENTITY: [f32; 16] = {
@@ -40,6 +47,65 @@ pub enum Transform {
         /// `[x, y, z]` vector.
         scale: [f32; 3],
     },
+}
+
+impl Transform {
+    /// Returns the matrix representation of this transform.
+    ///
+    /// If the transform is `Decomposed`, then the matrix is generated with the
+    /// equation `matrix = translation * rotation * scale`.
+    pub fn matrix(self) -> [[f32; 4]; 4] {
+        match self {
+            Transform::Matrix { matrix } => matrix,
+            Transform::Decomposed { translation, rotation, scale } => {
+                let t = Matrix4::from_translation(translation.into());
+                let r = Matrix4::from(Quaternion::from(rotation));
+                let s = Matrix4::from_nonuniform_scale(scale[0], scale[1], scale[2]);
+                (t * r * s).into()
+            },
+        }
+    }
+
+    /// Returns the decomposed representation of this transform.
+    ///
+    /// If the transform is `Matrix`, then the decomposition is extracted from the
+    /// matrix.
+    pub fn decomposed(self) -> ([f32; 3], [f32; 4], [f32; 3]) {
+        match self {
+            Transform::Matrix { matrix: mut m } => {
+                let translation = [
+                    mem::replace(&mut m[3][0], 0.0),
+                    mem::replace(&mut m[3][1], 0.0),
+                    mem::replace(&mut m[3][2], 0.0),
+                ];
+                let sx = Vector3::new(m[0][0], m[0][1], m[0][2]).magnitude();
+                m[0][0] /= sx;
+                m[0][1] /= sx;
+                m[0][2] /= sx;
+                let sy = Vector3::new(m[1][0], m[1][1], m[1][2]).magnitude();
+                m[1][0] /= sy;
+                m[1][1] /= sy;
+                m[1][2] /= sy;
+                let sz = Vector3::new(m[2][0], m[2][1], m[2][2]).magnitude();
+                m[2][0] /= sz;
+                m[2][1] /= sz;
+                m[2][2] /= sz;
+                let scale = [sx, sy, sz];
+                let r = Quaternion::from(
+                    Matrix3::new(
+                        m[0][0], m[0][1], m[0][2],
+                        m[1][0], m[1][1], m[1][2],
+                        m[2][0], m[2][1], m[2][2],
+                    ),
+                );
+                let rotation = [r.v.x, r.v.y, r.v.z, r.s];
+                (translation, rotation, scale)
+            },
+            Transform::Decomposed { translation, rotation, scale } => {
+                (translation, rotation, scale)
+            },
+        }
+    }
 }
 
 /// A node in the node hierarchy. When the node contains `skin`, all
@@ -99,7 +165,11 @@ pub struct Children<'a> {
 
 impl<'a> Node<'a> {
     /// Constructs a `Node`.
-    pub(crate) fn new(gltf: &'a Gltf, index: usize, json: &'a json::scene::Node) -> Self {
+    pub(crate) fn new(
+        gltf: &'a Gltf,
+        index: usize,
+        json: &'a json::scene::Node,
+    ) -> Self {
         Self {
             gltf: gltf,
             index: index,
@@ -138,7 +208,7 @@ impl<'a> Node<'a> {
     }
 
     /// Returns the 4x4 column-major transformation matrix.
-    #[deprecated(since = "0.9.1", note = "use Node::transform instead")]
+    #[deprecated(since = "0.9.1", note = "Use `transform().matrix()` instead")]
     pub fn matrix(&self) -> [f32; 16] {
         self.json.matrix.unwrap_or(IDENTITY)
     }
@@ -158,19 +228,19 @@ impl<'a> Node<'a> {
 
     /// Returns the node's unit quaternion rotation in the order `[x, y, z, w]`,
     /// where `w` is the scalar.
-    #[deprecated(since = "0.9.1", note = "Use Node::transform instead.")]
+    #[deprecated(since = "0.9.1", note = "Use `transform().decomposed()` instead.")]
     pub fn rotation(&self) -> [f32; 4] {
         self.json.rotation.0
     }
 
     /// Returns the node's non-uniform scale.
-    #[deprecated(since = "0.9.1", note = "Use Node::transform instead.")]
+    #[deprecated(since = "0.9.1", note = "Use `transform().decomposed()` instead.")]
     pub fn scale(&self) -> [f32; 3] {
         self.json.scale
     }
 
     /// Returns the node's translation.
-    #[deprecated(since = "0.9.1", note = "Use Node::transform instead.")]
+    #[deprecated(since = "0.9.1", note = "Use `transform().decomposed()` instead.")]
     pub fn translation(&self) -> [f32; 3] {
         self.json.translation
     }
@@ -179,7 +249,9 @@ impl<'a> Node<'a> {
     pub fn transform(&self) -> Transform {
         if let Some(matrix) = self.json.matrix.clone() {
             unsafe {
-                Transform::Matrix(mem::transmute(matrix))
+                Transform::Matrix {
+                    matrix: mem::transmute(matrix),
+                }
             }
         } else {
             Transform::Decomposed {
@@ -205,7 +277,11 @@ impl<'a> Node<'a> {
 
 impl<'a> Scene<'a> {
     /// Constructs a `Scene`.
-    pub(crate) fn new(gltf: &'a Gltf, index: usize, json: &'a json::scene::Scene) -> Self {
+    pub(crate) fn new(
+        gltf: &'a Gltf,
+        index: usize,
+        json: &'a json::scene::Scene,
+    ) -> Self {
         Self {
             gltf: gltf,
             index: index,

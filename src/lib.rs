@@ -59,6 +59,7 @@
 //! # }
 //! ```
 
+extern crate cgmath;
 #[macro_use]
 extern crate lazy_static;
 
