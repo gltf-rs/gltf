@@ -59,7 +59,7 @@ impl Transform {
             Transform::Matrix { matrix } => matrix,
             Transform::Decomposed { translation, rotation, scale } => {
                 let t = Matrix4::from_translation(translation.into());
-                let r = Matrix4::from(Quaternion::from(rotation));
+                let r = Matrix4::from(Quaternion::new(rotation[3], rotation[0], rotation[1], rotation[2]));
                 let s = Matrix4::from_nonuniform_scale(scale[0], scale[1], scale[2]);
                 (t * r * s).into()
             },

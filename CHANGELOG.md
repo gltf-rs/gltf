@@ -12,7 +12,6 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - New `scene::Transform` type, returned by `Node::transform`.
 
-
 ### Deprecated
 
 - `Node::matrix/translation/rotation/scale` in favour of `Node::transform`.
