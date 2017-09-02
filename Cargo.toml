@@ -10,8 +10,11 @@ readme = "README.md"
 keywords = ["glTF", "3D", "asset", "model", "scene"]
 license = "MIT/Apache-2.0"
 include = [
-    "**/*.rs",
     "Cargo.toml",
+    "examples/*.bin",
+    "examples/*.glb",
+    "examples/*.gltf",
+    "src/*.rs"
 ]
 
 [badges]

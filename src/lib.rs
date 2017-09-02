@@ -137,8 +137,8 @@ pub enum Error {
 /// # Examples
 ///
 /// ```rust
-/// assert_eq!(false, gltf::is_binary(include_bytes!("examples/Box.gltf")));
-/// assert_eq!(true, gltf::is_binary(include_bytes!("examples/Box.glb")));
+/// assert_eq!(true, gltf::is_binary(b"glTF..."));
+/// assert_eq!(false, gltf::is_binary(b"{...}"));
 /// ```
 pub fn is_binary(slice: &[u8]) -> bool {
     slice.starts_with(b"glTF")
