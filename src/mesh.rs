@@ -45,7 +45,7 @@ pub enum Attribute<'a> {
     Weights(u32, Accessor<'a>),
 }
 
-/// Morph targets.
+/// A single set of morph targets.
 #[derive(Clone, Debug)]
 pub struct MorphTargets<'a> {
     /// XYZ vertex position displacements.
@@ -56,6 +56,16 @@ pub struct MorphTargets<'a> {
 
     /// XYZ vertex tangent displacements.
     tangents: Option<Accessor<'a>>,
+}
+
+/// An `Iterator` that visits the morph targets of a `Primitive`.
+#[derive(Clone, Debug)]
+pub struct IterMorphTargets<'a> {
+    /// The parent `Gltf` struct.
+    gltf: &'a Gltf,
+
+    /// The internal JSON iterator.
+    iter: slice::Iter<'a, json::mesh::MorphTargets>,
 }
 
 /// A set of primitives to be rendered.  A node can contain one or more meshes and
@@ -257,6 +267,35 @@ impl<'a> Primitive<'a> {
     pub fn mode(&self) -> Mode {
         self.json.mode.unwrap()
     }
+
+    /// Returns an `Iterator` that visits the morph targets of the primitive.
+    pub fn iter_morph_targets(&self) -> Option<IterMorphTargets> {
+        self.json.targets
+            .as_ref()
+            .map(|slice| {
+                IterMorphTargets {
+                    gltf: self.mesh.gltf,
+                    iter: slice.iter(),
+                }
+            })
+    }
+}
+
+impl<'a> MorphTargets<'a> {
+    /// Returns the XYZ vertex position displacements.
+    pub fn positions(&self) -> Option<Accessor<'a>> {
+        self.positions.clone()
+    }
+
+    /// Returns the XYZ vertex normal displacements.
+    pub fn normals(&self) -> Option<Accessor<'a>> {
+        self.normals.clone()
+    }
+
+    /// Returns the XYZ vertex tangent displacements.
+    pub fn tangents(&self) -> Option<Accessor<'a>> {
+        self.tangents.clone()
+    }
 }
 
 impl<'a> ExactSizeIterator for Attributes<'a> {}
@@ -293,6 +332,35 @@ impl<'a> Iterator for Primitives<'a> {
     type Item = Primitive<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, json)| Primitive::new(self.mesh, index, json))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+}
+
+impl<'a> ExactSizeIterator for IterMorphTargets<'a> {}
+impl<'a> Iterator for IterMorphTargets<'a> {
+    type Item = MorphTargets<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter
+            .next()
+            .map(|json| {
+                let positions = json.positions
+                    .as_ref()
+                    .map(|index| self.gltf.accessors().nth(index.value()).unwrap());
+                let normals = json.normals
+                    .as_ref()
+                    .map(|index| self.gltf.accessors().nth(index.value()).unwrap());
+                let tangents = json.tangents
+                    .as_ref()
+                    .map(|index| self.gltf.accessors().nth(index.value()).unwrap());
+                MorphTargets {
+                    positions,
+                    normals,
+                    tangents,
+                }
+            })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {

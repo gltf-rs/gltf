@@ -203,7 +203,7 @@ impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
 
 /// Visits the items in an `Accessor`.
 #[derive(Clone, Debug)]
-struct AccessorIter<'a, T> {
+pub struct AccessorIter<'a, T> {
     /// The total number of iterations left.
     count: usize,
 
@@ -227,9 +227,10 @@ struct AccessorIter<'a, T> {
 }
 
 impl<'a, T> AccessorIter<'a, T> {
-    fn new<S>(accessor: gltf::Accessor<'a>, source: &'a S) -> AccessorIter<'a, T>
+    pub fn new<S>(accessor: gltf::Accessor<'a>, source: &'a S) -> AccessorIter<'a, T>
         where S: Source
     {
+        assert_eq!(mem::size_of::<T>(), accessor.size());
         let view = accessor.view();
         let buffer = view.buffer();
         let buffer_data = source.source_buffer(&buffer);
