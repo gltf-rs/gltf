@@ -276,21 +276,21 @@ impl Gltf {
         }
     }
 
-    /// Returns an `Iterator` that visits the pre-loaded buffer views of the glTF
-    /// asset.
-    pub fn views(&self) -> Views {
-        Views {
-            iter: self.as_json().buffer_views.iter().enumerate(),
-            gltf: self,
-        }
-    }
-
     /// Returns an `Iterator` that visits the cameras of the glTF asset.
     pub fn cameras(&self) -> Cameras {
         Cameras {
             iter: self.as_json().cameras.iter().enumerate(),
             gltf: self,
         }
+    }
+
+    /// Returns the default scene, if provided.
+    pub fn default_scene(&self) -> Option<Scene> {
+        self.as_json()
+            .scene
+            .as_ref()
+            .map(|index| self.scenes().nth(index.value()))
+            .unwrap()
     }
 
     /// Returns an `Iterator` that visits the pre-loaded images of the glTF asset.
@@ -353,6 +353,15 @@ impl Gltf {
     pub fn textures(&self) -> Textures {
         Textures {
             iter: self.as_json().textures.iter().enumerate(),
+            gltf: self,
+        }
+    }
+
+    /// Returns an `Iterator` that visits the pre-loaded buffer views of the glTF
+    /// asset.
+    pub fn views(&self) -> Views {
+        Views {
+            iter: self.as_json().buffer_views.iter().enumerate(),
             gltf: self,
         }
     }
