@@ -1,6 +1,6 @@
 [package]
 name = "gltf-utils"
-version = "0.1.1"
+version = "0.9.1"
 authors = ["alteous <alteous@outlook.com>"]
 description = "Utilities to complement the gltf crate"
 repository = "https://github.com/alteous/gltf"
