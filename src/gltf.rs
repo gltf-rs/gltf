@@ -24,7 +24,7 @@ use texture::{Sampler, Texture};
 
 use Error;
 
-/// **The primary data structure in this crate.**
+/// **The primary data structure of this crate.**
 pub struct Gltf {
     /// The JSON root object.
     root: json::root::Root,
