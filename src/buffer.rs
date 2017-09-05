@@ -62,6 +62,7 @@ impl<'a> Buffer<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::buffer::Buffer {
         self.json
     }
@@ -70,13 +71,13 @@ impl<'a> Buffer<'a> {
     ///
     /// # Notes
     ///
-    /// When the `glTF` comes from a .glb file and the .glb file has a BIN chunk,
-    /// then this function will return `#bin` for the first buffer entry. This is not
-    /// standard behaviour in the `glTF` schema.
+    /// When the buffer is sourced from the `BIN` section of binary glTF, the
+    /// fragment `"#bin"` is returned. This is non-standard according to the
+    /// glTF specification.
     pub fn uri(&self) -> &str {
         self.json.uri.as_ref().map(String::as_str).unwrap_or("#bin")
     }
-    
+
     /// The length of the buffer in bytes.
     pub fn length(&self) -> usize {
         self.json.byte_length as usize
@@ -116,6 +117,7 @@ impl<'a> View<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::buffer::View {
         self.json
     }

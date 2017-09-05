@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2017-09-05
+
+### Added
+
+- `scene::Transform` type, returned by `Node::transform`.
+- `MorphTarget` type and a corresponding `MorphTargets` iterator.
+- `Gltf::from_glb` function.
+- `Gltf::default_scene` function.
+
+### Changed
+
+- `as_json` functions are now hidden from the documentation.
+- `scene::Children` is bound to the lifetime of `Gltf` instead its parent `Node`
+- Documentation has been improved across the crate.
+
+### Removed
+
+- `root` module.
+- Default constructors for `Material` and `texture::Sampler`.
+
+### Deprecated
+
+- `Node::matrix/translation/rotation/scale` in favour of `Node::transform`.
+- `json` module.
+
 ## [0.9.0] - 2017-08-27
 
 ### Added

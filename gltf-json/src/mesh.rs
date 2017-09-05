@@ -131,7 +131,7 @@ pub struct Primitive {
     /// An array of Morph Targets, each  Morph Target is a dictionary mapping
     /// attributes (only `POSITION`, `NORMAL`, and `TANGENT` supported) to their
     /// deviations in the Morph Target.
-    pub targets: Option<Vec<MorphTargets>>,
+    pub targets: Option<Vec<MorphTarget>>,
 }
 
     impl Validate for Primitive {
@@ -186,7 +186,7 @@ pub struct Primitive {
 
 /// A dictionary mapping attributes to their deviations in the Morph Target.
 #[derive(Clone, Debug, Deserialize, Validate)]
-pub struct MorphTargets {
+pub struct MorphTarget {
     /// XYZ vertex position displacements of type `[f32; 3]`.
     #[serde(rename = "POSITION")]
     pub positions: Option<Index<accessor::Accessor>>,

@@ -59,49 +59,49 @@
 //! # }
 //! ```
 
+extern crate cgmath;
 #[macro_use]
 extern crate lazy_static;
 
 /// Contains (de)serializable data structures that match the glTF JSON text.
+#[deprecated(since = "0.9.1", note = "Will be removed in 1.0.0")]
+#[doc(hidden)]
 pub extern crate gltf_json as json;
 
-/// Contains `Accessor` and other related data structures.
+/// Accessors for reading vertex attributes from buffer views.
 pub mod accessor;
 
-/// Contains `Animation` and other related data structures.
+/// Animations, their channels, targets, and samplers.
 pub mod animation;
 
-/// Contains `Buffer`, `View`, and other related data structures.
+/// Buffers and buffer views.
 pub mod buffer;
 
-/// Contains `Camera` and other related data structures.
+/// Cameras and their projections.
 pub mod camera;
 
-/// Contains `Glb` and its parsing implementation.
+/// Primitives for working with binary glTF.
 pub mod glb;
 
-/// Contains `Gltf`, and other related data structures.
+/// **The main module - start here.**
 pub mod gltf;
 
-/// Contains `Image` and other related data structures.
+/// Images that may be used by textures.
 pub mod image;
 
-/// Contains `Material` and other related data structures.
+/// Material properties of primitives.
 pub mod material;
 
-/// Contains `Mesh` and other related data structures.
+/// Meshes and their primitives.
 pub mod mesh;
 
-/// Contains `Root`.
-pub mod root;
-
-/// Contains `Scene`, `Node`, and other related data structures.
+/// The glTF node heirarchy.
 pub mod scene;
 
-/// Contains `Skin` and other related data structures.
+/// Mesh skinning primitives.
 pub mod skin;
 
-/// Contains `Texture`, `Sampler`, and other related data structures.
+/// Textures and their samplers.
 pub mod texture;
 
 pub use self::animation::Animation;
@@ -136,8 +136,8 @@ pub enum Error {
 /// # Examples
 ///
 /// ```rust
-/// assert_eq!(false, gltf::is_binary(include_bytes!("examples/Box.gltf")));
-/// assert_eq!(true, gltf::is_binary(include_bytes!("examples/Box.glb")));
+/// assert_eq!(true, gltf::is_binary(b"glTF..."));
+/// assert_eq!(false, gltf::is_binary(b"{...}"));
 /// ```
 pub fn is_binary(slice: &[u8]) -> bool {
     slice.starts_with(b"glTF")

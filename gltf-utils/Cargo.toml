@@ -1,13 +1,13 @@
 [package]
 name = "gltf-utils"
-version = "0.1.0"
+version = "0.9.1"
 authors = ["alteous <alteous@outlook.com>"]
 description = "Utilities to complement the gltf crate"
 repository = "https://github.com/alteous/gltf"
 license = "MIT/Apache-2.0"
 
 [dependencies]
-gltf = { path = "..", version = "0.9" }
+gltf = { path = "..", version = "0.9.1" }
 
 [features]
 default = []

@@ -69,6 +69,7 @@ impl<'a> Camera<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::camera::Camera {
         self.json
     }
@@ -109,6 +110,7 @@ impl<'a> Orthographic<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::camera::Orthographic {
         self.json
     }
@@ -149,6 +151,7 @@ impl<'a> Perspective<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) -> &json::camera::Perspective {
         self.json
     }
