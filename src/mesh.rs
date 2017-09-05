@@ -201,15 +201,14 @@ impl<'a> Primitive<'a> {
         self.json
     }
 
-    /// Returns the `(min, max)` bounds of the `POSITION` vertex attribute
-    /// if there is one, otherwise `None`.
+    /// Returns the bounds of the `POSITION` vertex attribute when provided.
     ///
     /// # Panics
     ///
-    /// Panics for `POSITION` accessors with missing or invalid bounds.
+    /// Panics for `POSITION` accessors with missing bounds.
     ///
-    /// Use `json::validation::Validate::validate_minimally` to handle this
-    /// gracefully.
+    /// Since `POSITION` accessors must include bounds information, one can
+    /// call `Gltf::validate_minimally` to ensure this data exists.
     pub fn position_bounds(&self) -> Option<Bounds<[f32; 3]>> {
         if let Some(pos_accessor_index) = self.json.attributes.get(&Checked::Valid(Semantic::Positions)) {
             let pos_accessor = self.mesh.gltf.accessors().nth(pos_accessor_index.value()).unwrap();
