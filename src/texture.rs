@@ -67,7 +67,7 @@ impl<'a> Sampler<'a> {
     }
 
     /// Constructs the default `Sampler`.
-    pub fn default(gltf: &'a Gltf) -> Self {
+    pub(crate) fn default(gltf: &'a Gltf) -> Self {
         Self {
             gltf: gltf,
             index: None,
@@ -83,6 +83,7 @@ impl<'a> Sampler<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::texture::Sampler {
         self.json
     }
@@ -139,6 +140,7 @@ impl<'a> Texture<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::texture::Texture {
         self.json
     }
@@ -179,6 +181,7 @@ impl<'a> Info<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::texture::Info {
         self.json
     }

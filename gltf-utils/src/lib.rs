@@ -52,45 +52,6 @@ pub trait Source: fmt::Debug {
 }
 
 /// Extra methods for working with `gltf::Primitive`.
-///
-/// # Examples
-///
-/// Collecting the indices of a primitive into a `Vec`.
-///
-/// ```rust
-/// # extern crate gltf;
-/// # extern crate gltf_utils;
-/// # use gltf::Gltf;
-/// # use gltf_utils::Source;
-/// # use std::{fs, io};
-/// # fn run() -> Result<(), Box<std::error::Error>> {
-/// # let path = "../examples/Box.gltf";
-/// # let file = fs::File::open(path)?;
-/// # let gltf = Gltf::from_reader(io::BufReader::new(file))?.validate_minimally()?;
-/// /// Contains the single buffer necessary to render the box model.
-/// #[derive(Debug)]
-/// struct BoxData(&'static [u8]);
-/// impl Source for BoxData {
-///     fn source_buffer(&self, buffer: &gltf::Buffer) -> &[u8] {
-///         assert_eq!(0, buffer.index());
-///         self.0   
-///     }
-/// }
-///
-/// let box_data = BoxData(include_bytes!("../examples/Box0.bin"));
-/// let mesh = gltf.meshes().nth(0).unwrap();
-/// let primitive = mesh.primitives().nth(0).unwrap();
-/// 
-/// use gltf_utils::PrimitiveIterators;
-/// let iter = primitive.indices_u32(&box_data).unwrap();
-/// let indices: Vec<u32> = iter.collect();
-/// # let _ = indices;
-/// # Ok(())
-/// # }
-/// # fn main() {
-/// #    let _ = run().expect("No runtime errors");
-/// # }
-/// ```
 pub trait PrimitiveIterators<'a> {
     /// Visits the vertex positions of a primitive.
     fn positions<S>(&'a self, source: &'a S) -> Option<Positions<'a>>
@@ -203,7 +164,7 @@ impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
 
 /// Visits the items in an `Accessor`.
 #[derive(Clone, Debug)]
-struct AccessorIter<'a, T> {
+pub struct AccessorIter<'a, T> {
     /// The total number of iterations left.
     count: usize,
 
@@ -227,9 +188,10 @@ struct AccessorIter<'a, T> {
 }
 
 impl<'a, T> AccessorIter<'a, T> {
-    fn new<S>(accessor: gltf::Accessor<'a>, source: &'a S) -> AccessorIter<'a, T>
+    pub fn new<S>(accessor: gltf::Accessor<'a>, source: &'a S) -> AccessorIter<'a, T>
         where S: Source
     {
+        assert_eq!(mem::size_of::<T>(), accessor.size());
         let view = accessor.view();
         let buffer = view.buffer();
         let buffer_data = source.source_buffer(&buffer);

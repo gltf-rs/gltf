@@ -57,6 +57,7 @@ impl<'a> Accessor<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) -> &json::accessor::Accessor {
         self.json
     }
@@ -162,6 +163,7 @@ pub mod sparse {
         }
 
         /// Returns the internal JSON item.
+        #[doc(hidden)]
         pub fn as_json(&self) ->  &json::accessor::sparse::Indices {
             self.json
         }
@@ -215,6 +217,7 @@ pub mod sparse {
         }
 
         /// Returns the internal JSON item.
+        #[doc(hidden)]
         pub fn as_json(&self) -> &json::accessor::sparse::Sparse {
             self.json
         }
@@ -265,6 +268,7 @@ pub mod sparse {
         }
 
         /// Returns the internal JSON item.
+        #[doc(hidden)]
         pub fn as_json(&self) ->  &json::accessor::sparse::Values {
             self.json
         }

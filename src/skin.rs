@@ -55,6 +55,7 @@ impl<'a> Skin<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::skin::Skin {
         self.json
     }

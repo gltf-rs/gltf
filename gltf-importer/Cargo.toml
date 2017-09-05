@@ -9,7 +9,7 @@ license = "MIT/Apache-2.0"
 [dependencies]
 base64 = "0.6"
 gltf = { path = "..", version = "0.9.1" }
-gltf-utils = { path = "../gltf-utils", version = "0.1" }
+gltf-utils = { path = "../gltf-utils", version = "0.9.1" }
 
 [features]
 default = []

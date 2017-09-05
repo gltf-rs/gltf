@@ -45,9 +45,9 @@ pub enum Attribute<'a> {
     Weights(u32, Accessor<'a>),
 }
 
-/// Morph targets.
+/// A single morph target for a mesh primitive.
 #[derive(Clone, Debug)]
-pub struct MorphTargets<'a> {
+pub struct MorphTarget<'a> {
     /// XYZ vertex position displacements.
     positions: Option<Accessor<'a>>,
 
@@ -58,8 +58,17 @@ pub struct MorphTargets<'a> {
     tangents: Option<Accessor<'a>>,
 }
 
-/// A set of primitives to be rendered.  A node can contain one or more meshes and
-/// its transform places the meshes in the scene.
+/// An `Iterator` that visits the morph targets of a `Primitive`.
+#[derive(Clone, Debug)]
+pub struct MorphTargets<'a> {
+    /// The parent `Gltf` struct.
+    gltf: &'a Gltf,
+
+    /// The internal JSON iterator.
+    iter: slice::Iter<'a, json::mesh::MorphTarget>,
+}
+
+/// A set of primitives to be rendered.
 #[derive(Clone, Debug)]
 pub struct Mesh<'a>  {
     /// The parent `Gltf` struct.
@@ -112,13 +121,14 @@ pub struct Primitives<'a>  {
     iter: iter::Enumerate<slice::Iter<'a, json::mesh::Primitive>>,
 }
 
-/// Accessor bounds
+/// The minimum and maximum values for a generic accessor.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Bounds<T> {
-    /// Minimum
+    /// Minimum value.
     pub min: T,
-    /// Maximum
-    pub max: T
+
+    /// Maximum value.
+    pub max: T,
 }
 
 impl<'a> Mesh<'a>  {
@@ -141,6 +151,7 @@ impl<'a> Mesh<'a>  {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::mesh::Mesh {
         self.json
     }
@@ -185,23 +196,19 @@ impl<'a> Primitive<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::mesh::Primitive {
         self.json
     }
 
-    /// Returns the bounds (min/max) of the POSITION attribute if there is one, otherwise `None`.
-    /// May panic for invalid glTF files. Use json::validation::Validate::validate_minimally
-    /// to handle this gracefully.
-
-    /// Returns the `(min, max)` bounds of the `POSITION` vertex attribute
-    /// if there is one, otherwise `None`.
+    /// Returns the bounds of the `POSITION` vertex attribute when provided.
     ///
     /// # Panics
     ///
-    /// Panics for `POSITION` accessors with missing or invalid bounds.
+    /// Panics for `POSITION` accessors with missing bounds.
     ///
-    /// Use `json::validation::Validate::validate_minimally`
-    /// to handle this gracefully.
+    /// Since `POSITION` accessors must include bounds information, one can
+    /// call `Gltf::validate_minimally` to ensure this data exists.
     pub fn position_bounds(&self) -> Option<Bounds<[f32; 3]>> {
         if let Some(pos_accessor_index) = self.json.attributes.get(&Checked::Valid(Semantic::Positions)) {
             let pos_accessor = self.mesh.gltf.accessors().nth(pos_accessor_index.value()).unwrap();
@@ -257,6 +264,38 @@ impl<'a> Primitive<'a> {
     pub fn mode(&self) -> Mode {
         self.json.mode.unwrap()
     }
+
+    /// Returns an `Iterator` that visits the morph targets of the primitive.
+    pub fn morph_targets(&self) -> MorphTargets {
+        if let Some(slice) = self.json.targets.as_ref() {
+            MorphTargets {
+                gltf: self.mesh.gltf,
+                iter: slice.iter(),
+            }
+        } else {
+            MorphTargets {
+                gltf: self.mesh.gltf,
+                iter: (&[]).iter(),
+            }
+        }
+    }
+}
+
+impl<'a> MorphTarget<'a> {
+    /// Returns the XYZ vertex position displacements.
+    pub fn positions(&self) -> Option<Accessor<'a>> {
+        self.positions.clone()
+    }
+
+    /// Returns the XYZ vertex normal displacements.
+    pub fn normals(&self) -> Option<Accessor<'a>> {
+        self.normals.clone()
+    }
+
+    /// Returns the XYZ vertex tangent displacements.
+    pub fn tangents(&self) -> Option<Accessor<'a>> {
+        self.tangents.clone()
+    }
 }
 
 impl<'a> ExactSizeIterator for Attributes<'a> {}
@@ -293,6 +332,35 @@ impl<'a> Iterator for Primitives<'a> {
     type Item = Primitive<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, json)| Primitive::new(self.mesh, index, json))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+}
+
+impl<'a> ExactSizeIterator for MorphTargets<'a> {}
+impl<'a> Iterator for MorphTargets<'a> {
+    type Item = MorphTarget<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter
+            .next()
+            .map(|json| {
+                let positions = json.positions
+                    .as_ref()
+                    .map(|index| self.gltf.accessors().nth(index.value()).unwrap());
+                let normals = json.normals
+                    .as_ref()
+                    .map(|index| self.gltf.accessors().nth(index.value()).unwrap());
+                let tangents = json.tangents
+                    .as_ref()
+                    .map(|index| self.gltf.accessors().nth(index.value()).unwrap());
+                MorphTarget {
+                    positions,
+                    normals,
+                    tangents,
+                }
+            })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
