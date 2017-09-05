@@ -226,6 +226,11 @@ impl Gltf {
         }
     }
 
+    /// Constructs the `Gltf` wrapper from binary glTF.
+    pub fn from_glb(glb: &Glb) -> Result<Unvalidated, Error> {
+        Gltf::from_slice(glb.json)
+    }
+
     /// Constructs the `Gltf` wrapper from a reader.
     pub fn from_reader<R>(reader: R) -> Result<Unvalidated, Error>
         where R: io::Read
