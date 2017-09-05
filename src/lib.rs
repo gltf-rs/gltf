@@ -60,9 +60,13 @@
 //! ```
 
 extern crate cgmath;
-extern crate gltf_json as json;
 #[macro_use]
 extern crate lazy_static;
+
+/// Contains (de)serializable data structures that match the glTF JSON text.
+#[deprecated(since = "0.9.1", note = "Will be removed in 1.0.0")]
+#[doc(hidden)]
+pub extern crate gltf_json as json;
 
 /// Accessors for reading vertex attributes from buffer views.
 pub mod accessor;
