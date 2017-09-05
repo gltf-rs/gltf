@@ -63,6 +63,7 @@ impl<'a> Image<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) -> &json::image::Image {
         self.json
     }

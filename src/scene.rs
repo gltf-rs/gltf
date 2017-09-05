@@ -108,15 +108,10 @@ impl Transform {
     }
 }
 
-/// A node in the node hierarchy. When the node contains `skin`, all
-/// `mesh.primitives` must contain `JOINTS_0` and `WEIGHTS_0` attributes. A node can
-/// have either a `matrix` or any combination of `translation`/`rotation`/`scale`
-/// (TRS) properties. TRS properties are converted to matrices and postmultiplied in
-/// the `T * R * S` order to compose the transformation matrix; first the scale is
-/// applied to the vertices, then the rotation, and then the translation. If none are
-/// provided, the transform is the identity. When a node is targeted for animation
-/// (referenced by an animation.channel.target), only TRS properties may be present;
-/// `matrix` will not be present.
+/// A node in the node hierarchy.
+///
+/// When a node contains a skin, all its meshes contain `JOINTS_0` and `WEIGHTS_0`
+/// attributes.
 #[derive(Clone, Debug)]
 pub struct Node<'a> {
     /// The parent `Gltf` struct.
@@ -156,8 +151,8 @@ pub struct Nodes<'a> {
 /// An `Iterator` that visits the children of a node.
 #[derive(Clone, Debug)]
 pub struct Children<'a> {
-    /// The parent `Node` struct.
-    parent: &'a Node<'a>,
+    /// The parent `Gltf` struct.
+    gltf: &'a Gltf,
 
     /// The internal node index iterator.
     iter: slice::Iter<'a, json::Index<json::scene::Node>>,
@@ -183,21 +178,22 @@ impl<'a> Node<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::scene::Node {
         self.json
     }
 
     /// Returns the camera referenced by this node.
-    pub fn camera(&self) -> Option<Camera<'a>> {
+    pub fn camera(&self) -> Option<Camera> {
         self.json.camera.as_ref().map(|index| {
             self.gltf.cameras().nth(index.value()).unwrap()
         })
     }
 
     /// Returns an `Iterator` that visits the node's children.
-    pub fn children(&'a self) -> Children<'a> {
+    pub fn children(&self) -> Children {
         Children {
-            parent: self,
+            gltf: self.gltf,
             iter: self.json.children.as_ref().map_or([].iter(), |x| x.iter()),
         }
     }
@@ -214,7 +210,7 @@ impl<'a> Node<'a> {
     }
 
     /// Returns the mesh referenced by this node.
-    pub fn mesh(&self) -> Option<Mesh<'a>> {
+    pub fn mesh(&self) -> Option<Mesh> {
         self.json.mesh.as_ref().map(|index| {
             self.gltf.meshes().nth(index.value()).unwrap()
         })
@@ -263,7 +259,7 @@ impl<'a> Node<'a> {
     }
 
     /// Returns the skin referenced by this node.
-    pub fn skin(&self) -> Option<Skin<'a>> {
+    pub fn skin(&self) -> Option<Skin> {
         self.json.skin.as_ref().map(|index| {
             self.gltf.skins().nth(index.value()).unwrap()
         })
@@ -295,6 +291,7 @@ impl<'a> Scene<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::scene::Scene {
         self.json
     }
@@ -339,7 +336,7 @@ impl<'a> Iterator for Children<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
-            .map(|index| self.parent.gltf.nodes().nth(index.value()).unwrap())
+            .map(|index| self.gltf.nodes().nth(index.value()).unwrap())
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {

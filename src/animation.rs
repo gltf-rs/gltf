@@ -59,6 +59,7 @@ impl<'a> Animation<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::animation::Animation {
         self.json
     }
@@ -129,6 +130,7 @@ impl<'a> Channel<'a> {
     }
     
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::animation::Channel {
         self.json
     }
@@ -178,6 +180,7 @@ impl<'a> Target<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::animation::Target {
         self.json
     }
@@ -227,6 +230,7 @@ impl<'a> Sampler<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::animation::Sampler {
         self.json
     }

@@ -42,7 +42,7 @@ impl<'a> Material<'a> {
     }
 
     /// Constructs the default `Material`.
-    pub fn default(gltf: &'a Gltf) -> Self {
+    pub(crate) fn default(gltf: &'a Gltf) -> Self {
         Self {
             gltf: gltf,
             index: None,
@@ -58,6 +58,7 @@ impl<'a> Material<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::material::Material {
         self.json
     }
@@ -69,44 +70,54 @@ impl<'a> Material<'a> {
 
     /// The alpha rendering mode of the material.  The material's alpha rendering
     /// mode enumeration specifying the interpretation of the alpha value of the main
-    /// factor and texture.  * In `Opaque` mode (default) the alpha value is ignored
-    /// and the rendered output is fully opaque.  * In `Mask` mode, the rendered
-    /// output is either fully opaque or fully transparent depending on the alpha
-    /// value and the specified alpha cutoff value.  * In `Blend` mode, the alpha
-    /// value is used to composite the source and destination areas and the rendered
-    /// output is combined with the background using the normal painting operation
-    /// (i.e. the Porter and Duff over operIterator).
+    /// factor and texture.
+    ///
+    /// * In `Opaque` mode (default) the alpha value is ignored
+    ///   and the rendered output is fully opaque.
+    /// * In `Mask` mode, the rendered
+    ///   output is either fully opaque or fully transparent depending on the alpha
+    ///   value and the specified alpha cutoff value.
+    /// * In `Blend` mode, the alpha value is used to composite the source and
+    ///   destination areas and the rendered output is combined with the background
+    ///   using the normal painting operation (i.e. the Porter and Duff over
+    ///   operator).
     pub fn alpha_mode(&self) -> AlphaMode {
         self.json.alpha_mode.unwrap()
     }
 
-    ///  Specifies whether the material is double-sided.  * When this value is false,
-    /// back-face culling is enabled.  * When this value is true, back-face culling
-    /// is disabled and double sided lighting is enabled.  The back-face must have
-    /// its normals reversed before the lighting equation is evaluated.
+    /// Specifies whether the material is double-sided.
+    ///
+    /// * When this value is false, back-face culling is enabled.
+    /// * When this value is true, back-face culling is disabled and double sided
+    ///   lighting is enabled.  The back-face must have its normals reversed before
+    ///   the lighting equation is evaluated.
     pub fn double_sided(&self) -> bool {
         self.json.double_sided
     }
 
-    ///  Optional user-defined name for this object.
+    /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&str> {
         self.json.name.as_ref().map(String::as_str)
     }
 
-    ///  A set of parameter values that are used to define the metallic-roughness
-    /// material model from Physically-Based Rendering (PBR) methodology. When not
-    /// specified, all the default values of `pbrMetallicRoughness` apply.
+    /// Parameter values that define the metallic-roughness material model from
+    /// Physically-Based Rendering (PBR) methodology.
     pub fn pbr_metallic_roughness(&self) -> PbrMetallicRoughness<'a> {
         PbrMetallicRoughness::new(self.gltf, &self.json.pbr_metallic_roughness)
     }
 
-    ///  A tangent space normal map. The texture contains RGB components in linear
-    /// space. Each texel represents the XYZ components of a normal vector in tangent
-    /// space. Red [0 to 255] maps to X [-1 to 1]. Green [0 to 255] maps to Y
-    /// [-1 to 1]. Blue [128 to 255] maps to Z [1/255 to 1]. The normal vectors use
-    /// OpenGL conventions where +X is right and +Y is up. +Z points toward the
-    /// viewer.
+    /// A tangent space normal map.
+    ///
+    /// The texture contains RGB components in linear space. Each texel represents
+    /// the XYZ components of a normal vector in tangent space.
+    ///
+    /// * Red [0 to 255] maps to X [-1 to 1].
+    /// * Green [0 to 255] maps to Y [-1 to 1].
+    /// * Blue [128 to 255] maps to Z [1/255 to 1].
+    ///
+    /// The normal vectors use OpenGL conventions where +X is right, +Y is up, and
+    /// +Z points toward the viewer.
     pub fn normal_texture(&self) -> Option<NormalTexture<'a>> {
         self.json.normal_texture.as_ref().map(|json| {
             let texture = self.gltf.textures().nth(json.index.value()).unwrap();
@@ -114,10 +125,13 @@ impl<'a> Material<'a> {
         })
     }
 
-    ///  The occlusion map texture. The occlusion values are sampled from the R
-    /// channel. Higher values indicate areas that should receive full indirect
-    /// lighting and lower values indicate no indirect lighting. These values are
-    /// linear. If other channels are present (GBA), they are ignored for occlusion
+    /// The occlusion map texture.
+    ///
+    /// The occlusion values are sampled from the R channel. Higher values indicate
+    /// areas that should receive full indirect lighting and lower values indicate
+    /// no indirect lighting. These values are linear.
+    ///
+    /// If other channels are present (GBA), they are ignored for occlusion
     /// calculations.
     pub fn occlusion_texture(&self) -> Option<OcclusionTexture<'a>> {
         self.json.occlusion_texture.as_ref().map(|json| {
@@ -126,9 +140,13 @@ impl<'a> Material<'a> {
         })
     }
 
-    ///  The emissive map controls the color and intensity of the light being emitted
-    /// by the material. This texture contains RGB components in sRGB color space. If
-    /// a fourth component (A) is present, it is ignored.
+    /// The emissive map texture.
+    ///
+    /// The emissive map controls the color and intensity of the light being
+    /// emitted by the material.
+    ///
+    /// This texture contains RGB components in sRGB color space. If a fourth
+    /// component (A) is present, it is ignored.
     pub fn emissive_texture(&self) -> Option<texture::Info<'a>> {
         self.json.emissive_texture.as_ref().map(|json| {
             let texture = self.gltf.textures().nth(json.index.value()).unwrap();
@@ -136,18 +154,20 @@ impl<'a> Material<'a> {
         })
     }
 
-    ///  The emissive color of the material.
+    /// The emissive color of the material.
+    ///
+    /// The default value is `[0.0, 0.0, 0.0]`.
     pub fn emissive_factor(&self) -> [f32; 3] {
         self.json.emissive_factor.0
     }
 
-    ///  Optional application specific data.
+    /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
     }
 }
 
-///  A set of parameter values that are used to define the metallic-roughness
+/// A set of parameter values that are used to define the metallic-roughness
 /// material model from Physically-Based Rendering (PBR) methodology.
 pub struct PbrMetallicRoughness<'a> {
     /// The parent `Gltf` struct.
@@ -158,7 +178,7 @@ pub struct PbrMetallicRoughness<'a> {
 }
 
 impl<'a> PbrMetallicRoughness<'a> {
-    /// Constructs a `PbrMetallicRoughness`.
+    /// Constructs `PbrMetallicRoughness`.
     pub(crate) fn new(
         gltf: &'a Gltf,
         json: &'a json::material::PbrMetallicRoughness,
@@ -170,16 +190,19 @@ impl<'a> PbrMetallicRoughness<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) -> &json::material::PbrMetallicRoughness {
         self.json
     }
 
-    ///  The material's base color factor.
+    /// Returns the material's base color factor.
+    ///
+    /// The default value is `[1.0, 1.0, 1.0, 1.0]`.
     pub fn base_color_factor(&self) -> [f32; 4] {
         self.json.base_color_factor.0
     }
 
-    ///  The base color texture.
+    /// Returns the base color texture.
     pub fn base_color_texture(&self) -> Option<texture::Info<'a>> {
         self.json.base_color_texture.as_ref().map(|json| {
             let texture = self.gltf.textures().nth(json.index.value()).unwrap();
@@ -187,22 +210,31 @@ impl<'a> PbrMetallicRoughness<'a> {
         })
     }
 
-    ///  The metalness of the material.
+    /// Returns the metalness factor of the material.
+    ///
+    /// The default value is `1.0`.
     pub fn metallic_factor(&self) -> f32 {
         self.json.metallic_factor.0
     }
 
-    ///  The roughness of the material.  * A value of 1.0 means the material is
-    /// completely rough. * A value of 0.0 means the material is completely smooth.
+    /// Returns the roughness factor of the material.
+    ///
+    /// * A value of 1.0 means the material is completely rough.
+    /// * A value of 0.0 means the material is completely smooth.
+    ///
+    /// The default value is `1.0`.
     pub fn roughness_factor(&self) -> f32 {
         self.json.roughness_factor.0
     }
 
-    ///  The metallic-roughness texture.  This texture has two components:  * The
-    /// first component (R) contains the metallic-ness of the material. * The second
-    /// component (G) contains the roughness of the material. * If the third
-    /// component (B) and/or the fourth component (A) are present then they are
-    /// ignored.
+    /// The metallic-roughness texture.
+    ///
+    /// This texture has two components:
+    /// 
+    /// * The first component (R) contains the metallic-ness of the material.
+    /// * The second component (G) contains the roughness of the material.
+    /// * If the third component (B) and/or the fourth component (A) are present
+    ///   then they are ignored.
     pub fn metallic_roughness_texture(&self) -> Option<texture::Info<'a>> {
         self.json.metallic_roughness_texture.as_ref().map(|json| {
             let texture = self.gltf.textures().nth(json.index.value()).unwrap();
@@ -216,7 +248,7 @@ impl<'a> PbrMetallicRoughness<'a> {
     }
 }
 
-///  Defines the normal texture of a material.
+/// Defines the normal texture of a material.
 pub struct NormalTexture<'a> {
     /// The parent `Texture` struct.
     texture: texture::Texture<'a>,
@@ -238,12 +270,14 @@ impl<'a> NormalTexture<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::material::NormalTexture {
         self.json
     }
 
-    /// The scalar multiplier applied to each normal vector of the texture.
-    /// This value is ignored if normalTexture is not specified.
+    /// Returns the scalar multiplier applied to each normal vector of the texture.
+    ///
+    /// This value is ignored if `normal_texture` is `None`.
     pub fn scale(&self) -> f32 {
         self.json.scale
     }
@@ -257,14 +291,14 @@ impl<'a> NormalTexture<'a> {
     pub fn texture(&self) -> texture::Texture<'a> {
         self.texture.clone()
     }
-    
+
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
     }
 }
 
-///  Defines the occlusion texture of a material.
+/// Defines the occlusion texture of a material.
 pub struct OcclusionTexture<'a> {
     /// The parent `Texture` struct.
     texture: texture::Texture<'a>,
@@ -286,16 +320,17 @@ impl<'a> OcclusionTexture<'a> {
     }
 
     /// Returns the internal JSON item.
+    #[doc(hidden)]
     pub fn as_json(&self) ->  &json::material::OcclusionTexture {
         self.json
     }
 
-    /// The scalar multiplier controlling the amount of occlusion applied.
+    /// Returns the scalar multiplier controlling the amount of occlusion applied.
     pub fn strength(&self) -> f32 {
         self.json.strength.0
     }
 
-    /// The set index of the texture's `TEXCOORD` attribute.
+    /// Returns the set index of the texture's `TEXCOORD` attribute.
     pub fn tex_coord(&self) -> u32 {
         self.json.tex_coord
     }

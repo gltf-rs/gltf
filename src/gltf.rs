@@ -8,13 +8,13 @@
 // except according to those terms.
 
 use json;
-use root;
-use std::{fmt, io, iter, ops, slice};
+use std::{fmt, io, iter, slice};
 
 use accessor::Accessor;
 use animation::Animation;
 use buffer::{Buffer, View};
 use camera::Camera;
+use glb::Glb;
 use image::Image;
 use material::Material;
 use mesh::Mesh;
@@ -24,11 +24,15 @@ use texture::{Sampler, Texture};
 
 use Error;
 
-/// A loaded glTF complete with its data.
+/// **The primary data structure in this crate.**
 pub struct Gltf {
-    /// The root glTF struct (and also `Deref` target).
-    root: root::Root,
+    /// The JSON root object.
+    root: json::root::Root,
 }
+
+/// An `Iterator` that visits extension strings.
+#[derive(Clone, Debug)]
+pub struct Extensions<'a>(slice::Iter<'a, String>);
 
 /// Represents `glTF` that hasn't been validated yet.
 pub struct Unvalidated(Gltf);
@@ -166,9 +170,9 @@ pub struct Textures<'a> {
 impl Unvalidated {
     /// Returns the unvalidated JSON.
     pub fn as_json(&self) -> &json::Root {
-        self.0.root.as_json()
+        self.0.as_json()
     }
-    
+
     /// Skips validation (not recommended).
     pub unsafe fn skip_validation(self) -> Gltf {
         self.0
@@ -222,7 +226,7 @@ impl Gltf {
     /// Constructs the `Gltf` wrapper from deserialized JSON.
     fn from_json(json: json::Root) -> Self {
         Gltf {
-            root: root::Root::new(json),
+            root: json,
         }
     }
 
@@ -273,6 +277,12 @@ impl Gltf {
         }
     }
 
+    /// Returns the JSON.
+    #[doc(hidden)]
+    pub fn as_json(&self) -> &json::Root {
+        &self.root
+    }
+
     /// Returns an `Iterator` that visits the pre-loaded buffers of the glTF asset.
     pub fn buffers(&self) -> Buffers {
         Buffers {
@@ -296,6 +306,16 @@ impl Gltf {
             .as_ref()
             .map(|index| self.scenes().nth(index.value()))
             .unwrap()
+    }
+
+    /// Returns the extensions referenced in this .gltf file.
+    pub fn extensions_used(&self) -> Extensions {
+        Extensions(self.root.extensions_used.iter())
+    }
+
+    /// Returns the extensions required to load and render this asset.
+    pub fn extensions_required(&self) -> Extensions {
+        Extensions(self.root.extensions_required.iter())
     }
 
     /// Returns an `Iterator` that visits the pre-loaded images of the glTF asset.
@@ -378,13 +398,6 @@ impl<'a> fmt::Debug for Gltf {
     }
 }
 
-impl<'a> ops::Deref for Gltf {
-    type Target = root::Root;
-    fn deref(&self) -> &Self::Target {
-        &self.root
-    }
-}
-
 impl<'a> ExactSizeIterator for Accessors<'a> {}
 impl<'a> Iterator for Accessors<'a> {
     type Item = Accessor<'a>;
@@ -418,6 +431,18 @@ impl<'a> Iterator for Buffers<'a> {
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
+    }
+}
+
+impl<'a> ExactSizeIterator for Extensions<'a> {}
+impl<'a> Iterator for Extensions<'a> {
+    type Item = &'a str;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next().map(String::as_str)
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
     }
 }
 
