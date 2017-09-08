@@ -24,6 +24,7 @@ travis-ci = { repository = "alteous/gltf" }
 members = ["gltf-derive", "gltf-json", "gltf-importer", "gltf-utils"]
 
 [dependencies]
+approx = "0.1.1"
 cgmath = "0.15"
 gltf-json = { path = "gltf-json", version = "0.9.1" }
 lazy_static = "0.2"
