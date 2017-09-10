@@ -80,7 +80,7 @@ impl Transform {
                 );
                 let sx = i.x.magnitude();
                 let sy = i.y.magnitude();
-                let sz = i.determinant().signum() *  i.z.magnitude();
+                let sz = i.determinant().signum() * i.z.magnitude();
                 let scale = [sx, sy, sz];
                 i.x /= sx;
                 i.y /= sy;
@@ -334,8 +334,14 @@ impl<'a> Iterator for Children<'a> {
 
 #[cfg(test)]
 mod tests {
-    use ::cgmath::Matrix4;
+    use ::cgmath::{vec3, InnerSpace, Matrix4, Quaternion, Rad, Rotation3};
     use ::scene::Transform;
+    use ::std::f32::consts::PI;
+
+    fn rotate(x: f32, y: f32, z: f32, r: f32) -> [f32; 4] {
+        let r = Quaternion::from_axis_angle(vec3(x, y, z).normalize(), Rad(r));
+        [r[1], r[2], r[3], r[0]]
+    }
 
     fn test_decompose(translation: [f32; 3], rotation: [f32; 4], scale: [f32; 3]) {
         let matrix = Transform::Decomposed { translation, rotation, scale }.matrix();
@@ -344,19 +350,317 @@ mod tests {
         assert_relative_eq!(Matrix4::from(check), Matrix4::from(matrix));
     }
 
-    #[test]
-    fn decompose_matrix_with_positive_determinant() {
+    fn test_decompose_rotation(rotation: [f32; 4]) {
+        let translation = [1.0, -2.0, 3.0];
+        let scale = [1.0, 1.0, 1.0];
+        test_decompose(translation, rotation, scale);
+    }
+
+    fn test_decompose_scale(scale: [f32; 3]) {
         let translation = [1.0, 2.0, 3.0];
+        let rotation = rotate(1.0, 0.0, 0.0, PI / 2.0);
+        test_decompose(translation, rotation, scale);
+    }
+
+    fn test_decompose_translation(translation: [f32; 3]) {
         let rotation = [0.0, 0.0, 0.0, 1.0];
         let scale = [1.0, 1.0, 1.0];
         test_decompose(translation, rotation, scale);
     }
 
     #[test]
-    fn decompose_matrix_with_negative_determinant() {
-        let translation = [1.0, 2.0, 3.0];
+    fn decompose_identity() {
+        let translation = [0.0, 0.0, 0.0];
         let rotation = [0.0, 0.0, 0.0, 1.0];
-        let scale = [1.0, 1.0, -1.0];
+        let scale = [1.0, 1.0, 1.0];
         test_decompose(translation, rotation, scale);
+    }
+
+    #[test]
+    fn decompose_translation_unit_x() {
+        let translation = [1.0, 0.0, 0.0];
+        test_decompose_translation(translation);
+    }
+
+    #[test]
+    fn decompose_translation_unit_y() {
+        let translation = [0.0, 1.0, 0.0];
+        test_decompose_translation(translation);
+    }
+
+    #[test]
+    fn decompose_translation_unit_z() {
+        let translation = [0.0, 0.0, 1.0];
+        test_decompose_translation(translation);
+    }
+
+    #[test]
+    fn decompose_translation_random0() {
+        let translation = [1.0, -1.0, 1.0];
+        test_decompose_translation(translation);
+    }
+
+    #[test]
+    fn decompose_translation_random1() {
+        let translation = [-1.0, -1.0, -1.0];
+        test_decompose_translation(translation);
+    }
+
+    #[test]
+    fn decompose_translation_random2() {
+        let translation = [-10.0, 100000.0, -0.0001];
+        test_decompose_translation(translation);
+    }
+
+    #[test]
+    fn decompose_rotation_xaxis() {
+        let rotation = rotate(1.0, 0.0, 0.0, PI / 2.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_yaxis() {
+        let rotation = rotate(0.0, 1.0, 0.0, PI / 2.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_zaxis() {
+        let rotation = rotate(0.0, 0.0, 1.0, PI / 2.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_negative_xaxis() {
+        let rotation = rotate(-1.0, 0.0, 0.0, PI / 2.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_negative_yaxis() {
+        let rotation = rotate(0.0, -1.0, 0.0, PI / 2.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_negative_zaxis() {
+        let rotation = rotate(0.0, 0.0, -1.0, PI / 2.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_eighth_turn() {
+        let rotation = rotate(1.0, 0.0, 0.0, PI / 4.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_negative_quarter_turn() {
+        let rotation = rotate(0.0, 1.0, 0.0, -PI / 2.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_half_turn() {
+        let rotation = rotate(0.0, 0.0, 1.0, PI);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_zero_turn_xaxis() {
+        let rotation = rotate(1.0, 0.0, 0.0, 0.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_zero_turn_yaxis() {
+        let rotation = rotate(0.0, 1.0, 0.0, 0.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_zero_turn_zaxis() {
+        let rotation = rotate(0.0, 0.0, 1.0, 0.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_full_turn() {
+        let rotation = rotate(1.0, 0.0, 0.0, 2.0 * PI);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_random0() {
+        let rotation = rotate(1.0, 1.0, 1.0, PI / 3.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_random1() {
+        let rotation = rotate(1.0, -1.0, 1.0, -PI / 6.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_uniform_scale_up() {
+        let scale = [100.0, 100.0, 100.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_uniform_scale_down() {
+        let scale = [0.01, 0.01, 0.01];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_xscale_up() {
+        let scale = [100.0, 1.0, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_xscale_down() {
+        let scale = [0.001, 1.0, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_yscale_up() {
+        let scale = [1.0, 100.0, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_yscale_down() {
+        let scale = [1.0, 0.001, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_zscale_up() {
+        let scale = [1.0, 1.0, 100.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_zscale_down() {
+        let scale = [1.0, 1.0, 0.001];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_negative_xscale_unit() {
+        let scale = [-1.0, 1.0, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_negative_xscale_up() {
+        let scale = [-10.0, 1.0, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_negative_xscale_down() {
+        let scale = [-0.1, 1.0, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_negative_yscale_unit() {
+        let scale = [1.0, -1.0, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_negative_yscale_up() {
+        let scale = [1.0, -10.0, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_negative_yscale_down() {
+        let scale = [1.0, -0.1, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_negative_zscale_unit() {
+        let scale = [1.0, 1.0, -1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_negative_zscale_up() {
+        let scale = [1.0, 1.0, -10.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_negative_zscale_down() {
+        let scale = [1.0, 1.0, -0.1];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_up_sml() {
+        let scale = [10.0, 100.0, 1000.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_up_mls() {
+        let scale = [100.0, 1000.0, 10.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_up_lsm() {
+        let scale = [1000.0, 10.0, 100.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_down_sml() {
+        let scale = [0.01, 0.001, 0.0001];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_down_mls() {
+        let scale = [0.001, 0.0001, 0.01];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_down_lsm() {
+        let scale = [0.0001, 0.01, 0.01];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_unit_ls() {
+        let scale = [1.0, 100000.0, 0.000001];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_ms_negative_unit() {
+        let scale = [10.0, 0.1, -1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_ms_negative_up() {
+        let scale = [10.0, 0.1, -10.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_ms_negative_down() {
+        let scale = [10.0, 0.1, -0.1];
+        test_decompose_scale(scale);
     }
 }
