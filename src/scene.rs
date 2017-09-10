@@ -17,7 +17,6 @@ use {Camera, Gltf, Mesh, Skin};
 type Matrix3 = cgmath::Matrix3<f32>;
 type Matrix4 = cgmath::Matrix4<f32>;
 type Quaternion = cgmath::Quaternion<f32>;
-type Vector3 = cgmath::Vector3<f32>;
 
 /// 4x4 identity matrix.
 const IDENTITY: [f32; 16] = {
@@ -57,47 +56,36 @@ impl Transform {
     pub fn matrix(self) -> [[f32; 4]; 4] {
         match self {
             Transform::Matrix { matrix } => matrix,
-            Transform::Decomposed { translation, rotation, scale } => {
-                let t = Matrix4::from_translation(translation.into());
-                let r = Matrix4::from(Quaternion::new(rotation[3], rotation[0], rotation[1], rotation[2]));
-                let s = Matrix4::from_nonuniform_scale(scale[0], scale[1], scale[2]);
+            Transform::Decomposed { translation: t, rotation: r, scale: s } => {
+                let t = Matrix4::from_translation(t.into());
+                let r = Matrix4::from(Quaternion::new(r[3], r[0], r[1], r[2]));
+                let s = Matrix4::from_nonuniform_scale(s[0], s[1], s[2]);
                 (t * r * s).into()
             },
         }
     }
 
-    /// Returns the decomposed representation of this transform.
+    /// Returns a decomposed representation of this transform.
     ///
     /// If the transform is `Matrix`, then the decomposition is extracted from the
     /// matrix.
     pub fn decomposed(self) -> ([f32; 3], [f32; 4], [f32; 3]) {
         match self {
-            Transform::Matrix { matrix: mut m } => {
-                let translation = [
-                    mem::replace(&mut m[3][0], 0.0),
-                    mem::replace(&mut m[3][1], 0.0),
-                    mem::replace(&mut m[3][2], 0.0),
-                ];
-                let sx = Vector3::new(m[0][0], m[0][1], m[0][2]).magnitude();
-                m[0][0] /= sx;
-                m[0][1] /= sx;
-                m[0][2] /= sx;
-                let sy = Vector3::new(m[1][0], m[1][1], m[1][2]).magnitude();
-                m[1][0] /= sy;
-                m[1][1] /= sy;
-                m[1][2] /= sy;
-                let sz = Vector3::new(m[2][0], m[2][1], m[2][2]).magnitude();
-                m[2][0] /= sz;
-                m[2][1] /= sz;
-                m[2][2] /= sz;
-                let scale = [sx, sy, sz];
-                let r = Quaternion::from(
-                    Matrix3::new(
-                        m[0][0], m[0][1], m[0][2],
-                        m[1][0], m[1][1], m[1][2],
-                        m[2][0], m[2][1], m[2][2],
-                    ),
+            Transform::Matrix { matrix: m } => {
+                let translation = [m[3][0], m[3][1], m[3][2]];
+                let mut i = Matrix3::new(
+                    m[0][0], m[0][1], m[0][2],
+                    m[1][0], m[1][1], m[1][2],
+                    m[2][0], m[2][1], m[2][2],
                 );
+                let sx = i.x.magnitude();
+                let sy = i.y.magnitude();
+                let sz = i.determinant().signum() * i.z.magnitude();
+                let scale = [sx, sy, sz];
+                i.x /= sx;
+                i.y /= sy;
+                i.z /= sz;
+                let r = Quaternion::from(i);
                 let rotation = [r.v.x, r.v.y, r.v.z, r.s];
                 (translation, rotation, scale)
             },
@@ -344,3 +332,339 @@ impl<'a> Iterator for Children<'a> {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use ::cgmath::{vec3, InnerSpace, Matrix4, Quaternion, Rad, Rotation3};
+    use ::scene::Transform;
+    use ::std::f32::consts::PI;
+
+    fn rotate(x: f32, y: f32, z: f32, r: f32) -> [f32; 4] {
+        let r = Quaternion::from_axis_angle(vec3(x, y, z).normalize(), Rad(r));
+        [r[1], r[2], r[3], r[0]]
+    }
+
+    fn test_decompose(translation: [f32; 3], rotation: [f32; 4], scale: [f32; 3]) {
+        let matrix = Transform::Decomposed { translation, rotation, scale }.matrix();
+        let (translation, rotation, scale) = Transform::Matrix { matrix }.decomposed();
+        let check = Transform::Decomposed { translation, rotation, scale }.matrix();
+        assert_relative_eq!(
+            Matrix4::from(check),
+            Matrix4::from(matrix),
+            epsilon = 0.05
+        );
+    }
+
+    fn test_decompose_rotation(rotation: [f32; 4]) {
+        let translation = [1.0, -2.0, 3.0];
+        let scale = [1.0, 1.0, 1.0];
+        test_decompose(translation, rotation, scale);
+    }
+
+    fn test_decompose_scale(scale: [f32; 3]) {
+        let translation = [1.0, 2.0, 3.0];
+        let rotation = rotate(1.0, 0.0, 0.0, PI / 2.0);
+        test_decompose(translation, rotation, scale);
+    }
+
+    fn test_decompose_translation(translation: [f32; 3]) {
+        let rotation = [0.0, 0.0, 0.0, 1.0];
+        let scale = [1.0, 1.0, 1.0];
+        test_decompose(translation, rotation, scale);
+    }
+
+    #[test]
+    fn decompose_identity() {
+        let translation = [0.0, 0.0, 0.0];
+        let rotation = [0.0, 0.0, 0.0, 1.0];
+        let scale = [1.0, 1.0, 1.0];
+        test_decompose(translation, rotation, scale);
+    }
+
+    #[test]
+    fn decompose_translation_unit_x() {
+        let translation = [1.0, 0.0, 0.0];
+        test_decompose_translation(translation);
+    }
+
+    #[test]
+    fn decompose_translation_unit_y() {
+        let translation = [0.0, 1.0, 0.0];
+        test_decompose_translation(translation);
+    }
+
+    #[test]
+    fn decompose_translation_unit_z() {
+        let translation = [0.0, 0.0, 1.0];
+        test_decompose_translation(translation);
+    }
+
+    #[test]
+    fn decompose_translation_random0() {
+        let translation = [1.0, -1.0, 1.0];
+        test_decompose_translation(translation);
+    }
+
+    #[test]
+    fn decompose_translation_random1() {
+        let translation = [-1.0, -1.0, -1.0];
+        test_decompose_translation(translation);
+    }
+
+    #[test]
+    fn decompose_translation_random2() {
+        let translation = [-10.0, 100000.0, -0.0001];
+        test_decompose_translation(translation);
+    }
+
+    #[test]
+    fn decompose_rotation_xaxis() {
+        let rotation = rotate(1.0, 0.0, 0.0, PI / 2.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_yaxis() {
+        let rotation = rotate(0.0, 1.0, 0.0, PI / 2.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_zaxis() {
+        let rotation = rotate(0.0, 0.0, 1.0, PI / 2.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_negative_xaxis() {
+        let rotation = rotate(-1.0, 0.0, 0.0, PI / 2.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_negative_yaxis() {
+        let rotation = rotate(0.0, -1.0, 0.0, PI / 2.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_negative_zaxis() {
+        let rotation = rotate(0.0, 0.0, -1.0, PI / 2.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_eighth_turn() {
+        let rotation = rotate(1.0, 0.0, 0.0, PI / 4.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_negative_quarter_turn() {
+        let rotation = rotate(0.0, 1.0, 0.0, -PI / 2.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_half_turn() {
+        let rotation = rotate(0.0, 0.0, 1.0, PI);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_zero_turn_xaxis() {
+        let rotation = rotate(1.0, 0.0, 0.0, 0.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_zero_turn_yaxis() {
+        let rotation = rotate(0.0, 1.0, 0.0, 0.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_zero_turn_zaxis() {
+        let rotation = rotate(0.0, 0.0, 1.0, 0.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_full_turn() {
+        let rotation = rotate(1.0, 0.0, 0.0, 2.0 * PI);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_random0() {
+        let rotation = rotate(1.0, 1.0, 1.0, PI / 3.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_rotation_random1() {
+        let rotation = rotate(1.0, -1.0, 1.0, -PI / 6.0);
+        test_decompose_rotation(rotation);
+    }
+
+    #[test]
+    fn decompose_uniform_scale_up() {
+        let scale = [100.0, 100.0, 100.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_uniform_scale_down() {
+        let scale = [0.01, 0.01, 0.01];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_xscale_up() {
+        let scale = [100.0, 1.0, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_xscale_down() {
+        let scale = [0.001, 1.0, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_yscale_up() {
+        let scale = [1.0, 100.0, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_yscale_down() {
+        let scale = [1.0, 0.001, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_zscale_up() {
+        let scale = [1.0, 1.0, 100.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_zscale_down() {
+        let scale = [1.0, 1.0, 0.001];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_negative_xscale_unit() {
+        let scale = [-1.0, 1.0, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_negative_xscale_up() {
+        let scale = [-10.0, 1.0, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_negative_xscale_down() {
+        let scale = [-0.1, 1.0, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_negative_yscale_unit() {
+        let scale = [1.0, -1.0, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_negative_yscale_up() {
+        let scale = [1.0, -10.0, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_negative_yscale_down() {
+        let scale = [1.0, -0.1, 1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_negative_zscale_unit() {
+        let scale = [1.0, 1.0, -1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_negative_zscale_up() {
+        let scale = [1.0, 1.0, -10.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_negative_zscale_down() {
+        let scale = [1.0, 1.0, -0.1];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_up_sml() {
+        let scale = [10.0, 100.0, 1000.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_up_mls() {
+        let scale = [100.0, 1000.0, 10.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_up_lsm() {
+        let scale = [1000.0, 10.0, 100.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_down_sml() {
+        let scale = [0.01, 0.001, 0.0001];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_down_mls() {
+        let scale = [0.001, 0.0001, 0.01];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_down_lsm() {
+        let scale = [0.0001, 0.01, 0.01];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_unit_ls() {
+        let scale = [1.0, 100000.0, 0.000001];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_ms_negative_unit() {
+        let scale = [10.0, 0.1, -1.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_ms_negative_up() {
+        let scale = [10.0, 0.1, -10.0];
+        test_decompose_scale(scale);
+    }
+
+    #[test]
+    fn decompose_nonuniform_scale_ms_negative_down() {
+        let scale = [10.0, 0.1, -0.1];
+        test_decompose_scale(scale);
+    }
+}

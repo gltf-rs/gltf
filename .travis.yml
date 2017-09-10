@@ -11,11 +11,6 @@ script:
     - cargo build --verbose --all-features --all
     - cargo test --verbose --all-features --all
 
-addons:
-    apt:
-        packages:
-            - libgl1-mesa-dev
-
 os:
     - linux
 

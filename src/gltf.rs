@@ -304,8 +304,7 @@ impl Gltf {
         self.as_json()
             .scene
             .as_ref()
-            .map(|index| self.scenes().nth(index.value()))
-            .unwrap()
+            .map(|index| self.scenes().nth(index.value()).unwrap())
     }
 
     /// Returns the extensions referenced in this .gltf file.
