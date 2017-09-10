@@ -1,15 +1,15 @@
 [package]
 name = "gltf-importer"
-version = "0.9.1"
-authors = ["alteous <alteous@outlook.com>"]
+version = "0.9.2"
+authors = ["David Harvey-Macaulay <alteous@outlook.com>"]
 description = "Reference importer for the gltf crate"
-repository = "https://github.com/alteous/gltf"
+repository = "https://github.com/gltf-rs/gltf"
 license = "MIT/Apache-2.0"
 
 [dependencies]
 base64 = "0.6"
-gltf = { path = "..", version = "0.9.1" }
-gltf-utils = { path = "../gltf-utils", version = "0.9.1" }
+gltf = { path = "..", version = "0.9.2" }
+gltf-utils = { path = "../gltf-utils", version = "0.9.2" }
 
 [features]
 default = []
