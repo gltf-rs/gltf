@@ -347,7 +347,11 @@ mod tests {
         let matrix = Transform::Decomposed { translation, rotation, scale }.matrix();
         let (translation, rotation, scale) = Transform::Matrix { matrix }.decomposed();
         let check = Transform::Decomposed { translation, rotation, scale }.matrix();
-        assert_relative_eq!(Matrix4::from(check), Matrix4::from(matrix));
+        assert_relative_eq!(
+            Matrix4::from(check),
+            Matrix4::from(matrix),
+            epsilon = 0.05
+        );
     }
 
     fn test_decompose_rotation(rotation: [f32; 4]) {
