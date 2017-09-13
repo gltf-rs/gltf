@@ -10,6 +10,7 @@
 use cgmath;
 use cgmath::prelude::*;
 use json;
+use math;
 use std::{mem, slice};
 
 use {Camera, Gltf, Mesh, Skin};
@@ -32,19 +33,19 @@ pub enum Transform {
     /// 4x4 transformation matrix in column-major order.
     Matrix {
         /// 4x4 matrix.
-        matrix: [[f32; 4]; 4],
+        matrix: math::Mat4,
     },
 
     /// Decomposed TRS properties.
     Decomposed {
         /// `[x, y, z]` vector.
-        translation: [f32; 3],
+        translation: math::Vec3,
 
         /// `[x, y, z, w]` quaternion, where `w` is the scalar.
-        rotation: [f32; 4],
+        rotation: math::Quat,
 
         /// `[x, y, z]` vector.
-        scale: [f32; 3],
+        scale: math::Vec3,
     },
 }
 
@@ -53,14 +54,18 @@ impl Transform {
     ///
     /// If the transform is `Decomposed`, then the matrix is generated with the
     /// equation `matrix = translation * rotation * scale`.
-    pub fn matrix(self) -> [[f32; 4]; 4] {
+    pub fn matrix(self) -> math::Mat4 {
         match self {
             Transform::Matrix { matrix } => matrix,
             Transform::Decomposed { translation: t, rotation: r, scale: s } => {
+                let t: [f32; 3] = t.into();
+                let r: [f32; 4] = r.into();
+                let s: [f32; 3] = s.into();
                 let t = Matrix4::from_translation(t.into());
                 let r = Matrix4::from(Quaternion::new(r[3], r[0], r[1], r[2]));
                 let s = Matrix4::from_nonuniform_scale(s[0], s[1], s[2]);
-                (t * r * s).into()
+                let m: [[f32; 4]; 4] = (t * r * s).into();
+                math::mat4(m)
             },
         }
     }
@@ -69,10 +74,11 @@ impl Transform {
     ///
     /// If the transform is `Matrix`, then the decomposition is extracted from the
     /// matrix.
-    pub fn decomposed(self) -> ([f32; 3], [f32; 4], [f32; 3]) {
+    pub fn decomposed(self) -> (math::Vec3, math::Quat, math::Vec3) {
         match self {
             Transform::Matrix { matrix: m } => {
-                let translation = [m[3][0], m[3][1], m[3][2]];
+                let m: [[f32; 4]; 4] = m.into();
+                let translation = math::vec3([m[3][0], m[3][1], m[3][2]]);
                 let mut i = Matrix3::new(
                     m[0][0], m[0][1], m[0][2],
                     m[1][0], m[1][1], m[1][2],
@@ -81,12 +87,12 @@ impl Transform {
                 let sx = i.x.magnitude();
                 let sy = i.y.magnitude();
                 let sz = i.determinant().signum() * i.z.magnitude();
-                let scale = [sx, sy, sz];
+                let scale = math::vec3([sx, sy, sz]);
                 i.x /= sx;
                 i.y /= sy;
                 i.z /= sz;
                 let r = Quaternion::from(i);
-                let rotation = [r.v.x, r.v.y, r.v.z, r.s];
+                let rotation = math::quat(r.v.into(), r.s);
                 (translation, rotation, scale)
             },
             Transform::Decomposed { translation, rotation, scale } => {
@@ -238,10 +244,11 @@ impl<'a> Node<'a> {
                 }
             }
         } else {
+            let r = self.json.rotation.0;
             Transform::Decomposed {
-                translation: self.json.translation,
-                rotation: self.json.rotation.0,
-                scale: self.json.scale,
+                translation: math::vec3(self.json.translation),
+                rotation: math::quat([r[0], r[1], r[2]], r[3]),
+                scale: math::vec3(self.json.scale),
             }
         }
     }

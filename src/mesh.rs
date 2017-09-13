@@ -9,6 +9,7 @@
 
 use std::{collections, iter, slice};
 use json;
+use math;
 
 use {Accessor, Gltf, Material};
 
@@ -209,15 +210,21 @@ impl<'a> Primitive<'a> {
     ///
     /// Since `POSITION` accessors must include bounds information, one can
     /// call `Gltf::validate_minimally` to ensure this data exists.
-    pub fn position_bounds(&self) -> Option<Bounds<[f32; 3]>> {
-        if let Some(pos_accessor_index) = self.json.attributes.get(&Checked::Valid(Semantic::Positions)) {
-            let pos_accessor = self.mesh.gltf.accessors().nth(pos_accessor_index.value()).unwrap();
+    pub fn position_bounds(&self) -> Option<Bounds<math::Vec3>> {
+        if let Some(pos_accessor_index) = self.json.attributes
+            .get(&Checked::Valid(Semantic::Positions)) {
+            let pos_accessor = self.mesh.gltf
+                .accessors()
+                .nth(pos_accessor_index.value())
+                .unwrap();
             // NOTE: cannot panic if validated "minimally"
-            let min: [f32; 3] = json::from_value(pos_accessor.min().unwrap()).unwrap();
-            let max: [f32; 3] = json::from_value(pos_accessor.max().unwrap()).unwrap();
+            let min: [f32; 3] = json::from_value(pos_accessor.min().unwrap())
+                .unwrap();
+            let max: [f32; 3] = json::from_value(pos_accessor.max().unwrap())
+                .unwrap();
             Some(Bounds {
-                min: [min[0], min[1], min[2]],
-                max: [max[0], max[1], max[2]]
+                min: math::vec3([min[0], min[1], min[2]]),
+                max: math::vec3([max[0], max[1], max[2]]),
             })
         } else {
             None

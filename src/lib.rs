@@ -65,6 +65,8 @@ extern crate approx;
 extern crate cgmath;
 #[macro_use]
 extern crate lazy_static;
+#[cfg(feature = "mint-support")]
+extern crate mint;
 
 /// Contains (de)serializable data structures that match the glTF JSON text.
 #[deprecated(since = "0.9.1", note = "Will be removed in 1.0.0")]
@@ -94,6 +96,9 @@ pub mod image;
 
 /// Material properties of primitives.
 pub mod material;
+
+/// Mathematical primitives.
+pub mod math;
 
 /// Meshes and their primitives.
 pub mod mesh;
