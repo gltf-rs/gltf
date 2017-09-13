@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
-/// Re-exported with `feature = "mint-support"`.
-#[cfg(feature = "mint-support")]
+/// Re-exported with `feature = "mint"`.
+#[cfg(feature = "mint")]
 mod with_mint {
     /// 4x4 column-major matrix.
     pub type Mat4 = ::mint::ColumnMatrix4<f32>;
@@ -47,8 +47,8 @@ mod with_mint {
     }
 }
 
-/// Re-exported with `not(feature = "mint-support")`.
-#[cfg(not(feature = "mint-support"))]
+/// Re-exported with `not(feature = "mint")`.
+#[cfg(not(feature = "mint"))]
 mod without_mint {
     /// 4x4 column-major matrix.
     pub type Mat4 = [[f32; 4]; 4];
@@ -91,7 +91,7 @@ mod without_mint {
     }
 }
 
-#[cfg(feature = "mint-support")]
+#[cfg(feature = "mint")]
 pub use self::with_mint::*;
-#[cfg(not(feature = "mint-support"))]
+#[cfg(not(feature = "mint"))]
 pub use self::without_mint::*;

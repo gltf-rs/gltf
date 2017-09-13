@@ -20,16 +20,15 @@ members = ["gltf-derive", "gltf-json", "gltf-importer", "gltf-utils"]
 approx = "^0.1.1"
 cgmath = "^0.15.0"
 lazy_static = "^0.2.0"
-mint = "^0.4"
+mint = { optional = true, version = "^0.4" }
 
 [dependencies.gltf-json]
 path = "gltf-json"
 version = "0.9.2"
 
 [features]
-default = ["mint-support"]
+default = []
 extras = ["gltf-json/extras"]
-mint-support = []
 names = ["gltf-json/names"]
 
 [[example]]

@@ -65,7 +65,7 @@ extern crate approx;
 extern crate cgmath;
 #[macro_use]
 extern crate lazy_static;
-#[cfg(feature = "mint-support")]
+#[cfg(feature = "mint")]
 extern crate mint;
 
 /// Contains (de)serializable data structures that match the glTF JSON text.
