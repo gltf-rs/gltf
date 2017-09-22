@@ -13,6 +13,15 @@ use Gltf;
 
 pub use json::buffer::Target;
 
+/// The data referenced by a `Buffer`.
+pub enum Data<'a> {
+    /// Buffer data is contained in the `BIN` section of binary `glTF`.
+    Bin,
+
+    /// Buffer data is contained in an external data source.
+    Uri(&'a str),
+}
+
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Clone, Debug)]
 pub struct Buffer<'a> {
@@ -67,15 +76,21 @@ impl<'a> Buffer<'a> {
         self.json
     }
 
+    /// Returns a reference to the buffer data.
+    pub fn data(&self) -> Data {
+        if let Some(uri) = self.uri() {
+            Data::Uri(uri)
+        } else {
+            Data::Bin
+        }
+    }
+
     /// Returns the uniform resource identifier for the buffer data.
     ///
-    /// # Notes
-    ///
-    /// When the buffer is sourced from the `BIN` section of binary glTF, the
-    /// fragment `"#bin"` is returned. This is non-standard according to the
-    /// glTF specification.
-    pub fn uri(&self) -> &str {
-        self.json.uri.as_ref().map(String::as_str).unwrap_or("#bin")
+    /// Returns `None` when the buffer is sourced from the `BIN` section of
+    /// binary `glTF`.
+    fn uri(&self) -> Option<&str> {
+        self.json.uri.as_ref().map(String::as_str)
     }
 
     /// The length of the buffer in bytes.
