@@ -10,7 +10,7 @@
 use std::slice;
 use {accessor, json, scene, Gltf};
 
-pub use json::animation::{InterpolationAlgorithm, TrsProperty};
+pub use json::animation::{Interpolation, Property};
 
 /// A keyframe animation.
 #[derive(Clone, Debug)]
