@@ -197,7 +197,7 @@ impl<'a> Target<'a> {
 
     /// Returns the node's TRS property to modify or the 'weights' of the morph
     /// targets it instantiates.
-    pub fn path(&self) -> TrsProperty {
+    pub fn path(&self) -> Property {
         self.json.path.unwrap()
     }
 }
@@ -246,7 +246,7 @@ impl<'a> Sampler<'a> {
     }
 
     /// Returns the keyframe interpolation algorithm.
-    pub fn interpolation(&self) -> InterpolationAlgorithm {
+    pub fn interpolation(&self) -> Interpolation {
         self.json.interpolation.unwrap()
     }
 
