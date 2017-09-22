@@ -8,11 +8,13 @@ rust:
 sudo: false
 
 script:
+    - "travis_wait 30 sleep 1800 &"
     - cargo build --verbose --all-features --all
     - cargo test --verbose --all-features --all
 
 os:
     - linux
+    - osx
 
 matrix:
     allow_failures:

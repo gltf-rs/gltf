@@ -477,6 +477,10 @@ impl<'a> Iterator for Images<'a> {
             .next()
             .map(|(index, json)| Image::new(self.gltf, index, json))
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
 }
 
 impl<'a> ExactSizeIterator for Materials<'a> {}

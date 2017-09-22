@@ -50,7 +50,7 @@ pub enum Error {
 
     /// Base 64 decoding error.
     Base64Decoding(base64::DecodeError),
-    
+
     /// A glTF extension required by the asset has not been enabled by the user.
     ExtensionDisabled(String),
 
@@ -68,6 +68,9 @@ pub enum Error {
 
     /// Failure when deserializing .gltf or .glb JSON.
     MalformedJson(json::Error),
+
+    /// The `BIN` section of binary `glTF` is required but not provided.
+    MissingBin,
 
     /// The .gltf data is invalid.
     Validation(Vec<(json::Path, validation::Error)>),
@@ -154,14 +157,18 @@ fn load_external_buffers(
 ) -> Result<Vec<Vec<u8>>, Error> {
     let mut buffers = vec![];
     for (index, buffer) in gltf.buffers().enumerate() {
-        let uri = buffer.uri();
-        let data = if uri == "#bin" {
-            Ok(bin.take().unwrap())
-        } else if uri.starts_with("data:") {
-            Ok(parse_data_uri(uri)?)
-        } else {
-            let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
-            read_to_end(&path)
+        let data = match buffer.data() {
+            gltf::buffer::Data::Bin => bin.take().ok_or(Error::MissingBin),
+            gltf::buffer::Data::Uri(uri) if uri.starts_with("data:") => {
+                parse_data_uri(uri)
+            },
+            gltf::buffer::Data::Uri(uri)  => {
+                let path = base_path
+                    .parent()
+                    .unwrap_or(Path::new("./"))
+                    .join(uri);
+                read_to_end(&path)
+            },
         }?;
         if data.len() < buffer.length() {
             let path = json::Path::new().field("buffers").index(index);
@@ -312,6 +319,7 @@ impl StdError for Error {
             Io(_) => "I/O error",
             Gltf(_) => "Error from gltf crate",
             MalformedJson(_) => "Malformed .gltf / .glb JSON",
+            MissingBin => "`BIN` chunk of binary `glTF` required but not provided",
             Validation(_) => "Asset failed validation tests",
         }
     }

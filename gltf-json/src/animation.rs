@@ -30,7 +30,7 @@ pub const VALID_TRS_PROPERTIES: &'static [&'static str] = &[
 
 /// Specifies an interpolation algorithm.
 #[derive(Clone, Copy, Debug, Deserialize)]
-pub enum InterpolationAlgorithm {
+pub enum Interpolation {
     /// Linear interpolation.
     ///
     /// The animated values are linearly interpolated between keyframes.
@@ -67,7 +67,7 @@ pub enum InterpolationAlgorithm {
 
 /// Specifies a TRS property.
 #[derive(Clone, Copy, Debug, Deserialize)]
-pub enum TrsProperty {
+pub enum Property {
     /// XYZ translation vector.
     Translation = 1,
 
@@ -142,7 +142,7 @@ pub struct Target {
     
     /// The name of the node's TRS property to modify or the 'weights' of the
     /// morph targets it instantiates.
-    pub path: Checked<TrsProperty>,
+    pub path: Checked<Property>,
 }
 
 /// Defines a keyframe graph but not its target.
@@ -161,7 +161,7 @@ pub struct Sampler {
     
     /// The interpolation algorithm.
     #[serde(default)]
-    pub interpolation: Checked<InterpolationAlgorithm>,
+    pub interpolation: Checked<Interpolation>,
     
     /// The index of an accessor containing keyframe output values.
     pub output: Index<accessor::Accessor>,
@@ -183,19 +183,19 @@ impl Validate for Animation {
     }
 }
 
-impl Default for InterpolationAlgorithm {
+impl Default for Interpolation {
     fn default() -> Self {
-        InterpolationAlgorithm::Linear
+        Interpolation::Linear
     }
 }
 
-impl<'de> de::Deserialize<'de> for Checked<InterpolationAlgorithm> {
+impl<'de> de::Deserialize<'de> for Checked<Interpolation> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: de::Deserializer<'de>
     {
         struct Visitor;
         impl<'de> de::Visitor<'de> for Visitor {
-            type Value = Checked<InterpolationAlgorithm>;
+            type Value = Checked<Interpolation>;
 
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 write!(f, "any of: {:?}", VALID_INTERPOLATION_ALGORITHMS)
@@ -204,7 +204,7 @@ impl<'de> de::Deserialize<'de> for Checked<InterpolationAlgorithm> {
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
                 where E: de::Error
             {
-                use self::InterpolationAlgorithm::*;
+                use self::Interpolation::*;
                 use validation::Checked::*;
                 Ok(match value {
                     "LINEAR" => Valid(Linear),
@@ -219,13 +219,13 @@ impl<'de> de::Deserialize<'de> for Checked<InterpolationAlgorithm> {
     }
 }
 
-impl<'de> de::Deserialize<'de> for Checked<TrsProperty> {
+impl<'de> de::Deserialize<'de> for Checked<Property> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: de::Deserializer<'de>
     {
         struct Visitor;
         impl<'de> de::Visitor<'de> for Visitor {
-            type Value = Checked<TrsProperty>;
+            type Value = Checked<Property>;
 
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 write!(f, "any of: {:?}", VALID_TRS_PROPERTIES)
@@ -234,7 +234,7 @@ impl<'de> de::Deserialize<'de> for Checked<TrsProperty> {
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
                 where E: de::Error
             {
-                use self::TrsProperty::*;
+                use self::Property::*;
                 use validation::Checked::*;
                 Ok(match value {
                     "translation" => Valid(Translation),
