@@ -136,6 +136,27 @@ pub enum Error {
     Validation(Vec<(json::Path, json::validation::Error)>),
 }
 
+/// Represents a Glb loader error.
+#[derive(Debug)]
+pub enum GlbError {
+    /// Slice ended before we could even read the header.
+    MissingHeader,
+    /// Unsupported version in GLB header.
+    Version,
+    /// Magic says that file is not glTF.
+    Magic([u8; 4]),
+    /// Length is header exceeeds that of slice.
+    Length,
+    /// JSON chunkLength exceeeds slice length.
+    JsonChunkLength,
+    /// JSON chunkType is not JSON.
+    JsonChunkType,
+    /// BIN chunkLength exceeds length of data.
+    BinChunkLength,
+    /// BIN chunkType is not BIN\0
+    BinChunkType,
+}
+
 /// Returns `true` if the slice begins with the `b"glTF"` magic string, indicating
 /// a binary `glTF` asset.
 ///
@@ -181,5 +202,27 @@ impl From<json::Error> for Error {
 impl From<Vec<(json::Path, json::validation::Error)>> for Error {
     fn from(errs: Vec<(json::Path, json::validation::Error)>) -> Self {
         Error::Validation(errs)
+    }
+}
+
+impl std::fmt::Display for GlbError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        use std::error::Error;
+        write!(f, "{}", self.description())
+    }
+}
+
+impl std::error::Error for GlbError {
+    fn description(&self) -> &str {
+         match *self {
+             GlbError::MissingHeader => "missing header",
+             GlbError::Version => "unsupported version",
+             GlbError::Magic(_) => "not glTF magic",
+             GlbError::Length => "length in header exceeds that of slice",
+             GlbError::JsonChunkLength => "JSON chunkLength exceeeds slice length",
+             GlbError::JsonChunkType => "JSON chunkType is not JSON",
+             GlbError::BinChunkLength => "BIN chunkLength exceeds slice length",
+             GlbError::BinChunkType => "BIN chunkType is not BIN\\0",
+        }
     }
 }
