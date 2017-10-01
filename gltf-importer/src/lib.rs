@@ -9,7 +9,7 @@
 
 //! The reference loader implementation for the `gltf` crate.
 //!
-//! # Examples 
+//! # Examples
 //!
 //! ### Importing some `glTF` 2.0
 //!
@@ -50,7 +50,7 @@ pub enum Error {
 
     /// Base 64 decoding error.
     Base64Decoding(base64::DecodeError),
-    
+
     /// A glTF extension required by the asset has not been enabled by the user.
     ExtensionDisabled(String),
 
@@ -105,17 +105,17 @@ impl Buffers {
     }
 }
 
-fn import_impl(path: &Path, config: Config) -> Result<(Gltf, Buffers), Error> {
+fn import_impl(path: &Path, config: &Config) -> Result<(Gltf, Buffers), Error> {
     let data = read_to_end(path)?;
     if data.starts_with(b"glTF") {
-        import_binary(&data, &config, path)
+        import_binary(&data, config, path)
     } else {
-        import_standard(&data, &config, path)
+        import_standard(&data, config, path)
     }
-}   
+}
 
 /// Imports glTF 2.0 with custom configuration.
-pub fn import_with_config<P>(path: P, config: Config) -> Result<(Gltf, Buffers), Error>
+pub fn import_with_config<P>(path: P, config: &Config) -> Result<(Gltf, Buffers), Error>
     where P: AsRef<Path>
 {
     import_impl(path.as_ref(), config)
@@ -125,7 +125,7 @@ pub fn import_with_config<P>(path: P, config: Config) -> Result<(Gltf, Buffers),
 pub fn import<P>(path: P) -> Result<(Gltf, Buffers), Error>
     where P: AsRef<Path>
 {
-    import_impl(path.as_ref(), Default::default())
+    import_impl(path.as_ref(), &Default::default())
 }
 
 fn read_to_end_impl(path: &Path) -> Result<Vec<u8>, Error> {
@@ -142,11 +142,11 @@ fn read_to_end<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, Error> {
 }
 
 fn parse_data_uri(uri: &str) -> Result<Vec<u8>, Error> {
-    let encoded = uri.split(",").nth(1).unwrap();
+    let encoded = uri.split(',').nth(1).unwrap();
     let decoded = base64::decode(&encoded)?;
     Ok(decoded)
 }
-    
+
 fn load_external_buffers(
     base_path: &Path,
     gltf: &Gltf,
@@ -160,7 +160,7 @@ fn load_external_buffers(
         } else if uri.starts_with("data:") {
             Ok(parse_data_uri(uri)?)
         } else {
-            let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
+            let path = base_path.parent().unwrap_or_else(|| Path::new("./")).join(uri);
             read_to_end(&path)
         }?;
         if data.len() < buffer.length() {
@@ -235,7 +235,7 @@ fn import_standard<'a>(
     base_path: &Path,
 ) -> Result<(Gltf, Buffers), Error> {
     let unvalidated = Gltf::from_slice(data)?;
-    let gltf = validate_standard(unvalidated, &config)?;
+    let gltf = validate_standard(unvalidated, config)?;
     let bin = None;
     let mut buffers = Buffers(vec![]);
     for buffer in load_external_buffers(base_path, &gltf, bin)? {
@@ -249,10 +249,10 @@ fn import_binary<'a>(
     config: &Config,
     base_path: &Path,
 ) -> Result<(Gltf, Buffers), Error> {
-    let gltf::Glb { header: _, json, bin } = gltf::Glb::from_slice(data)?;
+    let gltf::Glb { json, bin, .. } = gltf::Glb::from_slice(data)?;
     let unvalidated = Gltf::from_slice(json)?;
     let bin = bin.map(|x| x.to_vec());
-    let gltf = validate_binary(unvalidated, &config, bin.is_some())?;
+    let gltf = validate_binary(unvalidated, config, bin.is_some())?;
     let mut buffers = Buffers(vec![]);
     for buffer in load_external_buffers(base_path, &gltf, bin)? {
         buffers.0.push(buffer);

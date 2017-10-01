@@ -13,10 +13,10 @@ use validation::{Checked, Error, Validate};
 use {extensions, Extras, Index, Root, Path};
 
 /// Corresponds to `GL_ARRAY_BUFFER`.
-pub const ARRAY_BUFFER: u32 = 34962;
+pub const ARRAY_BUFFER: u32 = 34_962;
 
 /// Corresponds to `GL_ELEMENT_ARRAY_BUFFER`.
-pub const ELEMENT_ARRAY_BUFFER: u32 = 34963;
+pub const ELEMENT_ARRAY_BUFFER: u32 = 34_963;
 
 /// The minimum byte stride.
 pub const MIN_BYTE_STRIDE: u32 = 4;
@@ -30,7 +30,7 @@ pub const VALID_TARGETS: &'static [u32] = &[
     ELEMENT_ARRAY_BUFFER,
 ];
 
-/// Specifies the target a GPU buffer should be bound to. 
+/// Specifies the target a GPU buffer should be bound to.
 #[derive(Clone, Copy, Debug)]
 pub enum Target {
     /// Corresponds to `GL_ARRAY_BUFFER`.
