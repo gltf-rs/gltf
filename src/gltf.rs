@@ -186,7 +186,7 @@ impl Unvalidated {
             let json = self.as_json();
             json.validate_minimally(
                 json,
-                || json::Path::new(),
+                json::Path::new,
                 &mut |path, err| errs.push((path(), err)),
             );
         }
@@ -205,12 +205,12 @@ impl Unvalidated {
             let json = self.as_json();
             json.validate_minimally(
                 json,
-                || json::Path::new(),
+                json::Path::new,
                 &mut |path, err| errs.push((path(), err)),
             );
             json.validate_completely(
                 json,
-                || json::Path::new(),
+                json::Path::new,
                 &mut |path, err| errs.push((path(), err)),
             );
         }
@@ -250,6 +250,7 @@ impl Gltf {
     }
 
     /// Constructs the `Gltf` wrapper from a string slice.
+    #[allow(should_implement_trait)]
     pub fn from_str(slice: &str) -> Result<Unvalidated, Error> {
         let json: json::Root = json::from_str(slice)?;
         Ok(Unvalidated(Gltf::from_json(json)))
@@ -340,7 +341,7 @@ impl Gltf {
             gltf: self,
         }
     }
-    
+
     /// Returns an `Iterator` that visits the nodes of the glTF asset.
     pub fn nodes(&self) -> Nodes {
         Nodes {

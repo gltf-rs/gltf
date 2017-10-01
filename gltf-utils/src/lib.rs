@@ -7,6 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#![allow(unknown_lints)]
+#![allow(cast_lossless)]
+
 extern crate gltf;
 
 use std::{fmt, marker, mem};
@@ -60,11 +63,11 @@ pub trait PrimitiveIterators<'a> {
     /// Visits the vertex normals of a primitive.
     fn normals<S>(&'a self, source: &'a S) -> Option<Normals<'a>>
         where S: Source;
-    
+
     /// Visits the vertex tangents of a primitive.
     fn tangents<S>(&'a self, source: &'a S) -> Option<Tangents<'a>>
         where S: Source;
-    
+
     /// Visits the vertex texture co-ordinates of a primitive.
     fn tex_coords_f32<S>(
         &'a self,
@@ -72,7 +75,7 @@ pub trait PrimitiveIterators<'a> {
         source: &'a S,
     ) -> Option<TexCoordsF32<'a>>
         where S: Source;
-    
+
     /// Visits the vertex colors of a primitive.
     fn colors_rgba_f32<S>(
         &'a self,
@@ -146,7 +149,7 @@ impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
     {
         self.indices().map(|accessor| IndicesU32(Indices::new(accessor, source)))
     }
-    
+
     fn joints_u16<S>(&'a self, set: u32, source: &'a S) -> Option<JointsU16<'a>>
         where S: Source
     {
@@ -176,13 +179,13 @@ pub struct AccessorIter<'a, T> {
 
     /// Byte offset into the buffer view where the items begin.
     offset: usize,
-    
+
     /// The data we're iterating over.
     data: &'a [u8],
 
     /// The accessor we're iterating over.
     accessor: gltf::Accessor<'a>,
-    
+
     /// Consumes the data type we're returning at each iteration.
     _marker: marker::PhantomData<T>,
 }
@@ -261,7 +264,7 @@ enum Joints<'a> {
     /// Refer to the documentation on morph targets and skins for more
     /// information.
     U8(AccessorIter<'a, [u8; 4]>),
-    
+
     /// Joints of type `[u16; 4]`.
     /// Refer to the documentation on morph targets and skins for more
     /// information.
@@ -552,7 +555,7 @@ impl<'a> Iterator for Normals<'a> {
         self.0.size_hint()
     }
 }
- 
+
 impl<'a> ExactSizeIterator for Tangents<'a> {}
 impl<'a> Iterator for Tangents<'a> {
     type Item = [f32; 4];

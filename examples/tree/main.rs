@@ -53,7 +53,7 @@ fn run(path: &str) -> Result<(), Box<StdError>> {
 
 fn main() {
     if let Some(path) = std::env::args().nth(1) {
-        let _ = run(&path).expect("runtime error");
+        run(&path).expect("runtime error");
     } else {
         println!("usage: gltf-tree <FILE>");
     }
