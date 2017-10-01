@@ -22,6 +22,7 @@ fn import_from_path(path: &path::Path) -> Result<(), ImportError> {
     }
 }
 
+#[allow(type_complexity)]
 fn run() -> Result<Vec<(path::PathBuf, Result<(), ImportError>)>, Box<StdError>> {
     let sample_dir_path = path::Path::new("../glTF-Sample-Models/2.0");
     let mut results = vec![];

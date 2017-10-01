@@ -17,7 +17,7 @@ fn test_accessor_bounds_validate_minimally() {
     let mut errs = vec![];
     json.validate_minimally(
         &json,
-        || gltf_json::Path::new(),
+        gltf_json::Path::new,
         &mut |path, err| errs.push((path(), err)),
     );
     assert_eq!(errs,
