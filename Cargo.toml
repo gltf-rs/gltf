@@ -23,8 +23,11 @@ travis-ci = { repository = "gltf-rs/gltf" }
 [workspace]
 members = ["gltf-derive", "gltf-json", "gltf-importer", "gltf-utils"]
 
-[dependencies]
+[dev-dependencies]
 approx = "0.1.1"
+
+[dependencies]
+byteorder = "1.1"
 cgmath = "0.15"
 gltf-json = { path = "gltf-json", version = "0.9.3" }
 lazy_static = "0.2"
