@@ -8,6 +8,7 @@
 // except according to those terms.
 
 use Error;
+use GlbError;
 
 /// The contents of a .glb file.
 #[derive(Clone, Debug)]
@@ -24,29 +25,24 @@ pub struct Glb<'a> {
 
 /// The header section of a .glb file.
 #[derive(Copy, Clone, Debug)]
-#[repr(C)]
 pub struct Header {
     /// Must be `b"glTF"`.
     pub magic: [u8; 4],
-
     /// Must be `2`.
     pub version: u32,
-
     /// Must match the length of the parent .glb file.
     pub length: u32,
 }
 
 /// The header of the JSON or BIN section of a .glb file.
 #[derive(Copy, Clone, Debug)]
-#[repr(C)]
-struct ChunkInfo {
+struct ChunkInfo<'a> {
     /// The length of the chunk data in byte excluding the header.
     length: u32,
-
     /// Either `b"JSON"` or `b"BIN\0"`.
     kind: [u8; 4],
-
-    // Data follows... 
+    // Data follows...
+    data: &'a [u8],
 }
 
 impl<'a> Glb<'a> {
@@ -56,70 +52,64 @@ impl<'a> Glb<'a> {
     /// * Mandatory JSON chunk.
     /// * Optional BIN chunk.
     pub fn from_slice(data: &'a [u8]) -> Result<Self, Error> {
-        use std::mem::{size_of, transmute};
-        let err = |reason: &str| Err(Error::Glb(reason.to_string()));
-        let ptr = data.as_ptr();
+        use byteorder::{LE, ReadBytesExt};
+        use std::io::{Cursor, Read, Seek, SeekFrom};
+        use std::mem::size_of;
         if data.len() < size_of::<Header>() + size_of::<ChunkInfo>() {
-            return err("GLB missing header");
+            return Err(Error::Glb(GlbError::MissingHeader));
         }
 
-        // Offset in bytes into `glb`.
-        let mut offset = 0isize;
-
-        let header = unsafe {
-            let x: *const Header = transmute(ptr.offset(offset));
-            if &(*x).magic != b"glTF" {
-                return err("GLB does not start with `glTF`");
+        // TODO: Clean up
+        let mut reader = Cursor::new(data);
+        let header = {
+            let mut magic = [0_u8; 4];
+            reader.read_exact(&mut magic).unwrap();
+            let version = reader.read_u32::<LE>().unwrap();
+            let length  = reader.read_u32::<LE>().unwrap();
+            if &magic != b"glTF" {
+                return Err(Error::Glb(GlbError::Magic(magic)));
             }
-            if (*x).length as usize != data.len() {
-                return err("length does not match length of data");
+            if version != 2 {
+                return Err(Error::Glb(GlbError::Version));
             }
-            if (*x).version != 2 {
-                return err("Not GLB version 2.0");
+            if length as usize > data.len() {
+                return Err(Error::Glb(GlbError::Length));
             }
-            *x
+            Header { magic, version, length }
         };
 
-        offset += size_of::<Header>() as isize;
-        let (json_chunk, json_chunk_length) = unsafe {
-            let x: *const ChunkInfo = transmute(ptr.offset(offset));
-            offset += size_of::<ChunkInfo>() as isize;
-            if (*x).length as usize > (data.len() as isize - offset) as usize {
-                return err("JSON chunkLength exceeds length of data");
+        let json = {
+            let length = reader.read_u32::<LE>().unwrap();
+            let mut kind = [0_u8; 4];
+            reader.read_exact(&mut kind).unwrap();
+            if &kind != b"JSON" {
+                return Err(Error::Glb(GlbError::JsonChunkType));
             }
-            if &(*x).kind != b"JSON" {
-                return err("JSON chunkType is not `JSON`");
+            let start = reader.position() as usize;
+            if start + length as usize > data.len() {
+                return Err(Error::Glb(GlbError::JsonChunkLength));
             }
-            let begin = offset as usize;
-            let end = begin + (*x).length as usize;
-            (begin..end, (*x).length as usize)
+            let end = start + length as usize;
+            &data[start .. end]
         };
 
-        offset += json_chunk_length as isize;
-        let bin_chunk = if data.len() as isize - offset == 0 {
-            None
+        let bin = if reader.seek(SeekFrom::Current((json.len() as i64 + 3) & !3)).is_ok() {
+            let length = reader.read_u32::<LE>().unwrap();
+            let mut kind = [0_u8; 4];
+            reader.read_exact(&mut kind).unwrap();
+            if &kind != b"BIN\0" {
+                return Err(Error::Glb(GlbError::BinChunkType));
+            }
+            let start = reader.position() as usize;
+            if start + length as usize > data.len() {
+                return Err(Error::Glb(GlbError::BinChunkLength));
+            }
+            let end = start + length as usize;
+            Some(start .. end).map(|range| &data[range])
         } else {
-            unsafe {
-                let x: *const ChunkInfo = transmute(ptr.offset(offset));
-                offset += size_of::<ChunkInfo>() as isize;
-                if (*x).length as usize > (data.len() as isize - offset) as usize {
-                    return err("BIN chunkLength exceeds length of data");
-                }
-                if &(*x).kind != b"BIN\0" {
-                    return err("BIN chunkType is not `BIN\0`");
-                }
-                let begin = offset as usize;
-                let end = begin + (*x).length as usize;
-                Some(begin..end)
-            }
+            None
         };
 
-        let json = &data[json_chunk];
-        let bin = bin_chunk.map(|range| &data[range]);
-        Ok(Glb {
-            header,
-            json,
-            bin,
-        })
+        Ok(Glb { header, json, bin })
     }
 }
