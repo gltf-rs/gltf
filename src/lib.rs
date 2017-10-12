@@ -128,38 +128,9 @@ pub enum Error {
     /// JSON deserialization error.
     Deserialize(json::Error),
     /// GLB parsing error.
-    Glb(GlbError),
+    Glb(self::glb::GlbError),
     /// `glTF` validation error.
     Validation(Vec<(json::Path, json::validation::Error)>),
-}
-
-/// Represents a Glb loader error.
-#[derive(Debug)]
-pub enum GlbError {
-    /// Io error occured.
-    IoError(::std::io::Error),
-    /// Unsupported version.
-    Version(u32),
-    /// Magic says that file is not glTF.
-    Magic([u8; 4]),
-    /// Length specified in GLB header exceeeds that of slice.
-    Length {
-        /// length specified in GLB header.
-        length: u32,
-        /// Actual length of data read.
-        length_read: usize,
-    },
-    /// Stream ended before we could read the chunk.
-    ChunkLength {
-        /// chunkType error happened at.
-        ty: [u8; 4],
-        /// chunkLength.
-        length: u32,
-        /// Actual length of data read.
-        length_read: usize,
-    },
-    /// Chunk of this chunkType was not expected.
-    ChunkType([u8; 4]),
 }
 
 /// Returns `true` if the slice begins with the `b"glTF"` magic string, indicating
