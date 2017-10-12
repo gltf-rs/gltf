@@ -163,8 +163,8 @@ impl std::error::Error for Error {
     }
 }
 
-impl From<GlbError> for Error {
-    fn from(err: GlbError) -> Self {
+impl From<self::glb::GlbError> for Error {
+    fn from(err: self::glb::GlbError) -> Self {
         Error::Glb(err)
     }
 }
@@ -178,23 +178,5 @@ impl From<json::Error> for Error {
 impl From<Vec<(json::Path, json::validation::Error)>> for Error {
     fn from(errs: Vec<(json::Path, json::validation::Error)>) -> Self {
         Error::Validation(errs)
-    }
-}
-
-impl std::fmt::Display for GlbError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        use std::error::Error;
-        write!(f, "{}", self.description())
-    }
-}
-
-impl std::error::Error for GlbError {
-    fn description(&self) -> &str {
-         match *self {
-             GlbError::Version(_) => "unsupported version",
-             GlbError::Magic(_) => "not glTF magic",
-             // GlbError::Length(_) => "length in header exceeds that of slice",
-             _ => unimplemented!(),
-        }
     }
 }
