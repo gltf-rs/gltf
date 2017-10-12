@@ -253,14 +253,12 @@ impl ::std::error::Error for GlbError {
              GlbError::ChunkLength { ty, .. } => match ty {
                  ChunkType::Json => "JSON chunk length exceeds that of slice",
                  ChunkType::Bin => "BIN\\0 chunk length exceeds that of slice",
-                 _ => "chunk length exceeds that of slice",
              },
              GlbError::ChunkType(ty) => match ty {
                  ChunkType::Json => "was not expecting JSON chunk",
                  ChunkType::Bin => "was not expecting BIN\\0 chunk",
-                 _ => "was not expecting a chunk",
              },
-             GlbError::UnknownChunkType(ty) => "unknown chunk type",
+             GlbError::UnknownChunkType(_) => "unknown chunk type",
         }
     }
 }
