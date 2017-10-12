@@ -9,9 +9,8 @@
 use byteorder::{LE, ReadBytesExt};
 
 use Error;
-use GlbError;
 
-use std::io;
+use std::{fmt, io};
 
 /// Represents a Glb loader error.
 #[derive(Debug)]
@@ -32,16 +31,17 @@ pub enum GlbError {
     /// Stream ended before we could read the chunk.
     ChunkLength {
         /// chunkType error happened at.
-        ty: [u8; 4],
+        ty: ChunkType,
         /// chunkLength.
         length: u32,
         /// Actual length of data read.
         length_read: usize,
     },
     /// Chunk of this chunkType was not expected.
-    ChunkType([u8; 4]),
+    ChunkType(ChunkType),
+    /// Unknown chunk type.
+    UnknownChunkType([u8; 4]),
 }
-
 
 /// The contents of a .glb file.
 #[derive(Clone, Debug)]
@@ -65,18 +65,27 @@ pub struct Header {
     pub length: u32,
 }
 
+/// GLB chunk type.
+#[derive(Copy, Clone, Debug)]
+pub enum ChunkType {
+    /// JSON chunk.
+    Json,
+    /// BIN\0 chunk.
+    Bin,
+}
+
 /// Chunk header with no data read yet.
 #[derive(Copy, Clone, Debug)]
 struct ChunkHeader {
     /// The length of the chunk data in byte excluding the header.
     length: u32,
     /// Chunk type.
-    ty: [u8; 4],
+    ty: ChunkType,
 }
 
 impl Header {
     fn from_reader<R: io::Read>(mut reader: R) -> Result<Self, GlbError> {
-        use GlbError::IoError;
+        use self::GlbError::IoError;
         let mut magic = [0; 4];
         reader.read_exact(&mut magic).map_err(IoError)?;
         // We only validate magic as we don't care for version and length of
@@ -96,10 +105,15 @@ impl Header {
 
 impl ChunkHeader {
     fn from_reader<R: io::Read>(mut reader: R) -> Result<Self, GlbError> {
-        use GlbError::IoError;
+        use self::GlbError::IoError;
         let length = reader.read_u32::<LE>().map_err(IoError)?;
         let mut ty = [0; 4];
         reader.read_exact(&mut ty).map_err(IoError)?;
+        let ty = match &ty {
+            b"JSON" => Ok(ChunkType::Json),
+            b"BIN\0" => Ok(ChunkType::Bin),
+            _ => Err(GlbError::UnknownChunkType(ty)),
+        }?;
         Ok(Self { length, ty })
     }
 }
@@ -176,17 +190,16 @@ impl<'a> Glb<'a> {
 
     /// Loads GLB for glTF 2.
     fn from_v2(mut data: &'a [u8]) -> Result<(&'a [u8], Option<&'a [u8]>), GlbError> {
-        use GlbError::{ChunkLength, ChunkType};
         let (json, mut data) = ChunkHeader::from_reader(&mut data)
-            .and_then(|json_h| if &json_h.ty == b"JSON" {
+            .and_then(|json_h| if let ChunkType::Json = json_h.ty {
                 Ok(json_h)
             } else {
-                Err(ChunkType(json_h.ty))
+                Err(GlbError::ChunkType(json_h.ty))
             })
             .and_then(|json_h| if json_h.length as usize <= data.len() {
                 Ok(json_h)
             } else {
-                Err(ChunkLength {
+                Err(GlbError::ChunkLength {
                     ty: json_h.ty,
                     length: json_h.length,
                     length_read: data.len(),
@@ -198,15 +211,15 @@ impl<'a> Glb<'a> {
 
         let bin = if data.len() > 0 {
             ChunkHeader::from_reader(&mut data)
-                .and_then(|bin_h| if &bin_h.ty == b"BIN\0" {
+                .and_then(|bin_h| if let ChunkType::Bin = bin_h.ty {
                     Ok(bin_h)
                 } else {
-                    Err(ChunkType(bin_h.ty))
+                    Err(GlbError::ChunkType(bin_h.ty))
                 })
                 .and_then(|bin_h| if bin_h.length as usize <= data.len() {
                     Ok(bin_h)
                 } else {
-                    Err(ChunkLength {
+                    Err(GlbError::ChunkLength {
                         ty: bin_h.ty,
                         length: bin_h.length,
                         length_read: data.len(),
@@ -220,5 +233,34 @@ impl<'a> Glb<'a> {
             None
         };
         Ok((json, bin))
+    }
+}
+
+impl fmt::Display for GlbError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use std::error::Error;
+        write!(f, "{}", self.description())
+    }
+}
+
+impl ::std::error::Error for GlbError {
+    fn description(&self) -> &str {
+         match *self {
+             GlbError::IoError(ref e) => e.description(),
+             GlbError::Version(_) => "unsupported version",
+             GlbError::Magic(_) => "not glTF magic",
+             GlbError::Length { .. } => "could not completely read the object",
+             GlbError::ChunkLength { ty, .. } => match ty {
+                 ChunkType::Json => "JSON chunk length exceeds that of slice",
+                 ChunkType::Bin => "BIN\\0 chunk length exceeds that of slice",
+                 _ => "chunk length exceeds that of slice",
+             },
+             GlbError::ChunkType(ty) => match ty {
+                 ChunkType::Json => "was not expecting JSON chunk",
+                 ChunkType::Bin => "was not expecting BIN\\0 chunk",
+                 _ => "was not expecting a chunk",
+             },
+             GlbError::UnknownChunkType(ty) => "unknown chunk type",
+        }
     }
 }
