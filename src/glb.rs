@@ -13,6 +13,36 @@ use GlbError;
 
 use std::io;
 
+/// Represents a Glb loader error.
+#[derive(Debug)]
+pub enum GlbError {
+    /// Io error occured.
+    IoError(::std::io::Error),
+    /// Unsupported version.
+    Version(u32),
+    /// Magic says that file is not glTF.
+    Magic([u8; 4]),
+    /// Length specified in GLB header exceeeds that of slice.
+    Length {
+        /// length specified in GLB header.
+        length: u32,
+        /// Actual length of data read.
+        length_read: usize,
+    },
+    /// Stream ended before we could read the chunk.
+    ChunkLength {
+        /// chunkType error happened at.
+        ty: [u8; 4],
+        /// chunkLength.
+        length: u32,
+        /// Actual length of data read.
+        length_read: usize,
+    },
+    /// Chunk of this chunkType was not expected.
+    ChunkType([u8; 4]),
+}
+
+
 /// The contents of a .glb file.
 #[derive(Clone, Debug)]
 pub struct Glb<'a> {
