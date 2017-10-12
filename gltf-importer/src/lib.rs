@@ -107,6 +107,10 @@ impl Buffers {
 
 fn import_impl(path: &Path, config: &Config) -> Result<(Gltf, Buffers), Error> {
     let data = read_to_end(path)?;
+    import_data_slice(&data, path, config)
+}
+
+pub fn import_data_slice<'a>(data: &'a [u8], path: &Path, config: Config) -> Result<(Gltf, Buffers), Error> {
     if data.starts_with(b"glTF") {
         import_binary(&data, config, path)
     } else {
