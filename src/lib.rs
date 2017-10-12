@@ -135,22 +135,30 @@ pub enum Error {
 /// Represents a Glb loader error.
 #[derive(Debug)]
 pub enum GlbError {
-    /// Slice ended before we could even read the header.
-    MissingHeader,
-    /// Unsupported version in GLB header.
-    Version,
+    /// Io error occured.
+    IoError(::std::io::Error),
+    /// Unsupported version.
+    Version(u32),
     /// Magic says that file is not glTF.
     Magic([u8; 4]),
-    /// Length is header exceeeds that of slice.
-    Length,
-    /// JSON chunkLength exceeeds slice length.
-    JsonChunkLength,
-    /// JSON chunkType is not JSON.
-    JsonChunkType,
-    /// BIN chunkLength exceeds length of data.
-    BinChunkLength,
-    /// BIN chunkType is not BIN\0
-    BinChunkType,
+    /// Length specified in GLB header exceeeds that of slice.
+    Length {
+        /// length specified in GLB header.
+        length: u32,
+        /// Actual length of data read.
+        length_read: usize,
+    },
+    /// Stream ended before we could read the chunk.
+    ChunkLength {
+        /// chunkType error happened at.
+        ty: [u8; 4],
+        /// chunkLength.
+        length: u32,
+        /// Actual length of data read.
+        length_read: usize,
+    },
+    /// Chunk of this chunkType was not expected.
+    ChunkType([u8; 4]),
 }
 
 /// Returns `true` if the slice begins with the `b"glTF"` magic string, indicating
@@ -211,14 +219,10 @@ impl std::fmt::Display for GlbError {
 impl std::error::Error for GlbError {
     fn description(&self) -> &str {
          match *self {
-             GlbError::MissingHeader => "missing header",
-             GlbError::Version => "unsupported version",
+             GlbError::Version(_) => "unsupported version",
              GlbError::Magic(_) => "not glTF magic",
-             GlbError::Length => "length in header exceeds that of slice",
-             GlbError::JsonChunkLength => "JSON chunkLength exceeeds slice length",
-             GlbError::JsonChunkType => "JSON chunkType is not JSON",
-             GlbError::BinChunkLength => "BIN chunkLength exceeds slice length",
-             GlbError::BinChunkType => "BIN chunkType is not BIN\\0",
+             // GlbError::Length(_) => "length in header exceeds that of slice",
+             _ => unimplemented!(),
         }
     }
 }

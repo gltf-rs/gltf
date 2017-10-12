@@ -18,8 +18,10 @@ use std::io;
 pub struct Glb<'a> {
     /// The header section of the `.glb` file.
     pub header: Header,
+
     /// The JSON section of the `.glb` file.
     pub json: &'a [u8],
+
     /// The optional BIN section of the `.glb` file.
     pub bin: Option<&'a [u8]>,
 }
@@ -55,7 +57,7 @@ impl Header {
         if &magic == b"glTF" {
             Ok(Self {
                 magic,
-                version: reader.read_u32::<LE>().map_err(IoError)?,
+                version: reader.read_u32::<LE>().map_err(|_| IoError(io::Error::new()))?,
                 length: reader.read_u32::<LE>().map_err(IoError)?,
             })
         } else {
@@ -65,9 +67,9 @@ impl Header {
 }
 
 impl ChunkHeader {
-    fn from_reader<R: io::Read>(mut reader: R) -> Result<Self, GlbError> {
+    fn from_reader<R: io::Read>(mut reader: R) -> Result<Self, ()> {
         use GlbError::IoError;
-        let length = reader.read_u32::<LE>().map_err(IoError)?;
+        let length = reader.read_u32::<LE>().map_err(|_| IoError())?;
         let mut ty = [0; 4];
         reader.read_exact(&mut ty).map_err(IoError)?;
         Ok(Self { length, ty })
@@ -87,46 +89,42 @@ impl<'a> Glb<'a> {
             } else {
                 Err(GlbError::Length {
                     length: header.length,
-                    length_read: data.len(),
+                    actual_length: data.len(),
                 })
             })
             .map_err(Error::Glb)?;
         match header.version {
-            2 => Self::from_v2(data)
-                .map(|(json, bin)| Glb { header, json, bin })
-                .map_err(Error::Glb),
+            2 => Self::from_v2(data).map(|(json, bin)| Glb { header, json, bin }),
             x => Err(Error::Glb(GlbError::Version(x)))
         }
     }
 
-    /// Does the loading job for you.  Provided buf will be cleared before new
+    /// Does the loading job for you.  Provided buf will be cleaned before new
     /// data will be written.  When error happens, if only header was read, buf
     /// will not be mutated, otherwise, buf will be empty.
     pub fn from_reader<R: io::Read>(mut reader: R,
                                     buf: &'a mut Vec<u8>) -> Result<Self, Error> {
+        // Safe to return from here as buf is not yet mutated.
         let header = Header::from_reader(&mut reader).map_err(Error::Glb)?;
         match header.version {
             2 => {
-                buf.clear();
-                buf.reserve(header.length as usize);
+                buf.clean();
+                buf.reserve(header.length);
                 // SAFETY: We are doing unsafe operation on a user-supplied
                 // container!  Make sure not to expose user to uninitialized
-                // data if an error happens during reading.
-                //
-                // It is guaranteed by reserve's implementation that the reserve
-                // call will make buf's capacity _at least_ header.length.
-                //
-                // We do not read contents of the Vec unless it is fully
-                // initialized.
-                unsafe { buf.set_len(header.length as usize) };
-                if let Err(e) = reader.read(buf)
+                // data if an error is returned.  It is guaranteed by reserve's
+                // implementation that the reserve call will make buf's capacity
+                // _at least_ header.length.  We do not read contents of the Vec
+                // unless it is fully initialized.
+                unsafe { buf.set_len(header.length) };
+                if let Err(e) = reader.read(&mut buf)
                     .map_err(GlbError::IoError)
-                    .and_then(|len| if len == header.length as usize {
+                    .and_then(|len| if len == header.length {
                         Ok(())
                     } else {
                         Err(GlbError::Length {
                             length: header.length,
-                            length_read: len,
+                            actual_length: len,
                         })
                     })
                 {
@@ -135,9 +133,9 @@ impl<'a> Glb<'a> {
                     unsafe { buf.set_len(0) };
                     Err(Error::Glb(e))
                 } else {
-                    Self::from_v2(buf)
+                    Ok(Self::from_v2(buf)
                        .map(|(json, bin)| Glb { header, json, bin })
-                       .map_err(Error::Glb)
+                       .map_err(Error::Glb))
                 }
             }
             x => Err(Error::Glb(GlbError::Version(x)))
