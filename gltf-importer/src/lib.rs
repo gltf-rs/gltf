@@ -107,12 +107,16 @@ impl Buffers {
 
 fn import_impl(path: &Path, config: Config) -> Result<(Gltf, Buffers), Error> {
     let data = read_to_end(path)?;
+    import_data_slice(&data, path, config)
+}
+
+pub fn import_data_slice<'a>(data: &'a [u8], path: &Path, config: Config) -> Result<(Gltf, Buffers), Error> {
     if data.starts_with(b"glTF") {
         import_binary(&data, &config, path)
     } else {
         import_standard(&data, &config, path)
     }
-}   
+}
 
 /// Imports glTF 2.0 with custom configuration.
 pub fn import_with_config<P>(path: P, config: Config) -> Result<(Gltf, Buffers), Error>
