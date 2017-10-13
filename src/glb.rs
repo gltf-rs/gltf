@@ -128,13 +128,15 @@ impl<'a> Glb<'a> {
     /// * Optional BIN chunk.
     pub fn from_slice(mut data: &'a [u8]) -> Result<Self, Error> {
         let header = Header::from_reader(&mut data)
-            .and_then(|header| if header.length as usize <= data.len() {
-                Ok(header)
-            } else {
-                Err(GlbError::Length {
-                    length: header.length,
-                    length_read: data.len(),
-                })
+            .and_then(|header| {
+                if header.length as usize - Header::size_of() <= data.len() {
+                    Ok(header)
+                } else {
+                    Err(GlbError::Length {
+                        length: header.length - Header::size_of(),
+                        length_read: data.len(),
+                    })
+                }
             })
             .map_err(Error::Glb)?;
         match header.version {
