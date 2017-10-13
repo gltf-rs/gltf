@@ -129,11 +129,12 @@ impl<'a> Glb<'a> {
     pub fn from_slice(mut data: &'a [u8]) -> Result<Self, Error> {
         let header = Header::from_reader(&mut data)
             .and_then(|header| {
-                if header.length as usize - Header::size_of() <= data.len() {
+                let contents_length = header.length as usize - Header::size_of();
+                if contents_length <= data.len() {
                     Ok(header)
                 } else {
                     Err(GlbError::Length {
-                        length: header.length - Header::size_of(),
+                        length: contents_length,
                         length_read: data.len(),
                     })
                 }
