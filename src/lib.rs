@@ -128,7 +128,7 @@ pub enum Error {
     /// JSON deserialization error.
     Deserialize(json::Error),
     /// GLB parsing error.
-    Glb(self::glb::GlbError),
+    Glb(self::glb::Error),
     /// `glTF` validation error.
     Validation(Vec<(json::Path, json::validation::Error)>),
 }
@@ -163,8 +163,8 @@ impl std::error::Error for Error {
     }
 }
 
-impl From<self::glb::GlbError> for Error {
-    fn from(err: self::glb::GlbError) -> Self {
+impl From<self::glb::Error> for Error {
+    fn from(err: self::glb::Error) -> Self {
         Error::Glb(err)
     }
 }
