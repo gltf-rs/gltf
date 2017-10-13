@@ -134,7 +134,7 @@ impl<'a> Glb<'a> {
                     Ok(header)
                 } else {
                     Err(GlbError::Length {
-                        length: contents_length,
+                        length: contents_length as u32,
                         length_read: data.len(),
                     })
                 }
