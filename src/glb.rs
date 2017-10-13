@@ -198,8 +198,8 @@ impl<'a> Glb<'a> {
                     length_read: data.len(),
                 })
             })
-            // PANIC: We have verified that json_h.length is no greater than
-            // that of data.len().
+            // We have verified that json_h.length is no greater than that of
+            // data.len().
             .map(|json_h| data.split_at(json_h.length as usize))?;
 
         let bin = if data.len() > 0 {
@@ -218,8 +218,8 @@ impl<'a> Glb<'a> {
                         length_read: data.len(),
                     })
                 })
-                // PANIC: we have verified that bin_h.length is no greater than
-                // that of data.len().
+                // We have verified that bin_h.length is no greater than that
+                // of data.len().
                 .map(|bin_h| data.split_at(bin_h.length as usize))
                 .map(|(x, _)| Some(x))?
         } else {
