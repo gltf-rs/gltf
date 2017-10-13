@@ -101,6 +101,8 @@ impl Header {
             Err(GlbError::Magic(magic))
         }
     }
+
+    fn size_of() -> usize { 12 }
 }
 
 impl ChunkHeader {
@@ -151,25 +153,26 @@ impl<'a> Glb<'a> {
         let header = Header::from_reader(&mut reader).map_err(Error::Glb)?;
         match header.version {
             2 => {
+                let glb_len = header.length - Header::size_of() as u32;
                 buf.clear();
-                buf.reserve(header.length as usize);
+                buf.reserve(glb_len as usize);
                 // SAFETY: We are doing unsafe operation on a user-supplied
                 // container!  Make sure not to expose user to uninitialized
                 // data if an error happens during reading.
                 //
                 // It is guaranteed by reserve's implementation that the reserve
-                // call will make buf's capacity _at least_ header.length.
+                // call will make buf's capacity _at least_ buf_len.
                 //
                 // We do not read contents of the Vec unless it is fully
                 // initialized.
-                unsafe { buf.set_len(header.length as usize) };
+                unsafe { buf.set_len(glb_len as usize) };
                 if let Err(e) = reader.read(buf)
                     .map_err(GlbError::IoError)
                     .and_then(|len| if len == header.length as usize {
                         Ok(())
                     } else {
                         Err(GlbError::Length {
-                            length: header.length,
+                            length: glb_len,
                             length_read: len,
                         })
                     })
