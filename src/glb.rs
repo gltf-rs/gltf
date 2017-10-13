@@ -166,17 +166,7 @@ impl<'a> Glb<'a> {
                 // We do not read contents of the Vec unless it is fully
                 // initialized.
                 unsafe { buf.set_len(glb_len as usize) };
-                if let Err(e) = reader.read(buf)
-                    .map_err(GlbError::IoError)
-                    .and_then(|len| if len == header.length as usize {
-                        Ok(())
-                    } else {
-                        Err(GlbError::Length {
-                            length: glb_len,
-                            length_read: len,
-                        })
-                    })
-                {
+                if let Err(e) = reader.read_exact(buf).map_err(GlbError::IoError) {
                     // SAFETY: It is safe to not run destructors because u8 has
                     // none.
                     unsafe { buf.set_len(0) };
@@ -191,7 +181,6 @@ impl<'a> Glb<'a> {
         }
     }
 
-    /// Loads GLB for glTF 2.
     fn from_v2(mut data: &'a [u8]) -> Result<(&'a [u8], Option<&'a [u8]>), GlbError> {
         let (json, mut data) = ChunkHeader::from_reader(&mut data)
             .and_then(|json_h| if let ChunkType::Json = json_h.ty {
