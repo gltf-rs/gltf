@@ -10,9 +10,13 @@
 #![allow(unknown_lints)]
 #![allow(cast_lossless)]
 
+extern crate byteorder;
 extern crate gltf;
 
-use std::{fmt, marker, mem};
+use std::{fmt, marker};
+use std::mem::size_of;
+
+use byteorder::ReadBytesExt;
 
 use gltf::accessor::{DataType, Dimensions};
 
@@ -168,46 +172,86 @@ impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
 /// Visits the items in an `Accessor`.
 #[derive(Clone, Debug)]
 pub struct AccessorIter<'a, T> {
-    /// The total number of iterations left.
-    count: usize,
-
-    /// The index of the next iteration.
-    index: usize,
-
     /// The number of bytes between each item.
     stride: usize,
+<<<<<<< ffca3d73b3c0813e5d0bade550b9a3362671da5d
 
     /// Byte offset into the buffer view where the items begin.
     offset: usize,
 
     /// The data we're iterating over.
+=======
+    /// Next slice.
+>>>>>>> Initial work on sound AccessorIter
     data: &'a [u8],
-
     /// The accessor we're iterating over.
     accessor: gltf::Accessor<'a>,
+<<<<<<< ffca3d73b3c0813e5d0bade550b9a3362671da5d
 
+=======
+>>>>>>> Initial work on sound AccessorIter
     /// Consumes the data type we're returning at each iteration.
-    _marker: marker::PhantomData<T>,
+    _phantom: marker::PhantomData<T>,
 }
 
 impl<'a, T> AccessorIter<'a, T> {
     pub fn new<S>(accessor: gltf::Accessor<'a>, source: &'a S) -> AccessorIter<'a, T>
         where S: Source
     {
-        assert_eq!(mem::size_of::<T>(), accessor.size());
         let view = accessor.view();
-        let buffer = view.buffer();
-        let buffer_data = source.source_buffer(&buffer);
-        let view_data = &buffer_data[view.offset()..(view.offset() + view.length())];
-        AccessorIter {
-            index: 0,
-            stride: view.stride().unwrap_or(mem::size_of::<T>()),
-            offset: accessor.offset(),
-            count: accessor.count(),
-            accessor: accessor,
-            data: view_data,
-            _marker: marker::PhantomData,
-        }
+        let stride = view.stride().unwrap_or(size_of::<T>());
+        let start = view.offset() + accessor.offset();
+        let end = start + stride * (accessor.count() - 1) + size_of::<T>();
+        let data = &source.source_buffer(&view.buffer())[start .. end];
+        AccessorIter { stride, data, accessor, _phantom: marker::PhantomData }
+    }
+}
+
+impl<'a, T: AccessorItem> Iterator for AccessorIter<'a, T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let stride = if self.data.len() >= self.stride {
+            Some(self.stride)
+        } else if self.data.len() >= size_of::<T>() {
+            Some(size_of::<T>())
+        } else {
+            None
+        };
+        stride.map(|stride| {
+            self.data = self.data[stride ..]
+        })
+
+        // &mut self.buf
+        // if self.index < self.count {
+        //     let offset = self.offset + self.index * self.stride;
+        //     let ptr = unsafe { self.data.as_ptr().offset(offset as isize) };
+        //     let value: T = unsafe { mem::transmute_copy(&*ptr) };
+        //     self.index += 1;
+        //     Some(value)
+        // } else {
+        //     None
+        // }
+        unimplemented!()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let hint = self.data.len() / self.stride;
+        (hint, Some(hint))
+    }
+}
+
+impl<'a, T: AccessorItem> ExactSizeIterator for AccessorIter<'a, T> {}
+
+/// Any type that can appear in an Accessor.
+pub trait AccessorItem {
+    fn from_slice(data: &[u8]) -> Self;
+}
+
+// Dummy plug
+impl<T: Copy> AccessorItem for T {
+    fn from_slice(_: &[u8]) -> Self {
+        unimplemented!()
     }
 }
 
@@ -321,27 +365,6 @@ pub struct ColorsRgbaF32<'a> {
 
     /// Default alpha value.
     default_alpha: f32,
-}
-
-impl<'a, T: Copy> ExactSizeIterator for AccessorIter<'a, T> {}
-impl<'a, T: Copy> Iterator for AccessorIter<'a, T> {
-    type Item = T;
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.count {
-            let offset = self.offset + self.index * self.stride;
-            let ptr = unsafe { self.data.as_ptr().offset(offset as isize) };
-            let value: T = unsafe { mem::transmute_copy(&*ptr) };
-            self.index += 1;
-            Some(value)
-        } else {
-            None
-        }
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        let hint = self.count - self.index;
-        (hint, Some(hint))
-    }
 }
 
 impl<'a> Colors<'a> {
@@ -571,14 +594,14 @@ impl<'a> Iterator for Tangents<'a> {
 impl Denormalize for u8 {
     type Denormalized = f32;
     fn denormalize(&self) -> Self::Denormalized {
-        *self as f32 / 255.0
+        *self as f32 / Self::max_value() as f32
     }
 }
 
 impl Denormalize for u16 {
     type Denormalized = f32;
     fn denormalize(&self) -> Self::Denormalized {
-        *self as f32 / 65535.0
+        *self as f32 / Self::max_value() as f32
     }
 }
 
