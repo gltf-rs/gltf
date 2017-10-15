@@ -7,9 +7,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+extern crate byteorder;
 extern crate gltf;
 
-use std::{fmt, marker, mem};
+use std::{fmt, marker};
+use std::mem::size_of;
+
+use byteorder::ReadBytesExt;
 
 use gltf::accessor::{DataType, Dimensions};
 
@@ -60,11 +64,11 @@ pub trait PrimitiveIterators<'a> {
     /// Visits the vertex normals of a primitive.
     fn normals<S>(&'a self, source: &'a S) -> Option<Normals<'a>>
         where S: Source;
-    
+
     /// Visits the vertex tangents of a primitive.
     fn tangents<S>(&'a self, source: &'a S) -> Option<Tangents<'a>>
         where S: Source;
-    
+
     /// Visits the vertex texture co-ordinates of a primitive.
     fn tex_coords_f32<S>(
         &'a self,
@@ -72,7 +76,7 @@ pub trait PrimitiveIterators<'a> {
         source: &'a S,
     ) -> Option<TexCoordsF32<'a>>
         where S: Source;
-    
+
     /// Visits the vertex colors of a primitive.
     fn colors_rgba_f32<S>(
         &'a self,
@@ -146,7 +150,7 @@ impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
     {
         self.indices().map(|accessor| IndicesU32(Indices::new(accessor, source)))
     }
-    
+
     fn joints_u16<S>(&'a self, set: u32, source: &'a S) -> Option<JointsU16<'a>>
         where S: Source
     {
@@ -165,46 +169,74 @@ impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
 /// Visits the items in an `Accessor`.
 #[derive(Clone, Debug)]
 pub struct AccessorIter<'a, T> {
-    /// The total number of iterations left.
-    count: usize,
-
-    /// The index of the next iteration.
-    index: usize,
-
     /// The number of bytes between each item.
     stride: usize,
-
-    /// Byte offset into the buffer view where the items begin.
-    offset: usize,
-    
-    /// The data we're iterating over.
+    /// Next slice.
     data: &'a [u8],
-
     /// The accessor we're iterating over.
     accessor: gltf::Accessor<'a>,
-    
     /// Consumes the data type we're returning at each iteration.
-    _marker: marker::PhantomData<T>,
+    _phantom: marker::PhantomData<T>,
 }
 
 impl<'a, T> AccessorIter<'a, T> {
     pub fn new<S>(accessor: gltf::Accessor<'a>, source: &'a S) -> AccessorIter<'a, T>
         where S: Source
     {
-        assert_eq!(mem::size_of::<T>(), accessor.size());
         let view = accessor.view();
-        let buffer = view.buffer();
-        let buffer_data = source.source_buffer(&buffer);
-        let view_data = &buffer_data[view.offset()..(view.offset() + view.length())];
-        AccessorIter {
-            index: 0,
-            stride: view.stride().unwrap_or(mem::size_of::<T>()),
-            offset: accessor.offset(),
-            count: accessor.count(),
-            accessor: accessor,
-            data: view_data,
-            _marker: marker::PhantomData,
-        }
+        let stride = view.stride().unwrap_or(size_of::<T>());
+        let start = view.offset() + accessor.offset();
+        let end = start + stride * (accessor.count() - 1) + size_of::<T>();
+        let data = &source.source_buffer(&view.buffer())[start .. end];
+        AccessorIter { stride, data, accessor, _phantom: marker::PhantomData }
+    }
+}
+
+impl<'a, T: AccessorItem> Iterator for AccessorIter<'a, T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let stride = if self.data.len() >= self.stride {
+            Some(self.stride)
+        } else if self.data.len() >= size_of::<T>() {
+            Some(size_of::<T>())
+        } else {
+            None
+        };
+        stride.map(|stride| {
+            self.data = self.data[stride ..]
+        })
+
+        // &mut self.buf
+        // if self.index < self.count {
+        //     let offset = self.offset + self.index * self.stride;
+        //     let ptr = unsafe { self.data.as_ptr().offset(offset as isize) };
+        //     let value: T = unsafe { mem::transmute_copy(&*ptr) };
+        //     self.index += 1;
+        //     Some(value)
+        // } else {
+        //     None
+        // }
+        unimplemented!()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let hint = self.data.len() / self.stride;
+        (hint, Some(hint))
+    }
+}
+
+impl<'a, T: AccessorItem> ExactSizeIterator for AccessorIter<'a, T> {}
+
+/// Any type that can appear in an Accessor.
+pub trait AccessorItem {
+    fn from_slice(data: &[u8]) -> Self;
+}
+
+// Dummy plug
+impl<T: Copy> AccessorItem for T {
+    fn from_slice(_: &[u8]) -> Self {
+        unimplemented!()
     }
 }
 
@@ -261,7 +293,7 @@ enum Joints<'a> {
     /// Refer to the documentation on morph targets and skins for more
     /// information.
     U8(AccessorIter<'a, [u8; 4]>),
-    
+
     /// Joints of type `[u16; 4]`.
     /// Refer to the documentation on morph targets and skins for more
     /// information.
@@ -318,27 +350,6 @@ pub struct ColorsRgbaF32<'a> {
 
     /// Default alpha value.
     default_alpha: f32,
-}
-
-impl<'a, T: Copy> ExactSizeIterator for AccessorIter<'a, T> {}
-impl<'a, T: Copy> Iterator for AccessorIter<'a, T> {
-    type Item = T;
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.count {
-            let offset = self.offset + self.index * self.stride;
-            let ptr = unsafe { self.data.as_ptr().offset(offset as isize) };
-            let value: T = unsafe { mem::transmute_copy(&*ptr) };
-            self.index += 1;
-            Some(value)
-        } else {
-            None
-        }
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        let hint = self.count - self.index;
-        (hint, Some(hint))
-    }
 }
 
 impl<'a> Colors<'a> {
@@ -552,7 +563,7 @@ impl<'a> Iterator for Normals<'a> {
         self.0.size_hint()
     }
 }
- 
+
 impl<'a> ExactSizeIterator for Tangents<'a> {}
 impl<'a> Iterator for Tangents<'a> {
     type Item = [f32; 4];
@@ -568,14 +579,14 @@ impl<'a> Iterator for Tangents<'a> {
 impl Denormalize for u8 {
     type Denormalized = f32;
     fn denormalize(&self) -> Self::Denormalized {
-        *self as f32 / 255.0
+        *self as f32 / Self::max_value() as f32
     }
 }
 
 impl Denormalize for u16 {
     type Denormalized = f32;
     fn denormalize(&self) -> Self::Denormalized {
-        *self as f32 / 65535.0
+        *self as f32 / Self::max_value() as f32
     }
 }
 
