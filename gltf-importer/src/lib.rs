@@ -182,7 +182,7 @@ fn validate_standard(
 ) -> Result<Gltf, Error> {
     use config::ValidationStrategy;
     Ok(match config.validation_strategy {
-        ValidationStrategy::Skip => unsafe { unvalidated.skip_validation() },
+        ValidationStrategy::Skip => unvalidated.skip_validation(),
         ValidationStrategy::Minimal => unvalidated.validate_minimally()?,
         ValidationStrategy::Complete => unvalidated.validate_completely()?,
     })
@@ -197,7 +197,7 @@ fn validate_binary(
     use json::validation::Error as Reason;
 
     if config.validation_strategy == ValidationStrategy::Skip {
-        return Ok(unsafe { unvalidated.skip_validation() });
+        return Ok(unvalidated.skip_validation());
     }
 
     let mut errs = vec![];
