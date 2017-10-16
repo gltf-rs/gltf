@@ -13,7 +13,7 @@ extern crate gltf;
 use std::{fmt, marker};
 use std::mem::size_of;
 
-use byteorder::ReadBytesExt;
+use byteorder::{LE, ByteOrder};
 
 use gltf::accessor::{DataType, Dimensions};
 
@@ -183,12 +183,18 @@ impl<'a, T> AccessorIter<'a, T> {
     pub fn new<S>(accessor: gltf::Accessor<'a>, source: &'a S) -> AccessorIter<'a, T>
         where S: Source
     {
+        debug_assert_eq!(size_of::<T>(), accessor.size());
         let view = accessor.view();
         let stride = view.stride().unwrap_or(size_of::<T>());
         let start = view.offset() + accessor.offset();
         let end = start + stride * (accessor.count() - 1) + size_of::<T>();
         let data = &source.source_buffer(&view.buffer())[start .. end];
-        AccessorIter { stride, data, accessor, _phantom: marker::PhantomData }
+        AccessorIter {
+            stride: stride,
+            data: data,
+            accessor: accessor,
+            _phantom: marker::PhantomData
+        }
     }
 }
 
@@ -203,25 +209,22 @@ impl<'a, T: AccessorItem> Iterator for AccessorIter<'a, T> {
         } else {
             None
         };
-        stride.map(|stride| {
-            self.data = self.data[stride ..]
-        })
-
-        // &mut self.buf
-        // if self.index < self.count {
-        //     let offset = self.offset + self.index * self.stride;
-        //     let ptr = unsafe { self.data.as_ptr().offset(offset as isize) };
-        //     let value: T = unsafe { mem::transmute_copy(&*ptr) };
-        //     self.index += 1;
-        //     Some(value)
-        // } else {
-        //     None
-        // }
-        unimplemented!()
+        if let Some(stride) = stride {
+            let (val, data) = self.data.split_at(stride);
+            let val = T::from_slice(val);
+            self.data = data;
+            Some(val)
+        } else {
+            None
+        }
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let hint = self.data.len() / self.stride;
+        let hint = self.data.len() / if self.data.len() >= self.stride {
+            self.stride
+        } else {
+            size_of::<T>()
+        };
         (hint, Some(hint))
     }
 }
@@ -229,14 +232,54 @@ impl<'a, T: AccessorItem> Iterator for AccessorIter<'a, T> {
 impl<'a, T: AccessorItem> ExactSizeIterator for AccessorIter<'a, T> {}
 
 /// Any type that can appear in an Accessor.
-pub trait AccessorItem {
-    fn from_slice(data: &[u8]) -> Self;
+pub trait AccessorItem: Sized {
+    fn from_slice(buf: &[u8]) -> Self;
 }
 
-// Dummy plug
-impl<T: Copy> AccessorItem for T {
-    fn from_slice(_: &[u8]) -> Self {
-        unimplemented!()
+impl AccessorItem for u8 {
+    fn from_slice(buf: &[u8]) -> Self {
+        buf[0]
+    }
+}
+
+impl AccessorItem for u16 {
+    fn from_slice(buf: &[u8]) -> Self {
+        LE::read_u16(buf)
+    }
+}
+
+impl AccessorItem for u32 {
+    fn from_slice(buf: &[u8]) -> Self {
+        LE::read_u32(buf)
+    }
+}
+
+impl AccessorItem for f32 {
+    fn from_slice(buf: &[u8]) -> Self {
+        LE::read_f32(buf)
+    }
+}
+
+impl<T: AccessorItem> AccessorItem for [T; 2] {
+    fn from_slice(buf: &[u8]) -> Self {
+        [T::from_slice(buf), T::from_slice(&buf[size_of::<T>() ..])]
+    }
+}
+
+impl<T: AccessorItem> AccessorItem for [T; 3] {
+    fn from_slice(buf: &[u8]) -> Self {
+        [T::from_slice(buf),
+         T::from_slice(&buf[1 * size_of::<T>() ..]),
+         T::from_slice(&buf[2 * size_of::<T>() ..])]
+    }
+}
+
+impl<T: AccessorItem> AccessorItem for [T; 4] {
+    fn from_slice(buf: &[u8]) -> Self {
+        [T::from_slice(buf),
+         T::from_slice(&buf[1 * size_of::<T>() ..]),
+         T::from_slice(&buf[2 * size_of::<T>() ..]),
+         T::from_slice(&buf[3 * size_of::<T>() ..])]
     }
 }
 
