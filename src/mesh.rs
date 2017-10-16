@@ -16,34 +16,7 @@ pub use json::mesh::{Mode, Semantic};
 use json::validation::Checked;
 
 /// Vertex attribute data.
-#[derive(Clone, Debug)]
-pub enum Attribute<'a> {
-    /// Vertex colors.
-    Colors(u32, Accessor<'a>),
-
-    /// User specific data.
-    #[cfg(feature = "extras")]
-    Extras(&'a str, Accessor<'a>),
-
-    /// Vertex joints.
-    Joints(u32, Accessor<'a>),
-
-    /// XYZ vertex positions of type `[f32; 3]`.
-    Positions(Accessor<'a>),
-
-    /// XYZ vertex normals of type `[f32; 3]`.
-    Normals(Accessor<'a>),
-
-    /// XYZW vertex tangents of type `[f32; 4]` where the `w` component is a
-    /// sign value (-1 or +1) indicating the handedness of the tangent basis.
-    Tangents(Accessor<'a>),
-
-    /// UV texture co-ordinates.
-    TexCoords(u32, Accessor<'a>),
-
-    /// Weights.
-    Weights(u32, Accessor<'a>),
-}
+pub type Attribute<'a> = (Semantic, Accessor<'a>);
 
 /// A single morph target for a mesh primitive.
 #[derive(Clone, Debug)]
@@ -302,23 +275,12 @@ impl<'a> ExactSizeIterator for Attributes<'a> {}
 impl<'a> Iterator for Attributes<'a> {
     type Item = Attribute<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        use self::Semantic::*;
         self.iter
             .next()
             .map(|(key, index)| {
-                let semantic = key.as_ref().unwrap();
+                let semantic = key.as_ref().unwrap().clone();
                 let accessor = self.gltf.accessors().nth(index.value()).unwrap();
-                match *semantic {
-                    Positions => Attribute::Positions(accessor),
-                    Normals => Attribute::Normals(accessor),
-                    Tangents => Attribute::Tangents(accessor),
-                    Colors(set) => Attribute::Colors(set, accessor),
-                    TexCoords(set) => Attribute::TexCoords(set, accessor),
-                    Joints(set) => Attribute::Joints(set, accessor),
-                    Weights(set) => Attribute::Weights(set, accessor),
-                    #[cfg(feature = "extras")]
-                    Extras(ref id) => Attribute::Extras(id, accessor),
-                }
+                (semantic, accessor)
             })
     }
 
