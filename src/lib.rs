@@ -8,6 +8,7 @@
 // except according to those terms.
 
 #![deny(missing_docs)]
+#![allow(unknown_lints)]
 
 //! glTF 2.0 loader
 //!

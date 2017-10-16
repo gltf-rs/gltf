@@ -7,6 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#![allow(unknown_lints)]
+#![allow(cast_lossless)]
 extern crate byteorder;
 extern crate gltf;
 
@@ -154,7 +156,7 @@ impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
     fn joints_u16<S>(&'a self, set: u32, source: &'a S) -> Option<JointsU16<'a>>
         where S: Source
     {
-        self.get(&gltf::Semantic::Colors(set))
+        self.get(&gltf::Semantic::Joints(set))
             .map(|accessor| JointsU16(Joints::new(accessor, source)))
     }
 
@@ -171,7 +173,7 @@ impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
 pub struct AccessorIter<'a, T> {
     /// The number of bytes between each item.
     stride: usize,
-    /// Next slice.
+    /// The data we're iterating over.
     data: &'a [u8],
     /// The accessor we're iterating over.
     accessor: gltf::Accessor<'a>,

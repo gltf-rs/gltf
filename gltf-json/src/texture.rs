@@ -31,13 +31,13 @@ pub const NEAREST_MIPMAP_LINEAR: u32 = 9986;
 pub const LINEAR_MIPMAP_LINEAR: u32 = 9987;
 
 /// Corresponds to `GL_CLAMP_TO_EDGE`.
-pub const CLAMP_TO_EDGE: u32 = 33071;
+pub const CLAMP_TO_EDGE: u32 = 33_071;
 
 /// Corresponds to `GL_MIRRORED_REPEAT`.
-pub const MIRRORED_REPEAT: u32 = 33648;
+pub const MIRRORED_REPEAT: u32 = 33_648;
 
 /// Corresponds to `GL_REPEAT`.
-pub const REPEAT: u32 = 10497;
+pub const REPEAT: u32 = 10_497;
 
 /// All valid magnification filters.
 pub const VALID_MAG_FILTERS: &'static [u32] = &[
