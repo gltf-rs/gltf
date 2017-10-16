@@ -173,8 +173,15 @@ impl Unvalidated {
         self.0.as_json()
     }
 
-    /// Skips validation (not recommended).
-    pub unsafe fn skip_validation(self) -> Gltf {
+    /// Skip validation.  **Using this is highly recommended against** as
+    /// malformed glTF assets might lead to program panics, huge values, NaNs
+    /// and general evil deeds.
+    ///
+    /// # Panics
+    ///
+    /// This function does not panic, but might cause an inherent panic later in
+    /// your program during reading of the malformed asset.
+    pub fn skip_validation(self) -> Gltf {
         self.0
     }
 
