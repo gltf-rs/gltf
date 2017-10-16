@@ -191,12 +191,7 @@ impl<'a, T> AccessorIter<'a, T> {
         let start = view.offset() + accessor.offset();
         let end = start + stride * (accessor.count() - 1) + size_of::<T>();
         let data = &source.source_buffer(&view.buffer())[start .. end];
-        AccessorIter {
-            stride: stride,
-            data: data,
-            accessor: accessor,
-            _phantom: marker::PhantomData
-        }
+        AccessorIter { stride, data, accessor, _phantom: marker::PhantomData }
     }
 }
 
