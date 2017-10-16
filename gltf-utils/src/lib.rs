@@ -246,6 +246,18 @@ pub trait AccessorItem: Sized {
     fn from_slice(buf: &[u8]) -> Self;
 }
 
+impl AccessorItem for i8 {
+    fn from_slice(buf: &[u8]) -> Self {
+        buf[0] as i8
+    }
+}
+
+impl AccessorItem for i16 {
+    fn from_slice(buf: &[u8]) -> Self {
+        LE::read_i16(buf)
+    }
+}
+
 impl AccessorItem for u8 {
     fn from_slice(buf: &[u8]) -> Self {
         buf[0]
