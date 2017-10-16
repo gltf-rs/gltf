@@ -63,6 +63,7 @@
 #[cfg(test)]
 #[macro_use]
 extern crate approx;
+extern crate byteorder;
 extern crate cgmath;
 #[macro_use]
 extern crate lazy_static;
@@ -126,10 +127,8 @@ pub use self::texture::Texture;
 pub enum Error {
     /// JSON deserialization error.
     Deserialize(json::Error),
-
     /// GLB parsing error.
-    Glb(String),
-
+    Glb(self::glb::Error),
     /// `glTF` validation error.
     Validation(Vec<(json::Path, json::validation::Error)>),
 }
@@ -157,10 +156,16 @@ impl std::fmt::Display for Error {
 impl std::error::Error for Error {
     fn description(&self) -> &str {
          match *self {
-            Error::Deserialize(_) => "deserialization error",
-            Error::Glb(_) => "invalid .glb format",
-            Error::Validation(_) => "invalid glTF JSON",
+             Error::Deserialize(_) => "deserialization error",
+             Error::Glb(ref e) => e.description(),
+             Error::Validation(_) => "invalid glTF JSON",
         }
+    }
+}
+
+impl From<self::glb::Error> for Error {
+    fn from(err: self::glb::Error) -> Self {
+        Error::Glb(err)
     }
 }
 
