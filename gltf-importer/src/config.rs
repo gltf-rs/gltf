@@ -22,7 +22,9 @@ pub enum ValidationStrategy {
     /// root JSON data structure.
     Minimal,
 
-    /// Skip the validation stage (not recommended.)
+    /// Skip the validation stage.  **Using this is highly recommended against**
+    /// as malformed glTF assets might lead to program panics, huge values, NaNs
+    /// and general evil deeds.
     Skip,
 }
 
