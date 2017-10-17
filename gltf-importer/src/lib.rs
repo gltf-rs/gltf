@@ -29,7 +29,7 @@ extern crate gltf;
 extern crate gltf_utils;
 
 use gltf::json::{self, validation};
-use std::{fmt, fs, io};
+use std::{fmt, fs, io, path};
 
 use gltf::Gltf;
 use gltf_utils::Source;
@@ -57,11 +57,14 @@ pub enum Error {
     /// A glTF extension required by the asset is not supported by the library.
     ExtensionUnsupported(String),
 
+    /// File not found.
+    FileNotFound(path::PathBuf),
+
     /// The glTF version of the asset is incompatible with the importer.
     IncompatibleVersion(String),
 
     /// Standard I/O error.
-    Io(std::io::Error),
+    Io(io::Error),
 
     /// `gltf` crate error.
     Gltf(gltf::Error),
@@ -130,11 +133,15 @@ pub fn import<P>(path: P) -> Result<(Gltf, Buffers), Error>
 
 fn read_to_end_impl(path: &Path) -> Result<Vec<u8>, Error> {
     use io::Read;
-    let file = fs::File::open(path)?;
-    let mut reader = io::BufReader::new(file);
-    let mut buffer = vec![];
-    let _ = reader.read_to_end(&mut buffer)?;
-    Ok(buffer)
+    if path.exists() {
+        let file = fs::File::open(path)?;
+        let mut reader = io::BufReader::new(file);
+        let mut buffer = vec![];
+        let _ = reader.read_to_end(&mut buffer)?;
+        Ok(buffer)
+    } else {
+        Err(Error::FileNotFound(path.to_path_buf()))
+    }
 }
 
 fn read_to_end<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, Error> {
@@ -266,8 +273,8 @@ impl From<json::Error> for Error {
     }
 }
 
-impl From<std::io::Error> for Error {
-    fn from(err: std::io::Error) -> Error {
+impl From<io::Error> for Error {
+    fn from(err: io::Error) -> Error {
         Error::Io(err)
     }
 }
@@ -304,15 +311,16 @@ impl StdError for Error {
     fn description(&self) -> &str {
         use self::Error::*;
         match *self {
-            Base64Decoding(_) => "Base 64 decoding failed",
-            BufferLength(_) => "Loaded buffer does not match required length",
-            ExtensionDisabled(_) => "Asset requires a disabled extension",
-            ExtensionUnsupported(_) => "Assets requires an unsupported extension",
-            IncompatibleVersion(_) => "Asset is not glTF version 2.0",
-            Io(_) => "I/O error",
-            Gltf(_) => "Error from gltf crate",
-            MalformedJson(_) => "Malformed .gltf / .glb JSON",
-            Validation(_) => "Asset failed validation tests",
+            Base64Decoding(_) => "base 64 decoding failed",
+            BufferLength(_) => "buffer does not match required length",
+            ExtensionDisabled(_) => "asset requires a disabled extension",
+            ExtensionUnsupported(_) => "asset requires an unsupported extension",
+            FileNotFound(_) => "file not found",
+            IncompatibleVersion(_) => "asset is not glTF version 2.0",
+            Io(_) => "io error",
+            Gltf(_) => "error from gltf crate",
+            MalformedJson(_) => "malformed .gltf / .glb JSON",
+            Validation(_) => "asset failed validation tests",
         }
     }
 
