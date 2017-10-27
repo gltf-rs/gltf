@@ -150,7 +150,7 @@ impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
     fn joints_u16<S>(&'a self, set: u32, source: &'a S) -> Option<JointsU16<'a>>
         where S: Source
     {
-        self.get(&gltf::Semantic::Colors(set))
+        self.get(&gltf::Semantic::Joints(set))
             .map(|accessor| JointsU16(Joints::new(accessor, source)))
     }
 
