@@ -207,6 +207,31 @@ impl<'a, T: AccessorItem> Iterator for AccessorIter<'a, T> {
         }
     }
 
+    fn nth(&mut self, nth: usize) -> Option<Self::Item> {
+        if self.data.len() > 0 {
+            let val_data = &self.data[nth * self.stride ..];
+            let val = T::from_slice(val_data);
+            self.data = &val_data[self.stride.min(val_data.len()) ..];
+            Some(val)
+        } else {
+            None
+        }
+    }
+
+    fn last(self) -> Option<Self::Item> {
+        if self.data.len() > 0 {
+            self.data
+                .get((self.data.len() - 1) / self.stride * self.stride ..)
+                .map(T::from_slice)
+        } else {
+            None
+        }
+    }
+
+    fn count(self) -> usize {
+        self.size_hint().0
+    }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         let hint = self.data.len() / if self.data.len() >= self.stride {
             self.stride
@@ -262,12 +287,15 @@ impl AccessorItem for f32 {
 
 impl<T: AccessorItem> AccessorItem for [T; 2] {
     fn from_slice(buf: &[u8]) -> Self {
-        [T::from_slice(buf), T::from_slice(&buf[size_of::<T>() ..])]
+        assert!(buf.len() >= 2 * size_of::<T>());
+        [T::from_slice(buf),
+         T::from_slice(&buf[size_of::<T>() ..])]
     }
 }
 
 impl<T: AccessorItem> AccessorItem for [T; 3] {
     fn from_slice(buf: &[u8]) -> Self {
+        assert!(buf.len() >= 3 * size_of::<T>());
         [T::from_slice(buf),
          T::from_slice(&buf[1 * size_of::<T>() ..]),
          T::from_slice(&buf[2 * size_of::<T>() ..])]
@@ -276,6 +304,7 @@ impl<T: AccessorItem> AccessorItem for [T; 3] {
 
 impl<T: AccessorItem> AccessorItem for [T; 4] {
     fn from_slice(buf: &[u8]) -> Self {
+        assert!(buf.len() >= 4 * size_of::<T>());
         [T::from_slice(buf),
          T::from_slice(&buf[1 * size_of::<T>() ..]),
          T::from_slice(&buf[2 * size_of::<T>() ..]),
