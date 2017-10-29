@@ -231,6 +231,16 @@ impl<'a, T: AccessorItem> Iterator for AccessorIter<'a, T> {
         }
     }
 
+    fn last(self) -> Option<Self::Item> {
+        if self.data.len() > 0 {
+            self.data
+                .get((self.data.len() - 1) / self.stride * self.stride ..)
+                .map(T::from_slice)
+        } else {
+            None
+        }
+    }
+
     fn count(self) -> usize {
         self.size_hint().0
     }
