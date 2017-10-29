@@ -207,6 +207,21 @@ impl<'a, T: AccessorItem> Iterator for AccessorIter<'a, T> {
         }
     }
 
+    fn nth(&mut self, nth: usize) -> Option<Self::Item> {
+        if self.data.len() > 0 {
+            let val_data = &self.data[nth * self.stride ..];
+            let val = T::from_slice(val_data);
+            self.data = &val_data[self.stride.min(val_data.len()) ..];
+            Some(val)
+        } else {
+            None
+        }
+    }
+
+    fn count(self) -> usize {
+        self.size_hint().0
+    }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         let hint = self.data.len() / if self.data.len() >= self.stride {
             self.stride
