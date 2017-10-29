@@ -287,12 +287,15 @@ impl AccessorItem for f32 {
 
 impl<T: AccessorItem> AccessorItem for [T; 2] {
     fn from_slice(buf: &[u8]) -> Self {
-        [T::from_slice(buf), T::from_slice(&buf[size_of::<T>() ..])]
+        assert!(buf.len() >= 2 * size_of::<T>());
+        [T::from_slice(buf),
+         T::from_slice(&buf[size_of::<T>() ..])]
     }
 }
 
 impl<T: AccessorItem> AccessorItem for [T; 3] {
     fn from_slice(buf: &[u8]) -> Self {
+        assert!(buf.len() >= 3 * size_of::<T>());
         [T::from_slice(buf),
          T::from_slice(&buf[1 * size_of::<T>() ..]),
          T::from_slice(&buf[2 * size_of::<T>() ..])]
@@ -301,6 +304,7 @@ impl<T: AccessorItem> AccessorItem for [T; 3] {
 
 impl<T: AccessorItem> AccessorItem for [T; 4] {
     fn from_slice(buf: &[u8]) -> Self {
+        assert!(buf.len() >= 4 * size_of::<T>());
         [T::from_slice(buf),
          T::from_slice(&buf[1 * size_of::<T>() ..]),
          T::from_slice(&buf[2 * size_of::<T>() ..]),
