@@ -14,7 +14,7 @@ fn run(path: &str) -> Result<(), Box<StdError>> {
     let _ = reader.read_to_end(&mut data)?;
     let json: json::Root = if gltf::is_binary(&data) {
         let glb = gltf::Glb::from_slice(&data)?;
-        json::from_slice(glb.json)
+        json::from_slice(&glb.json)
     } else {
         json::from_slice(&data)
     }?;
