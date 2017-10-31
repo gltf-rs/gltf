@@ -1,5 +1,6 @@
 use byteorder::{LE, ReadBytesExt};
 use std::{fmt, io};
+use std::borrow::Cow;
 
 /// Represents a Glb loader error.
 #[derive(Debug)]
@@ -38,9 +39,9 @@ pub struct Glb<'a> {
     /// The header section of the `.glb` file.
     pub header: Header,
     /// The JSON section of the `.glb` file.
-    pub json: &'a [u8],
+    pub json: Cow<'a, [u8]>,
     /// The optional BIN section of the `.glb` file.
-    pub bin: Option<&'a [u8]>,
+    pub bin: Option<Cow<'a, [u8]>>,
 }
 
 /// The header section of a .glb file.
@@ -131,7 +132,7 @@ impl<'a> Glb<'a> {
             .map_err(::Error::Glb)?;
         match header.version {
             2 => Self::from_v2(data)
-                .map(|(json, bin)| Glb { header, json, bin })
+                .map(|(json, bin)| Glb { header, json: json.into(), bin: bin.map(Into::into) })
                 .map_err(::Error::Glb),
             x => Err(::Error::Glb(Error::Version(x)))
         }
@@ -140,33 +141,22 @@ impl<'a> Glb<'a> {
     /// Does the loading job for you.  Provided buf will be cleared before new
     /// data will be written.  When error happens, if only header was read, buf
     /// will not be mutated, otherwise, buf will be empty.
-    pub fn from_reader<R: io::Read>(mut reader: R, buf: &'a mut Vec<u8>)
-                                    -> Result<Self, ::Error> {
+    pub fn from_reader<R: io::Read>(mut reader: R) -> Result<Self, ::Error> {
         let header = Header::from_reader(&mut reader).map_err(::Error::Glb)?;
         match header.version {
             2 => {
                 let glb_len = header.length - Header::size_of() as u32;
-                buf.clear();
-                buf.reserve(glb_len as usize);
-                // SAFETY: We are doing unsafe operation on a user-supplied
-                // container!  Make sure not to expose user to uninitialized
-                // data if an error happens during reading.
-                //
-                // It is guaranteed by reserve's implementation that the reserve
-                // call will make buf's capacity _at least_ buf_len.
-                //
-                // We do not read contents of the Vec unless it is fully
-                // initialized.
-                unsafe { buf.set_len(glb_len as usize) };
-                if let Err(e) = reader.read_exact(buf).map_err(Error::Io) {
-                    // SAFETY: It is safe to not run destructors because u8 has
-                    // none.
-                    unsafe { buf.set_len(0) };
+                let mut buf = vec![0; glb_len as usize];
+                if let Err(e) = reader.read_exact(&mut buf).map_err(Error::Io) {
                     Err(::Error::Glb(e))
                 } else {
-                    Self::from_v2(buf)
-                       .map(|(json, bin)| Glb { header, json, bin })
-                       .map_err(::Error::Glb)
+                    Self::from_v2(&buf)
+                        .map(|(json, bin)| Glb {
+                            header,
+                            json: json.to_vec().into(),
+                            bin: bin.map(<[u8]>::to_vec).map(Into::into),
+                        })
+                        .map_err(::Error::Glb)
                 }
             }
             x => Err(::Error::Glb(Error::Version(x)))
