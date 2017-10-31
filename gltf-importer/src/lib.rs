@@ -255,8 +255,8 @@ fn import_binary<'a>(
     base_path: &Path,
 ) -> Result<(Gltf, Buffers), Error> {
     let gltf::Glb { json, bin, .. } = gltf::Glb::from_slice(data)?;
-    let unvalidated = Gltf::from_slice(json)?;
-    let bin = bin.map(|x| x.to_vec());
+    let unvalidated = Gltf::from_slice(&json)?;
+    let bin = bin.map(|x| x.into_owned());
     let gltf = validate_binary(unvalidated, config, bin.is_some())?;
     let mut buffers = Buffers(vec![]);
     for buffer in load_external_buffers(base_path, &gltf, bin)? {
