@@ -165,22 +165,10 @@ impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
 pub struct AccessorIter<'a, T> {
     /// The number of bytes between each item.
     stride: usize,
-<<<<<<< ffca3d73b3c0813e5d0bade550b9a3362671da5d
-
-    /// Byte offset into the buffer view where the items begin.
-    offset: usize,
 
     /// The data we're iterating over.
-=======
-    /// Next slice.
->>>>>>> Initial work on sound AccessorIter
     data: &'a [u8],
-    /// The accessor we're iterating over.
-    accessor: gltf::Accessor<'a>,
-<<<<<<< ffca3d73b3c0813e5d0bade550b9a3362671da5d
-
-=======
->>>>>>> Initial work on sound AccessorIter
+    
     /// Consumes the data type we're returning at each iteration.
     _phantom: marker::PhantomData<T>,
 }
@@ -190,12 +178,14 @@ impl<'a, T> AccessorIter<'a, T> {
         where S: Source
     {
         debug_assert_eq!(size_of::<T>(), accessor.size());
+        debug_assert!(size_of::<T>() > 0);
         let view = accessor.view();
         let stride = view.stride().unwrap_or(size_of::<T>());
+        debug_assert!(stride >= size_of::<T>());
         let start = view.offset() + accessor.offset();
         let end = start + stride * (accessor.count() - 1) + size_of::<T>();
         let data = &source.source_buffer(&view.buffer())[start .. end];
-        AccessorIter { stride, data, accessor, _phantom: marker::PhantomData }
+        AccessorIter { stride, data, _phantom: marker::PhantomData }
     }
 }
 
@@ -246,11 +236,8 @@ impl<'a, T: AccessorItem> Iterator for AccessorIter<'a, T> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let hint = self.data.len() / if self.data.len() >= self.stride {
-            self.stride
-        } else {
-            size_of::<T>()
-        };
+        let hint = self.data.len() / self.stride
+            + (self.data.len() % self.stride > 0) as usize;
         (hint, Some(hint))
     }
 }
@@ -705,5 +692,97 @@ impl<T: Copy + Denormalize> Denormalize for [T; 4] {
             self[2].denormalize(),
             self[3].denormalize(),
         ]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{AccessorItem, AccessorIter};
+
+    #[test]
+    fn accessor_empty() {
+        let i: AccessorIter<f32> = AccessorIter {
+            stride: 4,
+            data: &[],
+            _phantom: Default::default(),
+        };
+        assert_eq!(None, i.clone().next());
+        assert_eq!(None, i.clone().nth(0));
+        assert_eq!(None, i.clone().last());
+        assert_eq!(0, i.clone().count());
+    }
+
+    #[test]
+    fn accessor_single() {
+        let data = [0x00, 0x00, 0x80, 0x3f];
+        let i: AccessorIter<f32> = AccessorIter {
+            stride: 4,
+            data: &data,
+            _phantom: Default::default(),
+        };
+        assert_eq!(Some(1.0), i.clone().next());
+        assert_eq!(Some(1.0), i.clone().nth(0));
+        assert_eq!(Some(1.0), i.clone().last());
+        assert_eq!(1, i.clone().count());
+    }
+
+    #[test]
+    fn accessor_single_stride() {
+        let data = [0x00, 0x00, 0x80, 0x3f, 0xff];
+        let i: AccessorIter<f32> = AccessorIter {
+            stride: 7,
+            data: &data,
+            _phantom: Default::default(),
+        };
+        assert_eq!(Some(1.0), i.clone().next());
+        assert_eq!(Some(1.0), i.clone().nth(0));
+        assert_eq!(Some(1.0), i.clone().last());
+        assert_eq!(1, i.clone().count());
+    }
+
+    #[test]
+    fn accessor_multi() {
+        let data = [0x00, 0x00, 0x80, 0x3f,
+                   0xd0, 0x0f, 0x49, 0x40,
+                   0x00, 0x00, 0x28, 0x42];
+        let i: AccessorIter<f32> = AccessorIter {
+            stride: 4,
+            data: &data,
+            _phantom: Default::default(),
+        };
+        assert_eq!(Some(1.0),      i.clone().nth(0));
+        assert_eq!(Some(3.141590), i.clone().nth(1));
+        assert_eq!(Some(42.0),     i.clone().nth(2));
+        assert_eq!(Some(42.0),     i.clone().last());
+        assert_eq!(3, i.clone().count());
+    }
+
+    #[test]
+    fn accessor_multi_stride() {
+        let data = [0x00, 0x00, 0x80, 0x3f, 0xde, 0xad, 0xbe, 0xef,
+                   0xd0, 0x0f, 0x49, 0x40, 0xde, 0xad, 0xbe, 0xef,
+                   0x00, 0x00, 0x28, 0x42];
+        let i: AccessorIter<f32> = AccessorIter {
+            stride: 8,
+            data: &data,
+            _phantom: Default::default(),
+        };
+        assert_eq!(Some(1.0),      i.clone().nth(0));
+        assert_eq!(Some(3.141590), i.clone().nth(1));
+        assert_eq!(Some(42.0),     i.clone().nth(2));
+        assert_eq!(Some(42.0),     i.clone().last());
+        assert_eq!(3, i.clone().count());
+    }
+
+    #[test]
+    fn accessor_types() {
+        let data = [0x26, 0x84, 0xa1, 0x99];
+        let evil = -1.670038415647693561554125748263503574431165787927966448478400707244873046875e-23;
+        assert_eq!(0x26,       <i8  as AccessorItem>::from_slice(&data));
+        assert_eq!(-31706,     <i16 as AccessorItem>::from_slice(&data));
+        assert_eq!(0x26,       <u8  as AccessorItem>::from_slice(&data));
+        assert_eq!(0x8426,     <u16 as AccessorItem>::from_slice(&data));
+        assert_eq!(0x99a18426, <u32 as AccessorItem>::from_slice(&data));
+        assert_eq!(evil,       <f32 as AccessorItem>::from_slice(&data));
     }
 }
