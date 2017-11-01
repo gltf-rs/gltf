@@ -52,109 +52,93 @@ pub trait Source: fmt::Debug {
 /// Extra methods for working with `gltf::Primitive`.
 pub trait PrimitiveIterators<'a> {
     /// Visits the vertex positions of a primitive.
-    fn positions<S>(&'a self, source: &'a S) -> Option<Positions<'a>>
-        where S: Source;
+    fn positions<'s, S: Source>(&'a self, source: &'s S) -> Option<Positions<'s>>;
 
     /// Visits the vertex normals of a primitive.
-    fn normals<S>(&'a self, source: &'a S) -> Option<Normals<'a>>
-        where S: Source;
+    fn normals<'s, S: Source>(&'a self, source: &'s S) -> Option<Normals<'s>>;
 
     /// Visits the vertex tangents of a primitive.
-    fn tangents<S>(&'a self, source: &'a S) -> Option<Tangents<'a>>
-        where S: Source;
+    fn tangents<'s, S: Source>(&'a self, source: &'s S) -> Option<Tangents<'s>>;
 
     /// Visits the vertex texture co-ordinates of a primitive.
-    fn tex_coords_f32<S>(
+    fn tex_coords_f32<'s, S: Source>(
         &'a self,
         set: u32,
-        source: &'a S,
-    ) -> Option<TexCoordsF32<'a>>
-        where S: Source;
+        source: &'s S,
+    ) -> Option<TexCoordsF32<'s>>;
 
     /// Visits the vertex colors of a primitive.
-    fn colors_rgba_f32<S>(
+    fn colors_rgba_f32<'s, S: Source>(
         &'a self,
         set: u32,
         default_alpha: f32,
-        source: &'a S,
-    ) -> Option<ColorsRgbaF32<'a>>
-        where S: Source;
+        source: &'s S,
+    ) -> Option<ColorsRgbaF32<'s>>;
 
     /// Visits the vertex draw sequence of a primitive.
-    fn indices_u32<S>(&'a self, source: &'a S) -> Option<IndicesU32<'a>>
-        where S: Source;
+    fn indices_u32<'s, S: Source>(&'a self, source: &'s S) -> Option<IndicesU32<'s>>;
 
     /// Visits the joint indices of the primitive.
-    fn joints_u16<S: Source>(&'a self, set: u32, source: &'a S) -> Option<JointsU16<'a>>
-        where S: Source;
+    fn joints_u16<'s, S: Source>(
+        &'a self,
+        set: u32,
+        source: &'s S
+    ) -> Option<JointsU16<'s>>;
 
     /// Visits the joint weights of the primitive.
-    fn weights_f32<S: Source>(&'a self, set: u32, source: &'a S) -> Option<WeightsF32<'a>>
-        where S: Source;
+    fn weights_f32<'s, S: Source>(
+        &'a self,
+        set: u32,
+        source: &'s S
+    ) -> Option<WeightsF32<'s>>;
 }
 
 impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
-    fn positions<S>(&'a self, source: &'a S) -> Option<Positions<'a>>
-        where S: Source
-    {
+    fn positions<'s, S: Source>(&'a self, source: &'s S) -> Option<Positions<'s>> {
         self.get(&gltf::Semantic::Positions)
             .map(|accessor| Positions(AccessorIter::new(accessor, source)))
     }
 
-    fn normals<S>(&'a self, source: &'a S) -> Option<Normals<'a>>
-        where S: Source
-    {
+    fn normals<'s, S: Source>(&'a self, source: &'s S) -> Option<Normals<'s>> {
         self.get(&gltf::Semantic::Normals)
             .map(|accessor| Normals(AccessorIter::new(accessor, source)))
     }
 
-    fn tangents<S>(&'a self, source: &'a S) -> Option<Tangents<'a>>
-        where S: Source
-    {
+    fn tangents<'s, S: Source>(&'a self, source: &'s S) -> Option<Tangents<'s>> {
         self.get(&gltf::Semantic::Tangents)
             .map(|accessor| Tangents(AccessorIter::new(accessor, source)))
     }
 
-    fn tex_coords_f32<S>(&'a self, set: u32, source: &'a S) -> Option<TexCoordsF32<'a>>
-        where S: Source
-    {
+    fn tex_coords_f32<'s, S: Source>(&'a self, set: u32, source: &'s S) -> Option<TexCoordsF32<'s>> {
         self.get(&gltf::Semantic::TexCoords(set))
             .map(|accessor| TexCoordsF32(TexCoords::new(accessor, source)))
     }
 
-    fn colors_rgba_f32<S>(
+    fn colors_rgba_f32<'s, S: Source>(
         &'a self,
         set: u32,
         default_alpha: f32,
-        source: &'a S,
-    ) -> Option<ColorsRgbaF32<'a>>
-        where S: Source
-    {
+        source: &'s S,
+    ) -> Option<ColorsRgbaF32<'s>> {
         self.get(&gltf::Semantic::Colors(set))
-            .map(|accessor| {
+            .map(|accessor|
                 ColorsRgbaF32 {
                     iter: Colors::new(accessor, source),
                     default_alpha,
                 }
-            })
+            )
     }
 
-    fn indices_u32<S>(&'a self, source: &'a S) -> Option<IndicesU32<'a>>
-        where S: Source
-    {
+    fn indices_u32<'s, S: Source>(&'a self, source: &'s S) -> Option<IndicesU32<'s>> {
         self.indices().map(|accessor| IndicesU32(Indices::new(accessor, source)))
     }
 
-    fn joints_u16<S>(&'a self, set: u32, source: &'a S) -> Option<JointsU16<'a>>
-        where S: Source
-    {
+    fn joints_u16<'s, S: Source>(&'a self, set: u32, source: &'s S) -> Option<JointsU16<'s>> {
         self.get(&gltf::Semantic::Joints(set))
             .map(|accessor| JointsU16(Joints::new(accessor, source)))
     }
 
-    fn weights_f32<S>(&'a self, set: u32, source: &'a S) -> Option<WeightsF32<'a>>
-        where S: Source
-    {
+    fn weights_f32<'s, S: Source>(&'a self, set: u32, source: &'s S) -> Option<WeightsF32<'s>> {
         self.get(&gltf::Semantic::Weights(set))
             .map(|accessor| WeightsF32(Weights::new(accessor, source)))
     }
@@ -174,7 +158,7 @@ pub struct AccessorIter<'a, T> {
 }
 
 impl<'a, T> AccessorIter<'a, T> {
-    pub fn new<S>(accessor: gltf::Accessor<'a>, source: &'a S) -> AccessorIter<'a, T>
+    pub fn new<S>(accessor: gltf::Accessor, source: &'a S) -> AccessorIter<'a, T>
         where S: Source
     {
         debug_assert_eq!(size_of::<T>(), accessor.size());
@@ -425,7 +409,7 @@ pub struct ColorsRgbaF32<'a> {
 }
 
 impl<'a> Colors<'a> {
-    fn new<S: Source>(accessor: gltf::Accessor<'a>, source: &'a S) -> Colors<'a> {
+    fn new<S: Source>(accessor: gltf::Accessor, source: &'a S) -> Colors<'a> {
         match (accessor.dimensions(), accessor.data_type()) {
             (Dimensions::Vec3, DataType::U8) => {
                 Colors::RgbU8(AccessorIter::new(accessor, source))
@@ -450,7 +434,7 @@ impl<'a> Colors<'a> {
     }
 }
 impl<'a> TexCoords<'a> {
-    fn new<S: Source>(accessor: gltf::Accessor<'a>, source: &'a S) -> TexCoords<'a> {
+    fn new<S: Source>(accessor: gltf::Accessor, source: &'a S) -> TexCoords<'a> {
         match accessor.data_type() {
             DataType::U8 => TexCoords::U8(AccessorIter::new(accessor, source)),
             DataType::U16 => TexCoords::U16(AccessorIter::new(accessor, source)),
@@ -461,7 +445,7 @@ impl<'a> TexCoords<'a> {
 }
 
 impl<'a> Indices<'a> {
-    fn new<S: Source>(accessor: gltf::Accessor<'a>, source: &'a S) -> Indices<'a> {
+    fn new<S: Source>(accessor: gltf::Accessor, source: &'a S) -> Indices<'a> {
         match accessor.data_type() {
             DataType::U8 => Indices::U8(AccessorIter::new(accessor, source)),
             DataType::U16 => Indices::U16(AccessorIter::new(accessor, source)),
@@ -472,7 +456,7 @@ impl<'a> Indices<'a> {
 }
 
 impl<'a> Joints<'a> {
-    fn new<S: Source>(accessor: gltf::Accessor<'a>, source: &'a S) -> Joints<'a> {
+    fn new<S: Source>(accessor: gltf::Accessor, source: &'a S) -> Joints<'a> {
         match accessor.data_type() {
             DataType::U8 => Joints::U8(AccessorIter::new(accessor, source)),
             DataType::U16 => Joints::U16(AccessorIter::new(accessor, source)),
@@ -482,7 +466,7 @@ impl<'a> Joints<'a> {
 }
 
 impl<'a> Weights<'a> {
-    fn new<S: Source>(accessor: gltf::Accessor<'a>, source: &'a S) -> Weights<'a> {
+    fn new<S: Source>(accessor: gltf::Accessor, source: &'a S) -> Weights<'a> {
         match accessor.data_type() {
             DataType::U8 => Weights::U8(AccessorIter::new(accessor, source)),
             DataType::U16 => Weights::U16(AccessorIter::new(accessor, source)),
