@@ -93,51 +93,51 @@ pub trait PrimitiveIterators<'a> {
 }
 
 impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
-    fn positions<'s, S: Source>(&'a self, source: &'s S) -> Option<Positions<'s>> {
+    fn positions<'s, S: Source>(&self, source: &'s S) -> Option<Positions<'s>> {
         self.get(&gltf::Semantic::Positions)
             .map(|accessor| Positions(AccessorIter::new(accessor, source)))
     }
 
-    fn normals<'s, S: Source>(&'a self, source: &'s S) -> Option<Normals<'s>> {
+    fn normals<'s, S: Source>(&self, source: &'s S) -> Option<Normals<'s>> {
         self.get(&gltf::Semantic::Normals)
             .map(|accessor| Normals(AccessorIter::new(accessor, source)))
     }
 
-    fn tangents<'s, S: Source>(&'a self, source: &'s S) -> Option<Tangents<'s>> {
+    fn tangents<'s, S: Source>(&self, source: &'s S) -> Option<Tangents<'s>> {
         self.get(&gltf::Semantic::Tangents)
             .map(|accessor| Tangents(AccessorIter::new(accessor, source)))
     }
 
-    fn tex_coords_f32<'s, S: Source>(&'a self, set: u32, source: &'s S) -> Option<TexCoordsF32<'s>> {
+    fn tex_coords_f32<'s, S: Source>(&self, set: u32, source: &'s S) -> Option<TexCoordsF32<'s>> {
         self.get(&gltf::Semantic::TexCoords(set))
             .map(|accessor| TexCoordsF32(TexCoords::new(accessor, source)))
     }
 
     fn colors_rgba_f32<'s, S: Source>(
-        &'a self,
+        &self,
         set: u32,
         default_alpha: f32,
         source: &'s S,
     ) -> Option<ColorsRgbaF32<'s>> {
         self.get(&gltf::Semantic::Colors(set))
-            .map(|accessor|
+            .map(|accessor| {
                 ColorsRgbaF32 {
                     iter: Colors::new(accessor, source),
                     default_alpha,
                 }
-            )
+            })
     }
 
-    fn indices_u32<'s, S: Source>(&'a self, source: &'s S) -> Option<IndicesU32<'s>> {
+    fn indices_u32<'s, S: Source>(&self, source: &'s S) -> Option<IndicesU32<'s>> {
         self.indices().map(|accessor| IndicesU32(Indices::new(accessor, source)))
     }
 
-    fn joints_u16<'s, S: Source>(&'a self, set: u32, source: &'s S) -> Option<JointsU16<'s>> {
+    fn joints_u16<'s, S: Source>(&self, set: u32, source: &'s S) -> Option<JointsU16<'s>> {
         self.get(&gltf::Semantic::Joints(set))
             .map(|accessor| JointsU16(Joints::new(accessor, source)))
     }
 
-    fn weights_f32<'s, S: Source>(&'a self, set: u32, source: &'s S) -> Option<WeightsF32<'s>> {
+    fn weights_f32<'s, S: Source>(&self, set: u32, source: &'s S) -> Option<WeightsF32<'s>> {
         self.get(&gltf::Semantic::Weights(set))
             .map(|accessor| WeightsF32(Weights::new(accessor, source)))
     }
@@ -643,7 +643,7 @@ impl Denormalize for u16 {
     }
 }
 
-impl<T: Copy + Denormalize> Denormalize for [T; 2] {
+impl<T: Denormalize> Denormalize for [T; 2] {
     type Denormalized = [T::Denormalized; 2];
     fn denormalize(&self) -> Self::Denormalized {
         [
@@ -653,7 +653,7 @@ impl<T: Copy + Denormalize> Denormalize for [T; 2] {
     }
 }
 
-impl<T: Copy + Denormalize> Denormalize for [T; 3] {
+impl<T: Denormalize> Denormalize for [T; 3] {
     type Denormalized = [T::Denormalized; 3];
     fn denormalize(&self) -> Self::Denormalized {
         [
@@ -664,7 +664,7 @@ impl<T: Copy + Denormalize> Denormalize for [T; 3] {
     }
 }
 
-impl<T: Copy + Denormalize> Denormalize for [T; 4] {
+impl<T: Denormalize> Denormalize for [T; 4] {
     type Denormalized = [T::Denormalized; 4];
     fn denormalize(&self) -> Self::Denormalized {
         [
