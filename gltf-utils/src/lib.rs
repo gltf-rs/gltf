@@ -144,6 +144,78 @@ impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
     }
 }
 
+/// Extra methods for working with `gltf::Skin`.
+pub trait SkinIterators<'a> {
+    /// Visits the `inverseBindMatrices` of the skin.
+    fn ibms<S: Source>(&'a self, source: &'a S) -> Option<InverseBindMatrices<'a>>;
+}
+
+impl<'a> SkinIterators<'a> for gltf::Skin<'a> {
+    fn ibms<S: Source>(&'a self, source: &'a S) -> Option<InverseBindMatrices<'a>> {
+        self.inverse_bind_matrices().map(|accessor| InverseBindMatrices(AccessorIter::new(accessor, source)))
+    }
+}
+
+/// Extra methods for working with `gltf::animation::Channel`.
+pub trait ChannelIterators<'a> {
+    /// Visits the input samples of a channel.
+    fn inputs<S: Source>(&'a self, source: &'a S) -> Inputs<'a>;
+
+    /// Visits the translation samples of a channel.
+    fn translations<S: Source>(&'a self, source: &'a S) -> Option<Translations<'a>>;
+
+    /// Visits the rotation samples of a channel.
+    fn rotations_f32<S: Source>(&'a self, source: &'a S) -> Option<RotationsF32<'a>>;
+
+    /// Visits the scaling samples of a channel.
+    fn scales<S: Source>(&'a self, source: &'a S) -> Option<Scales<'a>>;
+
+    /// Visits the morph target weight samples of a channel.
+    fn weights_f32<S: Source>(&'a self, source: &'a S) -> Option<MorphWeightsF32<'a>>;
+}
+
+impl<'a> ChannelIterators<'a> for gltf::animation::Channel<'a> {
+    fn inputs<S: Source>(&'a self, source: &'a S) -> Inputs<'a> {
+        Inputs(AccessorIter::new(self.sampler().input(), source))
+    }
+ 
+    fn translations<S: Source>(&'a self, source: &'a S) -> Option<Translations<'a>> {
+        match self.target().path() {
+            gltf::animation::TrsProperty::Translation => {
+                Some(Translations(AccessorIter::new(self.sampler().output(), source)))
+            },
+            _ => None,
+        }
+    }
+
+    fn rotations_f32<S: Source>(&'a self, source: &'a S) -> Option<RotationsF32<'a>> {
+        match self.target().path() {
+            gltf::animation::TrsProperty::Rotation => {
+                Some(RotationsF32(Rotations::new(self.sampler().output(), source)))
+            },
+            _ => None,
+        }
+    }
+
+    fn scales<S: Source>(&'a self, source: &'a S) -> Option<Scales<'a>> {
+        match self.target().path() {
+            gltf::animation::TrsProperty::Scale => {
+                Some(Scales(AccessorIter::new(self.sampler().output(), source)))
+            },
+            _ => None,
+        }
+    }
+
+    fn weights_f32<S: Source>(&'a self, source: &'a S) -> Option<MorphWeightsF32<'a>> {
+        match self.target().path() {
+            gltf::animation::TrsProperty::Weights => {
+                Some(MorphWeightsF32(MorphWeights::new(self.sampler().output(), source)))
+            },
+            _ => None,
+        }
+    }
+}
+
 /// Visits the items in an `Accessor`.
 #[derive(Clone, Debug)]
 pub struct AccessorIter<'a, T> {
@@ -309,6 +381,22 @@ pub struct Positions<'a>(AccessorIter<'a, [f32; 3]>);
 #[derive(Clone, Debug)]
 pub struct Tangents<'a>(AccessorIter<'a, [f32; 4]>);
 
+/// Inverse Bind Matrices of type [[f32; 4]; 4].
+#[derive(Clone, Debug)]
+pub struct InverseBindMatrices<'a>(AccessorIter<'a, [[f32; 4]; 4]>);
+
+/// Animation input sampler values of type `f32`.
+#[derive(Clone, Debug)]
+pub struct Inputs<'a>(AccessorIter<'a, f32>);
+
+/// XYZ translations of type `[f32; 3]`.
+#[derive(Clone, Debug)]
+pub struct Translations<'a>(AccessorIter<'a, [f32; 3]>);
+
+/// XYZ scales of type `[f32; 3]`.
+#[derive(Clone, Debug)]
+pub struct Scales<'a>(AccessorIter<'a, [f32; 3]>);
+
 /// Vertex colors.
 #[derive(Clone, Debug)]
 enum Colors<'a> {
@@ -382,6 +470,38 @@ enum Weights<'a> {
     U16(AccessorIter<'a, [u16; 4]>),
 }
 
+/// Rotation animations 
+#[derive(Clone, Debug)]
+enum Rotations<'a> {
+    /// Rotations of type `[f32; 4]`.
+    F32(AccessorIter<'a, [f32; 4]>),
+    
+    /// Rotations of type `[u8; 4]`.
+    U8(AccessorIter<'a, [u8; 4]>),
+    
+    /// Rotations of type `[i16; 4]`.
+    I16(AccessorIter<'a, [i16; 4]>),
+    
+    /// Rotations of type `[u16; 4]`.
+    U16(AccessorIter<'a, [u16; 4]>),
+}
+
+/// Morph-target weight animations.
+#[derive(Clone, Debug)]
+enum MorphWeights<'a> {
+    /// Weights of type `f32`.
+    F32(AccessorIter<'a, f32>),
+    
+    /// Weights of type `u8`.
+    U8(AccessorIter<'a, u8>),
+    
+    /// Weights of type `i16`.
+    I16(AccessorIter<'a, i16>), 
+    
+    /// Weights of type `u16`.
+    U16(AccessorIter<'a, u16>),
+}
+
 /// Index data coerced into `u32` values.
 #[derive(Clone, Debug)]
 pub struct IndicesU32<'a>(Indices<'a>);
@@ -408,6 +528,14 @@ pub struct ColorsRgbaF32<'a> {
     default_alpha: f32,
 }
 
+/// XYZW quaternion rotations of type `[f32; 4]`.
+#[derive(Clone, Debug)]
+pub struct RotationsF32<'a>(Rotations<'a>);
+
+/// Morph-target weights of type `f32`.
+#[derive(Clone, Debug)]
+pub struct MorphWeightsF32<'a>(MorphWeights<'a>);
+
 impl<'a> Colors<'a> {
     fn new<S: Source>(accessor: gltf::Accessor, source: &'a S) -> Colors<'a> {
         match (accessor.dimensions(), accessor.data_type()) {
@@ -433,6 +561,7 @@ impl<'a> Colors<'a> {
         }
     }
 }
+
 impl<'a> TexCoords<'a> {
     fn new<S: Source>(accessor: gltf::Accessor, source: &'a S) -> TexCoords<'a> {
         match accessor.data_type() {
@@ -472,6 +601,56 @@ impl<'a> Weights<'a> {
             DataType::U16 => Weights::U16(AccessorIter::new(accessor, source)),
             DataType::F32 => Weights::F32(AccessorIter::new(accessor, source)),
             _ => unreachable!(),
+        }
+    }
+}
+
+impl<'a> Rotations<'a> {
+    fn new<S: Source>(accessor: gltf::Accessor<'a>, source: &'a S) -> Rotations<'a> {
+        match accessor.dimensions() {
+            Dimensions::Vec4 => {
+                match accessor.data_type() {
+                    DataType::F32 => {
+                        Rotations::F32(AccessorIter::new(accessor, source))
+                    },
+                    DataType::U8 => {
+                        Rotations::U8(AccessorIter::new(accessor, source))
+                    },
+                    DataType::I16 => {
+                        Rotations::I16(AccessorIter::new(accessor, source))
+                    },
+                    DataType::U16 => {
+                        Rotations::U16(AccessorIter::new(accessor, source))
+                    },
+                    _ => unimplemented!(),
+                }
+            },
+            _ => unimplemented!(),
+        }
+    }
+}
+
+impl<'a> MorphWeights<'a> {
+    fn new<S: Source>(accessor: gltf::Accessor<'a>, source: &'a S) -> MorphWeights<'a> {
+        match accessor.dimensions() {
+            Dimensions::Scalar => {
+                match accessor.data_type() {
+                    DataType::F32 => {
+                        MorphWeights::F32(AccessorIter::new(accessor, source))
+                    },
+                    DataType::U8 => {
+                        MorphWeights::U8(AccessorIter::new(accessor, source))
+                    },
+                    DataType::I16 => {
+                        MorphWeights::I16(AccessorIter::new(accessor, source))
+                    },
+                    DataType::U16 => {
+                        MorphWeights::U16(AccessorIter::new(accessor, source))
+                    },
+                    _ => unimplemented!(),
+                }
+            },
+            _ => unimplemented!(),
         }
     }
 }
@@ -632,10 +811,115 @@ impl<'a> Iterator for Tangents<'a> {
     }
 }
 
+impl<'a> ExactSizeIterator for InverseBindMatrices<'a> {}
+impl<'a> Iterator for InverseBindMatrices<'a> {
+    type Item = [[f32; 4]; 4];
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
+}
+
+impl<'a> ExactSizeIterator for Inputs<'a> {}
+impl<'a> Iterator for Inputs<'a> {
+    type Item = f32;
+    
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
+}
+
+impl<'a> ExactSizeIterator for Translations<'a> {}
+impl<'a> Iterator for Translations<'a> {
+    type Item = [f32; 3];
+    
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
+}
+
+impl<'a> ExactSizeIterator for RotationsF32<'a> {}
+impl<'a> Iterator for RotationsF32<'a> {
+    type Item = [f32; 4];
+    
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.0 {
+            Rotations::F32(ref mut i) => i.next(),
+            Rotations::U8(ref mut i) => i.next().map(|x| x.denormalize()),
+            Rotations::I16(ref mut i) => i.next().map(|x| x.denormalize()),
+            Rotations::U16(ref mut i) => i.next().map(|x| x.denormalize()),
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self.0 {
+            Rotations::F32(ref i) => i.size_hint(),
+            Rotations::U8(ref i) => i.size_hint(),
+            Rotations::I16(ref i) => i.size_hint(),
+            Rotations::U16(ref i) => i.size_hint(),
+        }
+    }
+}
+
+impl<'a> ExactSizeIterator for Scales<'a> {}
+impl<'a> Iterator for Scales<'a> {
+    type Item = [f32; 3];
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.0.size_hint()
+    }
+}
+
+impl<'a> ExactSizeIterator for MorphWeightsF32<'a> {}
+impl<'a> Iterator for MorphWeightsF32<'a> {
+    type Item = f32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.0 {
+            MorphWeights::F32(ref mut i) => i.next(),
+            MorphWeights::U8(ref mut i) => i.next().map(|x| x.denormalize()),
+            MorphWeights::I16(ref mut i) => i.next().map(|x| x as f32 / 32767.0),
+            MorphWeights::U16(ref mut i) => i.next().map(|x| x.denormalize()),
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self.0 {
+            MorphWeights::F32(ref i) => i.size_hint(),
+            MorphWeights::U8(ref i) => i.size_hint(),
+            MorphWeights::I16(ref i) => i.size_hint(),
+            MorphWeights::U16(ref i) => i.size_hint(),
+        }
+    }
+}
+
 impl Denormalize for u8 {
     type Denormalized = f32;
     fn denormalize(&self) -> Self::Denormalized {
         *self as f32 / Self::max_value() as f32
+    }
+}
+
+impl Denormalize for i16 {
+    type Denormalized = f32;
+    fn denormalize(&self) -> Self::Denormalized {
+        let num = *self as f32 / Self::max_value() as f32;
+        if num < -1.0_f32 { -1.0_f32 } else { num }
     }
 }
 
