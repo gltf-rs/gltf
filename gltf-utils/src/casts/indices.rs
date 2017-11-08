@@ -2,17 +2,26 @@ use std::marker::PhantomData;
 
 use Indices;
 
+/// Casting iterator for `Indices`.
 #[derive(Debug, Copy, Clone)]
 pub struct CastingIter<'a, T>(Indices<'a>, PhantomData<T>);
 
+/// Type which describes how to cast any index into u32.
 #[derive(Debug, Copy, Clone)]
 pub struct U32;
 
+/// Trait for types which describe casting behaviour.
 pub trait Cast {
+    /// Output type.
     type Into;
 
+    /// Cast from u8.
     fn from_u8(x: u8) -> Self::Into;
+
+    /// Cast from u16.
     fn from_u16(x: u16) -> Self::Into;
+
+    /// Cast from u32.
     fn from_u32(x: u32) -> Self::Into;
 }
 
@@ -21,6 +30,7 @@ impl<'a, A> CastingIter<'a, A> {
         CastingIter(iter, PhantomData)
     }
 
+    /// Unwrap underlying `Indices` object.
     pub fn unwrap(self) -> Indices<'a> {
         self.0
     }

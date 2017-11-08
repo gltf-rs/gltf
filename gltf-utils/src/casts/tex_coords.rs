@@ -9,23 +9,34 @@ use super::norm_f32_as_u8;
 
 use TexCoords;
 
+/// Casting iterator for `TexCoords`.
 #[derive(Debug, Copy, Clone)]
 pub struct CastingIter<'a, T>(TexCoords<'a>, PhantomData<T>);
 
+/// Type which describes how to cast any texture coordinate into pair of u8.
 #[derive(Debug, Copy, Clone)]
 pub struct U8;
 
+/// Type which describes how to cast any texture coordinate into pair of u16.
 #[derive(Debug, Copy, Clone)]
 pub struct U16;
 
+/// Type which describes how to cast any texture coordinate into pair of f32.
 #[derive(Debug, Copy, Clone)]
 pub struct F32;
 
+/// Trait for types which describe casting behaviour.
 pub trait Cast {
+    /// Output type.
     type Into;
 
+    /// Cast from u8 pair.
     fn from_u8(x: [u8; 2]) -> Self::Into;
+
+    /// Cast from u16 pair.
     fn from_u16(x: [u16; 2]) -> Self::Into;
+
+    /// Cast from f32 pair.
     fn from_f32(x: [f32; 2]) -> Self::Into;
 }
 
@@ -34,6 +45,7 @@ impl<'a, A> CastingIter<'a, A> {
         CastingIter(iter, PhantomData)
     }
 
+    /// Unwrap underlying `TexCoords` object.
     pub fn unwrap(self) -> TexCoords<'a> {
         self.0
     }

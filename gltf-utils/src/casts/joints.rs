@@ -2,16 +2,23 @@ use std::marker::PhantomData;
 
 use Joints;
 
+/// Casting iterator for `Joints`.
 #[derive(Debug, Copy, Clone)]
 pub struct CastingIter<'a, T>(Joints<'a>, PhantomData<T>);
 
+/// Type which describes how to cast any joint into u16.
 #[derive(Debug, Copy, Clone)]
 pub struct U16;
 
+/// Trait for types which describe casting behaviour.
 pub trait Cast {
+    /// Output type.
     type Into;
 
+    /// Cast from u8.
     fn from_u8(x: [u8; 4]) -> Self::Into;
+
+    /// Cast from u16.
     fn from_u16(x: [u16; 4]) -> Self::Into;
 }
 
@@ -20,6 +27,7 @@ impl<'a, A> CastingIter<'a, A> {
         CastingIter(iter, PhantomData)
     }
 
+    /// Unwrap underlying `Joints` object.
     pub fn unwrap(self) -> Joints<'a> {
         self.0
     }

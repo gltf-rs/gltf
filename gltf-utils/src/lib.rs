@@ -1,10 +1,6 @@
-/*!
-
-This crate provides utility methods in addition to core gltf, such as accessor
-iterators and easy conversions between different representations of accessor
-items.
-
-*/
+//! This crate provides utility methods in addition to core gltf, such as
+//! accessor iterators and easy conversions between different representations of
+//! accessor items.
 
 #![warn(missing_docs)]
 #![warn(trivial_casts)]
@@ -158,7 +154,7 @@ pub struct AccessorIter<'a, T> {
 }
 
 impl<'a, T> AccessorIter<'a, T> {
-    pub fn new<S>(accessor: gltf::Accessor, source: &'a S) -> AccessorIter<'a, T>
+    fn new<S>(accessor: gltf::Accessor, source: &'a S) -> AccessorIter<'a, T>
         where S: Source
     {
         debug_assert_eq!(size_of::<T>(), accessor.size());
@@ -229,7 +225,8 @@ impl<'a, T: AccessorItem> Iterator for AccessorIter<'a, T> {
 impl<'a, T: AccessorItem> ExactSizeIterator for AccessorIter<'a, T> {}
 
 /// Any type that can appear in an Accessor.
-pub trait AccessorItem: Sized {
+pub trait AccessorItem {
+    /// Create an object of this type from a byte slice.
     fn from_slice(buf: &[u8]) -> Self;
 }
 
@@ -368,66 +365,92 @@ pub enum Weights<'a> {
 }
 
 impl<'a> Colors<'a> {
+    /// Reinterpret colors as RGB u8, discarding alpha, if present.  Lossy if
+    /// the underlying iterator yields u16, f32 or any RGBA.
     pub fn to_rgb_u8(self) -> colors::CastingIter<'a, colors::RgbU8> {
         colors::CastingIter::new(self)
     }
 
+    /// Reinterpret colors as RGB u16, discarding alpha, if present.  Lossy if
+    /// the underlying iterator yields f32 or any RGBA.
     pub fn to_rgb_u16(self) -> colors::CastingIter<'a, colors::RgbU16> {
         colors::CastingIter::new(self)
     }
 
+    /// Reinterpret colors as RGB f32, discarding alpha, if present.  Lossy if
+    /// the underlying iterator yields u16 or any RGBA.
     pub fn to_rgb_f32(self) -> colors::CastingIter<'a, colors::RgbF32> {
         colors::CastingIter::new(self)
     }
 
+    /// Reinterpret colors as RGBA u8, with default alpha 255.  Lossy if the
+    /// underlying iterator yields u16 or f32.
     pub fn to_rgba_u8(self) -> colors::CastingIter<'a, colors::RgbaU8> {
         colors::CastingIter::new(self)
     }
 
+    /// Reinterpret colors as RGBA u16, with default alpha 65535.  Lossy if the
+    /// underlying iterator yields f32.
     pub fn to_rgba_u16(self) -> colors::CastingIter<'a, colors::RgbaU16> {
         colors::CastingIter::new(self)
     }
 
+    /// Reinterpret colors as RGBA f32, with default alpha 1.0.  Lossy if the
+    /// underlying iterator yields u16.
     pub fn to_rgba_f32(self) -> colors::CastingIter<'a, colors::RgbaF32> {
         colors::CastingIter::new(self)
     }
 }
 
 impl<'a> Indices<'a> {
+    /// Reinterpret indices as u32, which can fit any possible index.
     pub fn to_u32(self) -> indices::CastingIter<'a, indices::U32> {
         indices::CastingIter::new(self)
     }
 }
 
 impl<'a> Joints<'a> {
+    /// Reinterpret joints as u16, which can fit any possible joint.
     pub fn to_u16(self) -> joints::CastingIter<'a, joints::U16> {
         joints::CastingIter::new(self)
     }
 }
 
 impl<'a> TexCoords<'a> {
+    /// Reinterpret texture coordinates as u8.  Lossy if the underlying iterator
+    /// yields u16 or f32.
     pub fn to_u8(self) -> tex_coords::CastingIter<'a, tex_coords::U8> {
         tex_coords::CastingIter::new(self)
     }
 
+    /// Reinterpret texture coordinates as u16.  Lossy if the underlying
+    /// iterator yields f32.
     pub fn to_u16(self) -> tex_coords::CastingIter<'a, tex_coords::U16> {
         tex_coords::CastingIter::new(self)
     }
 
+    /// Reinterpret texture coordinates as f32.  Lossy if the underlying
+    /// iterator yields u16.
     pub fn to_f32(self) -> tex_coords::CastingIter<'a, tex_coords::F32> {
         tex_coords::CastingIter::new(self)
     }
 }
 
 impl<'a> Weights<'a> {
+    /// Reinterpret weights as u8.  Lossy if the underlying iterator yields u16
+    /// or f32.
     pub fn to_u8(self) -> weights::CastingIter<'a, weights::U8> {
         weights::CastingIter::new(self)
     }
 
+    /// Reinterpret weights as u16.  Lossy if the underlying iterator yields
+    /// f32.
     pub fn to_u16(self) -> weights::CastingIter<'a, weights::U16> {
         weights::CastingIter::new(self)
     }
 
+    /// Reinterpret weights as f32.  Lossy if the underlying iterator yields
+    /// u16.
     pub fn to_f32(self) -> weights::CastingIter<'a, weights::F32> {
         weights::CastingIter::new(self)
     }

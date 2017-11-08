@@ -1,7 +1,14 @@
+//! This module provides casting iterators for certain types of accessors.
+
+/// Casting iterator and accompanying types for `Colors`.
 pub mod colors;
+/// Casting iterator and accompanying types for `Indices`.
 pub mod indices;
+/// Casting iterator and accompanying types for `Joints`.
 pub mod joints;
+/// Casting iterator and accompanying types for `TexCoords`.
 pub mod tex_coords;
+/// Casting iterator and accompanying types for `Weights`.
 pub mod weights;
 
 fn norm_f32_as_u8(x: f32) -> u8 {
