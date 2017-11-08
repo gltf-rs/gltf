@@ -6,14 +6,8 @@ items.
 
 */
 
-#![warn(missing_docs,
-        missing_copy_implementations,
-        missing_debug_implementations,
-        trivial_casts,
-        trivial_numeric_casts,
-        unused_extern_crates,
-        unused_import_braces,
-        unused_qualifications)]
+#![warn(missing_docs)]
+#![warn(trivial_casts)]
 
 extern crate byteorder;
 extern crate gltf;
