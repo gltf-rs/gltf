@@ -148,12 +148,12 @@ impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
 /// Extra methods for working with `gltf::Skin`.
 pub trait SkinIterators<'a> {
     /// Visits the `inverseBindMatrices` of the skin.
-    fn ibms<S>(&'a self, source: &'a S) -> Option<InverseBindMatrices<'a>>
+    fn ibms<'s, S>(&'a self, source: &'s S) -> Option<InverseBindMatrices<'s>>
         where S: Source;
 }
 
 impl<'a> SkinIterators<'a> for gltf::Skin<'a> {
-    fn ibms<S>(&'a self, source: &'a S) -> Option<InverseBindMatrices<'a>>
+    fn ibms<'s, S>(&'a self, source: &'s S) -> Option<InverseBindMatrices<'s>>
         where S: Source
     {
         self.inverse_bind_matrices()
@@ -164,23 +164,23 @@ impl<'a> SkinIterators<'a> for gltf::Skin<'a> {
 /// Extra methods for working with `gltf::animation::Channel`.
 pub trait ChannelIterators<'a> {
     /// Visits the input samples of a channel.
-    fn inputs<S>(&'a self, source: &'a S) -> Inputs<'a>
+    fn inputs<'s, S>(&'a self, source: &'s S) -> Inputs<'s>
         where S: Source;
 
     /// Returns a visitor to either translation, rotation, scaling or morph
     /// target weight samples of a channel.
-    fn select<S>(&'a self, source: &'a S) -> Select<'a>
+    fn select<'s, S>(&'a self, source: &'s S) -> Select<'s>
         where S: Source;
 }
 
 impl<'a> ChannelIterators<'a> for gltf::animation::Channel<'a> {
-    fn inputs<S>(&'a self, source: &'a S) -> Inputs<'a>
+    fn inputs<'s, S>(&'a self, source: &'s S) -> Inputs<'s>
         where S: Source
     {
         AccessorIter::new(self.sampler().input(), source)
     }
 
-    fn select<S>(&'a self, source: &'a S) -> Select<'a>
+    fn select<'s, S>(&'a self, source: &'s S) -> Select<'s>
         where S: Source
     {
         use gltf::animation::TrsProperty;
