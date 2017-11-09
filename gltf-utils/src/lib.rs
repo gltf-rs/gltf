@@ -607,6 +607,7 @@ mod private {
 
 #[cfg(test)]
 mod tests {
+    use std::marker::PhantomData;
     use super::{AccessorItem, AccessorIter};
 
     #[test]
