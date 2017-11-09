@@ -32,7 +32,7 @@ pub trait Source: fmt::Debug {
 }
 
 /// Extra methods for working with `gltf::Primitive`.
-pub trait PrimitiveIterators<'a> {
+pub trait PrimitiveIterators<'a>: private::Sealed {
     /// Visits the vertex positions of a primitive.
     fn positions<'s, S: Source>(&'a self, source: &'s S) -> Option<Positions<'s>>;
 
@@ -146,7 +146,7 @@ impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
 }
 
 /// Extra methods for working with `gltf::Skin`.
-pub trait SkinIterators<'a> {
+pub trait SkinIterators<'a>: private::Sealed {
     /// Visits the `inverseBindMatrices` of the skin.
     fn ibms<'s, S>(&'a self, source: &'s S) -> Option<InverseBindMatrices<'s>>
         where S: Source;
@@ -162,7 +162,7 @@ impl<'a> SkinIterators<'a> for gltf::Skin<'a> {
 }
 
 /// Extra methods for working with `gltf::animation::Channel`.
-pub trait ChannelIterators<'a> {
+pub trait ChannelIterators<'a>: private::Sealed {
     /// Visits the input samples of a channel.
     fn inputs<'s, S>(&'a self, source: &'s S) -> Inputs<'s>
         where S: Source;
@@ -593,6 +593,16 @@ impl<'a> MorphWeights<'a> {
     pub fn to_f32(self) -> morph_weights::CastingIter<'a, morph_weights::F32> {
         morph_weights::CastingIter::new(self)
     }
+}
+
+mod private {
+    use gltf;
+
+    pub trait Sealed {}
+
+    impl<'a> Sealed for gltf::Primitive<'a> {}
+    impl<'a> Sealed for gltf::animation::Channels<'a> {}
+    impl<'a> Sealed for gltf::Skin<'a> {}
 }
 
 #[cfg(test)]
