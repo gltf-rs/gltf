@@ -601,7 +601,7 @@ mod private {
     pub trait Sealed {}
 
     impl<'a> Sealed for gltf::Primitive<'a> {}
-    impl<'a> Sealed for gltf::animation::Channels<'a> {}
+    impl<'a> Sealed for gltf::animation::Channel<'a> {}
     impl<'a> Sealed for gltf::Skin<'a> {}
 }
 
