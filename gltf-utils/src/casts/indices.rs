@@ -3,11 +3,11 @@ use std::marker::PhantomData;
 use Indices;
 
 /// Casting iterator for `Indices`.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct CastingIter<'a, T>(Indices<'a>, PhantomData<T>);
 
 /// Type which describes how to cast any index into u32.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct U32;
 
 /// Trait for types which describe casting behaviour.

@@ -10,31 +10,31 @@ use super::norm_f32_as_u8;
 use Colors;
 
 /// Casting iterator for `Colors`.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct CastingIter<'a, T>(Colors<'a>, PhantomData<T>);
 
 /// Type which describes how to cast any color into RGB u8.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct RgbU8;
 
 /// Type which describes how to cast any color into RGB u16.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct RgbU16;
 
 /// Type which describes how to cast any color into RGB f32.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct RgbF32;
 
 /// Type which describes how to cast any color into RGBA u8.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct RgbaU8;
 
 /// Type which describes how to cast any color into RGBA u16.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct RgbaU16;
 
 /// Type which describes how to cast any color into RGBA f32.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct RgbaF32;
 
 /// Trait for types which describe casting behaviour.

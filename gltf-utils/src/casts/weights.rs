@@ -10,19 +10,19 @@ use super::norm_f32_as_u8;
 use Weights;
 
 /// Casting iterator for `Weights`.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct CastingIter<'a, T>(Weights<'a>, PhantomData<T>);
 
 /// Type which describes how to cast any weight into u8.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct U8;
 
 /// Type which describes how to cast any weight into u16.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct U16;
 
 /// Type which describes how to cast any weight into f32.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct F32;
 
 /// Trait for types which describe casting behaviour.

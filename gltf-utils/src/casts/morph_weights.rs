@@ -8,11 +8,11 @@ use super::norm_u16_as_f32;
 use MorphWeights;
 
 /// Casting iterator for `MorphWeights`.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct CastingIter<'a, T>(MorphWeights<'a>, PhantomData<T>);
 
 /// Type which describes how to cast any weight into f32.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct F32;
 
 /// Trait for types which describe casting behaviour.
