@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
 
-use super::u8_as_norm_f32;
-use super::u8_as_u16_norm;
-use super::u16_as_norm_f32;
-use super::u16_as_u8_norm;
+use super::norm_u8_as_f32;
+use super::norm_u8_as_u16;
+use super::norm_u16_as_f32;
+use super::norm_u16_as_u8;
 use super::norm_f32_as_u16;
 use super::norm_f32_as_u8;
 
@@ -100,8 +100,8 @@ impl Cast for U8 {
     fn from_u8(x: [u8; 4]) -> Self::Into { x }
 
     fn from_u16(x: [u16; 4]) -> Self::Into {
-        [u16_as_u8_norm(x[0]), u16_as_u8_norm(x[1]),
-         u16_as_u8_norm(x[2]), u16_as_u8_norm(x[3])]
+        [norm_u16_as_u8(x[0]), norm_u16_as_u8(x[1]),
+         norm_u16_as_u8(x[2]), norm_u16_as_u8(x[3])]
     }
 
     fn from_f32(x: [f32; 4]) -> Self::Into {
@@ -114,8 +114,8 @@ impl Cast for U16 {
     type Into = [u16; 4];
 
     fn from_u8(x: [u8; 4]) -> Self::Into {
-        [u8_as_u16_norm(x[0]), u8_as_u16_norm(x[1]),
-         u8_as_u16_norm(x[2]), u8_as_u16_norm(x[3])]
+        [norm_u8_as_u16(x[0]), norm_u8_as_u16(x[1]),
+         norm_u8_as_u16(x[2]), norm_u8_as_u16(x[3])]
     }
 
     fn from_u16(x: [u16; 4]) -> Self::Into { x }
@@ -130,13 +130,13 @@ impl Cast for F32 {
     type Into = [f32; 4];
 
     fn from_u8(x: [u8; 4]) -> Self::Into {
-        [u8_as_norm_f32(x[0]), u8_as_norm_f32(x[1]),
-         u8_as_norm_f32(x[2]), u8_as_norm_f32(x[3])]
+        [norm_u8_as_f32(x[0]), norm_u8_as_f32(x[1]),
+         norm_u8_as_f32(x[2]), norm_u8_as_f32(x[3])]
     }
 
     fn from_u16(x: [u16; 4]) -> Self::Into {
-        [u16_as_norm_f32(x[0]), u16_as_norm_f32(x[1]),
-         u16_as_norm_f32(x[2]), u16_as_norm_f32(x[3])]
+        [norm_u16_as_f32(x[0]), norm_u16_as_f32(x[1]),
+         norm_u16_as_f32(x[2]), norm_u16_as_f32(x[3])]
     }
 
     fn from_f32(x: [f32; 4]) -> Self::Into { x }

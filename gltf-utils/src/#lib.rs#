@@ -583,7 +583,7 @@ impl<'a> Rotations<'a> {
     /// Reinterpret rotations as f32.  Lossy if underlying iterator yields i16
     /// or u16.
     pub fn to_f32(self) -> rotations::CastingIter<'a, rotations::F32> {
-        rotations::CastingIter::new(self)
+        anim_rotations::CastingIter::new(self)
     }
 }
 

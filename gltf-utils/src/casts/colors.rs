@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
 
-use super::u8_as_norm_f32;
-use super::u8_as_u16_norm;
-use super::u16_as_norm_f32;
-use super::u16_as_u8_norm;
+use super::norm_u8_as_f32;
+use super::norm_u8_as_u16;
+use super::norm_u16_as_f32;
+use super::norm_u16_as_u8;
 use super::norm_f32_as_u16;
 use super::norm_f32_as_u8;
 
@@ -133,7 +133,7 @@ impl Cast for RgbU8 {
     fn from_rgb_u8(x: [u8; 3]) -> Self::Into { x }
 
     fn from_rgb_u16(x: [u16; 3]) -> Self::Into {
-        [u16_as_u8_norm(x[0]), u16_as_u8_norm(x[1]), u16_as_u8_norm(x[2])]
+        [norm_u16_as_u8(x[0]), norm_u16_as_u8(x[1]), norm_u16_as_u8(x[2])]
     }
 
     fn from_rgb_f32(x: [f32; 3]) -> Self::Into {
@@ -157,7 +157,7 @@ impl Cast for RgbU16 {
     type Into = [u16; 3];
 
     fn from_rgb_u8(x: [u8; 3]) -> Self::Into {
-        [u8_as_u16_norm(x[0]), u8_as_u16_norm(x[1]), u8_as_u16_norm(x[2])]
+        [norm_u8_as_u16(x[0]), norm_u8_as_u16(x[1]), norm_u8_as_u16(x[2])]
     }
 
     fn from_rgb_u16(x: [u16; 3]) -> Self::Into { x }
@@ -183,11 +183,11 @@ impl Cast for RgbF32 {
     type Into = [f32; 3];
 
     fn from_rgb_u8(x: [u8; 3]) -> Self::Into {
-        [u8_as_norm_f32(x[0]), u8_as_norm_f32(x[1]), u8_as_norm_f32(x[2])]
+        [norm_u8_as_f32(x[0]), norm_u8_as_f32(x[1]), norm_u8_as_f32(x[2])]
     }
 
     fn from_rgb_u16(x: [u16; 3]) -> Self::Into {
-        [u16_as_norm_f32(x[0]), u16_as_norm_f32(x[1]), u16_as_norm_f32(x[2])]
+        [norm_u16_as_f32(x[0]), norm_u16_as_f32(x[1]), norm_u16_as_f32(x[2])]
     }
 
     fn from_rgb_f32(x: [f32; 3]) -> Self::Into { x }
@@ -223,8 +223,8 @@ impl Cast for RgbaU8 {
     fn from_rgba_u8(x: [u8; 4]) -> Self::Into { x }
 
     fn from_rgba_u16(x: [u16; 4]) -> Self::Into {
-        [u16_as_u8_norm(x[0]), u16_as_u8_norm(x[1]),
-         u16_as_u8_norm(x[2]), u16_as_u8_norm(x[2])]
+        [norm_u16_as_u8(x[0]), norm_u16_as_u8(x[1]),
+         norm_u16_as_u8(x[2]), norm_u16_as_u8(x[2])]
     }
 
     fn from_rgba_f32(x: [f32; 4]) -> Self::Into {
@@ -249,8 +249,8 @@ impl Cast for RgbaU16 {
     }
 
     fn from_rgba_u8(x: [u8; 4]) -> Self::Into {
-        [u8_as_u16_norm(x[0]), u8_as_u16_norm(x[1]),
-         u8_as_u16_norm(x[2]), u8_as_u16_norm(x[2])]
+        [norm_u8_as_u16(x[0]), norm_u8_as_u16(x[1]),
+         norm_u8_as_u16(x[2]), norm_u8_as_u16(x[2])]
     }
 
     fn from_rgba_u16(x: [u16; 4]) -> Self::Into { x }
@@ -277,13 +277,13 @@ impl Cast for RgbaF32 {
     }
 
     fn from_rgba_u8(x: [u8; 4]) -> Self::Into {
-        [u8_as_norm_f32(x[0]), u8_as_norm_f32(x[1]),
-         u8_as_norm_f32(x[2]), u8_as_norm_f32(x[2])]
+        [norm_u8_as_f32(x[0]), norm_u8_as_f32(x[1]),
+         norm_u8_as_f32(x[2]), norm_u8_as_f32(x[2])]
     }
 
     fn from_rgba_u16(x: [u16; 4]) -> Self::Into {
-        [u16_as_norm_f32(x[0]), u16_as_norm_f32(x[1]),
-         u16_as_norm_f32(x[2]), u16_as_norm_f32(x[2])]
+        [norm_u16_as_f32(x[0]), norm_u16_as_f32(x[1]),
+         norm_u16_as_f32(x[2]), norm_u16_as_f32(x[2])]
     }
 
     fn from_rgba_f32(x: [f32; 4]) -> Self::Into { x }
