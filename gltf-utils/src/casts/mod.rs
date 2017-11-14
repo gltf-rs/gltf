@@ -17,7 +17,7 @@ pub mod rotations;
 
 #[inline]
 fn norm_i8_as_f32(x: i8) -> f32 {
-    (x as f32 * (1.0 / i8::max_value() as f32)).max(-1.0)
+    (x as f32 * (i8::max_value() as f32).recip()).max(-1.0)
 }
 
 #[inline]
@@ -27,12 +27,12 @@ fn norm_u8_as_u16(x: u8) -> u16 {
 
 #[inline]
 fn norm_u8_as_f32(x: u8) -> f32 {
-    x as f32 * (1.0 / u8::max_value() as f32)
+    x as f32 * (u8::max_value() as f32).recip()
 }
 
 #[inline]
 fn norm_i16_as_f32(x: i16) -> f32 {
-    (x as f32 * (1.0 / i16::max_value() as f32)).max(-1.0)
+    (x as f32 * (i16::max_value() as f32).recip()).max(-1.0)
 }
 
 #[inline]
@@ -42,15 +42,19 @@ fn norm_u16_as_u8(x: u16) -> u8 {
 
 #[inline]
 fn norm_u16_as_f32(x: u16) -> f32 {
-    x as f32 * (1.0 / u16::max_value() as f32)
+    x as f32 * (u16::max_value() as f32).recip()
 }
 
 #[inline]
 fn norm_f32_as_u8(x: f32) -> u8 {
-    (x * u8::max_value() as f32) as u8
+    let hi = u8::max_value() as f32;
+    let lo = 0.0;
+    (x * hi).max(lo).min(hi) as u8
 }
 
 #[inline]
 fn norm_f32_as_u16(x: f32) -> u16 {
-    (x * u16::max_value() as f32) as u16
+    let hi = u16::max_value() as f32;
+    let lo = 0.0;
+    (x * hi).max(lo).min(hi) as u16
 }
