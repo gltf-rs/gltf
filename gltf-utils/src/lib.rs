@@ -257,18 +257,21 @@ impl<'a, T: AccessorItem> Iterator for AccessorIter<'a, T> {
     }
 
     fn nth(&mut self, nth: usize) -> Option<Self::Item> {
-        if self.data.len() > 0 {
-            let val_data = &self.data[nth * self.stride ..];
-            let val = T::from_slice(val_data);
-            self.data = &val_data[self.stride.min(val_data.len()) ..];
-            Some(val)
+        if let Some(val_data) = self.data.get(nth * self.stride ..) {
+            if val_data.len() >= size_of::<T>() {
+                let val = T::from_slice(val_data);
+                self.data = &val_data[self.stride.min(val_data.len()) ..];
+                Some(val)
+            } else {
+                None
+            }
         } else {
             None
         }
     }
 
     fn last(self) -> Option<Self::Item> {
-        if self.data.len() > 0 {
+        if self.data.len() >= size_of::<T>() {
             self.data
                 .get((self.data.len() - 1) / self.stride * self.stride ..)
                 .map(T::from_slice)
@@ -283,7 +286,7 @@ impl<'a, T: AccessorItem> Iterator for AccessorIter<'a, T> {
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         let hint = self.data.len() / self.stride
-            + (self.data.len() % self.stride > 0) as usize;
+            + (self.data.len() % self.stride >= size_of::<T>()) as usize;
         (hint, Some(hint))
     }
 }
