@@ -13,13 +13,13 @@ pub struct U16;
 /// Trait for types which describe casting behaviour.
 pub trait Cast {
     /// Output type.
-    type Into;
+    type Output;
 
     /// Cast from u8.
-    fn from_u8(x: [u8; 4]) -> Self::Into;
+    fn cast_u8(x: [u8; 4]) -> Self::Output;
 
     /// Cast from u16.
-    fn from_u16(x: [u16; 4]) -> Self::Into;
+    fn cast_u16(x: [u16; 4]) -> Self::Output;
 }
 
 impl<'a, A> CastingIter<'a, A> {
@@ -34,28 +34,28 @@ impl<'a, A> CastingIter<'a, A> {
 }
 
 impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
-    type Item = A::Into;
+    type Item = A::Output;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         match self.0 {
-            Joints::U8(ref mut i)  => i.next().map(A::from_u8),
-            Joints::U16(ref mut i) => i.next().map(A::from_u16),
+            Joints::U8(ref mut i)  => i.next().map(A::cast_u8),
+            Joints::U16(ref mut i) => i.next().map(A::cast_u16),
         }
     }
 
     #[inline]
     fn nth(&mut self, x: usize) -> Option<Self::Item> {
         match self.0 {
-            Joints::U8(ref mut i)  => i.nth(x).map(A::from_u8),
-            Joints::U16(ref mut i) => i.nth(x).map(A::from_u16),
+            Joints::U8(ref mut i)  => i.nth(x).map(A::cast_u8),
+            Joints::U16(ref mut i) => i.nth(x).map(A::cast_u16),
         }
     }
 
     fn last(self) -> Option<Self::Item> {
         match self.0 {
-            Joints::U8(i)  => i.last().map(A::from_u8),
-            Joints::U16(i) => i.last().map(A::from_u16),
+            Joints::U8(i)  => i.last().map(A::cast_u8),
+            Joints::U16(i) => i.last().map(A::cast_u16),
         }
     }
 
@@ -73,11 +73,13 @@ impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
 }
 
 impl Cast for U16 {
-    type Into = [u16; 4];
+    type Output = [u16; 4];
 
-    fn from_u8(x: [u8; 4]) -> Self::Into {
+    fn cast_u8(x: [u8; 4]) -> Self::Output {
         [x[0] as u16, x[1] as u16, x[2] as u16, x[3] as u16]
     }
 
-    fn from_u16(x: [u16; 4]) -> Self::Into { x }
+    fn cast_u16(x: [u16; 4]) -> Self::Output {
+        x
+    }
 }

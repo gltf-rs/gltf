@@ -13,16 +13,16 @@ pub struct U32;
 /// Trait for types which describe casting behaviour.
 pub trait Cast {
     /// Output type.
-    type Into;
+    type Output;
 
     /// Cast from u8.
-    fn from_u8(x: u8) -> Self::Into;
+    fn cast_u8(x: u8) -> Self::Output;
 
     /// Cast from u16.
-    fn from_u16(x: u16) -> Self::Into;
+    fn cast_u16(x: u16) -> Self::Output;
 
     /// Cast from u32.
-    fn from_u32(x: u32) -> Self::Into;
+    fn cast_u32(x: u32) -> Self::Output;
 }
 
 impl<'a, A> CastingIter<'a, A> {
@@ -37,31 +37,31 @@ impl<'a, A> CastingIter<'a, A> {
 }
 
 impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
-    type Item = A::Into;
+    type Item = A::Output;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         match self.0 {
-            Indices::U8(ref mut i)  => i.next().map(A::from_u8),
-            Indices::U16(ref mut i) => i.next().map(A::from_u16),
-            Indices::U32(ref mut i) => i.next().map(A::from_u32),
+            Indices::U8(ref mut i)  => i.next().map(A::cast_u8),
+            Indices::U16(ref mut i) => i.next().map(A::cast_u16),
+            Indices::U32(ref mut i) => i.next().map(A::cast_u32),
         }
     }
 
     #[inline]
     fn nth(&mut self, x: usize) -> Option<Self::Item> {
         match self.0 {
-            Indices::U8(ref mut i)  => i.nth(x).map(A::from_u8),
-            Indices::U16(ref mut i) => i.nth(x).map(A::from_u16),
-            Indices::U32(ref mut i) => i.nth(x).map(A::from_u32),
+            Indices::U8(ref mut i)  => i.nth(x).map(A::cast_u8),
+            Indices::U16(ref mut i) => i.nth(x).map(A::cast_u16),
+            Indices::U32(ref mut i) => i.nth(x).map(A::cast_u32),
         }
     }
 
     fn last(self) -> Option<Self::Item> {
         match self.0 {
-            Indices::U8(i)  => i.last().map(A::from_u8),
-            Indices::U16(i) => i.last().map(A::from_u16),
-            Indices::U32(i) => i.last().map(A::from_u32),
+            Indices::U8(i)  => i.last().map(A::cast_u8),
+            Indices::U16(i) => i.last().map(A::cast_u16),
+            Indices::U32(i) => i.last().map(A::cast_u32),
         }
     }
 
@@ -80,9 +80,9 @@ impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
 }
 
 impl Cast for U32 {
-    type Into = u32;
+    type Output = u32;
 
-    fn from_u8(x: u8) -> Self::Into { x as Self::Into }
-    fn from_u16(x: u16) -> Self::Into { x as Self::Into }
-    fn from_u32(x: u32) -> Self::Into { x }
+    fn cast_u8(x: u8) -> Self::Output { x as Self::Output }
+    fn cast_u16(x: u16) -> Self::Output { x as Self::Output }
+    fn cast_u32(x: u32) -> Self::Output { x }
 }
