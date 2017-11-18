@@ -490,51 +490,51 @@ pub enum MorphWeights<'a> {
 impl<'a> Colors<'a> {
     /// Reinterpret colors as RGB u8, discarding alpha, if present.  Lossy if
     /// the underlying iterator yields u16, f32 or any RGBA.
-    pub fn to_rgb_u8(self) -> colors::CastingIter<'a, colors::RgbU8> {
+    pub fn into_rgb_u8(self) -> colors::CastingIter<'a, colors::RgbU8> {
         colors::CastingIter::new(self)
     }
 
     /// Reinterpret colors as RGB u16, discarding alpha, if present.  Lossy if
     /// the underlying iterator yields f32 or any RGBA.
-    pub fn to_rgb_u16(self) -> colors::CastingIter<'a, colors::RgbU16> {
+    pub fn into_rgb_u16(self) -> colors::CastingIter<'a, colors::RgbU16> {
         colors::CastingIter::new(self)
     }
 
     /// Reinterpret colors as RGB f32, discarding alpha, if present.  Lossy if
     /// the underlying iterator yields u16 or any RGBA.
-    pub fn to_rgb_f32(self) -> colors::CastingIter<'a, colors::RgbF32> {
+    pub fn into_rgb_f32(self) -> colors::CastingIter<'a, colors::RgbF32> {
         colors::CastingIter::new(self)
     }
 
     /// Reinterpret colors as RGBA u8, with default alpha 255.  Lossy if the
     /// underlying iterator yields u16 or f32.
-    pub fn to_rgba_u8(self) -> colors::CastingIter<'a, colors::RgbaU8> {
+    pub fn into_rgba_u8(self) -> colors::CastingIter<'a, colors::RgbaU8> {
         colors::CastingIter::new(self)
     }
 
     /// Reinterpret colors as RGBA u16, with default alpha 65535.  Lossy if the
     /// underlying iterator yields f32.
-    pub fn to_rgba_u16(self) -> colors::CastingIter<'a, colors::RgbaU16> {
+    pub fn into_rgba_u16(self) -> colors::CastingIter<'a, colors::RgbaU16> {
         colors::CastingIter::new(self)
     }
 
     /// Reinterpret colors as RGBA f32, with default alpha 1.0.  Lossy if the
     /// underlying iterator yields u16.
-    pub fn to_rgba_f32(self) -> colors::CastingIter<'a, colors::RgbaF32> {
+    pub fn into_rgba_f32(self) -> colors::CastingIter<'a, colors::RgbaF32> {
         colors::CastingIter::new(self)
     }
 }
 
 impl<'a> Indices<'a> {
     /// Reinterpret indices as u32, which can fit any possible index.
-    pub fn to_u32(self) -> indices::CastingIter<'a, indices::U32> {
+    pub fn into_u32(self) -> indices::CastingIter<'a, indices::U32> {
         indices::CastingIter::new(self)
     }
 }
 
 impl<'a> Joints<'a> {
     /// Reinterpret joints as u16, which can fit any possible joint.
-    pub fn to_u16(self) -> joints::CastingIter<'a, joints::U16> {
+    pub fn into_u16(self) -> joints::CastingIter<'a, joints::U16> {
         joints::CastingIter::new(self)
     }
 }
@@ -542,19 +542,19 @@ impl<'a> Joints<'a> {
 impl<'a> TexCoords<'a> {
     /// Reinterpret texture coordinates as u8.  Lossy if the underlying iterator
     /// yields u16 or f32.
-    pub fn to_u8(self) -> tex_coords::CastingIter<'a, tex_coords::U8> {
+    pub fn into_u8(self) -> tex_coords::CastingIter<'a, tex_coords::U8> {
         tex_coords::CastingIter::new(self)
     }
 
     /// Reinterpret texture coordinates as u16.  Lossy if the underlying
     /// iterator yields f32.
-    pub fn to_u16(self) -> tex_coords::CastingIter<'a, tex_coords::U16> {
+    pub fn into_u16(self) -> tex_coords::CastingIter<'a, tex_coords::U16> {
         tex_coords::CastingIter::new(self)
     }
 
     /// Reinterpret texture coordinates as f32.  Lossy if the underlying
     /// iterator yields u16.
-    pub fn to_f32(self) -> tex_coords::CastingIter<'a, tex_coords::F32> {
+    pub fn into_f32(self) -> tex_coords::CastingIter<'a, tex_coords::F32> {
         tex_coords::CastingIter::new(self)
     }
 }
@@ -562,35 +562,82 @@ impl<'a> TexCoords<'a> {
 impl<'a> Weights<'a> {
     /// Reinterpret weights as u8.  Lossy if the underlying iterator yields u16
     /// or f32.
-    pub fn to_u8(self) -> weights::CastingIter<'a, weights::U8> {
+    pub fn into_u8(self) -> weights::CastingIter<'a, weights::U8> {
         weights::CastingIter::new(self)
     }
 
     /// Reinterpret weights as u16.  Lossy if the underlying iterator yields
     /// f32.
-    pub fn to_u16(self) -> weights::CastingIter<'a, weights::U16> {
+    pub fn into_u16(self) -> weights::CastingIter<'a, weights::U16> {
         weights::CastingIter::new(self)
     }
 
     /// Reinterpret weights as f32.  Lossy if the underlying iterator yields
     /// u16.
-    pub fn to_f32(self) -> weights::CastingIter<'a, weights::F32> {
+    pub fn into_f32(self) -> weights::CastingIter<'a, weights::F32> {
         weights::CastingIter::new(self)
     }
 }
 
 impl<'a> Rotations<'a> {
+    /// Reinterpret rotations as u16.  Lossy if underlying iterator yields u8,
+    /// i16, u16 or f32.
+    pub fn into_i8(self) -> rotations::CastingIter<'a, rotations::I8> {
+        rotations::CastingIter::new(self)
+    }
+
+    /// Reinterpret rotations as u16.  Lossy if underlying iterator yields i16,
+    /// u16 or f32.
+    pub fn into_u8(self) -> rotations::CastingIter<'a, rotations::U8> {
+        rotations::CastingIter::new(self)
+    }
+
+    /// Reinterpret rotations as u16.  Lossy if underlying iterator yields u16
+    /// or f32.
+    pub fn into_i16(self) -> rotations::CastingIter<'a, rotations::I16> {
+        rotations::CastingIter::new(self)
+    }
+
+    /// Reinterpret rotations as u16.  Lossy if underlying iterator yields f32.
+    pub fn into_u16(self) -> rotations::CastingIter<'a, rotations::U16> {
+        rotations::CastingIter::new(self)
+    }
+
     /// Reinterpret rotations as f32.  Lossy if underlying iterator yields i16
     /// or u16.
-    pub fn to_f32(self) -> rotations::CastingIter<'a, rotations::F32> {
+    pub fn into_f32(self) -> rotations::CastingIter<'a, rotations::F32> {
         rotations::CastingIter::new(self)
     }
 }
 
 impl<'a> MorphWeights<'a> {
+    /// Reinterpret morph weights as u16.  Lossy if underlying iterator yields
+    /// u8, i16, u16 or f32.
+    pub fn into_i8(self) -> morph_weights::CastingIter<'a, morph_weights::I8> {
+        morph_weights::CastingIter::new(self)
+    }
+
+    /// Reinterpret morph weights as u16.  Lossy if underlying iterator yields
+    /// i16, u16 or f32.
+    pub fn into_u8(self) -> morph_weights::CastingIter<'a, morph_weights::U8> {
+        morph_weights::CastingIter::new(self)
+    }
+
+    /// Reinterpret morph weights as u16.  Lossy if underlying iterator yields
+    /// u16 or f32.
+    pub fn into_i16(self) -> morph_weights::CastingIter<'a, morph_weights::I16> {
+        morph_weights::CastingIter::new(self)
+    }
+
+    /// Reinterpret morph weights as u16.  Lossy if underlying iterator yields
+    /// f32.
+    pub fn into_u16(self) -> morph_weights::CastingIter<'a, morph_weights::U16> {
+        morph_weights::CastingIter::new(self)
+    }
+
     /// Reinterpret morph weights as f32.  Lossy if underlying iterator yields
     /// i16 or u16.
-    pub fn to_f32(self) -> morph_weights::CastingIter<'a, morph_weights::F32> {
+    pub fn into_f32(self) -> morph_weights::CastingIter<'a, morph_weights::F32> {
         morph_weights::CastingIter::new(self)
     }
 }

@@ -8,6 +8,22 @@ use Rotations;
 #[derive(Debug, Clone)]
 pub struct CastingIter<'a, T>(Rotations<'a>, PhantomData<T>);
 
+/// Type which describes how to cast any weight into i8.
+#[derive(Debug, Clone)]
+pub struct I8;
+
+/// Type which describes how to cast any weight into u8.
+#[derive(Debug, Clone)]
+pub struct U8;
+
+/// Type which describes how to cast any weight into i16.
+#[derive(Debug, Clone)]
+pub struct I16;
+
+/// Type which describes how to cast any weight into u16.
+#[derive(Debug, Clone)]
+pub struct U16;
+
 /// Type which describes how to cast any weight into f32.
 #[derive(Debug, Clone)]
 pub struct F32;
@@ -92,6 +108,102 @@ impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
             Rotations::U16(ref i) => i.size_hint(),
             Rotations::F32(ref i) => i.size_hint(),
         }
+    }
+}
+
+impl Cast for I8 {
+    type Output = [i8; 4];
+
+    fn cast_i8(x: [i8; 4]) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_u8(x: [u8; 4]) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_i16(x: [i16; 4]) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_u16(x: [u16; 4]) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_f32(x: [f32; 4]) -> Self::Output {
+        x.normalize()
+    }
+}
+
+impl Cast for i8 {
+    type Output = [u8; 4];
+
+    fn cast_i8(x: [i8; 4]) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_u8(x: [u8; 4]) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_i16(x: [i16; 4]) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_u16(x: [u16; 4]) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_f32(x: [f32; 4]) -> Self::Output {
+        x.normalize()
+    }
+}
+
+impl Cast for I16 {
+    type Output = [i16; 4];
+
+    fn cast_i8(x: [i8; 4]) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_u8(x: [u8; 4]) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_i16(x: [i16; 4]) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_u16(x: [u16; 4]) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_f32(x: [f32; 4]) -> Self::Output {
+        x.normalize()
+    }
+}
+
+impl Cast for U16 {
+    type Output = [u16; 4];
+
+    fn cast_i8(x: [i8; 4]) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_u8(x: [u8; 4]) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_i16(x: [i16; 4]) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_u16(x: [u16; 4]) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_f32(x: [f32; 4]) -> Self::Output {
+        x.normalize()
     }
 }
 

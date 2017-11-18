@@ -111,6 +111,102 @@ impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
     }
 }
 
+impl Cast for I8 {
+    type Output = i8;
+
+    fn cast_i8(x: i8) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_u8(x: u8) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_i16(x: i16) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_u16(x: u16) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_f32(x: f32) -> Self::Output {
+        x.normalize()
+    }
+}
+
+impl Cast for U8 {
+    type Output = u8;
+
+    fn cast_i8(x: i8) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_u8(x: u8) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_i16(x: i16) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_u16(x: u16) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_f32(x: f32) -> Self::Output {
+        x.normalize()
+    }
+}
+
+impl Cast for I16 {
+    type Output = i16;
+
+    fn cast_i8(x: i8) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_u8(x: u8) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_i16(x: i16) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_u16(x: u16) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_f32(x: f32) -> Self::Output {
+        x.normalize()
+    }
+}
+
+impl Cast for U16 {
+    type Output = u16;
+
+    fn cast_i8(x: i8) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_u8(x: u8) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_i16(x: i16) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_u16(x: u16) -> Self::Output {
+        x.normalize()
+    }
+
+    fn cast_f32(x: f32) -> Self::Output {
+        x.normalize()
+    }
+}
+
 impl Cast for F32 {
     type Output = f32;
 
