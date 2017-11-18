@@ -160,57 +160,29 @@ pub trait ChannelIterators<'a> {
     /// Visits the input samples of a channel.
     fn inputs<S: Source>(&'a self, source: &'a S) -> Inputs<'a>;
 
-    /// Visits the translation samples of a channel.
-    fn translations<S: Source>(&'a self, source: &'a S) -> Option<Translations<'a>>;
-
-    /// Visits the rotation samples of a channel.
-    fn rotations_f32<S: Source>(&'a self, source: &'a S) -> Option<RotationsF32<'a>>;
-
-    /// Visits the scaling samples of a channel.
-    fn scales<S: Source>(&'a self, source: &'a S) -> Option<Scales<'a>>;
-
-    /// Visits the morph target weight samples of a channel.
-    fn weights_f32<S: Source>(&'a self, source: &'a S) -> Option<MorphWeightsF32<'a>>;
+    /// Visits the output samples of a channel.
+    fn outputs<S: Source>(&'a self, source: &'a S) -> Outputs<'a>;
 }
 
 impl<'a> ChannelIterators<'a> for gltf::animation::Channel<'a> {
     fn inputs<S: Source>(&'a self, source: &'a S) -> Inputs<'a> {
         Inputs(AccessorIter::new(self.sampler().input(), source))
     }
- 
-    fn translations<S: Source>(&'a self, source: &'a S) -> Option<Translations<'a>> {
+
+    fn outputs<S: Source>(&'a self, source: &'a S) -> Outputs<'a> {
         match self.target().path() {
             gltf::animation::TrsProperty::Translation => {
-                Some(Translations(AccessorIter::new(self.sampler().output(), source)))
+                Outputs::Translations(AccessorIter::new(self.sampler().output(), source))
             },
-            _ => None,
-        }
-    }
-
-    fn rotations_f32<S: Source>(&'a self, source: &'a S) -> Option<RotationsF32<'a>> {
-        match self.target().path() {
-            gltf::animation::TrsProperty::Rotation => {
-                Some(RotationsF32(Rotations::new(self.sampler().output(), source)))
-            },
-            _ => None,
-        }
-    }
-
-    fn scales<S: Source>(&'a self, source: &'a S) -> Option<Scales<'a>> {
-        match self.target().path() {
             gltf::animation::TrsProperty::Scale => {
-                Some(Scales(AccessorIter::new(self.sampler().output(), source)))
+                Outputs::Scales(AccessorIter::new(self.sampler().output(), source))
             },
-            _ => None,
-        }
-    }
-
-    fn weights_f32<S: Source>(&'a self, source: &'a S) -> Option<MorphWeightsF32<'a>> {
-        match self.target().path() {
+            gltf::animation::TrsProperty::Rotation => {
+                Outputs::Rotations(RotationsF32(Rotations::new(self.sampler().output(), source)))
+            },
             gltf::animation::TrsProperty::Weights => {
-                Some(MorphWeightsF32(MorphWeights::new(self.sampler().output(), source)))
-            },
-            _ => None,
+                Outputs::Weights(MorphWeightsF32(MorphWeights::new(self.sampler().output(), source)))
+            }
         }
     }
 }
@@ -386,13 +358,20 @@ pub struct InverseBindMatrices<'a>(AccessorIter<'a, [[f32; 4]; 4]>);
 #[derive(Clone, Debug)]
 pub struct Inputs<'a>(AccessorIter<'a, f32>);
 
-/// XYZ translations of type `[f32; 3]`.
-#[derive(Clone, Debug)]
-pub struct Translations<'a>(AccessorIter<'a, [f32; 3]>);
+/// Animation output sampler values.
+pub enum Outputs<'a> {
+    /// XYZ translations of type `[f32; 3]`.
+    Translations(AccessorIter<'a, [f32; 3]>),
 
-/// XYZ scales of type `[f32; 3]`.
-#[derive(Clone, Debug)]
-pub struct Scales<'a>(AccessorIter<'a, [f32; 3]>);
+    /// Rotation animations.
+    Rotations(RotationsF32<'a>),
+
+    /// XYZ scales of type `[f32; 3]`.
+    Scales(AccessorIter<'a, [f32; 3]>),
+
+    /// Morph target animations.
+    Weights(MorphWeightsF32<'a>),
+}
 
 /// Vertex colors.
 #[derive(Clone, Debug)]
@@ -454,7 +433,7 @@ enum TexCoords<'a> {
     U16(AccessorIter<'a, [u16; 2]>),
 }
 
-/// Weights,
+/// Weights.
 #[derive(Clone, Debug)]
 enum Weights<'a> {
     /// Weights of type `[f32; 4]`.
@@ -467,7 +446,7 @@ enum Weights<'a> {
     U16(AccessorIter<'a, [u16; 4]>),
 }
 
-/// Rotation animations 
+/// Rotation animations .
 #[derive(Clone, Debug)]
 enum Rotations<'a> {
     /// Rotations of type `[f32; 4]`.
@@ -833,19 +812,6 @@ impl<'a> Iterator for Inputs<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for Translations<'a> {}
-impl<'a> Iterator for Translations<'a> {
-    type Item = [f32; 3];
-    
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.next()
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.0.size_hint()
-    }
-}
-
 impl<'a> ExactSizeIterator for RotationsF32<'a> {}
 impl<'a> Iterator for RotationsF32<'a> {
     type Item = [f32; 4];
@@ -866,19 +832,6 @@ impl<'a> Iterator for RotationsF32<'a> {
             Rotations::I16(ref i) => i.size_hint(),
             Rotations::U16(ref i) => i.size_hint(),
         }
-    }
-}
-
-impl<'a> ExactSizeIterator for Scales<'a> {}
-impl<'a> Iterator for Scales<'a> {
-    type Item = [f32; 3];
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.next()
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.0.size_hint()
     }
 }
 
