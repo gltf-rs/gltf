@@ -1,11 +1,6 @@
 use std::marker::PhantomData;
 
-use super::norm_u8_as_f32;
-use super::norm_u8_as_u16;
-use super::norm_u16_as_f32;
-use super::norm_u16_as_u8;
-use super::norm_f32_as_u16;
-use super::norm_f32_as_u8;
+use super::Normalizable;
 
 use TexCoords;
 
@@ -97,14 +92,16 @@ impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
 impl Cast for U8 {
     type Into = [u8; 2];
 
-    fn from_u8(x: [u8; 2]) -> Self::Into { x }
+    fn from_u8(x: [u8; 2]) -> Self::Into {
+        Normalizable::normalize(x)
+    }
 
     fn from_u16(x: [u16; 2]) -> Self::Into {
-        [norm_u16_as_u8(x[0]), norm_u16_as_u8(x[1])]
+        Normalizable::normalize(x)
     }
 
     fn from_f32(x: [f32; 2]) -> Self::Into {
-        [norm_f32_as_u8(x[0]), norm_f32_as_u8(x[1])]
+        Normalizable::normalize(x)
     }
 }
 
@@ -112,13 +109,15 @@ impl Cast for U16 {
     type Into = [u16; 2];
 
     fn from_u8(x: [u8; 2]) -> Self::Into {
-        [norm_u8_as_u16(x[0]), norm_u8_as_u16(x[1])]
+        Normalizable::normalize(x)
     }
 
-    fn from_u16(x: [u16; 2]) -> Self::Into { x }
+    fn from_u16(x: [u16; 2]) -> Self::Into {
+        Normalizable::normalize(x)
+    }
 
     fn from_f32(x: [f32; 2]) -> Self::Into {
-        [norm_f32_as_u16(x[0]), norm_f32_as_u16(x[1])]
+        Normalizable::normalize(x)
     }
 }
 
@@ -126,12 +125,14 @@ impl Cast for F32 {
     type Into = [f32; 2];
 
     fn from_u8(x: [u8; 2]) -> Self::Into {
-        [norm_u8_as_f32(x[0]), norm_u8_as_f32(x[1])]
+        Normalizable::normalize(x)
     }
 
     fn from_u16(x: [u16; 2]) -> Self::Into {
-        [norm_u16_as_f32(x[0]), norm_u16_as_f32(x[1])]
+        Normalizable::normalize(x)
     }
 
-    fn from_f32(x: [f32; 2]) -> Self::Into { x }
+    fn from_f32(x: [f32; 2]) -> Self::Into {
+        Normalizable::normalize(x)
+    }
 }

@@ -1,11 +1,6 @@
 use std::marker::PhantomData;
 
-use super::norm_u8_as_f32;
-use super::norm_u8_as_u16;
-use super::norm_u16_as_f32;
-use super::norm_u16_as_u8;
-use super::norm_f32_as_u16;
-use super::norm_f32_as_u8;
+use super::Normalizable;
 
 use Colors;
 
@@ -130,14 +125,16 @@ impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
 impl Cast for RgbU8 {
     type Into = [u8; 3];
 
-    fn from_rgb_u8(x: [u8; 3]) -> Self::Into { x }
+    fn from_rgb_u8(x: [u8; 3]) -> Self::Into {
+        Normalizable::normalize(x)
+    }
 
     fn from_rgb_u16(x: [u16; 3]) -> Self::Into {
-        [norm_u16_as_u8(x[0]), norm_u16_as_u8(x[1]), norm_u16_as_u8(x[2])]
+        Normalizable::normalize(x)
     }
 
     fn from_rgb_f32(x: [f32; 3]) -> Self::Into {
-        [norm_f32_as_u8(x[0]), norm_f32_as_u8(x[1]), norm_f32_as_u8(x[2])]
+        Normalizable::normalize(x)
     }
 
     fn from_rgba_u8(x: [u8; 4]) -> Self::Into {
@@ -157,13 +154,15 @@ impl Cast for RgbU16 {
     type Into = [u16; 3];
 
     fn from_rgb_u8(x: [u8; 3]) -> Self::Into {
-        [norm_u8_as_u16(x[0]), norm_u8_as_u16(x[1]), norm_u8_as_u16(x[2])]
+        Normalizable::normalize(x)
     }
 
-    fn from_rgb_u16(x: [u16; 3]) -> Self::Into { x }
+    fn from_rgb_u16(x: [u16; 3]) -> Self::Into {
+        Normalizable::normalize(x)
+    }
 
     fn from_rgb_f32(x: [f32; 3]) -> Self::Into {
-        [norm_f32_as_u16(x[0]), norm_f32_as_u16(x[1]), norm_f32_as_u16(x[2])]
+        Normalizable::normalize(x)
     }
 
     fn from_rgba_u8(x: [u8; 4]) -> Self::Into {
@@ -183,14 +182,16 @@ impl Cast for RgbF32 {
     type Into = [f32; 3];
 
     fn from_rgb_u8(x: [u8; 3]) -> Self::Into {
-        [norm_u8_as_f32(x[0]), norm_u8_as_f32(x[1]), norm_u8_as_f32(x[2])]
+        Normalizable::normalize(x)
     }
 
     fn from_rgb_u16(x: [u16; 3]) -> Self::Into {
-        [norm_u16_as_f32(x[0]), norm_u16_as_f32(x[1]), norm_u16_as_f32(x[2])]
+        Normalizable::normalize(x)
     }
 
-    fn from_rgb_f32(x: [f32; 3]) -> Self::Into { x }
+    fn from_rgb_f32(x: [f32; 3]) -> Self::Into {
+        Normalizable::normalize(x)
+    }
 
     fn from_rgba_u8(x: [u8; 4]) -> Self::Into {
         Self::from_rgb_u8([x[0], x[1], x[2]])
@@ -220,16 +221,16 @@ impl Cast for RgbaU8 {
         Self::from_rgba_f32([x[0], x[1], x[2], 1.0])
     }
 
-    fn from_rgba_u8(x: [u8; 4]) -> Self::Into { x }
+    fn from_rgba_u8(x: [u8; 4]) -> Self::Into {
+        Normalizable::normalize(x)
+    }
 
     fn from_rgba_u16(x: [u16; 4]) -> Self::Into {
-        [norm_u16_as_u8(x[0]), norm_u16_as_u8(x[1]),
-         norm_u16_as_u8(x[2]), norm_u16_as_u8(x[2])]
+        Normalizable::normalize(x)
     }
 
     fn from_rgba_f32(x: [f32; 4]) -> Self::Into {
-        [norm_f32_as_u8(x[0]), norm_f32_as_u8(x[1]),
-         norm_f32_as_u8(x[2]), norm_f32_as_u8(x[2])]
+        Normalizable::normalize(x)
     }
 }
 
@@ -249,15 +250,15 @@ impl Cast for RgbaU16 {
     }
 
     fn from_rgba_u8(x: [u8; 4]) -> Self::Into {
-        [norm_u8_as_u16(x[0]), norm_u8_as_u16(x[1]),
-         norm_u8_as_u16(x[2]), norm_u8_as_u16(x[2])]
+        Normalizable::normalize(x)
     }
 
-    fn from_rgba_u16(x: [u16; 4]) -> Self::Into { x }
+    fn from_rgba_u16(x: [u16; 4]) -> Self::Into {
+        Normalizable::normalize(x)
+    }
 
     fn from_rgba_f32(x: [f32; 4]) -> Self::Into {
-        [norm_f32_as_u16(x[0]), norm_f32_as_u16(x[1]),
-         norm_f32_as_u16(x[2]), norm_f32_as_u16(x[2])]
+        Normalizable::normalize(x)
     }
 }
 
@@ -277,14 +278,14 @@ impl Cast for RgbaF32 {
     }
 
     fn from_rgba_u8(x: [u8; 4]) -> Self::Into {
-        [norm_u8_as_f32(x[0]), norm_u8_as_f32(x[1]),
-         norm_u8_as_f32(x[2]), norm_u8_as_f32(x[2])]
+        Normalizable::normalize(x)
     }
 
     fn from_rgba_u16(x: [u16; 4]) -> Self::Into {
-        [norm_u16_as_f32(x[0]), norm_u16_as_f32(x[1]),
-         norm_u16_as_f32(x[2]), norm_u16_as_f32(x[2])]
+        Normalizable::normalize(x)
     }
 
-    fn from_rgba_f32(x: [f32; 4]) -> Self::Into { x }
+    fn from_rgba_f32(x: [f32; 4]) -> Self::Into {
+        Normalizable::normalize(x)
+    }
 }

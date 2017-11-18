@@ -1,9 +1,6 @@
 use std::marker::PhantomData;
 
-use super::norm_i8_as_f32;
-use super::norm_u8_as_f32;
-use super::norm_i16_as_f32;
-use super::norm_u16_as_f32;
+use super::Normalizable;
 
 use Rotations;
 
@@ -102,24 +99,22 @@ impl Cast for F32 {
     type Into = [f32; 4];
 
     fn from_i8(x: [i8; 4]) -> Self::Into {
-        [norm_i8_as_f32(x[0]), norm_i8_as_f32(x[1]),
-         norm_i8_as_f32(x[2]), norm_i8_as_f32(x[3])]
+        Normalizable::normalize(x)
     }
 
     fn from_u8(x: [u8; 4]) -> Self::Into {
-        [norm_u8_as_f32(x[0]), norm_u8_as_f32(x[1]),
-         norm_u8_as_f32(x[2]), norm_u8_as_f32(x[3])]
+        Normalizable::normalize(x)
     }
 
     fn from_i16(x: [i16; 4]) -> Self::Into {
-        [norm_i16_as_f32(x[0]), norm_i16_as_f32(x[1]),
-         norm_i16_as_f32(x[2]), norm_i16_as_f32(x[3])]
+        Normalizable::normalize(x)
     }
 
     fn from_u16(x: [u16; 4]) -> Self::Into {
-        [norm_u16_as_f32(x[0]), norm_u16_as_f32(x[1]),
-         norm_u16_as_f32(x[2]), norm_u16_as_f32(x[3])]
+        Normalizable::normalize(x)
     }
 
-    fn from_f32(x: [f32; 4]) -> Self::Into { x }
+    fn from_f32(x: [f32; 4]) -> Self::Into {
+        Normalizable::normalize(x)
+    }
 }
