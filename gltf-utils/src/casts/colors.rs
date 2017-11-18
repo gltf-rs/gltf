@@ -32,17 +32,33 @@ pub struct RgbaU16;
 #[derive(Debug, Clone)]
 pub struct RgbaF32;
 
-pub trait ArrayRelation<T> {
+trait ColorChannel {
+    fn max_color() -> Self;
+}
+
+impl ColorChannel for u8 {
+    fn max_color() -> Self { u8::max_value() }
+}
+
+impl ColorChannel for u16 {
+    fn max_color() -> Self { u16::max_value() }
+}
+
+impl ColorChannel for f32 {
+    fn max_color() -> Self { 1.0 }
+}
+
+trait ColorArray<T> {
     fn into_rgb(self)  -> [T; 3];
     fn into_rgba(self) -> [T; 4];
 }
 
-impl<T: Copy + Default> ArrayRelation<T> for [T; 3] {
+impl<T: Copy + ColorChannel> ColorArray<T> for [T; 3] {
     fn into_rgb(self)  -> [T; 3] { self }
-    fn into_rgba(self) -> [T; 4] { [self[0], self[1], self[2], T::default()] }
+    fn into_rgba(self) -> [T; 4] { [self[0], self[1], self[2], T::max_color()] }
 }
 
-impl<T: Copy + Default> ArrayRelation<T> for [T; 4] {
+impl<T: Copy + ColorChannel> ColorArray<T> for [T; 4] {
     fn into_rgb(self)  -> [T; 3] { [self[0], self[1], self[2]] }
     fn into_rgba(self) -> [T; 4] { self }
 }
@@ -50,25 +66,25 @@ impl<T: Copy + Default> ArrayRelation<T> for [T; 4] {
 /// Trait for types which describe casting behaviour.
 pub trait Cast {
     /// Output type.
-    type Into;
+    type Output;
 
     /// Cast from RGB u8.
-    fn from_rgb_u8(x: [u8; 3]) -> Self::Into;
+    fn from_rgb_u8(x: [u8; 3]) -> Self::Output;
 
     /// Cast from RGB u16.
-    fn from_rgb_u16(x: [u16; 3]) -> Self::Into;
+    fn from_rgb_u16(x: [u16; 3]) -> Self::Output;
 
     /// Cast from RGB f32.
-    fn from_rgb_f32(x: [f32; 3]) -> Self::Into;
+    fn from_rgb_f32(x: [f32; 3]) -> Self::Output;
 
     /// Cast from RGBA u8.
-    fn from_rgba_u8(x: [u8; 4]) -> Self::Into;
+    fn from_rgba_u8(x: [u8; 4]) -> Self::Output;
 
     /// Cast from RGBA u16.
-    fn from_rgba_u16(x: [u16; 4]) -> Self::Into;
+    fn from_rgba_u16(x: [u16; 4]) -> Self::Output;
 
     /// Cast from RGBA f32.
-    fn from_rgba_f32(x: [f32; 4]) -> Self::Into;
+    fn from_rgba_f32(x: [f32; 4]) -> Self::Output;
 }
 
 impl<'a, A> CastingIter<'a, A> {
@@ -83,7 +99,7 @@ impl<'a, A> CastingIter<'a, A> {
 }
 
 impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
-    type Item = A::Into;
+    type Item = A::Output;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -138,169 +154,169 @@ impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
 }
 
 impl Cast for RgbU8 {
-    type Into = [u8; 3];
+    type Output = [u8; 3];
 
-    fn from_rgb_u8(x: [u8; 3]) -> Self::Into {
+    fn from_rgb_u8(x: [u8; 3]) -> Self::Output {
         x.into_rgb().normalize()
     }
 
-    fn from_rgb_u16(x: [u16; 3]) -> Self::Into {
+    fn from_rgb_u16(x: [u16; 3]) -> Self::Output {
         x.into_rgb().normalize()
     }
 
-    fn from_rgb_f32(x: [f32; 3]) -> Self::Into {
+    fn from_rgb_f32(x: [f32; 3]) -> Self::Output {
         x.into_rgb().normalize()
     }
 
-    fn from_rgba_u8(x: [u8; 4]) -> Self::Into {
+    fn from_rgba_u8(x: [u8; 4]) -> Self::Output {
         x.into_rgb().normalize()
     }
 
-    fn from_rgba_u16(x: [u16; 4]) -> Self::Into {
+    fn from_rgba_u16(x: [u16; 4]) -> Self::Output {
         x.into_rgb().normalize()
     }
 
-    fn from_rgba_f32(x: [f32; 4]) -> Self::Into {
+    fn from_rgba_f32(x: [f32; 4]) -> Self::Output {
         x.into_rgb().normalize()
     }
 }
 
 impl Cast for RgbU16 {
-    type Into = [u16; 3];
+    type Output = [u16; 3];
 
-    fn from_rgb_u8(x: [u8; 3]) -> Self::Into {
+    fn from_rgb_u8(x: [u8; 3]) -> Self::Output {
         x.into_rgb().normalize()
     }
 
-    fn from_rgb_u16(x: [u16; 3]) -> Self::Into {
+    fn from_rgb_u16(x: [u16; 3]) -> Self::Output {
         x.into_rgb().normalize()
     }
 
-    fn from_rgb_f32(x: [f32; 3]) -> Self::Into {
+    fn from_rgb_f32(x: [f32; 3]) -> Self::Output {
         x.into_rgb().normalize()
     }
 
-    fn from_rgba_u8(x: [u8; 4]) -> Self::Into {
+    fn from_rgba_u8(x: [u8; 4]) -> Self::Output {
         x.into_rgb().normalize()
     }
 
-    fn from_rgba_u16(x: [u16; 4]) -> Self::Into {
+    fn from_rgba_u16(x: [u16; 4]) -> Self::Output {
         x.into_rgb().normalize()
     }
 
-    fn from_rgba_f32(x: [f32; 4]) -> Self::Into {
+    fn from_rgba_f32(x: [f32; 4]) -> Self::Output {
         x.into_rgb().normalize()
     }
 }
 
 impl Cast for RgbF32 {
-    type Into = [f32; 3];
+    type Output = [f32; 3];
 
-    fn from_rgb_u8(x: [u8; 3]) -> Self::Into {
+    fn from_rgb_u8(x: [u8; 3]) -> Self::Output {
         x.into_rgb().normalize()
     }
 
-    fn from_rgb_u16(x: [u16; 3]) -> Self::Into {
+    fn from_rgb_u16(x: [u16; 3]) -> Self::Output {
         x.into_rgb().normalize()
     }
 
-    fn from_rgb_f32(x: [f32; 3]) -> Self::Into {
+    fn from_rgb_f32(x: [f32; 3]) -> Self::Output {
         x.into_rgb().normalize()
     }
 
-    fn from_rgba_u8(x: [u8; 4]) -> Self::Into {
+    fn from_rgba_u8(x: [u8; 4]) -> Self::Output {
         x.into_rgb().normalize()
     }
 
-    fn from_rgba_u16(x: [u16; 4]) -> Self::Into {
+    fn from_rgba_u16(x: [u16; 4]) -> Self::Output {
         x.into_rgb().normalize()
     }
 
-    fn from_rgba_f32(x: [f32; 4]) -> Self::Into {
+    fn from_rgba_f32(x: [f32; 4]) -> Self::Output {
         x.into_rgb().normalize()
     }
 }
 
 impl Cast for RgbaU8 {
-    type Into = [u8; 4];
+    type Output = [u8; 4];
 
-    fn from_rgb_u8(x: [u8; 3]) -> Self::Into {
+    fn from_rgb_u8(x: [u8; 3]) -> Self::Output {
         x.normalize().into_rgba()
     }
 
-    fn from_rgb_u16(x: [u16; 3]) -> Self::Into {
+    fn from_rgb_u16(x: [u16; 3]) -> Self::Output {
         x.normalize().into_rgba()
     }
 
-    fn from_rgb_f32(x: [f32; 3]) -> Self::Into {
+    fn from_rgb_f32(x: [f32; 3]) -> Self::Output {
         x.normalize().into_rgba()
     }
 
-    fn from_rgba_u8(x: [u8; 4]) -> Self::Into {
+    fn from_rgba_u8(x: [u8; 4]) -> Self::Output {
         x.normalize().into_rgba()
     }
 
-    fn from_rgba_u16(x: [u16; 4]) -> Self::Into {
+    fn from_rgba_u16(x: [u16; 4]) -> Self::Output {
         x.normalize().into_rgba()
     }
 
-    fn from_rgba_f32(x: [f32; 4]) -> Self::Into {
+    fn from_rgba_f32(x: [f32; 4]) -> Self::Output {
         x.normalize().into_rgba()
     }
 }
 
 impl Cast for RgbaU16 {
-    type Into = [u16; 4];
+    type Output = [u16; 4];
 
-    fn from_rgb_u8(x: [u8; 3]) -> Self::Into {
+    fn from_rgb_u8(x: [u8; 3]) -> Self::Output {
         x.normalize().into_rgba()
     }
 
-    fn from_rgb_u16(x: [u16; 3]) -> Self::Into {
+    fn from_rgb_u16(x: [u16; 3]) -> Self::Output {
         x.normalize().into_rgba()
     }
 
-    fn from_rgb_f32(x: [f32; 3]) -> Self::Into {
+    fn from_rgb_f32(x: [f32; 3]) -> Self::Output {
         x.normalize().into_rgba()
     }
 
-    fn from_rgba_u8(x: [u8; 4]) -> Self::Into {
+    fn from_rgba_u8(x: [u8; 4]) -> Self::Output {
         x.normalize().into_rgba()
     }
 
-    fn from_rgba_u16(x: [u16; 4]) -> Self::Into {
+    fn from_rgba_u16(x: [u16; 4]) -> Self::Output {
         x.normalize().into_rgba()
     }
 
-    fn from_rgba_f32(x: [f32; 4]) -> Self::Into {
+    fn from_rgba_f32(x: [f32; 4]) -> Self::Output {
         x.normalize().into_rgba()
     }
 }
 
 impl Cast for RgbaF32 {
-    type Into = [f32; 4];
+    type Output = [f32; 4];
 
-    fn from_rgb_u8(x: [u8; 3]) -> Self::Into {
+    fn from_rgb_u8(x: [u8; 3]) -> Self::Output {
         x.normalize().into_rgba()
     }
 
-    fn from_rgb_u16(x: [u16; 3]) -> Self::Into {
+    fn from_rgb_u16(x: [u16; 3]) -> Self::Output {
         x.normalize().into_rgba()
     }
 
-    fn from_rgb_f32(x: [f32; 3]) -> Self::Into {
+    fn from_rgb_f32(x: [f32; 3]) -> Self::Output {
         x.normalize().into_rgba()
     }
 
-    fn from_rgba_u8(x: [u8; 4]) -> Self::Into {
+    fn from_rgba_u8(x: [u8; 4]) -> Self::Output {
         x.normalize().into_rgba()
     }
 
-    fn from_rgba_u16(x: [u16; 4]) -> Self::Into {
+    fn from_rgba_u16(x: [u16; 4]) -> Self::Output {
         x.normalize().into_rgba()
     }
 
-    fn from_rgba_f32(x: [f32; 4]) -> Self::Into {
+    fn from_rgba_f32(x: [f32; 4]) -> Self::Output {
         x.normalize().into_rgba()
     }
 }
