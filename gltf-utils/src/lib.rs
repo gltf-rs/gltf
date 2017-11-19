@@ -212,7 +212,7 @@ impl<'a> ChannelIterators<'a> for gltf::animation::Channel<'a> {
 }
 
 /// Visits the items in an `Accessor`.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct AccessorIter<'a, T> {
     stride: usize,
     data: &'a [u8],
@@ -379,7 +379,7 @@ pub type InverseBindMatrices<'a> = AccessorIter<'a, [[f32; 4]; 4]>;
 pub type Inputs<'a> = AccessorIter<'a, f32>;
 
 /// Vertex colors.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum Colors<'a> {
     /// RGB vertex color of type `[u8; 3]>`.
     RgbU8(AccessorIter<'a, [u8; 3]>),
@@ -396,7 +396,7 @@ pub enum Colors<'a> {
 }
 
 /// Index data.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum Indices<'a> {
     /// Index data of type U8
     U8(AccessorIter<'a, u8>),
@@ -407,7 +407,7 @@ pub enum Indices<'a> {
 }
 
 /// Vertex joints.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum Joints<'a> {
     /// Joints of type `[u8; 4]`.
     /// Refer to the documentation on morph targets and skins for more
@@ -420,7 +420,7 @@ pub enum Joints<'a> {
 }
 
 /// UV texture co-ordinates.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum TexCoords<'a> {
     /// UV texture co-ordinates of type `[u8; 2]>`.
     U8(AccessorIter<'a, [u8; 2]>),
@@ -431,7 +431,7 @@ pub enum TexCoords<'a> {
 }
 
 /// Weights,
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum Weights<'a> {
     /// Weights of type `[u8; 4]`.
     U8(AccessorIter<'a, [u8; 4]>),
@@ -442,7 +442,7 @@ pub enum Weights<'a> {
 }
 
 /// Purpose of data in an animation channel,
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum Select<'a> {
     /// Channel contains translation data.
     Translations(Translations<'a>),
@@ -461,7 +461,7 @@ pub type Translations<'a> = AccessorIter<'a, [f32; 3]>;
 pub type Scales<'a> = AccessorIter<'a, [f32; 3]>;
 
 /// Rotation animations
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum Rotations<'a> {
     /// Rotations of type `[i8; 4]`.
     I8(AccessorIter<'a, [i8; 4]>),
@@ -476,7 +476,7 @@ pub enum Rotations<'a> {
 }
 
 /// Morph-target weight animations.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum MorphWeights<'a> {
     /// Weights of type `i8`.
     I8(AccessorIter<'a, i8>),

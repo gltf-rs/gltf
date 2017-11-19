@@ -3,11 +3,11 @@ use std::marker::PhantomData;
 use Joints;
 
 /// Casting iterator for `Joints`.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct CastingIter<'a, T>(Joints<'a>, PhantomData<T>);
 
 /// Type which describes how to cast any joint into u16.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct U16;
 
 /// Trait for types which describe casting behaviour.

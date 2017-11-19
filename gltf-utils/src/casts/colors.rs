@@ -5,31 +5,31 @@ use super::Normalizable;
 use Colors;
 
 /// Casting iterator for `Colors`.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct CastingIter<'a, T>(Colors<'a>, PhantomData<T>);
 
 /// Type which describes how to cast any color into RGB u8.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct RgbU8;
 
 /// Type which describes how to cast any color into RGB u16.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct RgbU16;
 
 /// Type which describes how to cast any color into RGB f32.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct RgbF32;
 
 /// Type which describes how to cast any color into RGBA u8.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct RgbaU8;
 
 /// Type which describes how to cast any color into RGBA u16.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct RgbaU16;
 
 /// Type which describes how to cast any color into RGBA f32.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct RgbaF32;
 
 trait ColorChannel {

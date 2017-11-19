@@ -5,27 +5,27 @@ use super::Normalizable;
 use Rotations;
 
 /// Casting iterator for `Rotations`.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct CastingIter<'a, T>(Rotations<'a>, PhantomData<T>);
 
 /// Type which describes how to cast any weight into i8.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct I8;
 
 /// Type which describes how to cast any weight into u8.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct U8;
 
 /// Type which describes how to cast any weight into i16.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct I16;
 
 /// Type which describes how to cast any weight into u16.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct U16;
 
 /// Type which describes how to cast any weight into f32.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct F32;
 
 /// Trait for types which describe casting behaviour.

@@ -5,19 +5,19 @@ use super::Normalizable;
 use TexCoords;
 
 /// Casting iterator for `TexCoords`.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct CastingIter<'a, T>(TexCoords<'a>, PhantomData<T>);
 
 /// Type which describes how to cast any texture coordinate into pair of u8.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct U8;
 
 /// Type which describes how to cast any texture coordinate into pair of u16.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct U16;
 
 /// Type which describes how to cast any texture coordinate into pair of f32.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct F32;
 
 /// Trait for types which describe casting behaviour.
