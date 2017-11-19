@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use super::Normalizable;
+use super::Normalize;
 
 use TexCoords;
 
