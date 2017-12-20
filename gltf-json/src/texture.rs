@@ -1,12 +1,3 @@
-
-// Copyright 2017 The gltf Library Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use serde::de;
 use std::fmt;
 use validation::Checked;
@@ -31,13 +22,13 @@ pub const NEAREST_MIPMAP_LINEAR: u32 = 9986;
 pub const LINEAR_MIPMAP_LINEAR: u32 = 9987;
 
 /// Corresponds to `GL_CLAMP_TO_EDGE`.
-pub const CLAMP_TO_EDGE: u32 = 33071;
+pub const CLAMP_TO_EDGE: u32 = 33_071;
 
 /// Corresponds to `GL_MIRRORED_REPEAT`.
-pub const MIRRORED_REPEAT: u32 = 33648;
+pub const MIRRORED_REPEAT: u32 = 33_648;
 
 /// Corresponds to `GL_REPEAT`.
-pub const REPEAT: u32 = 10497;
+pub const REPEAT: u32 = 10_497;
 
 /// All valid magnification filters.
 pub const VALID_MAG_FILTERS: &'static [u32] = &[

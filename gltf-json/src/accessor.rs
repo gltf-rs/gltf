@@ -1,12 +1,3 @@
-
-// Copyright 2017 The gltf Library Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use {buffer, extensions, Extras, Index};
 use serde::de;
 use serde_json::Value;
@@ -191,27 +182,27 @@ pub struct Accessor {
     /// The parent buffer view this accessor reads from.
     #[serde(rename = "bufferView")]
     pub buffer_view: Index<buffer::View>,
-    
+
     /// The offset relative to the start of the parent `BufferView` in bytes.
     #[serde(default, rename = "byteOffset")]
     pub byte_offset: u32,
-    
+
     /// The number of components within the buffer view - not to be confused
     /// with the number of bytes in the buffer view.
     pub count: u32,
-    
+
     /// The data type of components in the attribute.
     #[serde(rename = "componentType")]
     pub component_type: Checked<GenericComponentType>,
-    
+
     /// Extension specific data.
     #[serde(default)]
     pub extensions: extensions::accessor::Accessor,
-    
+
     /// Optional application specific data.
     #[serde(default)]
     pub extras: Extras,
-    
+
     /// Specifies if the attribute is a scalar, vector, or matrix.
     #[serde(rename = "type")]
     pub type_: Checked<Type>,
@@ -231,7 +222,7 @@ pub struct Accessor {
     /// Specifies whether integer data values should be normalized.
     #[serde(default)]
     pub normalized: bool,
-    
+
     /// Sparse storage of attributes that deviate from their initialization
     /// value.
     #[serde(default)]
@@ -360,8 +351,7 @@ impl Type {
             Scalar => 1,
             Vec2 => 2,
             Vec3 => 3,
-            Vec4 => 4,
-            Mat2 => 4,
+            Vec4 | Mat2 => 4,
             Mat3 => 9,
             Mat4 => 16,
         }

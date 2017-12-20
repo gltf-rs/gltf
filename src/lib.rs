@@ -1,13 +1,5 @@
-
-// Copyright 2017 The gltf Library Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 #![deny(missing_docs)]
+#![allow(unknown_lints)]
 
 //! glTF 2.0 loader
 //!
@@ -62,6 +54,7 @@
 #[cfg(test)]
 #[macro_use]
 extern crate approx;
+extern crate byteorder;
 extern crate cgmath;
 #[macro_use]
 extern crate lazy_static;
@@ -107,17 +100,29 @@ pub mod skin;
 /// Textures and their samplers.
 pub mod texture;
 
+#[doc(inline)]
 pub use self::animation::Animation;
+#[doc(inline)]
 pub use self::accessor::Accessor;
+#[doc(inline)]
 pub use self::buffer::Buffer;
+#[doc(inline)]
 pub use self::camera::Camera;
+#[doc(inline)]
 pub use self::glb::Glb;
+#[doc(inline)]
 pub use self::gltf::{Gltf, Unvalidated};
+#[doc(inline)]
 pub use self::image::Image;
+#[doc(inline)]
 pub use self::material::Material;
+#[doc(inline)]
 pub use self::mesh::{Attribute, Mesh, Primitive, Semantic};
+#[doc(inline)]
 pub use self::scene::{Node, Scene};
+#[doc(inline)]
 pub use self::skin::Skin;
+#[doc(inline)]
 pub use self::texture::Texture;
 
 /// Represents a runtime error.
@@ -125,10 +130,8 @@ pub use self::texture::Texture;
 pub enum Error {
     /// JSON deserialization error.
     Deserialize(json::Error),
-
     /// GLB parsing error.
-    Glb(String),
-
+    Glb(self::glb::Error),
     /// `glTF` validation error.
     Validation(Vec<(json::Path, json::validation::Error)>),
 }
@@ -156,10 +159,16 @@ impl std::fmt::Display for Error {
 impl std::error::Error for Error {
     fn description(&self) -> &str {
          match *self {
-            Error::Deserialize(_) => "deserialization error",
-            Error::Glb(_) => "invalid .glb format",
-            Error::Validation(_) => "invalid glTF JSON",
+             Error::Deserialize(_) => "deserialization error",
+             Error::Glb(ref e) => e.description(),
+             Error::Validation(_) => "invalid glTF JSON",
         }
+    }
+}
+
+impl From<self::glb::Error> for Error {
+    fn from(err: self::glb::Error) -> Self {
+        Error::Glb(err)
     }
 }
 

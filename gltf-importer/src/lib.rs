@@ -1,15 +1,6 @@
-
-// Copyright 2017 The gltf Library Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 //! The reference loader implementation for the `gltf` crate.
 //!
-//! # Examples 
+//! # Examples
 //!
 //! ### Importing some `glTF` 2.0
 //!
@@ -29,7 +20,7 @@ extern crate gltf;
 extern crate gltf_utils;
 
 use gltf::json::{self, validation};
-use std::{fmt, fs, io};
+use std::{fmt, fs, io, path};
 
 use gltf::Gltf;
 use gltf_utils::Source;
@@ -50,18 +41,21 @@ pub enum Error {
 
     /// Base 64 decoding error.
     Base64Decoding(base64::DecodeError),
-    
+
     /// A glTF extension required by the asset has not been enabled by the user.
     ExtensionDisabled(String),
 
     /// A glTF extension required by the asset is not supported by the library.
     ExtensionUnsupported(String),
 
+    /// File not found.
+    FileNotFound(path::PathBuf),
+
     /// The glTF version of the asset is incompatible with the importer.
     IncompatibleVersion(String),
 
     /// Standard I/O error.
-    Io(std::io::Error),
+    Io(io::Error),
 
     /// `gltf` crate error.
     Gltf(gltf::Error),
@@ -105,21 +99,24 @@ impl Buffers {
     }
 }
 
-fn import_impl(path: &Path, config: Config) -> Result<(Gltf, Buffers), Error> {
+fn import_impl(path: &Path, config: &Config) -> Result<(Gltf, Buffers), Error> {
     let data = read_to_end(path)?;
     import_data_slice(&data, path, config)
 }
 
-pub fn import_data_slice<'a>(data: &'a [u8], path: &Path, config: Config) -> Result<(Gltf, Buffers), Error> {
+/// Imports glTF 2.0 from a slice with custom configuration.
+pub fn import_data_slice<'a, P>(data: &'a [u8], path: P, config: &Config) -> Result<(Gltf, Buffers), Error>
+    where P: AsRef<Path>
+{
     if data.starts_with(b"glTF") {
-        import_binary(&data, &config, path)
+        import_binary(&data, config, path.as_ref())
     } else {
-        import_standard(&data, &config, path)
+        import_standard(&data, config, path.as_ref())
     }
 }
 
 /// Imports glTF 2.0 with custom configuration.
-pub fn import_with_config<P>(path: P, config: Config) -> Result<(Gltf, Buffers), Error>
+pub fn import_with_config<P>(path: P, config: &Config) -> Result<(Gltf, Buffers), Error>
     where P: AsRef<Path>
 {
     import_impl(path.as_ref(), config)
@@ -129,16 +126,20 @@ pub fn import_with_config<P>(path: P, config: Config) -> Result<(Gltf, Buffers),
 pub fn import<P>(path: P) -> Result<(Gltf, Buffers), Error>
     where P: AsRef<Path>
 {
-    import_impl(path.as_ref(), Default::default())
+    import_impl(path.as_ref(), &Default::default())
 }
 
 fn read_to_end_impl(path: &Path) -> Result<Vec<u8>, Error> {
     use io::Read;
-    let file = fs::File::open(path)?;
-    let mut reader = io::BufReader::new(file);
-    let mut buffer = vec![];
-    let _ = reader.read_to_end(&mut buffer)?;
-    Ok(buffer)
+    if path.exists() {
+        let file = fs::File::open(path)?;
+        let mut reader = io::BufReader::new(file);
+        let mut buffer = vec![];
+        let _ = reader.read_to_end(&mut buffer)?;
+        Ok(buffer)
+    } else {
+        Err(Error::FileNotFound(path.to_path_buf()))
+    }
 }
 
 fn read_to_end<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, Error> {
@@ -146,11 +147,11 @@ fn read_to_end<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, Error> {
 }
 
 fn parse_data_uri(uri: &str) -> Result<Vec<u8>, Error> {
-    let encoded = uri.split(",").nth(1).unwrap();
+    let encoded = uri.split(',').nth(1).unwrap();
     let decoded = base64::decode(&encoded)?;
     Ok(decoded)
 }
-    
+
 fn load_external_buffers(
     base_path: &Path,
     gltf: &Gltf,
@@ -164,7 +165,7 @@ fn load_external_buffers(
         } else if uri.starts_with("data:") {
             Ok(parse_data_uri(uri)?)
         } else {
-            let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
+            let path = base_path.parent().unwrap_or_else(|| Path::new("./")).join(uri);
             read_to_end(&path)
         }?;
         if data.len() < buffer.length() {
@@ -182,7 +183,7 @@ fn validate_standard(
 ) -> Result<Gltf, Error> {
     use config::ValidationStrategy;
     Ok(match config.validation_strategy {
-        ValidationStrategy::Skip => unsafe { unvalidated.skip_validation() },
+        ValidationStrategy::Skip => unvalidated.skip_validation(),
         ValidationStrategy::Minimal => unvalidated.validate_minimally()?,
         ValidationStrategy::Complete => unvalidated.validate_completely()?,
     })
@@ -197,7 +198,7 @@ fn validate_binary(
     use json::validation::Error as Reason;
 
     if config.validation_strategy == ValidationStrategy::Skip {
-        return Ok(unsafe { unvalidated.skip_validation() });
+        return Ok(unvalidated.skip_validation());
     }
 
     let mut errs = vec![];
@@ -239,7 +240,7 @@ fn import_standard<'a>(
     base_path: &Path,
 ) -> Result<(Gltf, Buffers), Error> {
     let unvalidated = Gltf::from_slice(data)?;
-    let gltf = validate_standard(unvalidated, &config)?;
+    let gltf = validate_standard(unvalidated, config)?;
     let bin = None;
     let mut buffers = Buffers(vec![]);
     for buffer in load_external_buffers(base_path, &gltf, bin)? {
@@ -253,10 +254,10 @@ fn import_binary<'a>(
     config: &Config,
     base_path: &Path,
 ) -> Result<(Gltf, Buffers), Error> {
-    let gltf::Glb { header: _, json, bin } = gltf::Glb::from_slice(data)?;
-    let unvalidated = Gltf::from_slice(json)?;
-    let bin = bin.map(|x| x.to_vec());
-    let gltf = validate_binary(unvalidated, &config, bin.is_some())?;
+    let gltf::Glb { json, bin, .. } = gltf::Glb::from_slice(data)?;
+    let unvalidated = Gltf::from_slice(&json)?;
+    let bin = bin.map(|x| x.into_owned());
+    let gltf = validate_binary(unvalidated, config, bin.is_some())?;
     let mut buffers = Buffers(vec![]);
     for buffer in load_external_buffers(base_path, &gltf, bin)? {
         buffers.0.push(buffer);
@@ -270,8 +271,8 @@ impl From<json::Error> for Error {
     }
 }
 
-impl From<std::io::Error> for Error {
-    fn from(err: std::io::Error) -> Error {
+impl From<io::Error> for Error {
+    fn from(err: io::Error) -> Error {
         Error::Io(err)
     }
 }
@@ -308,15 +309,16 @@ impl StdError for Error {
     fn description(&self) -> &str {
         use self::Error::*;
         match *self {
-            Base64Decoding(_) => "Base 64 decoding failed",
-            BufferLength(_) => "Loaded buffer does not match required length",
-            ExtensionDisabled(_) => "Asset requires a disabled extension",
-            ExtensionUnsupported(_) => "Assets requires an unsupported extension",
-            IncompatibleVersion(_) => "Asset is not glTF version 2.0",
-            Io(_) => "I/O error",
-            Gltf(_) => "Error from gltf crate",
-            MalformedJson(_) => "Malformed .gltf / .glb JSON",
-            Validation(_) => "Asset failed validation tests",
+            Base64Decoding(_) => "base 64 decoding failed",
+            BufferLength(_) => "buffer does not match required length",
+            ExtensionDisabled(_) => "asset requires a disabled extension",
+            ExtensionUnsupported(_) => "asset requires an unsupported extension",
+            FileNotFound(_) => "file not found",
+            IncompatibleVersion(_) => "asset is not glTF version 2.0",
+            Io(_) => "io error",
+            Gltf(_) => "error from gltf crate",
+            MalformedJson(_) => "malformed .gltf / .glb JSON",
+            Validation(_) => "asset failed validation tests",
         }
     }
 

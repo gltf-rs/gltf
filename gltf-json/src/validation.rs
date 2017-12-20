@@ -1,11 +1,3 @@
-// Copyright 2017 The gltf Library Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use serde_json;
 use std;
 
@@ -65,9 +57,9 @@ pub enum Checked<T> {
 impl<T> Checked<T> {
     /// Converts from `Checked<T>` to `Checked<&T>`.
     pub fn as_ref(&self) -> Checked<&T> {
-        match self {
-            &Checked::Valid(ref item) => Checked::Valid(item),
-            &Checked::Invalid => Checked::Invalid,
+        match *self {
+            Checked::Valid(ref item) => Checked::Valid(item),
+            Checked::Invalid => Checked::Invalid,
         }
     }
 
@@ -86,9 +78,9 @@ impl<T> Checked<T> {
 
 impl<T: Clone> Clone for Checked<T> {
     fn clone(&self) -> Self {
-        match self {
-            &Checked::Valid(ref item) => Checked::Valid(item.clone()),
-            &Checked::Invalid => Checked::Invalid,
+        match *self {
+            Checked::Valid(ref item) => Checked::Valid(item.clone()),
+            Checked::Invalid => Checked::Invalid,
         }
     }
 }
@@ -105,9 +97,9 @@ impl<T> Validate for Checked<T> {
     fn validate_minimally<P, R>(&self, _root: &Root, path: P, report: &mut R)
         where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
-        match self {
-            &Checked::Valid(_) => {},
-            &Checked::Invalid => report(&path, Error::Invalid),
+        match *self {
+            Checked::Valid(_) => {},
+            Checked::Invalid => report(&path, Error::Invalid),
         }
     }
 }
@@ -170,10 +162,10 @@ impl<T: Validate> Validate for Vec<T> {
 
 impl std::error::Error for Error {
     fn description(&self) -> &str {
-        match self {
-            &Error::IndexOutOfBounds => "Index out of bounds",
-            &Error::Invalid => "Invalid value",
-            &Error::Missing => "Missing data",
+        match *self {
+            Error::IndexOutOfBounds => "Index out of bounds",
+            Error::Invalid => "Invalid value",
+            Error::Missing => "Missing data",
         }
     }
 }

@@ -1,12 +1,3 @@
-
-// Copyright 2017 The gltf Library Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use cgmath;
 use cgmath::prelude::*;
 use json;
@@ -20,9 +11,9 @@ type Quaternion = cgmath::Quaternion<f32>;
 
 /// 4x4 identity matrix.
 const IDENTITY: [f32; 16] = {
-    [1.0, 0.0, 0.0, 0.0, 
-     0.0, 1.0, 0.0, 0.0, 
-     0.0, 0.0, 1.0, 0.0, 
+    [1.0, 0.0, 0.0, 0.0,
+     0.0, 1.0, 0.0, 0.0,
+     0.0, 0.0, 1.0, 0.0,
      0.0, 0.0, 0.0, 1.0]
 };
 
@@ -231,7 +222,7 @@ impl<'a> Node<'a> {
 
     /// Returns the node's transform.
     pub fn transform(&self) -> Transform {
-        if let Some(matrix) = self.json.matrix.clone() {
+        if let Some(matrix) = self.json.matrix {
             unsafe {
                 Transform::Matrix {
                     matrix: mem::transmute(matrix),

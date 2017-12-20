@@ -1,22 +1,13 @@
-
-// Copyright 2017 The gltf Library Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use serde::de;
 use std::fmt;
 use validation::{Checked, Error, Validate};
 use {extensions, Extras, Index, Root, Path};
 
 /// Corresponds to `GL_ARRAY_BUFFER`.
-pub const ARRAY_BUFFER: u32 = 34962;
+pub const ARRAY_BUFFER: u32 = 34_962;
 
 /// Corresponds to `GL_ELEMENT_ARRAY_BUFFER`.
-pub const ELEMENT_ARRAY_BUFFER: u32 = 34963;
+pub const ELEMENT_ARRAY_BUFFER: u32 = 34_963;
 
 /// The minimum byte stride.
 pub const MIN_BYTE_STRIDE: u32 = 4;
@@ -30,7 +21,7 @@ pub const VALID_TARGETS: &'static [u32] = &[
     ELEMENT_ARRAY_BUFFER,
 ];
 
-/// Specifies the target a GPU buffer should be bound to. 
+/// Specifies the target a GPU buffer should be bound to.
 #[derive(Clone, Copy, Debug)]
 pub enum Target {
     /// Corresponds to `GL_ARRAY_BUFFER`.

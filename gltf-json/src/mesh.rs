@@ -1,12 +1,3 @@
-
-// Copyright 2017 The gltf Library Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use serde::de;
 use serde_json::from_value;
 use std::collections::HashMap;
@@ -311,25 +302,25 @@ impl Semantic {
 impl ToString for Semantic {
     fn to_string(&self) -> String {
         use self::Semantic::*;
-        match self {
-            &Positions => format!("POSITION"),
-            &Normals => format!("NORMAL"),
-            &Tangents => format!("TANGENT"),
-            &Colors(set) => format!("COLOR_{}", set),
-            &TexCoords(set) => format!("TEXCOORD_{}", set),
-            &Joints(set) => format!("JOINTS_{}", set),
-            &Weights(set) => format!("WEIGHTS_{}", set),
+        match *self {
+            Positions => "POSITION".into(),
+            Normals => "NORMAL".into(),
+            Tangents => "TANGENT".into(),
+            Colors(set) => format!("COLOR_{}", set),
+            TexCoords(set) => format!("TEXCOORD_{}", set),
+            Joints(set) => format!("JOINTS_{}", set),
+            Weights(set) => format!("WEIGHTS_{}", set),
             #[cfg(feature = "extras")]
-            &Extras(ref name) => format!("_{}", name),
+            Extras(ref name) => format!("_{}", name),
         }
     }
 }
 
 impl ToString for Checked<Semantic> {
     fn to_string(&self) -> String {
-        match self {
-            &Checked::Valid(ref semantic) => semantic.to_string(),
-            &Checked::Invalid => format!("<invalid semantic name>"),
+        match *self {
+            Checked::Valid(ref semantic) => semantic.to_string(),
+            Checked::Invalid => "<invalid semantic name>".into(),
         }
     }
 }

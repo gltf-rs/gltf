@@ -1,12 +1,3 @@
-
-// Copyright 2017 The gltf Library Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 /// Describes the validation strategy of an `Importer`.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ValidationStrategy {
@@ -22,7 +13,9 @@ pub enum ValidationStrategy {
     /// root JSON data structure.
     Minimal,
 
-    /// Skip the validation stage (not recommended.)
+    /// Skip the validation stage.  **Using this is highly recommended against**
+    /// as malformed glTF assets might lead to program panics, huge values, NaNs
+    /// and general evil deeds.
     Skip,
 }
 

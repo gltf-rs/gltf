@@ -1,12 +1,3 @@
-
-// Copyright 2017 The gltf Library Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use json;
 use std::{fmt, io, iter, slice};
 
@@ -173,8 +164,15 @@ impl Unvalidated {
         self.0.as_json()
     }
 
-    /// Skips validation (not recommended).
-    pub unsafe fn skip_validation(self) -> Gltf {
+    /// Skip validation.  **Using this is highly recommended against** as
+    /// malformed glTF assets might lead to program panics, huge values, NaNs
+    /// and general evil deeds.
+    ///
+    /// # Panics
+    ///
+    /// This function does not panic, but might cause an inherent panic later in
+    /// your program during reading of the malformed asset.
+    pub fn skip_validation(self) -> Gltf {
         self.0
     }
 
@@ -186,7 +184,7 @@ impl Unvalidated {
             let json = self.as_json();
             json.validate_minimally(
                 json,
-                || json::Path::new(),
+                json::Path::new,
                 &mut |path, err| errs.push((path(), err)),
             );
         }
@@ -205,12 +203,12 @@ impl Unvalidated {
             let json = self.as_json();
             json.validate_minimally(
                 json,
-                || json::Path::new(),
+                json::Path::new,
                 &mut |path, err| errs.push((path(), err)),
             );
             json.validate_completely(
                 json,
-                || json::Path::new(),
+                json::Path::new,
                 &mut |path, err| errs.push((path(), err)),
             );
         }
@@ -232,7 +230,7 @@ impl Gltf {
 
     /// Constructs the `Gltf` wrapper from binary glTF.
     pub fn from_glb(glb: &Glb) -> Result<Unvalidated, Error> {
-        Gltf::from_slice(glb.json)
+        Gltf::from_slice(&glb.json)
     }
 
     /// Constructs the `Gltf` wrapper from a reader.
@@ -250,6 +248,7 @@ impl Gltf {
     }
 
     /// Constructs the `Gltf` wrapper from a string slice.
+    #[allow(should_implement_trait)]
     pub fn from_str(slice: &str) -> Result<Unvalidated, Error> {
         let json: json::Root = json::from_str(slice)?;
         Ok(Unvalidated(Gltf::from_json(json)))
@@ -340,7 +339,7 @@ impl Gltf {
             gltf: self,
         }
     }
-    
+
     /// Returns an `Iterator` that visits the nodes of the glTF asset.
     pub fn nodes(&self) -> Nodes {
         Nodes {
@@ -476,6 +475,10 @@ impl<'a> Iterator for Images<'a> {
         self.iter
             .next()
             .map(|(index, json)| Image::new(self.gltf, index, json))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
     }
 }
 
