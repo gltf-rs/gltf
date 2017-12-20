@@ -10,8 +10,14 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
-- Accessor iteration for non-little-endian architectures.
-- ChannelIterators
+- `ChannelIterators`
+
+### Changed
+
+- Rework of GLB parser and `AccessorIter` in order to reduce `unsafe` code and
+  to allow loading of binary glTF data on non-little-endian machines.
+- More descriptive errors in the `gltf` and `gltf_importer` crates.
+- `Gltf::skip_validation` is no longer marked `unsafe`.
 
 ## [0.9.3] - 2017-10-28
 
