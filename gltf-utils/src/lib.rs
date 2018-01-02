@@ -2,6 +2,9 @@
 //! accessor iterators and easy conversions between different representations of
 //! accessor items.
 
+#![allow(unknown_lints)]
+#![allow(cast_lossless)]
+
 #![warn(missing_docs)]
 #![warn(trivial_casts)]
 
@@ -131,7 +134,7 @@ impl<'a> PrimitiveIterators<'a> for gltf::Primitive<'a> {
                 _ => unreachable!(),
             })
     }
-
+  
     fn weights<'s, S>(&'a self, set: u32, source: &'s S) -> Option<Weights<'s>>
         where S: Source
     {
@@ -207,6 +210,50 @@ impl<'a> ChannelIterators<'a> for gltf::animation::Channel<'a> {
                 DataType::F32 => MorphWeights::F32(AccessorIter::new(output, source)),
                 _ => unreachable!()
             }),
+        }
+    }
+}
+
+/// Extra methods for working with `gltf::Skin`.
+pub trait SkinIterators<'a> {
+    /// Visits the `inverseBindMatrices` of the skin.
+    fn ibms<S: Source>(&'a self, source: &'a S) -> Option<InverseBindMatrices<'a>>;
+}
+
+impl<'a> SkinIterators<'a> for gltf::Skin<'a> {
+    fn ibms<S: Source>(&'a self, source: &'a S) -> Option<InverseBindMatrices<'a>> {
+        self.inverse_bind_matrices().map(|accessor| InverseBindMatrices(AccessorIter::new(accessor, source)))
+    }
+}
+
+/// Extra methods for working with `gltf::animation::Channel`.
+pub trait ChannelIterators<'a> {
+    /// Visits the input samples of a channel.
+    fn inputs<S: Source>(&'a self, source: &'a S) -> Inputs<'a>;
+
+    /// Visits the output samples of a channel.
+    fn outputs<S: Source>(&'a self, source: &'a S) -> Outputs<'a>;
+}
+
+impl<'a> ChannelIterators<'a> for gltf::animation::Channel<'a> {
+    fn inputs<S: Source>(&'a self, source: &'a S) -> Inputs<'a> {
+        Inputs(AccessorIter::new(self.sampler().input(), source))
+    }
+
+    fn outputs<S: Source>(&'a self, source: &'a S) -> Outputs<'a> {
+        match self.target().path() {
+            gltf::animation::TrsProperty::Translation => {
+                Outputs::Translations(AccessorIter::new(self.sampler().output(), source))
+            },
+            gltf::animation::TrsProperty::Scale => {
+                Outputs::Scales(AccessorIter::new(self.sampler().output(), source))
+            },
+            gltf::animation::TrsProperty::Rotation => {
+                Outputs::Rotations(RotationsF32(Rotations::new(self.sampler().output(), source)))
+            },
+            gltf::animation::TrsProperty::Weights => {
+                Outputs::Weights(MorphWeightsF32(MorphWeights::new(self.sampler().output(), source)))
+            }
         }
     }
 }
@@ -378,6 +425,29 @@ pub type InverseBindMatrices<'a> = AccessorIter<'a, [[f32; 4]; 4]>;
 /// Animation input sampler values of type `f32`.
 pub type Inputs<'a> = AccessorIter<'a, f32>;
 
+/// Inverse Bind Matrices of type [[f32; 4]; 4].
+#[derive(Clone, Debug)]
+pub struct InverseBindMatrices<'a>(AccessorIter<'a, [[f32; 4]; 4]>);
+
+/// Animation input sampler values of type `f32`.
+#[derive(Clone, Debug)]
+pub struct Inputs<'a>(AccessorIter<'a, f32>);
+
+/// Animation output sampler values.
+pub enum Outputs<'a> {
+    /// XYZ translations of type `[f32; 3]`.
+    Translations(AccessorIter<'a, [f32; 3]>),
+
+    /// Rotation animations.
+    Rotations(RotationsF32<'a>),
+
+    /// XYZ scales of type `[f32; 3]`.
+    Scales(AccessorIter<'a, [f32; 3]>),
+
+    /// Morph target animations.
+    Weights(MorphWeightsF32<'a>),
+}
+
 /// Vertex colors.
 #[derive(Clone, Debug)]
 pub enum Colors<'a> {
@@ -430,7 +500,7 @@ pub enum TexCoords<'a> {
     F32(AccessorIter<'a, [f32; 2]>),
 }
 
-/// Weights,
+/// Weights.
 #[derive(Clone, Debug)]
 pub enum Weights<'a> {
     /// Weights of type `[u8; 4]`.
@@ -636,8 +706,7 @@ impl<'a> MorphWeights<'a> {
     /// f32.
     pub fn into_u16(self) -> morph_weights::CastingIter<'a, morph_weights::U16> {
         morph_weights::CastingIter::new(self)
-    }
-
+ 
     /// Reinterpret morph weights as f32.  Lossy if underlying iterator yields
     /// i16 or u16.
     pub fn into_f32(self) -> morph_weights::CastingIter<'a, morph_weights::F32> {
@@ -727,6 +796,98 @@ mod tests {
             stride: 8,
             data: &data,
             _phantom: PhantomData,
+        };
+        assert_eq!(Some(1.0),      i.clone().nth(0));
+        assert_eq!(Some(3.141590), i.clone().nth(1));
+        assert_eq!(Some(42.0),     i.clone().nth(2));
+        assert_eq!(Some(42.0),     i.clone().last());
+        assert_eq!(3, i.clone().count());
+    }
+
+    #[test]
+    fn accessor_types() {
+        let data = [0x26, 0x84, 0xa1, 0x99];
+        let evil = -1.670038415647693561554125748263503574431165787927966448478400707244873046875e-23;
+        assert_eq!(0x26,       <i8  as AccessorItem>::from_slice(&data));
+        assert_eq!(-31706,     <i16 as AccessorItem>::from_slice(&data));
+        assert_eq!(0x26,       <u8  as AccessorItem>::from_slice(&data));
+        assert_eq!(0x8426,     <u16 as AccessorItem>::from_slice(&data));
+        assert_eq!(0x99a18426, <u32 as AccessorItem>::from_slice(&data));
+        assert_eq!(evil,       <f32 as AccessorItem>::from_slice(&data));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{AccessorItem, AccessorIter};
+
+    #[test]
+    fn accessor_empty() {
+        let i: AccessorIter<f32> = AccessorIter {
+            stride: 4,
+            data: &[],
+            _phantom: Default::default(),
+        };
+        assert_eq!(None, i.clone().next());
+        assert_eq!(None, i.clone().nth(0));
+        assert_eq!(None, i.clone().last());
+        assert_eq!(0, i.clone().count());
+    }
+
+    #[test]
+    fn accessor_single() {
+        let data = [0x00, 0x00, 0x80, 0x3f];
+        let i: AccessorIter<f32> = AccessorIter {
+            stride: 4,
+            data: &data,
+            _phantom: Default::default(),
+        };
+        assert_eq!(Some(1.0), i.clone().next());
+        assert_eq!(Some(1.0), i.clone().nth(0));
+        assert_eq!(Some(1.0), i.clone().last());
+        assert_eq!(1, i.clone().count());
+    }
+
+    #[test]
+    fn accessor_single_stride() {
+        let data = [0x00, 0x00, 0x80, 0x3f, 0xff];
+        let i: AccessorIter<f32> = AccessorIter {
+            stride: 7,
+            data: &data,
+            _phantom: Default::default(),
+        };
+        assert_eq!(Some(1.0), i.clone().next());
+        assert_eq!(Some(1.0), i.clone().nth(0));
+        assert_eq!(Some(1.0), i.clone().last());
+        assert_eq!(1, i.clone().count());
+    }
+
+    #[test]
+    fn accessor_multi() {
+        let data = [0x00, 0x00, 0x80, 0x3f,
+                   0xd0, 0x0f, 0x49, 0x40,
+                   0x00, 0x00, 0x28, 0x42];
+        let i: AccessorIter<f32> = AccessorIter {
+            stride: 4,
+            data: &data,
+            _phantom: Default::default(),
+        };
+        assert_eq!(Some(1.0),      i.clone().nth(0));
+        assert_eq!(Some(3.141590), i.clone().nth(1));
+        assert_eq!(Some(42.0),     i.clone().nth(2));
+        assert_eq!(Some(42.0),     i.clone().last());
+        assert_eq!(3, i.clone().count());
+    }
+
+    #[test]
+    fn accessor_multi_stride() {
+        let data = [0x00, 0x00, 0x80, 0x3f, 0xde, 0xad, 0xbe, 0xef,
+                   0xd0, 0x0f, 0x49, 0x40, 0xde, 0xad, 0xbe, 0xef,
+                   0x00, 0x00, 0x28, 0x42];
+        let i: AccessorIter<f32> = AccessorIter {
+            stride: 8,
+            data: &data,
+            _phantom: Default::default(),
         };
         assert_eq!(Some(1.0),      i.clone().nth(0));
         assert_eq!(Some(3.141590), i.clone().nth(1));

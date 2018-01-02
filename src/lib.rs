@@ -100,17 +100,29 @@ pub mod skin;
 /// Textures and their samplers.
 pub mod texture;
 
+#[doc(inline)]
 pub use self::animation::Animation;
+#[doc(inline)]
 pub use self::accessor::Accessor;
+#[doc(inline)]
 pub use self::buffer::Buffer;
+#[doc(inline)]
 pub use self::camera::Camera;
+#[doc(inline)]
 pub use self::glb::Glb;
+#[doc(inline)]
 pub use self::gltf::{Gltf, Unvalidated};
+#[doc(inline)]
 pub use self::image::Image;
+#[doc(inline)]
 pub use self::material::Material;
+#[doc(inline)]
 pub use self::mesh::{Attribute, Mesh, Primitive, Semantic};
+#[doc(inline)]
 pub use self::scene::{Node, Scene};
+#[doc(inline)]
 pub use self::skin::Skin;
+#[doc(inline)]
 pub use self::texture::Texture;
 
 /// Represents a runtime error.
