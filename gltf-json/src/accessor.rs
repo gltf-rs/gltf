@@ -121,9 +121,11 @@ pub mod sparse {
         pub component_type: Checked<IndexComponentType>,
 
         /// Extension specific data.
+        #[serde(default)]
         pub extensions: extensions::accessor::sparse::Indices,
 
         /// Optional application specific data.
+        #[serde(default)]
         pub extras: Extras,
     }
 
@@ -147,9 +149,11 @@ pub mod sparse {
         pub values: Values,
 
         /// Extension specific data.
+        #[serde(default)]
         pub extensions: extensions::accessor::sparse::Sparse,
 
         /// Optional application specific data.
+        #[serde(default)]
         pub extras: Extras,
     }
 
@@ -169,9 +173,11 @@ pub mod sparse {
         pub byte_offset: u32,
 
         /// Extension specific data.
+        #[serde(default)]
         pub extensions: extensions::accessor::sparse::Values,
 
         /// Optional application specific data.
+        #[serde(default)]
         pub extras: Extras,
     }
 }
