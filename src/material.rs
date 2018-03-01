@@ -220,12 +220,10 @@ impl<'a> PbrMetallicRoughness<'a> {
 
     /// The metallic-roughness texture.
     ///
-    /// This texture has two components:
-    /// 
-    /// * The first component (R) contains the metallic-ness of the material.
-    /// * The second component (G) contains the roughness of the material.
-    /// * If the third component (B) and/or the fourth component (A) are present
-    ///   then they are ignored.
+    /// The metalness values are sampled from the B channel.
+    /// The roughness values are sampled from the G channel.
+    /// These values are linear. If other channels are present (R or A),
+    /// they are ignored for metallic-roughness calculations.
     pub fn metallic_roughness_texture(&self) -> Option<texture::Info<'a>> {
         self.json.metallic_roughness_texture.as_ref().map(|json| {
             let texture = self.gltf.textures().nth(json.index.value()).unwrap();
