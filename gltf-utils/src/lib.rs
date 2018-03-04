@@ -224,7 +224,6 @@ impl<'a> ChannelIterators<'a> for gltf::animation::Channel<'a> {
     }
 }
 
-
 /// Extra methods for working with `gltf::animation::Channel`.
 pub trait AnimationChannelIterators<'a> {
     /// Visits the input samples of a channel.
@@ -393,15 +392,13 @@ pub type Normals<'a> = AccessorIter<'a, [f32; 3]>;
 
 /// XYZW vertex tangents of type `[f32; 4]` where the `w` component is a
 /// sign value (-1 or +1) indicating the handedness of the tangent basis.
-pub type Tangents<'a> = AccessorIter<'a, [f32; 3]>;
+pub type Tangents<'a> = AccessorIter<'a, [f32; 4]>;
 
-/// Inverse Bind Matrices of type [[f32; 4]; 4].
+/// Inverse Bind Matrices of type `[[f32; 4]; 4]`.
 pub type InverseBindMatrices<'a> = AccessorIter<'a, [[f32; 4]; 4]>;
 
 /// Animation input sampler values of type `f32`.
 pub type Inputs<'a> = AccessorIter<'a, f32>;
-
-
 
 /// Animation output sampler values.
 pub enum Outputs<'a> {
