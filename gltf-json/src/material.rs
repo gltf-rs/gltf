@@ -136,10 +136,10 @@ pub struct PbrMetallicRoughness {
     ///
     /// This texture has two components:
     ///
-    /// * The first component (R) contains the metallic-ness of the material.
-    /// * The second component (G) contains the roughness of the material.
-    /// * If the third component (B) and/or the fourth component (A) are present
-    ///   then they are ignored.
+    /// The metalness values are sampled from the B channel.
+    /// The roughness values are sampled from the G channel.
+    /// These values are linear. If other channels are present (R or A),
+    /// they are ignored for metallic-roughness calculations.
     #[serde(rename = "metallicRoughnessTexture")]
     pub metallic_roughness_texture: Option<texture::Info>,
 

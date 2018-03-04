@@ -1,3 +1,4 @@
+#![allow(unknown_lints)]
 extern crate gltf_importer;
 
 use std::{fs, path};
