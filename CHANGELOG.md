@@ -6,7 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.10.0] - 2017-12-03
+## [0.10.1] - 2018-03-05
+
+### Fixed
+
+- `gltf_utils::AccessorIter::new` is marked `pub` again.
+
+## [0.10.0] - 2018-03-04
 
 ### Added
 

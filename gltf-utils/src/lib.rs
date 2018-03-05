@@ -242,9 +242,11 @@ pub struct AccessorIter<'a, T> {
 }
 
 impl<'a, T> AccessorIter<'a, T> {
-    fn new<S>(accessor: gltf::Accessor, source: &'a S) -> AccessorIter<'a, T>
-        where S: Source
-    {
+    /// Constructor.
+    pub fn new<S: Source>(
+        accessor: gltf::Accessor,
+        source: &'a S,
+    ) -> AccessorIter<'a, T> {
         debug_assert_eq!(size_of::<T>(), accessor.size());
         debug_assert!(size_of::<T>() > 0);
         let view = accessor.view();
