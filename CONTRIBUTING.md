@@ -4,9 +4,7 @@ Thank for you taking the time to contribute to `gltf`. Your contributions are va
 
 ## Branch conventions and pull requests
 
- * New features may be submitted to the `incoming` branch.
- * Bug fixes and minor changes to documentation may be submitted to the `master` branch.
- * Any other branch other than `master` and `incoming` contains unstable or experimental code.
+ * Please submit all pull requests to the `master` branch.
 
 ## Contribution opportunities
 
@@ -18,7 +16,7 @@ Thank for you taking the time to contribute to `gltf`. Your contributions are va
 
 ## Guidelines for API design and code style
 
- * We aim to follow @brson 's [Rust API guidelines](https://github.com/brson/rust-api-guidelines).
+ * We aim to follow the [Rust API guidelines](https://github.com/rust-lang-nursery/api-guidelines).
  * We aim to leave no blank spaces in generated documentation.
  * We use 4 space indentation with the [new Rust style guide](https://github.com/rust-lang-nursery/fmt-rfcs/blob/master/guide/guide.md).
 
