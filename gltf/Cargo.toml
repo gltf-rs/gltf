@@ -1,0 +1,44 @@
+[package]
+authors = ["David Harvey-Macaulay <alteous@outlook.com>"]
+description = "glTF 2.0 loader"
+documentation = "https://docs.rs/gltf"
+homepage = "https://github.com/gltf-rs/gltf"
+include = ["Cargo.toml", "examples/*.bin", "examples/*.glb", "examples/*.gltf", "src/*.rs"]
+keywords = ["glTF", "3D", "asset", "model", "scene"]
+license = "MIT/Apache-2.0"
+name = "gltf"
+readme = "README.md"
+repository = "https://github.com/gltf-rs/gltf"
+version = "0.11.0"
+[[example]]
+name = "gltf-display"
+path = "examples/display/main.rs"
+[[example]]
+name = "gltf-tree"
+path = "examples/tree/main.rs"
+required-features = ["names"]
+[badges.travis-ci]
+repository = "gltf-rs/gltf"
+
+[dependencies]
+base64 = "0.6"
+byteorder = "1.1"
+cgmath = "0.16.0"
+lazy_static = "1.0.0"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+
+[dependencies.gltf-derive]
+path = "../gltf-derive"
+version = "0.11.0"
+
+[dev-dependencies]
+approx = "0.1.1"
+
+[features]
+default = []
+extras = []
+import = []
+names = []
+util = []
