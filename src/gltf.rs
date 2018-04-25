@@ -348,7 +348,7 @@ impl Gltf {
         }
     }
 
-    /// Returns an `Iterator` that visits the scenes of the glTF asset.
+    /// Returns an `Iterator` that visits the samplers of the glTF asset.
     pub fn samplers(&self) -> Samplers {
         Samplers {
             iter: self.as_json().samplers.iter().enumerate(),
@@ -356,7 +356,7 @@ impl Gltf {
         }
     }
 
-    /// Returns an `Iterator` that visits the samplers of the glTF asset.
+    /// Returns an `Iterator` that visits the scenes of the glTF asset.
     pub fn scenes(&self) -> Scenes {
         Scenes {
             iter: self.as_json().scenes.iter().enumerate(),
