@@ -36,6 +36,7 @@ impl<'a, A> CastingIter<'a, A> {
     }
 }
 
+impl<'a, A: Cast> ExactSizeIterator for CastingIter<'a, A> {}
 impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
     type Item = A::Output;
 
