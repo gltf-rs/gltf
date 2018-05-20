@@ -11,7 +11,7 @@ use {camera, extensions, mesh, scene, skin, Extras, Index, Root, Path};
 /// identity. When a node is targeted for animation (referenced by an
 /// animation.channel.target), only TRS properties may be present; `matrix` will not
 /// be present.
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Node {
     /// The index of the camera referenced by this node.
     pub camera: Option<Index<camera::Camera>>,
@@ -63,7 +63,7 @@ fn node_scale_default() -> [f32; 3] {
 }
 
 /// The root `Node`s of a scene.
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Scene {
     /// Extension specific data.
     #[serde(default)]
@@ -82,7 +82,7 @@ pub struct Scene {
 }
 
 /// Unit quaternion rotation in the order (x, y, z, w), where w is the scalar.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct UnitQuaternion(pub [f32; 4]);
 
 impl Default for UnitQuaternion {

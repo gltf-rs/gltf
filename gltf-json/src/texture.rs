@@ -54,7 +54,7 @@ pub const VALID_WRAPPING_MODES: &'static [u32] = &[
 ];
 
 /// Magnification filter.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum MagFilter {
     /// Corresponds to `GL_NEAREST`.
     Nearest = 1,
@@ -74,7 +74,7 @@ impl MagFilter {
 }
 
 /// Minification filter.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum MinFilter {
     /// Corresponds to `GL_NEAREST`.
     Nearest = 1,
@@ -110,7 +110,7 @@ impl MinFilter {
 }
 
 /// Texture co-ordinate wrapping mode.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum WrappingMode {
     /// Corresponds to `GL_CLAMP_TO_EDGE`.
     ClampToEdge = 1,
@@ -134,7 +134,7 @@ impl WrappingMode {
 }
 
 /// Texture sampler properties for filtering and wrapping modes.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 #[serde(default)]
 pub struct Sampler {
     /// Magnification filter.
@@ -167,7 +167,7 @@ pub struct Sampler {
 }
 
 /// A texture and its sampler.
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Texture {
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
@@ -188,7 +188,7 @@ pub struct Texture {
     pub extras: Extras,
 }
 
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 /// Reference to a `Texture`.
 pub struct Info {
     /// The index of the texture.

@@ -11,7 +11,7 @@ pub type Extras = Option<Value>;
 pub type Extras = Void;
 
 /// Type representing no user-defined data.
-#[derive(Clone, Default, Deserialize, Validate)]
+#[derive(Clone, Default, Deserialize, Serialize, Validate)]
 pub struct Void {
     #[serde(default)]
     _allow_unknown_fields: (),

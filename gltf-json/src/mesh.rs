@@ -1,4 +1,4 @@
-use serde::de;
+use serde::{de, ser};
 use serde_json::from_value;
 use std::collections::HashMap;
 use std::fmt;
@@ -45,7 +45,7 @@ pub const VALID_MORPH_TARGETS: &'static [&'static str] = &[
 ];
 
 /// The type of primitives to render.
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
 pub enum Mode {
     /// Corresponds to `GL_POINTS`.
     Points = 1,
@@ -73,7 +73,7 @@ pub enum Mode {
 ///
 /// A node can contain one or more meshes and its transform places the meshes in
 /// the scene.
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Mesh {
     /// Extension specific data.
     #[serde(default)]
@@ -95,7 +95,7 @@ pub struct Mesh {
 }
 
 /// Geometry to be rendered with the given material.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Primitive {
     /// Maps attribute semantic names to the `Accessor`s containing the
     /// corresponding attribute data.
@@ -176,7 +176,7 @@ pub struct Primitive {
     }
 
 /// A dictionary mapping attributes to their deviations in the Morph Target.
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct MorphTarget {
     /// XYZ vertex position displacements of type `[f32; 3]`.
     #[serde(rename = "POSITION")]
@@ -296,6 +296,14 @@ impl Semantic {
             },
             _ => Invalid,
         }
+    }
+}
+
+impl ser::Serialize for Semantic {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: ser::Serializer
+    {
+        serializer.serialize_str(&self.to_string())
     }
 }
 

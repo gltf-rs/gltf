@@ -1,4 +1,4 @@
-use serde::de;
+use serde::{de, ser};
 use std::fmt;
 use validation::{Checked, Error, Validate};
 use {extensions, Extras, Index, Root, Path};
@@ -31,8 +31,19 @@ pub enum Target {
     ElementArrayBuffer,
 }
 
+impl ser::Serialize for Target {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: ser::Serializer
+    {
+        match *self {
+            Target::ArrayBuffer => serializer.serialize_u32(ARRAY_BUFFER),
+            Target::ElementArrayBuffer => serializer.serialize_u32(ELEMENT_ARRAY_BUFFER),
+        }
+    }
+}
+
 /// A buffer points to binary data representing geometry, animations, or skins.
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Buffer {
     /// The length of the buffer in bytes.
     #[serde(default, rename = "byteLength")]
@@ -56,7 +67,7 @@ pub struct Buffer {
 }
 
 /// A view into a buffer generally representing a subset of the buffer.
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct View {
     /// The parent `Buffer`.
     pub buffer: Index<Buffer>,
@@ -92,7 +103,7 @@ pub struct View {
 }
 
 /// The stride, in bytes, between vertex attributes.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct ByteStride(pub u32);
 
 impl Validate for ByteStride {
