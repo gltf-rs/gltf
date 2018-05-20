@@ -1,4 +1,4 @@
-use serde::de;
+use serde::{de, ser};
 use std::fmt;
 use validation::{Checked, Error, Validate};
 use {extensions, Extras, Root, Path};
@@ -19,11 +19,22 @@ pub enum Type {
     Orthographic,
 }
 
+impl ser::Serialize for Type {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: ser::Serializer
+    {
+        match *self {
+            Type::Perspective => serializer.serialize_str("perspective"),
+            Type::Orthographic => serializer.serialize_str("orthographic"),
+        }
+    }
+}
+
 /// A camera's projection.
 ///
 /// A node can reference a camera to apply a transform to place the camera in the
 /// scene.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Camera {
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
@@ -51,7 +62,7 @@ pub struct Camera {
 }
 
 /// Values for an orthographic camera.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Orthographic {
     /// The horizontal magnification of the view.
     pub xmag: f32,
@@ -75,7 +86,7 @@ pub struct Orthographic {
 }
 
 /// Values for a perspective camera.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Perspective {
     /// Aspect ratio of the field of view.
     #[serde(rename = "aspectRatio")]

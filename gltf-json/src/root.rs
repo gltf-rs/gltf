@@ -19,7 +19,7 @@ pub trait Get<T> {
 pub struct Index<T>(u32, marker::PhantomData<T>);
 
 /// The root object of a glTF 2.0 asset.
-#[derive(Clone, Debug, Default, Deserialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct Root {
     /// An array of accessors.
     #[serde(default)]

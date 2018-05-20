@@ -1,7 +1,7 @@
 use {accessor, extensions, scene, Extras, Index};
 
 /// Joints and matrices defining a skin.
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Skin {
     /// Extension specific data.
     #[serde(default)]

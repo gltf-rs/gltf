@@ -20,7 +20,7 @@ pub const VALID_TRS_PROPERTIES: &'static [&'static str] = &[
 ];
 
 /// Specifies an interpolation algorithm.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum InterpolationAlgorithm {
     /// Linear interpolation.
     ///
@@ -57,7 +57,7 @@ pub enum InterpolationAlgorithm {
 }
 
 /// Specifies a TRS property.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum TrsProperty {
     /// XYZ translation vector.
     Translation = 1,
@@ -73,7 +73,7 @@ pub enum TrsProperty {
 }
 
 /// A keyframe animation.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Animation {
     /// Extension specific data.
     #[serde(default)]
@@ -99,7 +99,7 @@ pub struct Animation {
 }
 
 /// Targets an animation's sampler at a node's property.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Channel {
     /// The index of a sampler in this animation used to compute the value for the
     /// target.
@@ -118,7 +118,7 @@ pub struct Channel {
 }
 
 /// The index of the node and TRS property that an animation channel targets.
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Target {
     /// Extension specific data.
     #[serde(default)]
@@ -137,7 +137,7 @@ pub struct Target {
 }
 
 /// Defines a keyframe graph but not its target.
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Sampler {
     /// Extension specific data.
     #[serde(default)]

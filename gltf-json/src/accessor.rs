@@ -5,7 +5,7 @@ use std::fmt;
 use validation::Checked;
 
 /// The component data type.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum ComponentType {
     /// Corresponds to `GL_BYTE`.
     I8 = 1,
@@ -27,7 +27,7 @@ pub enum ComponentType {
 }
 
 /// Specifies whether an attribute, vector, or matrix.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum Type {
     /// Scalar quantity.
     Scalar = 1,
@@ -103,7 +103,7 @@ pub mod sparse {
     use ::extensions;
 
     /// Indices of those attributes that deviate from their initialization value.
-    #[derive(Clone, Debug, Deserialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     pub struct Indices {
         /// The parent buffer view containing the sparse indices.
         ///
@@ -130,7 +130,7 @@ pub mod sparse {
     }
 
     /// Sparse storage of attributes that deviate from their initialization value.
-    #[derive(Clone, Debug, Deserialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     pub struct Sparse {
         /// The number of attributes encoded in this sparse accessor.
         pub count: u32,
@@ -159,7 +159,7 @@ pub mod sparse {
 
     /// Array of size `count * number_of_components` storing the displaced
     /// accessor attributes pointed by `accessor::sparse::Indices`.
-    #[derive(Clone, Debug, Deserialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     pub struct Values {
         /// The parent buffer view containing the sparse indices.
         ///
@@ -183,7 +183,7 @@ pub mod sparse {
 }
 
 /// A typed view into a buffer view.
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Accessor {
     /// The parent buffer view this accessor reads from.
     #[serde(rename = "bufferView")]
@@ -236,11 +236,11 @@ pub struct Accessor {
 }
 
 /// The data type of an index.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct IndexComponentType(pub ComponentType);
 
 /// The data type of a generic vertex attribute.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct GenericComponentType(pub ComponentType);
 
 impl<'de> de::Deserialize<'de> for Checked<GenericComponentType> {
