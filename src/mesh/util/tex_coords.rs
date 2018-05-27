@@ -1,12 +1,12 @@
 use std::marker::PhantomData;
 
-use super::Normalize;
+use Normalize;
 
-use TexCoords;
+use mesh::util::IterTexCoords;
 
 /// Casting iterator for `TexCoords`.
 #[derive(Clone, Debug)]
-pub struct CastingIter<'a, T>(TexCoords<'a>, PhantomData<T>);
+pub struct CastingIter<'a, T>(IterTexCoords<'a>, PhantomData<T>);
 
 /// Type which describes how to cast any texture coordinate into pair of u8.
 #[derive(Clone, Debug)]
@@ -36,42 +36,43 @@ pub trait Cast {
 }
 
 impl<'a, A> CastingIter<'a, A> {
-    pub(crate) fn new(iter: TexCoords<'a>) -> Self {
+    pub(crate) fn new(iter: IterTexCoords<'a>) -> Self {
         CastingIter(iter, PhantomData)
     }
 
     /// Unwrap underlying `TexCoords` object.
-    pub fn unwrap(self) -> TexCoords<'a> {
+    pub fn unwrap(self) -> IterTexCoords<'a> {
         self.0
     }
 }
 
+impl<'a, A: Cast> ExactSizeIterator for CastingIter<'a, A> {}
 impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
     type Item = A::Output;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         match self.0 {
-            TexCoords::U8(ref mut i)  => i.next().map(A::cast_u8),
-            TexCoords::U16(ref mut i) => i.next().map(A::cast_u16),
-            TexCoords::F32(ref mut i) => i.next().map(A::cast_f32),
+            IterTexCoords::U8(ref mut i)  => i.next().map(A::cast_u8),
+            IterTexCoords::U16(ref mut i) => i.next().map(A::cast_u16),
+            IterTexCoords::F32(ref mut i) => i.next().map(A::cast_f32),
         }
     }
 
     #[inline]
     fn nth(&mut self, x: usize) -> Option<Self::Item> {
         match self.0 {
-            TexCoords::U8(ref mut i)  => i.nth(x).map(A::cast_u8),
-            TexCoords::U16(ref mut i) => i.nth(x).map(A::cast_u16),
-            TexCoords::F32(ref mut i) => i.nth(x).map(A::cast_f32),
+            IterTexCoords::U8(ref mut i)  => i.nth(x).map(A::cast_u8),
+            IterTexCoords::U16(ref mut i) => i.nth(x).map(A::cast_u16),
+            IterTexCoords::F32(ref mut i) => i.nth(x).map(A::cast_f32),
         }
     }
 
     fn last(self) -> Option<Self::Item> {
         match self.0 {
-            TexCoords::U8(i)  => i.last().map(A::cast_u8),
-            TexCoords::U16(i) => i.last().map(A::cast_u16),
-            TexCoords::F32(i) => i.last().map(A::cast_f32),
+            IterTexCoords::U8(i)  => i.last().map(A::cast_u8),
+            IterTexCoords::U16(i) => i.last().map(A::cast_u16),
+            IterTexCoords::F32(i) => i.last().map(A::cast_f32),
         }
     }
 
@@ -82,9 +83,9 @@ impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         match self.0 {
-            TexCoords::U8(ref i)  => i.size_hint(),
-            TexCoords::U16(ref i) => i.size_hint(),
-            TexCoords::F32(ref i) => i.size_hint(),
+            IterTexCoords::U8(ref i)  => i.size_hint(),
+            IterTexCoords::U16(ref i) => i.size_hint(),
+            IterTexCoords::F32(ref i) => i.size_hint(),
         }
     }
 }

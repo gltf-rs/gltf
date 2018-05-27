@@ -53,12 +53,6 @@ impl<'a> Image<'a> {
         self.index
     }
 
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) -> &json::image::Image {
-        self.json
-    }
-
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&str> {

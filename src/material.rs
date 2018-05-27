@@ -48,12 +48,6 @@ impl<'a> Material<'a> {
         self.index
     }
 
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::material::Material {
-        self.json
-    }
-
     ///  The alpha cutoff value of the material.
     pub fn alpha_cutoff(&self) -> f32 {
         self.json.alpha_cutoff.0
@@ -180,12 +174,6 @@ impl<'a> PbrMetallicRoughness<'a> {
         }
     }
 
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) -> &json::material::PbrMetallicRoughness {
-        self.json
-    }
-
     /// Returns the material's base color factor.
     ///
     /// The default value is `[1.0, 1.0, 1.0, 1.0]`.
@@ -258,12 +246,6 @@ impl<'a> NormalTexture<'a> {
         }
     }
 
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::material::NormalTexture {
-        self.json
-    }
-
     /// Returns the scalar multiplier applied to each normal vector of the texture.
     ///
     /// This value is ignored if `normal_texture` is `None`.
@@ -306,12 +288,6 @@ impl<'a> OcclusionTexture<'a> {
             texture: texture,
             json: json,
         }
-    }
-
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::material::OcclusionTexture {
-        self.json
     }
 
     /// Returns the scalar multiplier controlling the amount of occlusion applied.

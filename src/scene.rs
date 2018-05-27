@@ -9,14 +9,6 @@ type Matrix3 = cgmath::Matrix3<f32>;
 type Matrix4 = cgmath::Matrix4<f32>;
 type Quaternion = cgmath::Quaternion<f32>;
 
-/// 4x4 identity matrix.
-const IDENTITY: [f32; 16] = {
-    [1.0, 0.0, 0.0, 0.0,
-     0.0, 1.0, 0.0, 0.0,
-     0.0, 0.0, 1.0, 0.0,
-     0.0, 0.0, 0.0, 1.0]
-};
-
 /// The transform for a `Node`.
 #[derive(Clone, Debug)]
 pub enum Transform {
@@ -156,12 +148,6 @@ impl<'a> Node<'a> {
         self.index
     }
 
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::scene::Node {
-        self.json
-    }
-
     /// Returns the camera referenced by this node.
     pub fn camera(&self) -> Option<Camera> {
         self.json.camera.as_ref().map(|index| {
@@ -182,12 +168,6 @@ impl<'a> Node<'a> {
         &self.json.extras
     }
 
-    /// Returns the 4x4 column-major transformation matrix.
-    #[deprecated(since = "0.9.1", note = "Use `transform().matrix()` instead")]
-    pub fn matrix(&self) -> [f32; 16] {
-        self.json.matrix.unwrap_or(IDENTITY)
-    }
-
     /// Returns the mesh referenced by this node.
     pub fn mesh(&self) -> Option<Mesh> {
         self.json.mesh.as_ref().map(|index| {
@@ -199,25 +179,6 @@ impl<'a> Node<'a> {
     #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&str> {
         self.json.name.as_ref().map(String::as_str)
-    }
-
-    /// Returns the node's unit quaternion rotation in the order `[x, y, z, w]`,
-    /// where `w` is the scalar.
-    #[deprecated(since = "0.9.1", note = "Use `transform().decomposed()` instead.")]
-    pub fn rotation(&self) -> [f32; 4] {
-        self.json.rotation.0
-    }
-
-    /// Returns the node's non-uniform scale.
-    #[deprecated(since = "0.9.1", note = "Use `transform().decomposed()` instead.")]
-    pub fn scale(&self) -> [f32; 3] {
-        self.json.scale
-    }
-
-    /// Returns the node's translation.
-    #[deprecated(since = "0.9.1", note = "Use `transform().decomposed()` instead.")]
-    pub fn translation(&self) -> [f32; 3] {
-        self.json.translation
     }
 
     /// Returns the node's transform.
@@ -267,12 +228,6 @@ impl<'a> Scene<'a> {
     /// Returns the internal JSON index.
     pub fn index(&self) -> usize {
         self.index
-    }
-
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::scene::Scene {
-        self.json
     }
 
     /// Optional application specific data.

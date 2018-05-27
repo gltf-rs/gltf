@@ -73,12 +73,6 @@ impl<'a> Sampler<'a> {
         self.index
     }
 
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::texture::Sampler {
-        self.json
-    }
-
     /// Magnification filter.
     pub fn mag_filter(&self) -> Option<MagFilter> {
         self.json.mag_filter.map(|filter| filter.unwrap())
@@ -130,12 +124,6 @@ impl<'a> Texture<'a> {
         self.index
     }
 
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::texture::Texture {
-        self.json
-    }
-
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&str> {
@@ -169,12 +157,6 @@ impl<'a> Info<'a> {
             texture: texture,
             json: json,
         }
-    }
-
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::texture::Info {
-        self.json
     }
 
     /// The set index of the texture's `TEXCOORD` attribute.
