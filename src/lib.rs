@@ -138,67 +138,78 @@ pub enum Error {
 }
 
 /// **The primary data structure of this crate.**
-pub struct Gltf {
-    /// The JSON root object.
-    pub json: json::Root,
+pub struct Gltf(json::Root);
 
-    /// Binary payload in the case of binary glTF.
-    pub bin: Option<Vec<u8>>,
+/// Loads glTF from a reader without performing validation checks.
+pub fn from_reader_without_validation<R>(mut reader: R) -> Result<(Gltf, Option<Vec<u8>>), Error>
+where
+    R: io::Read + io::Seek
+{
+    let mut magic = [0u8; 4];
+    reader.read_exact(&mut magic)?;
+    reader.seek(io::SeekFrom::Start(0))?;
+    let (json, bin): (json::Root, Option<Vec<u8>>);
+    if magic.starts_with(b"glTF") {
+        let mut glb = binary::Glb::from_reader(reader)?;
+        // TODO: use `json::from_reader` instead of `json::from_slice`
+        json = json::deserialize::from_slice(&glb.json)?;
+        bin = glb.bin.take().map(|x| x.into_owned());
+    } else {
+        json = json::deserialize::from_reader(reader)?;
+        bin = None;
+    };
+    Ok((Gltf::from_json_without_validation(json), bin ))
+}
+
+/// Loads glTF from a reader.
+pub fn from_reader<R>(reader: R) -> Result<(Gltf, Option<Vec<u8>>), Error>
+where
+    R: io::Read + io::Seek,
+{
+    let (gltf, bin) = from_reader_without_validation(reader)?;
+    let _ = gltf.validate()?;
+    Ok((gltf, bin))
+}
+
+/// Loads glTF from a slice of bytes without performing validation
+/// checks.
+pub fn from_slice_without_validation(slice: &[u8]) -> Result<(Gltf, Option<Vec<u8>>), Error> {
+    let (json, bin): (json::Root, Option<Vec<u8>>);
+    if slice.starts_with(b"glTF") {
+        let mut glb = binary::Glb::from_slice(slice)?;
+        json = json::deserialize::from_slice(&glb.json)?;
+        bin = glb.bin.take().map(|x| x.into_owned());
+    } else {
+        json = json::deserialize::from_slice(slice)?;
+        bin = None;
+    };
+    Ok((Gltf::from_json_without_validation(json), bin))
+}
+
+/// Loads glTF from a slice of bytes.
+pub fn from_slice(slice: &[u8]) -> Result<(Gltf, Option<Vec<u8>>), Error> {
+    let (gltf, bin) = from_slice_without_validation(slice)?;
+    let _ = gltf.validate()?;
+    Ok((gltf, bin))
 }
 
 impl Gltf {
-    /// Loads glTF from a reader without performing validation checks.
-    pub fn from_reader_without_validation<R>(mut reader: R) -> Result<Self, Error>
-    where
-        R: io::Read + io::Seek
-    {
-        let mut magic = [0u8; 4];
-        reader.read_exact(&mut magic)?;
-        reader.seek(io::SeekFrom::Start(0))?;
-        let (json, bin): (json::Root, Option<Vec<u8>>);
-        if magic.starts_with(b"glTF") {
-            let mut glb = binary::Glb::from_reader(reader)?;
-            // TODO: use `json::from_reader` instead of `json::from_slice`
-            json = json::deserialize::from_slice(&glb.json)?;
-            bin = glb.bin.take().map(|x| x.into_owned());
-        } else {
-            json = json::deserialize::from_reader(reader)?;
-            bin = None;
-        };
-        Ok(Gltf { json, bin })
-    }
-
-    /// Loads glTF from a reader.
-    pub fn from_reader<R>(reader: R) -> Result<Self, Error>
-    where
-        R: io::Read + io::Seek,
-    {
-        let gltf = Gltf::from_reader_without_validation(reader)?;
+    /// Loads glTF from pre-deserialized JSON.
+    pub fn from_json(json: json::Root) -> Result<Self, Error> {
+        let gltf = Self::from_json_without_validation(json);
         let _ = gltf.validate()?;
         Ok(gltf)
     }
 
-    /// Loads glTF from a slice of bytes without performing validation
-    /// checks.
-    pub fn from_slice_without_validation(slice: &[u8]) -> Result<Self, Error> {
-        let (json, bin): (json::Root, Option<Vec<u8>>);
-        if slice.starts_with(b"glTF") {
-            let mut glb = binary::Glb::from_slice(slice)?;
-            json = json::deserialize::from_slice(&glb.json)?;
-            bin = glb.bin.take().map(|x| x.into_owned());
-        } else {
-            json = json::deserialize::from_slice(slice)?;
-            bin = None;
-        };
-        Ok(Gltf { json, bin })
+    /// Loads glTF from pre-deserialized JSON without performing
+    /// validation checks.
+    pub fn from_json_without_validation(json: json::Root) -> Self {
+        Gltf(json)
     }
 
-    /// Loads glTF from a slice of bytes.
-    pub fn from_slice(slice: &[u8]) -> Result<Self, Error> {
-        let gltf = Gltf::from_slice_without_validation
-(slice)?;
-        let _ = gltf.validate()?;
-        Ok(gltf)
+    /// Unwraps the glTF document.
+    pub fn into_json(self) -> json::Root {
+        self.0
     }
 
     /// Perform validation checks on loaded glTF.
@@ -208,8 +219,8 @@ impl Gltf {
     pub fn validate(&self) -> Result<(), Vec<(json::Path, json::validation::Error)>> {
         use json::validation::Validate;
         let mut errors = Vec::new();
-        self.json.validate_minimally(
-            &self.json,
+        self.0.validate_minimally(
+            &self.0,
             json::Path::new,
             &mut |path, error| errors.push((path(), error)),
         );
@@ -223,7 +234,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the accessors of the glTF asset.
     pub fn accessors(&self) -> iter::Accessors {
         iter::Accessors {
-            iter: self.json.accessors.iter().enumerate(),
+            iter: self.0.accessors.iter().enumerate(),
             gltf: self,
         }
     }
@@ -231,7 +242,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the animations of the glTF asset.
     pub fn animations(&self) -> iter::Animations {
         iter::Animations {
-            iter: self.json.animations.iter().enumerate(),
+            iter: self.0.animations.iter().enumerate(),
             gltf: self,
         }
     }
@@ -239,7 +250,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the pre-loaded buffers of the glTF asset.
     pub fn buffers(&self) -> iter::Buffers {
         iter::Buffers {
-            iter: self.json.buffers.iter().enumerate(),
+            iter: self.0.buffers.iter().enumerate(),
             gltf: self,
         }
     }
@@ -247,14 +258,14 @@ impl Gltf {
     /// Returns an `Iterator` that visits the cameras of the glTF asset.
     pub fn cameras(&self) -> iter::Cameras {
         iter::Cameras {
-            iter: self.json.cameras.iter().enumerate(),
+            iter: self.0.cameras.iter().enumerate(),
             gltf: self,
         }
     }
 
     /// Returns the default scene, if provided.
     pub fn default_scene(&self) -> Option<Scene> {
-        self.json
+        self.0
             .scene
             .as_ref()
             .map(|index| self.scenes().nth(index.value()).unwrap())
@@ -262,18 +273,18 @@ impl Gltf {
 
     /// Returns the extensions referenced in this .gltf file.
     pub fn extensions_used(&self) -> iter::Extensions {
-        iter::Extensions(self.json.extensions_used.iter())
+        iter::Extensions(self.0.extensions_used.iter())
     }
 
     /// Returns the extensions required to load and render this asset.
     pub fn extensions_required(&self) -> iter::Extensions {
-        iter::Extensions(self.json.extensions_required.iter())
+        iter::Extensions(self.0.extensions_required.iter())
     }
 
     /// Returns an `Iterator` that visits the pre-loaded images of the glTF asset.
     pub fn images(&self) -> iter::Images {
         iter::Images {
-            iter: self.json.images.iter().enumerate(),
+            iter: self.0.images.iter().enumerate(),
             gltf: self,
         }
     }
@@ -281,7 +292,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the materials of the glTF asset.
     pub fn materials(&self) -> iter::Materials {
         iter::Materials {
-            iter: self.json.materials.iter().enumerate(),
+            iter: self.0.materials.iter().enumerate(),
             gltf: self,
         }
     }
@@ -289,7 +300,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the meshes of the glTF asset.
     pub fn meshes(&self) -> iter::Meshes {
         iter::Meshes {
-            iter: self.json.meshes.iter().enumerate(),
+            iter: self.0.meshes.iter().enumerate(),
             gltf: self,
         }
     }
@@ -297,7 +308,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the nodes of the glTF asset.
     pub fn nodes(&self) -> iter::Nodes {
         iter::Nodes {
-            iter: self.json.nodes.iter().enumerate(),
+            iter: self.0.nodes.iter().enumerate(),
             gltf: self,
         }
     }
@@ -305,7 +316,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the samplers of the glTF asset.
     pub fn samplers(&self) -> iter::Samplers {
         iter::Samplers {
-            iter: self.json.samplers.iter().enumerate(),
+            iter: self.0.samplers.iter().enumerate(),
             gltf: self,
         }
     }
@@ -313,7 +324,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the scenes of the glTF asset.
     pub fn scenes(&self) -> iter::Scenes {
         iter::Scenes {
-            iter: self.json.scenes.iter().enumerate(),
+            iter: self.0.scenes.iter().enumerate(),
             gltf: self,
         }
     }
@@ -321,7 +332,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the skins of the glTF asset.
     pub fn skins(&self) -> iter::Skins {
         iter::Skins {
-            iter: self.json.skins.iter().enumerate(),
+            iter: self.0.skins.iter().enumerate(),
             gltf: self,
         }
     }
@@ -329,7 +340,7 @@ impl Gltf {
     /// Returns an `Iterator` that visits the textures of the glTF asset.
     pub fn textures(&self) -> iter::Textures {
         iter::Textures {
-            iter: self.json.textures.iter().enumerate(),
+            iter: self.0.textures.iter().enumerate(),
             gltf: self,
         }
     }
@@ -338,7 +349,7 @@ impl Gltf {
     /// asset.
     pub fn views(&self) -> iter::Views {
         iter::Views {
-            iter: self.json.buffer_views.iter().enumerate(),
+            iter: self.0.buffer_views.iter().enumerate(),
             gltf: self,
         }
     }
@@ -346,7 +357,7 @@ impl Gltf {
 
 impl<'a> fmt::Debug for Gltf {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self.json)
+        write!(f, "{:?}", self.0)
     }
 }
 
