@@ -52,21 +52,14 @@ impl<'a> Buffer<'a> {
         self.index
     }
 
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::buffer::Buffer {
-        self.json
-    }
-
     /// Returns the uniform resource identifier for the buffer data.
     ///
     /// # Notes
     ///
-    /// When the buffer is sourced from the `BIN` section of binary glTF, the
-    /// fragment `"#bin"` is returned. This is non-standard according to the
-    /// glTF specification.
-    pub fn uri(&self) -> &str {
-        self.json.uri.as_ref().map(String::as_str).unwrap_or("#bin")
+    /// When the return type is `None`, the referenced buffer data is
+    /// contained in the `BIN` section of binary glTF.
+    pub fn uri(&self) -> Option<&str> {
+        self.json.uri.as_ref().map(String::as_str)
     }
 
     /// The length of the buffer in bytes.
@@ -105,12 +98,6 @@ impl<'a> View<'a> {
     /// Returns the internal JSON index.
     pub fn index(&self) -> usize {
         self.index
-    }
-
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::buffer::View {
-        self.json
     }
 
     /// Returns the parent `Buffer`.

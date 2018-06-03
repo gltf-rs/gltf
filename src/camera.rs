@@ -59,12 +59,6 @@ impl<'a> Camera<'a> {
         self.index
     }
 
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::camera::Camera {
-        self.json
-    }
-
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&str> {
@@ -100,12 +94,6 @@ impl<'a> Orthographic<'a> {
         }
     }
 
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::camera::Orthographic {
-        self.json
-    }
-
     ///  The horizontal magnification of the view.
     pub fn xmag(&self) -> f32 {
         self.json.xmag
@@ -139,12 +127,6 @@ impl<'a> Perspective<'a> {
             gltf: gltf,
             json: json,
         }
-    }
-
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) -> &json::camera::Perspective {
-        self.json
     }
 
     ///  Aspect ratio of the field of view.

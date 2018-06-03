@@ -8,7 +8,7 @@ pub const VALID_MIME_TYPES: &'static [&'static str] = &[
 ];
 
 /// Image data used to create a texture.
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Image {
     /// The index of the buffer view that contains the image. Use this instead of
     /// the image's uri property.
@@ -38,7 +38,7 @@ pub struct Image {
 }
 
 /// An image MIME type.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct MimeType(pub String);
 
 impl Validate for MimeType {

@@ -1,7 +1,11 @@
 use std::slice;
 use {accessor, json, scene, Gltf};
 
-pub use json::animation::{InterpolationAlgorithm, TrsProperty};
+pub use json::animation::{Interpolation, Property};
+
+/// Utility functions.
+#[cfg(feature = "utils")]
+pub mod util;
 
 /// A keyframe animation.
 #[derive(Clone, Debug)]
@@ -47,12 +51,6 @@ impl<'a> Animation<'a> {
             index: index,
             json: json,
         }
-    }
-
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::animation::Animation {
-        self.json
     }
 
     /// Returns the internal JSON index.
@@ -119,12 +117,6 @@ impl<'a> Channel<'a> {
     pub fn animation(&self) -> Animation<'a> {
         self.anim.clone()
     }
-    
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::animation::Channel {
-        self.json
-    }
 
     /// Returns the sampler in this animation used to compute the value for the
     /// target.
@@ -132,7 +124,7 @@ impl<'a> Channel<'a> {
         self.anim.samplers().nth(self.json.sampler.value()).unwrap()
     }
 
-    /// Returns the node and TRS property to target.
+    /// Returns the node and property to target.
     pub fn target(&self) -> Target<'a> {
         Target::new(self.anim.clone(), &self.json.target)
     }
@@ -140,6 +132,47 @@ impl<'a> Channel<'a> {
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
+    }
+
+    #[cfg(feature = "utils")]
+    /// Visits the input samples of a channel.
+    pub fn inputs<'s>(
+        &'a self,
+        buffer_data: &'s [u8],
+    ) -> util::Inputs<'s> {
+        accessor::Iter::new(self.sampler().input(), buffer_data)
+    }
+
+    #[cfg(feature = "utils")]
+    /// Visits the output samples of a channel.
+    pub fn outputs<'s>(
+        &'a self,
+        buffer_data: &'s [u8],
+    ) -> util::Outputs<'s> {
+        use accessor::{DataType, Iter};
+        use animation::Property;
+        use self::util::{Rotations, Outputs, MorphTargetWeights};
+        let output = self.sampler().output();
+        match self.target().property() {
+            Property::Translation => Outputs::Translations(Iter::new(output, buffer_data)),
+            Property::Rotation => Outputs::Rotations(match output.data_type() {
+                DataType::I8 => Rotations::I8(Iter::new(output, buffer_data)),
+                DataType::U8 => Rotations::U8(Iter::new(output, buffer_data)),
+                DataType::I16 => Rotations::I16(Iter::new(output, buffer_data)),
+                DataType::U16 => Rotations::U16(Iter::new(output, buffer_data)),
+                DataType::F32 => Rotations::F32(Iter::new(output, buffer_data)),
+                _ => unreachable!()
+            }),
+            Property::Scale => Outputs::Scales(Iter::new(output, buffer_data)),
+            Property::MorphTargetWeights => Outputs::MorphTargetWeights(match output.data_type() {
+                DataType::I8 => MorphTargetWeights::I8(Iter::new(output, buffer_data)),
+                DataType::U8 => MorphTargetWeights::U8(Iter::new(output, buffer_data)),
+                DataType::I16 => MorphTargetWeights::I16(Iter::new(output, buffer_data)),
+                DataType::U16 => MorphTargetWeights::U16(Iter::new(output, buffer_data)),
+                DataType::F32 => MorphTargetWeights::F32(Iter::new(output, buffer_data)),
+                _ => unreachable!()
+            }),
+        }
     }
 }
 
@@ -170,12 +203,6 @@ impl<'a> Target<'a> {
         self.anim.clone()
     }
 
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::animation::Target {
-        self.json
-    }
-
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -186,9 +213,9 @@ impl<'a> Target<'a> {
         self.anim.gltf.nodes().nth(self.json.node.value()).unwrap()
     }
 
-    /// Returns the node's TRS property to modify or the 'weights' of the morph
+    /// Returns the node's property to modify or the 'weights' of the morph
     /// targets it instantiates.
-    pub fn path(&self) -> TrsProperty {
+    pub fn property(&self) -> Property {
         self.json.path.unwrap()
     }
 }
@@ -220,12 +247,6 @@ impl<'a> Sampler<'a> {
         self.anim.clone()
     }
 
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::animation::Sampler {
-        self.json
-    }
-
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -237,7 +258,7 @@ impl<'a> Sampler<'a> {
     }
 
     /// Returns the keyframe interpolation algorithm.
-    pub fn interpolation(&self) -> InterpolationAlgorithm {
+    pub fn interpolation(&self) -> Interpolation {
         self.json.interpolation.unwrap()
     }
 

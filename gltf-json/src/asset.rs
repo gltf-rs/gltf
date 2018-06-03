@@ -1,7 +1,7 @@
 use {extensions, Extras};
 
 /// Metadata about the glTF asset.
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Asset {
     /// A copyright message suitable for display to credit the content creator.
     pub copyright: Option<String>,

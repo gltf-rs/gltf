@@ -3,6 +3,13 @@ use std::slice;
 
 use {Accessor, Gltf, Node};
 
+#[cfg(feature = "utils")]
+use accessor;
+
+/// Inverse Bind Matrices of type `[[f32; 4]; 4]`.
+#[cfg(feature = "utils")]
+pub type IterInverseBindMatrices<'a> = accessor::Iter<'a, [[f32; 4]; 4]>;
+
 /// Joints and matrices defining a skin.
 #[derive(Clone, Debug)]
 pub struct Skin<'a> {
@@ -45,12 +52,6 @@ impl<'a> Skin<'a> {
         self.index
     }
 
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::skin::Skin {
-        self.json
-    }
-
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -69,6 +70,16 @@ impl<'a> Skin<'a> {
                     .nth(index.value())
                     .unwrap()
             })
+    }
+
+    /// Returns an `Iterator` that returns the inverse bind matrices the skin.
+    #[cfg(feature = "utils")]
+    pub fn iter_inverse_bind_matrices<'s>(
+        &'a self,
+        buffer_data: &'s [u8],
+    ) -> Option<IterInverseBindMatrices<'s>> {
+        self.inverse_bind_matrices()
+            .map(|accessor| accessor::Iter::new(accessor, buffer_data))
     }
 
     /// Returns an `Iterator` that visits the skeleton nodes used as joints in

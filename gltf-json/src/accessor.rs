@@ -1,5 +1,5 @@
 use {buffer, extensions, Extras, Index};
-use serde::de;
+use serde::{de, ser};
 use serde_json::Value;
 use std::fmt;
 use validation::Checked;
@@ -43,7 +43,7 @@ pub enum Type {
 
     /// 2x2 matrix.
     Mat2,
-
+    
     /// 3x3 matrix.
     Mat3,
 
@@ -103,7 +103,7 @@ pub mod sparse {
     use ::extensions;
 
     /// Indices of those attributes that deviate from their initialization value.
-    #[derive(Clone, Debug, Deserialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     pub struct Indices {
         /// The parent buffer view containing the sparse indices.
         ///
@@ -130,7 +130,7 @@ pub mod sparse {
     }
 
     /// Sparse storage of attributes that deviate from their initialization value.
-    #[derive(Clone, Debug, Deserialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     pub struct Sparse {
         /// The number of attributes encoded in this sparse accessor.
         pub count: u32,
@@ -159,7 +159,7 @@ pub mod sparse {
 
     /// Array of size `count * number_of_components` storing the displaced
     /// accessor attributes pointed by `accessor::sparse::Indices`.
-    #[derive(Clone, Debug, Deserialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     pub struct Values {
         /// The parent buffer view containing the sparse indices.
         ///
@@ -183,7 +183,7 @@ pub mod sparse {
 }
 
 /// A typed view into a buffer view.
-#[derive(Clone, Debug, Deserialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Accessor {
     /// The parent buffer view this accessor reads from.
     #[serde(rename = "bufferView")]
@@ -228,7 +228,7 @@ pub struct Accessor {
     /// Specifies whether integer data values should be normalized.
     #[serde(default)]
     pub normalized: bool,
-
+    
     /// Sparse storage of attributes that deviate from their initialization
     /// value.
     #[serde(default)]
@@ -236,11 +236,11 @@ pub struct Accessor {
 }
 
 /// The data type of an index.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct IndexComponentType(pub ComponentType);
 
 /// The data type of a generic vertex attribute.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct GenericComponentType(pub ComponentType);
 
 impl<'de> de::Deserialize<'de> for Checked<GenericComponentType> {
@@ -337,6 +337,23 @@ impl<'de> de::Deserialize<'de> for Checked<Type> {
     }
 }
 
+impl ser::Serialize for Type {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: ser::Serializer
+    {
+        serializer.serialize_str(match *self {
+            Type::Scalar => "SCALAR",
+            Type::Vec2 => "VEC2",
+            Type::Vec3 => "VEC3",
+            Type::Vec4 => "VEC4",
+            Type::Mat2 => "MAT2",
+            Type::Mat3 => "MAT3",
+            Type::Mat4 => "MAT4",
+        })
+    }
+}
+
 impl ComponentType {
     /// Returns the number of bytes this value represents.
     pub fn size(&self) -> usize {
@@ -346,6 +363,27 @@ impl ComponentType {
             I16 | U16 => 2,
             F32 | U32 => 4,
         }
+    }
+
+    /// Returns the corresponding `GLenum`.
+    pub fn as_gl_enum(self) -> u32 {
+        match self {
+            ComponentType::I8 => BYTE,
+            ComponentType::U8 => UNSIGNED_BYTE,
+            ComponentType::I16 => SHORT,
+            ComponentType::U16 => UNSIGNED_SHORT,
+            ComponentType::U32 => UNSIGNED_INT,
+            ComponentType::F32 => FLOAT,
+        }
+    }
+}
+
+impl ser::Serialize for ComponentType {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: ser::Serializer
+    {
+        serializer.serialize_u32(self.as_gl_enum())
     }
 }
 
