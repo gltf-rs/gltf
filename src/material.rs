@@ -247,8 +247,6 @@ impl<'a> NormalTexture<'a> {
     }
 
     /// Returns the scalar multiplier applied to each normal vector of the texture.
-    ///
-    /// This value is ignored if `normal_texture` is `None`.
     pub fn scale(&self) -> f32 {
         self.json.scale
     }
@@ -258,7 +256,7 @@ impl<'a> NormalTexture<'a> {
         self.json.tex_coord
     }
 
-    /// Returns the referenced `Texture`.
+    /// Returns the referenced texture.
     pub fn texture(&self) -> texture::Texture<'a> {
         self.texture.clone()
     }
@@ -300,7 +298,7 @@ impl<'a> OcclusionTexture<'a> {
         self.json.tex_coord
     }
 
-    /// Returns the referenced `Texture`.
+    /// Returns the referenced texture.
     pub fn texture(&self) -> texture::Texture<'a> {
         self.texture.clone()
     }

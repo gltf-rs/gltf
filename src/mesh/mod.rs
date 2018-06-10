@@ -1,3 +1,53 @@
+//! # Basic usage
+//!
+//! Listing the attributes of each mesh primitive in a glTF asset.
+//!
+//! ```
+//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! # let gltf = gltf::Gltf::open("examples/Box.gltf")?;
+//! for mesh in gltf.meshes() {
+//!    println!("Mesh #{}", mesh.index());
+//!    for primitive in mesh.primitives() {
+//!        println!("- Primitive #{}", primitive.index());
+//!        for (semantic, _) in primitive.attributes() {
+//!            println!("-- {:?}", semantic);
+//!        }
+//!    }
+//! }
+//! # Ok(())
+//! # }
+//! # fn main() {
+//! #    let _ = run().expect("runtime error");
+//! # }
+//! ```
+//!
+//! # Reader utility
+//!
+//! Printing the vertex positions of each primitive of each mesh in
+//! a glTF asset.
+//!
+//! ```
+//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! let (gltf, buffers, _) = gltf::import("examples/Box.gltf")?;
+//! for mesh in gltf.meshes() {
+//!    println!("Mesh #{}", mesh.index());
+//!    for primitive in mesh.primitives() {
+//!        println!("- Primitive #{}", primitive.index());
+//!        let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
+//!        if let Some(iter) = reader.read_positions() {
+//!            for vertex_position in iter {
+//!                println!("{:?}", vertex_position);
+//!            }
+//!        }
+//!    }
+//! }
+//! # Ok(())
+//! # }
+//! # fn main() {
+//! #    let _ = run().expect("runtime error");
+//! # }
+//! ```
+
 /// Iterators.
 pub mod iter;
 
@@ -157,6 +207,11 @@ impl<'a> Primitive<'a> {
         self.json.attributes
             .get(&json::validation::Checked::Valid(semantic.clone()))
             .map(|index| self.mesh.document.accessors().nth(index.value()).unwrap())
+    }
+
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// Returns the accessor containing the primitive indices, if provided.

@@ -20,7 +20,7 @@
 
 This crate is intended to load [glTF 2.0](https://www.khronos.org/gltf), a file format designed for the efficient transmission of 3D assets.
 
-`rustc` version 1.19 or above is required.
+`rustc` version 1.19 or above is required; version 1.26 and above is recommended.
 
 ### Reference infographic
 
@@ -38,7 +38,7 @@ By default, `gltf` ignores all `extras` and `names` included with glTF assets. Y
 
 ```toml
 [dependencies.gltf]
-version = "0.10"
+version = "0.11"
 features = ["extras", "names"]
 ```
 

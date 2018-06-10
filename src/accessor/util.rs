@@ -2,13 +2,17 @@ use std::mem;
 use byteorder::{LE, ByteOrder};
 use std::marker::PhantomData;
 
-/// Represents items that can be read by an `Accessor`.
+/// Represents items that can be read by an [`Accessor`].
+///
+/// [`Accessor`]: struct.Accessor.html
 pub trait Item {
     /// Create an object of this type from a byte slice.
     fn from_slice(slice: &[u8]) -> Self;
 }
 
-/// Visits the items in an `Accessor`.
+/// Visits the items in an [`Accessor`].
+///
+/// [`Accessor`]: struct.Accessor.html
 #[derive(Copy, Clone, Debug)]
 pub struct Iter<'a, T> {
     stride: usize,

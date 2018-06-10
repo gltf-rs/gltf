@@ -7,9 +7,7 @@
 //! efficient runtime transmission of 3D scenes. The crate aims to provide
 //! rustic utilities that make working with glTF simple and intuitive.
 //!
-//! [glTF 2.0]: https://www.khronos.org/gltf
-//!
-//! ## Installation
+//! # Installation
 //!
 //! Add `gltf` version 0.11 to your `Cargo.toml`.
 //!
@@ -18,25 +16,20 @@
 //! version = "0.11"
 //! ```
 //!
-//! ## Examples
+//! # Examples
 //!
-//! ### Walking the node hierarchy
+//! ## Basic usage
 //!
-//! Below demonstates visiting the root [`Node`]s of every [`Scene`], printing the
-//! number of children each node has.
-//! [`Node`]: scene/struct.Node.html
-//! [`Scene`]: scene/struct.Scene.html
+//! Walking the node hierarchy.
+//!
 //! ```
 //! # fn run() -> Result<(), Box<std::error::Error>> {
-//! # let path = "examples/Box.gltf";
-//! let file = std::fs::File::open(path)?;
-//! let reader = std::io::BufReader::new(file);
-//! let gltf = gltf::Gltf::from_reader(reader)?;
+//! # use gltf::Gltf;
+//! let gltf = Gltf::open("examples/Box.gltf")?;
 //! for scene in gltf.scenes() {
 //!     for node in scene.nodes() {
-//!         // Do something with this node.
 //!         println!(
-//!             "Node {} has {} children",
+//!             "Node #{} has {} children",
 //!             node.index(),
 //!             node.children().count(),
 //!         );
@@ -45,9 +38,30 @@
 //! # Ok(())
 //! # }
 //! # fn main() {
-//! #    let _ = run().expect("No runtime errors");
+//! #    let _ = run().expect("runtime error");
 //! # }
 //! ```
+//!
+//! ## Import function
+//!
+//! Reading a glTF document plus its buffers and images from the
+//! file system.
+//!
+//! ```
+//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! let (document, buffers, images) = gltf::import("examples/Box.gltf")?;
+//! assert_eq!(buffers.len(), document.buffers().count());
+//! assert_eq!(images.len(), document.images().count());
+//! # Ok(())
+//! # }
+//! # fn main() {
+//! #    let _ = run().expect("runtime error");
+//! # }
+//! ```
+//!
+//! [glTF 2.0]: https://www.khronos.org/gltf
+//! [`Node`]: struct.Node.html
+//! [`Scene`]: struct.Scene.html
 
 #[cfg(test)]
 #[macro_use]
@@ -128,7 +142,8 @@ pub use self::skin::Skin;
 #[doc(inline)]
 pub use self::texture::Texture;
 
-use std::{io, ops, result};
+use std::path::Path;
+use std::{fs, io, ops, result};
 
 pub(crate) trait Normalize<T> {
     fn normalize(self) -> T;
@@ -201,6 +216,17 @@ pub struct Gltf {
 pub struct Document(json::Root);
 
 impl Gltf {
+    /// Convenience function that loads glTF from the file system.
+    pub fn open<P>(path: P) -> Result<Self>
+    where
+        P: AsRef<Path>,
+    {
+        let file = fs::File::open(path)?;
+        let reader = io::BufReader::new(file);
+        let gltf = Self::from_reader(reader)?;
+        Ok(gltf)
+    }
+
     /// Loads glTF from a reader without performing validation checks.
     pub fn from_reader_without_validation<R>(mut reader: R) -> Result<Self>
     where

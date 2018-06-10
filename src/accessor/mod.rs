@@ -1,3 +1,61 @@
+//! # Basic usage
+//!
+//! Visiting the accessors of a glTF asset.
+//!
+//! ```
+//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! # let gltf = gltf::Gltf::open("examples/Box.gltf")?;
+//! for accessor in gltf.accessors() {
+//!     println!("Accessor #{}", accessor.index());
+//!     println!("offset: {}", accessor.offset());
+//!     println!("count: {}", accessor.count());
+//!     println!("data_type: {:?}", accessor.data_type());
+//!     println!("dimensions: {:?}", accessor.dimensions());
+//! }
+//! # Ok(())
+//! # }
+//! # fn main() {
+//! #    let _ = run().expect("runtime error");
+//! # }
+//! ```
+//!
+//! # Utility functions
+//!
+//! Reading the values from the `vec3` accessors of a glTF asset.
+//!
+//! ## Note
+//!
+//! The [`Iter`] utility is a low-level iterator intended for use in special
+//! cases. The average user is expected to use reader abstractions such as
+//! [`mesh::Reader`].
+//!
+//! [`Iter`]: struct.Iter.html
+//! [`mesh::Reader`]: ../mesh/struct.Reader.html
+//!
+//! ```
+//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! # use gltf::accessor::{DataType, Dimensions, Iter};
+//! let (gltf, buffers, _) = gltf::import("examples/Box.gltf")?;
+//! for accessor in gltf.accessors() {
+//!     match (accessor.data_type(), accessor.dimensions()) {
+//!         (DataType::F32, Dimensions::Vec3) => {
+//!             let buffer_index = accessor.view().buffer().index();
+//!             let buffer_data = buffers[buffer_index].0.as_slice();
+//!             let iter = Iter::<[f32; 3]>::new(accessor, buffer_data);
+//!             for item in iter {
+//!                 println!("{:?}", item);
+//!             }
+//!         }
+//!         _ => {},
+//!     }
+//! }
+//! # Ok(())
+//! # }
+//! # fn main() {
+//! #    let _ = run().expect("runtime error");
+//! # }
+//! ```
+
 use {buffer, json};
 
 use Document;
@@ -5,7 +63,7 @@ use Document;
 pub use json::accessor::ComponentType as DataType;
 pub use json::accessor::Type as Dimensions;
 
-/// Any type that can appear in an Accessor.
+/// Utility functions.
 #[cfg(feature = "utils")]
 pub mod util;
 

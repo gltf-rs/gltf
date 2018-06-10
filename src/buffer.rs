@@ -1,4 +1,5 @@
 use json;
+use std::ops;
 
 use {Document};
 
@@ -47,6 +48,13 @@ pub enum Source<'a> {
 #[cfg(feature = "import")]
 #[derive(Clone, Debug)]
 pub struct Data(pub Vec<u8>);
+
+impl ops::Deref for Data {
+    type Target = [u8];
+    fn deref(&self) -> &Self::Target {
+        self.0.as_slice()
+    }
+}
 
 impl<'a> Buffer<'a> {
     /// Constructs a `Buffer`.
