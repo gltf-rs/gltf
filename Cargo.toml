@@ -9,13 +9,6 @@ homepage = "https://github.com/gltf-rs/gltf"
 readme = "README.md"
 keywords = ["glTF", "3D", "asset", "model", "scene"]
 license = "MIT/Apache-2.0"
-include = [
-    "/Cargo.toml",
-    "/examples/*.bin",
-    "/examples/*.glb",
-    "/examples/*.gltf",
-    "/src"
-]
 
 [badges]
 travis-ci = { repository = "gltf-rs/gltf" }

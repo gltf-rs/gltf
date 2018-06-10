@@ -1,5 +1,8 @@
 use json;
 
+#[cfg(feature = "import")]
+use std::ops;
+
 use {Document};
 
 pub use json::buffer::Target;
@@ -47,6 +50,14 @@ pub enum Source<'a> {
 #[cfg(feature = "import")]
 #[derive(Clone, Debug)]
 pub struct Data(pub Vec<u8>);
+
+#[cfg(feature = "import")]
+impl ops::Deref for Data {
+    type Target = [u8];
+    fn deref(&self) -> &Self::Target {
+        self.0.as_slice()
+    }
+}
 
 impl<'a> Buffer<'a> {
     /// Constructs a `Buffer`.
