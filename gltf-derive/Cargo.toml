@@ -1,6 +1,6 @@
 [package]
 name = "gltf-derive"
-version = "0.11.0"
+version = "0.11.1"
 authors = ["David Harvey-Macaulay <alteous@outlook.com>"]
 description = "Internal macros for the gltf crate"
 repository = "https://github.com/gltf-rs/gltf"
