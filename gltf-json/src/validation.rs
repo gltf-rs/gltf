@@ -1,6 +1,8 @@
+use serde::ser;
 use serde_json;
 use std;
 
+use serde::{Serialize, Serializer};
 use std::collections::HashMap;
 use std::hash::Hash;
 
@@ -72,6 +74,17 @@ impl<T> Checked<T> {
         match self {
             Checked::Valid(item) => item,
             Checked::Invalid => panic!("attempted to unwrap an invalid item"),
+        }
+    }
+}
+
+impl<T: Serialize> Serialize for Checked<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        match *self {
+            Checked::Valid(ref item) => item.serialize(serializer),
+            Checked::Invalid => Err(ser::Error::custom("invalid item")),
         }
     }
 }

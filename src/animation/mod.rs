@@ -1,13 +1,26 @@
-use std::slice;
-use {accessor, json, scene, Gltf};
+use {accessor, json, scene, Document};
 
-pub use json::animation::{InterpolationAlgorithm, TrsProperty};
+#[cfg(feature = "utils")]
+use Buffer;
+
+pub use json::animation::{Interpolation, Property};
+
+/// Iterators.
+pub mod iter;
+
+/// Utility functions.
+#[cfg(feature = "utils")]
+pub mod util;
+
+#[cfg(feature = "utils")]
+#[doc(inline)]
+pub use self::util::Reader;
 
 /// A keyframe animation.
 #[derive(Clone, Debug)]
 pub struct Animation<'a> {
-    /// The parent `Gltf` struct.
-    gltf: &'a Gltf,
+    /// The parent `Document` struct.
+    document: &'a Document,
 
     /// The corresponding JSON index.
     index: usize,
@@ -16,43 +29,47 @@ pub struct Animation<'a> {
     json: &'a json::animation::Animation,
 }
 
-/// An `Iterator` that visits the channels of an animation.
+/// Targets an animation's sampler at a node's property.
 #[derive(Clone, Debug)]
-pub struct Channels<'a> {
+pub struct Channel<'a> {
     /// The parent `Animation` struct.
     anim: Animation<'a>,
 
-    /// The internal channel iterator.
-    iter: slice::Iter<'a, json::animation::Channel>,
+    /// The corresponding JSON struct.
+    json: &'a json::animation::Channel,
 }
 
-/// An `Iterator` that visits the samplers of an animation.
+/// Defines a keyframe graph (but not its target).
 #[derive(Clone, Debug)]
-pub struct Samplers<'a> {
-    /// The parent `Channel` struct.
+pub struct Sampler<'a> {
+    /// The parent `Animation` struct.
     anim: Animation<'a>,
 
-    /// The internal channel iterator.
-    iter: slice::Iter<'a, json::animation::Sampler>,
+    /// The corresponding JSON struct.
+    json: &'a json::animation::Sampler,
+}
+
+/// The node and TRS property that an animation channel targets.
+#[derive(Clone, Debug)]
+pub struct Target<'a> {
+    /// The parent `Animation` struct.
+    anim: Animation<'a>,
+
+    /// The corresponding JSON struct.
+    json: &'a json::animation::Target,
 }
 
 impl<'a> Animation<'a> {
     /// Constructs an `Animation`.
     pub(crate) fn new(
-        gltf: &'a Gltf, index: usize,
+        document: &'a Document, index: usize,
         json: &'a json::animation::Animation,
     ) -> Self {
         Self {
-            gltf: gltf,
+            document: document,
             index: index,
             json: json,
         }
-    }
-
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::animation::Animation {
-        self.json
     }
 
     /// Returns the internal JSON index.
@@ -68,8 +85,8 @@ impl<'a> Animation<'a> {
     /// Returns an `Iterator` over the animation channels.
     ///
     /// Each channel targets an animation's sampler at a node's property.
-    pub fn channels(&self) -> Channels<'a> {
-        Channels {
+    pub fn channels(&self) -> iter::Channels<'a> {
+        iter::Channels {
             anim: self.clone(),
             iter: self.json.channels.iter(),
         }
@@ -85,22 +102,12 @@ impl<'a> Animation<'a> {
     ///
     /// Each sampler combines input and output accessors with an
     /// interpolation algorithm to define a keyframe graph (but not its target).
-    pub fn samplers(&self) -> Samplers<'a> {
-        Samplers {
+    pub fn samplers(&self) -> iter::Samplers<'a> {
+        iter::Samplers {
             anim: self.clone(),
             iter: self.json.samplers.iter(),
         }
     }
-}
-
-/// Targets an animation's sampler at a node's property.
-#[derive(Clone, Debug)]
-pub struct Channel<'a> {
-    /// The parent `Animation` struct.
-    anim: Animation<'a>,
-
-    /// The corresponding JSON struct.
-    json: &'a json::animation::Channel,
 }
 
 impl<'a> Channel<'a> {
@@ -119,12 +126,6 @@ impl<'a> Channel<'a> {
     pub fn animation(&self) -> Animation<'a> {
         self.anim.clone()
     }
-    
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::animation::Channel {
-        self.json
-    }
 
     /// Returns the sampler in this animation used to compute the value for the
     /// target.
@@ -132,25 +133,27 @@ impl<'a> Channel<'a> {
         self.anim.samplers().nth(self.json.sampler.value()).unwrap()
     }
 
-    /// Returns the node and TRS property to target.
+    /// Returns the node and property to target.
     pub fn target(&self) -> Target<'a> {
         Target::new(self.anim.clone(), &self.json.target)
+    }
+
+    /// Constructs an animation channel reader.
+    #[cfg(feature = "utils")]
+    pub fn reader<'s, F>(&self, get_buffer_data: F) -> Reader<'a, 's, F>
+    where
+        F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>,
+    {
+        Reader {
+            channel: self.clone(),
+            get_buffer_data,
+        }
     }
 
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
     }
-}
-
-/// The node and TRS property that an animation channel targets.
-#[derive(Clone, Debug)]
-pub struct Target<'a> {
-    /// The parent `Animation` struct.
-    anim: Animation<'a>,
-
-    /// The corresponding JSON struct.
-    json: &'a json::animation::Target,
 }
 
 impl<'a> Target<'a> {
@@ -170,12 +173,6 @@ impl<'a> Target<'a> {
         self.anim.clone()
     }
 
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::animation::Target {
-        self.json
-    }
-
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -183,24 +180,14 @@ impl<'a> Target<'a> {
 
     /// Returns the target node.
     pub fn node(&self) -> scene::Node {
-        self.anim.gltf.nodes().nth(self.json.node.value()).unwrap()
+        self.anim.document.nodes().nth(self.json.node.value()).unwrap()
     }
 
-    /// Returns the node's TRS property to modify or the 'weights' of the morph
+    /// Returns the node's property to modify or the 'weights' of the morph
     /// targets it instantiates.
-    pub fn path(&self) -> TrsProperty {
+    pub fn property(&self) -> Property {
         self.json.path.unwrap()
     }
-}
-
-/// Defines a keyframe graph (but not its target).
-#[derive(Clone, Debug)]
-pub struct Sampler<'a> {
-    /// The parent `Animation` struct.
-    anim: Animation<'a>,
-
-    /// The corresponding JSON struct.
-    json: &'a json::animation::Sampler,
 }
 
 impl<'a> Sampler<'a> {
@@ -220,12 +207,6 @@ impl<'a> Sampler<'a> {
         self.anim.clone()
     }
 
-    /// Returns the internal JSON item.
-    #[doc(hidden)]
-    pub fn as_json(&self) ->  &json::animation::Sampler {
-        self.json
-    }
-
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -233,30 +214,16 @@ impl<'a> Sampler<'a> {
 
     /// Returns the accessor containing the keyframe input values (e.g. time).
     pub fn input(&self) -> accessor::Accessor<'a> {
-        self.anim.gltf.accessors().nth(self.json.input.value()).unwrap()
+        self.anim.document.accessors().nth(self.json.input.value()).unwrap()
     }
 
     /// Returns the keyframe interpolation algorithm.
-    pub fn interpolation(&self) -> InterpolationAlgorithm {
+    pub fn interpolation(&self) -> Interpolation {
         self.json.interpolation.unwrap()
     }
 
     /// Returns the accessor containing the keyframe output values.
     pub fn output(&self) -> accessor::Accessor<'a> {
-        self.anim.gltf.accessors().nth(self.json.output.value()).unwrap()
-    }
-}
-
-impl<'a> Iterator for Channels<'a> {
-    type Item = Channel<'a>;
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|json| Channel::new(self.anim.clone(), json))
-    }
-}
-
-impl<'a> Iterator for Samplers<'a> {
-    type Item = Sampler<'a>;
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|json| Sampler::new(self.anim.clone(), json))
+        self.anim.document.accessors().nth(self.json.output.value()).unwrap()
     }
 }
