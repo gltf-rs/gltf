@@ -1,4 +1,6 @@
 use json;
+
+#[cfg(feature = "import")]
 use std::ops;
 
 use {Document};
