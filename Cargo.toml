@@ -1,6 +1,6 @@
 [package]
 name = "gltf"
-version = "0.11.1"
+version = "1.0.0"
 authors = ["David Harvey-Macaulay <alteous@outlook.com>"]
 description = "glTF 2.0 loader"
 documentation = "https://docs.rs/gltf"
@@ -24,7 +24,7 @@ approx = "0.1.1"
 base64 = { optional = true, version = "0.6" }
 byteorder = "1.1"
 cgmath = "0.15"
-gltf-json = { path = "gltf-json", version = "0.11.1" }
+gltf-json = { path = "gltf-json", version = "1.0.0" }
 image = { optional = true, version = "0.19" }
 lazy_static = "0.2"
 

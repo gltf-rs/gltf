@@ -6,7 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.11.0] - 2018-06-10
+## [1.0.0] - TBD
+
+First stable release.
+
+## [0.11.1] - 2018-06-10
 
 ### Added
 
@@ -50,6 +54,10 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `Node::matrix` -- use `transform().matrix()` instead.
 - `Node::rotation` -- use `transform().decomposed()` instead.
 - All hidden `as_json` functions -- no longer supported.
+
+## [0.11.0] - 2018-06-10
+
+Yanked
 
 ## [0.10.1] - 2018-03-05
 
