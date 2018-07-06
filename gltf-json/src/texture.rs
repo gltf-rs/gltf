@@ -139,14 +139,17 @@ impl WrappingMode {
 pub struct Sampler {
     /// Magnification filter.
     #[serde(rename = "magFilter")]
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub mag_filter: Option<Checked<MagFilter>>,
 
     /// Minification filter.
     #[serde(rename = "minFilter")]
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub min_filter: Option<Checked<MinFilter>>,
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
+    #[cfg_attr(feature = "names", serde(skip_serializing_if = "Option::is_none"))]
     pub name: Option<String>,
 
     /// `s` wrapping mode.
@@ -163,6 +166,7 @@ pub struct Sampler {
 
     /// Optional application specific data.
     #[serde(default)]
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
 }
 
@@ -171,9 +175,11 @@ pub struct Sampler {
 pub struct Texture {
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
+    #[cfg_attr(feature = "names", serde(skip_serializing_if = "Option::is_none"))]
     pub name: Option<String>,
 
     /// The index of the sampler used by this texture.
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub sampler: Option<Index<Sampler>>,
 
     /// The index of the image used by this texture.
@@ -185,6 +191,7 @@ pub struct Texture {
 
     /// Optional application specific data.
     #[serde(default)]
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
 }
 
@@ -204,6 +211,7 @@ pub struct Info {
 
     /// Optional application specific data.
     #[serde(default)]
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
 }
 

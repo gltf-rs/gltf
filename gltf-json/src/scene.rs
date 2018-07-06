@@ -14,9 +14,11 @@ use {camera, extensions, mesh, scene, skin, Extras, Index, Root, Path};
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Node {
     /// The index of the camera referenced by this node.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub camera: Option<Index<camera::Camera>>,
     
     /// The indices of this node's children.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub children: Option<Vec<Index<scene::Node>>>,
 
     /// Extension specific data.
@@ -25,16 +27,20 @@ pub struct Node {
     
     /// Optional application specific data.
     #[serde(default)]
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
     
     /// 4x4 column-major transformation matrix.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub matrix: Option<[f32; 16]>,
 
     /// The index of the mesh in this node.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub mesh: Option<Index<mesh::Mesh>>,
     
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
+    #[cfg_attr(feature = "names", serde(skip_serializing_if = "Option::is_none"))]
     pub name: Option<String>,
     
     /// The node's unit quaternion rotation in the order (x, y, z, w), where w is
@@ -51,10 +57,12 @@ pub struct Node {
     pub translation: [f32; 3],
     
     /// The index of the skin referenced by this node.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub skin: Option<Index<skin::Skin>>,
     
     /// The weights of the instantiated Morph Target. Number of elements must match
     /// the number of Morph Targets of used mesh.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub weights: Option<Vec<f32>>,
 }
 
@@ -71,10 +79,12 @@ pub struct Scene {
     
     /// Optional application specific data.
     #[serde(default)]
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
     
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
+    #[cfg_attr(feature = "names", serde(skip_serializing_if = "Option::is_none"))]
     pub name: Option<String>,
 
     /// The indices of each root node.

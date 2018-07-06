@@ -43,6 +43,7 @@ pub struct Root {
     pub buffer_views: Vec<buffer::View>,
 
     /// The default scene.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub scene: Option<Index<Scene>>,
 
     /// Extension specific data.
@@ -51,6 +52,7 @@ pub struct Root {
 
     /// Optional application specific data.
     #[serde(default)]
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
     
     /// Names of glTF extensions used somewhere in this asset.
