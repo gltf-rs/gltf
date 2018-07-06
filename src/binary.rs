@@ -148,7 +148,7 @@ impl<'a> Glb<'a> {
             writer.write_all(&magic[..])?;
             writer.write_all(&self.json)?;
             for _ in 0..padding {
-                writer.write_u8(0)?;
+                writer.write_u8(0x20)?;
             }
         }
 
