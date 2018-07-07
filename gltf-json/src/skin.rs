@@ -17,7 +17,7 @@ pub struct Skin {
     /// When `None`,each matrix is assumed to be the 4x4 identity matrix
     /// which implies that the inverse-bind matrices were pre-applied.
     #[serde(rename = "inverseBindMatrices")]
-    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub inverse_bind_matrices: Option<Index<accessor::Accessor>>,
     
     /// Indices of skeleton nodes used as joints in this skin.
@@ -34,6 +34,6 @@ pub struct Skin {
     /// The index of the node used as a skeleton root.
     ///
     /// When `None`, joints transforms resolve to scene root.
-    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub skeleton: Option<Index<scene::Node>>,
 }
