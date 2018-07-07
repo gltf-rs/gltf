@@ -87,6 +87,7 @@ pub struct Animation {
     /// node's property.
     ///
     /// Different channels of the same animation must not have equal targets.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub channels: Vec<Channel>,
     
     /// Optional user-defined name for this object.
@@ -95,6 +96,7 @@ pub struct Animation {
     
     /// An array of samplers that combine input and output accessors with an
     /// interpolation algorithm to define a keyframe graph (but not its target).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub samplers: Vec<Sampler>,
 }
 
