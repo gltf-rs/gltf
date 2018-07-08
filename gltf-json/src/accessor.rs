@@ -126,6 +126,7 @@ pub mod sparse {
 
         /// Optional application specific data.
         #[serde(default)]
+        #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
         pub extras: Extras,
     }
 
@@ -154,6 +155,7 @@ pub mod sparse {
 
         /// Optional application specific data.
         #[serde(default)]
+        #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
         pub extras: Extras,
     }
 
@@ -178,6 +180,7 @@ pub mod sparse {
 
         /// Optional application specific data.
         #[serde(default)]
+        #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
         pub extras: Extras,
     }
 }
@@ -207,6 +210,7 @@ pub struct Accessor {
 
     /// Optional application specific data.
     #[serde(default)]
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
 
     /// Specifies if the attribute is a scalar, vector, or matrix.
@@ -219,10 +223,12 @@ pub struct Accessor {
 
     /// Maximum value of each component in this attribute.
     #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub max: Option<Value>,
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
+    #[cfg_attr(feature = "names", serde(skip_serializing_if = "Option::is_none"))]
     pub name: Option<String>,
 
     /// Specifies whether integer data values should be normalized.
@@ -232,6 +238,7 @@ pub struct Accessor {
     /// Sparse storage of attributes that deviate from their initialization
     /// value.
     #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub sparse: Option<sparse::Sparse>,
 }
 

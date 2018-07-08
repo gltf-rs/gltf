@@ -78,6 +78,7 @@ pub struct Material {
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
+    #[cfg_attr(feature = "names", serde(skip_serializing_if = "Option::is_none"))]
     pub name: Option<String>,
 
     /// A set of parameter values that are used to define the metallic-roughness
@@ -93,6 +94,7 @@ pub struct Material {
     /// use OpenGL conventions where +X is right and +Y is up. +Z points toward the
     /// viewer.
     #[serde(rename = "normalTexture")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub normal_texture: Option<NormalTexture>,
 
     /// The occlusion map texture. The occlusion values are sampled from the R
@@ -101,12 +103,14 @@ pub struct Material {
     /// linear. If other channels are present (GBA), they are ignored for occlusion
     /// calculations.
     #[serde(rename = "occlusionTexture")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub occlusion_texture: Option<OcclusionTexture>,
 
     /// The emissive map controls the color and intensity of the light being emitted
     /// by the material. This texture contains RGB components in sRGB color space.
     /// If a fourth component (A) is present, it is ignored.
     #[serde(rename = "emissiveTexture")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub emissive_texture: Option<texture::Info>,
 
     /// The emissive color of the material.
@@ -117,6 +121,7 @@ pub struct Material {
     pub extensions: extensions::material::Material,
 
     /// Optional application specific data.
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
 }
 
@@ -131,6 +136,7 @@ pub struct PbrMetallicRoughness {
 
     /// The base color texture.
     #[serde(rename = "baseColorTexture")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub base_color_texture: Option<texture::Info>,
 
     /// The metalness of the material.
@@ -153,12 +159,14 @@ pub struct PbrMetallicRoughness {
     /// These values are linear. If other channels are present (R or A),
     /// they are ignored for metallic-roughness calculations.
     #[serde(rename = "metallicRoughnessTexture")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub metallic_roughness_texture: Option<texture::Info>,
 
     /// Extension specific data.
     pub extensions: extensions::material::PbrMetallicRoughness,
 
     /// Optional application specific data.
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
 }
 
@@ -184,6 +192,7 @@ pub struct NormalTexture {
 
     /// Optional application specific data.
     #[serde(default)]
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
 }
 
@@ -211,6 +220,7 @@ pub struct OcclusionTexture {
 
     /// Optional application specific data.
     #[serde(default)]
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
 }
 

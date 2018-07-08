@@ -51,10 +51,12 @@ pub struct Buffer {
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
+    #[cfg_attr(feature = "names", serde(skip_serializing_if = "Option::is_none"))]
     pub name: Option<String>,
 
     /// The uri of the buffer.  Relative paths are relative to the .gltf file.
     /// Instead of referencing an external file, the uri can also be a data-uri.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub uri: Option<String>,
 
     /// Extension specific data.
@@ -63,6 +65,7 @@ pub struct Buffer {
 
     /// Optional application specific data.
     #[serde(default)]
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
 }
 
@@ -84,13 +87,16 @@ pub struct View {
     ///
     /// When zero, data is assumed to be tightly packed.
     #[serde(rename = "byteStride")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub byte_stride: Option<ByteStride>,
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
+    #[cfg_attr(feature = "names", serde(skip_serializing_if = "Option::is_none"))]
     pub name: Option<String>,
 
     /// Optional target the buffer should be bound to.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub target: Option<Checked<Target>>,
 
     /// Extension specific data.
@@ -99,6 +105,7 @@ pub struct View {
 
     /// Optional application specific data.
     #[serde(default)]
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
 }
 

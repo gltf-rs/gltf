@@ -27,14 +27,17 @@ pub enum Type {
 pub struct Camera {
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
+    #[cfg_attr(feature = "names", serde(skip_serializing_if = "Option::is_none"))]
     pub name: Option<String>,
 
     /// An orthographic camera containing properties to create an orthographic
     /// projection matrix.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub orthographic: Option<Orthographic>,
 
     /// A perspective camera containing properties to create a perspective
     /// projection matrix.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub perspective: Option<Perspective>,
 
     /// Specifies if the camera uses a perspective or orthographic projection.
@@ -47,6 +50,7 @@ pub struct Camera {
 
     /// Optional application specific data.
     #[serde(default)]
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
 }
 
@@ -71,6 +75,7 @@ pub struct Orthographic {
 
     /// Optional application specific data.
     #[serde(default)]
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
 }
 
@@ -79,12 +84,14 @@ pub struct Orthographic {
 pub struct Perspective {
     /// Aspect ratio of the field of view.
     #[serde(rename = "aspectRatio")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub aspect_ratio: Option<f32>,
 
     /// The vertical field of view in radians.
     pub yfov: f32,
 
     /// The distance to the far clipping plane.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub zfar: Option<f32>,
 
     /// The distance to the near clipping plane.
@@ -96,6 +103,7 @@ pub struct Perspective {
 
     /// Optional application specific data.
     #[serde(default)]
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
 }
 

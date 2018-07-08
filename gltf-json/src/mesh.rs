@@ -81,16 +81,19 @@ pub struct Mesh {
 
     /// Optional application specific data.
     #[serde(default)]
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
+    #[cfg_attr(feature = "names", serde(skip_serializing_if = "Option::is_none"))]
     pub name: Option<String>,
 
     /// Defines the geometry to be renderered with a material.
     pub primitives: Vec<Primitive>,
 
     /// Defines the weights to be applied to the morph targets.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub weights: Option<Vec<f32>>,
 }
 
@@ -107,12 +110,15 @@ pub struct Primitive {
 
     /// Optional application specific data.
     #[serde(default)]
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
 
     /// The index of the accessor that contains the indices.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub indices: Option<Index<accessor::Accessor>>,
 
     /// The index of the material to apply to this primitive when rendering
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub material: Option<Index<material::Material>>,
 
     /// The type of primitives to render.
@@ -122,6 +128,7 @@ pub struct Primitive {
     /// An array of Morph Targets, each  Morph Target is a dictionary mapping
     /// attributes (only `POSITION`, `NORMAL`, and `TANGENT` supported) to their
     /// deviations in the Morph Target.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub targets: Option<Vec<MorphTarget>>,
 }
 
@@ -181,14 +188,17 @@ pub struct Primitive {
 pub struct MorphTarget {
     /// XYZ vertex position displacements of type `[f32; 3]`.
     #[serde(rename = "POSITION")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub positions: Option<Index<accessor::Accessor>>,
 
     /// XYZ vertex normal displacements of type `[f32; 3]`.
     #[serde(rename = "NORMAL")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub normals: Option<Index<accessor::Accessor>>,
 
     /// XYZ vertex tangent displacements of type `[f32; 3]`.
     #[serde(rename = "TANGENT")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tangents: Option<Index<accessor::Accessor>>,
 }
 
