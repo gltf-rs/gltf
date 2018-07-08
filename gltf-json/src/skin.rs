@@ -24,6 +24,7 @@ pub struct Skin {
     ///
     /// The array length must be the same as the `count` property of the
     /// `inverse_bind_matrices` `Accessor` (when defined).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub joints: Vec<Index<scene::Node>>,
     
     /// Optional user-defined name for this object.
