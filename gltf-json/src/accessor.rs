@@ -5,7 +5,7 @@ use std::fmt;
 use validation::Checked;
 
 /// The component data type.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize)]
 pub enum ComponentType {
     /// Corresponds to `GL_BYTE`.
     I8 = 1,
@@ -27,7 +27,7 @@ pub enum ComponentType {
 }
 
 /// Specifies whether an attribute, vector, or matrix.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize)]
 pub enum Type {
     /// Scalar quantity.
     Scalar = 1,

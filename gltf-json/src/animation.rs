@@ -20,7 +20,7 @@ pub const VALID_PROPERTIES: &'static [&'static str] = &[
 ];
 
 /// Specifies an interpolation algorithm.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize)]
 pub enum Interpolation {
     /// Linear interpolation.
     ///
@@ -57,7 +57,7 @@ pub enum Interpolation {
 }
 
 /// Specifies a property to animate.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize)]
 pub enum Property {
     /// XYZ translation vector.
     Translation = 1,

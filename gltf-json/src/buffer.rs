@@ -22,7 +22,7 @@ pub const VALID_TARGETS: &'static [u32] = &[
 ];
 
 /// Specifies the target a GPU buffer should be bound to.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Target {
     /// Corresponds to `GL_ARRAY_BUFFER`.
     ArrayBuffer = 1,
