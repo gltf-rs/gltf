@@ -457,8 +457,23 @@ impl Document {
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        use std::error::Error;
-        write!(f, "{}", self.description())
+        match *self {
+            #[cfg(feature = "import")]
+            Error::Base64(ref e) => e.fmt(f),
+            Error::Binary(ref e) => e.fmt(f),
+            Error::Deserialize(ref e) => e.fmt(f),
+            Error::Io(ref e) => e.fmt(f),
+            #[cfg(feature = "import")]
+            Error::Image(ref e) => e.fmt(f),
+            Error::Validation(ref xs) => {
+                write!(f, "invalid glTF:")?;
+                for &(ref path, ref error) in xs {
+                    write!(f, " {}: {};", path, error)?;
+                }
+                Ok(())
+            }
+            _ => f.write_str(std::error::Error::description(self))
+        }
     }
 }
 
