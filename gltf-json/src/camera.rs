@@ -10,7 +10,7 @@ pub const VALID_CAMERA_TYPES: &'static [&'static str] = &[
 ];
 
 /// Specifies the camera type.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Type {
     /// A perspective projection.
     Perspective = 1,

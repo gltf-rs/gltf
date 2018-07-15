@@ -54,7 +54,7 @@ pub const VALID_WRAPPING_MODES: &'static [u32] = &[
 ];
 
 /// Magnification filter.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
 pub enum MagFilter {
     /// Corresponds to `GL_NEAREST`.
     Nearest = 1,
@@ -74,7 +74,7 @@ impl MagFilter {
 }
 
 /// Minification filter.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
 pub enum MinFilter {
     /// Corresponds to `GL_NEAREST`.
     Nearest = 1,
@@ -110,7 +110,7 @@ impl MinFilter {
 }
 
 /// Texture co-ordinate wrapping mode.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
 pub enum WrappingMode {
     /// Corresponds to `GL_CLAMP_TO_EDGE`.
     ClampToEdge = 1,

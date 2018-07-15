@@ -11,7 +11,7 @@ pub const VALID_ALPHA_MODES: &'static [&'static str] = &[
 ];
 
 /// The alpha rendering mode of a material.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub enum AlphaMode {
     /// The alpha value is ignored and the rendered output is fully opaque.
     Opaque = 1,
