@@ -92,6 +92,13 @@ impl<'a> Material<'a> {
         PbrMetallicRoughness::new(self.document, &self.json.pbr_metallic_roughness)
     }
 
+    /// Parameter values that define the specular-glossiness material model from
+    /// Physically-Based Rendering (PBR) methodology.
+    #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
+    pub fn pbr_specular_glossiness(&self) -> Option<PbrSpecularGlossiness<'a>> {
+        self.json.extensions.pbr_specular_glossiness.as_ref().map(|x| PbrSpecularGlossiness::new(self.document, x))
+    }
+
     /// A tangent space normal map.
     ///
     /// The texture contains RGB components in linear space. Each texel represents
@@ -214,6 +221,81 @@ impl<'a> PbrMetallicRoughness<'a> {
     /// they are ignored for metallic-roughness calculations.
     pub fn metallic_roughness_texture(&self) -> Option<texture::Info<'a>> {
         self.json.metallic_roughness_texture.as_ref().map(|json| {
+            let texture = self.document.textures().nth(json.index.value()).unwrap();
+            texture::Info::new(texture, json)
+        })
+    }
+
+    /// Optional application specific data.
+    pub fn extras(&self) -> &json::Extras {
+        &self.json.extras
+    }
+}
+
+/// A set of parameter values that are used to define the specular-glossiness
+/// material model from Physically-Based Rendering (PBR) methodology.
+#[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
+pub struct PbrSpecularGlossiness<'a> {
+    /// The parent `Document` struct.
+    document: &'a Document,
+
+    /// The corresponding JSON struct.
+    json: &'a json::extensions::material::PbrSpecularGlossiness,
+}
+
+#[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
+impl<'a> PbrSpecularGlossiness<'a> {
+    /// Constructs `PbrSpecularGlossiness`.
+    pub(crate) fn new(
+        document: &'a Document,
+        json: &'a json::extensions::material::PbrSpecularGlossiness,
+    ) -> Self {
+        Self {
+            document: document,
+            json: json,
+        }
+    }
+
+    /// Returns the material's base color factor.
+    ///
+    /// The default value is `[1.0, 1.0, 1.0, 1.0]`.
+    pub fn diffuse_factor(&self) -> [f32; 4] {
+        self.json.diffuse_factor.0
+    }
+
+    /// Returns the base color texture.
+    pub fn diffuse_texture(&self) -> Option<texture::Info<'a>> {
+        self.json.diffuse_texture.as_ref().map(|json| {
+            let texture = self.document.textures().nth(json.index.value()).unwrap();
+            texture::Info::new(texture, json)
+        })
+    }
+
+    /// Returns the specular factor of the material.
+    ///
+    /// The default value is `[1.0, 1.0, 1.0]`.
+    pub fn specular_factor(&self) -> [f32; 3] {
+        self.json.specular_factor.0
+    }
+
+    /// Returns the glossiness factor of the material.
+    ///
+    /// A value of 1.0 means the material has full glossiness or is perfectly
+    /// smooth. A value of 0.0 means the material has no glossiness or is
+    /// completely rough. This value is linear.
+    ///
+    /// The default value is `1.0`.
+    pub fn glossiness_factor(&self) -> f32 {
+        self.json.glossiness_factor.0
+    }
+
+    /// The specular-glossiness texture.
+    ///
+    /// A RGBA texture, containing the specular color of the material (RGB
+    /// components) and its glossiness (A component). The color values are in
+    /// sRGB space.
+    pub fn specular_glossiness_texture(&self) -> Option<texture::Info<'a>> {
+        self.json.specular_glossiness_texture.as_ref().map(|json| {
             let texture = self.document.textures().nth(json.index.value()).unwrap();
             texture::Info::new(texture, json)
         })
