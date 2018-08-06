@@ -130,7 +130,7 @@ pub use self::camera::Camera;
 pub use self::image::Image;
 #[cfg(feature = "import")]
 #[doc(inline)]
-pub use self::import::import;
+pub use self::import::{import, load_from, Loader};
 #[doc(inline)]
 pub use self::material::Material;
 #[doc(inline)]
