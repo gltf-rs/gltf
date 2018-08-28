@@ -182,7 +182,7 @@ impl Root {
 
 impl<T> Index<T> {
     /// Creates a new `Index` representing an offset into an array containing `T`.
-    fn new(value: u32) -> Self {
+    pub fn new(value: u32) -> Self {
         Index(value, std::marker::PhantomData)
     }
 
