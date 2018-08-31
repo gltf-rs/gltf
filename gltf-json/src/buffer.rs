@@ -60,8 +60,8 @@ pub struct Buffer {
     pub uri: Option<String>,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::buffer::Buffer,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::buffer::Buffer>,
 
     /// Optional application specific data.
     #[serde(default)]
@@ -100,8 +100,8 @@ pub struct View {
     pub target: Option<Checked<Target>>,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::buffer::View,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::buffer::View>,
 
     /// Optional application specific data.
     #[serde(default)]

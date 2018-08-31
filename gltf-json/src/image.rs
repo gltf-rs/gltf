@@ -33,8 +33,8 @@ pub struct Image {
     pub uri: Option<String>,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::image::Image,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::image::Image>,
 
     /// Optional application specific data.
     #[serde(default)]

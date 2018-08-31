@@ -22,8 +22,8 @@ pub struct Node {
     pub children: Option<Vec<Index<scene::Node>>>,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::scene::Node,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::scene::Node>,
     
     /// Optional application specific data.
     #[serde(default)]
@@ -74,8 +74,8 @@ fn node_scale_default() -> [f32; 3] {
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Scene {
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::scene::Scene,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::scene::Scene>,
     
     /// Optional application specific data.
     #[serde(default)]

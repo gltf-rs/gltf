@@ -76,8 +76,8 @@ pub enum Property {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Animation {
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::animation::Animation,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::animation::Animation>,
     
     /// Optional application specific data.
     #[serde(default)]
@@ -113,8 +113,8 @@ pub struct Channel {
     pub target: Target,
     
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::animation::Channel,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::animation::Channel>,
     
     /// Optional application specific data.
     #[serde(default)]
@@ -126,8 +126,8 @@ pub struct Channel {
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Target {
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::animation::Target,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::animation::Target>,
     
     /// Optional application specific data.
     #[serde(default)]
@@ -146,8 +146,8 @@ pub struct Target {
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Sampler {
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::animation::Sampler,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::animation::Sampler>,
     
     /// Optional application specific data.
     #[serde(default)]

@@ -45,8 +45,8 @@ pub struct Camera {
     pub type_: Checked<Type>,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::camera::Camera,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::camera::Camera>,
 
     /// Optional application specific data.
     #[serde(default)]
@@ -70,8 +70,8 @@ pub struct Orthographic {
     pub znear: f32,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::camera::Orthographic,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::camera::Orthographic>,
 
     /// Optional application specific data.
     #[serde(default)]
@@ -98,8 +98,8 @@ pub struct Perspective {
     pub znear: f32,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::camera::Perspective,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::camera::Perspective>,
 
     /// Optional application specific data.
     #[serde(default)]

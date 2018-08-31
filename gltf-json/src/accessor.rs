@@ -121,8 +121,8 @@ pub mod sparse {
         pub component_type: Checked<IndexComponentType>,
 
         /// Extension specific data.
-        #[serde(default)]
-        pub extensions: extensions::accessor::sparse::Indices,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub extensions: Option<extensions::accessor::sparse::Indices>,
 
         /// Optional application specific data.
         #[serde(default)]
@@ -150,8 +150,8 @@ pub mod sparse {
         pub values: Values,
 
         /// Extension specific data.
-        #[serde(default)]
-        pub extensions: extensions::accessor::sparse::Sparse,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub extensions: Option<extensions::accessor::sparse::Sparse>,
 
         /// Optional application specific data.
         #[serde(default)]
@@ -175,8 +175,8 @@ pub mod sparse {
         pub byte_offset: u32,
 
         /// Extension specific data.
-        #[serde(default)]
-        pub extensions: extensions::accessor::sparse::Values,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub extensions: Option<extensions::accessor::sparse::Values>,
 
         /// Optional application specific data.
         #[serde(default)]
@@ -205,8 +205,8 @@ pub struct Accessor {
     pub component_type: Checked<GenericComponentType>,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::accessor::Accessor,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::accessor::Accessor>,
 
     /// Optional application specific data.
     #[serde(default)]
