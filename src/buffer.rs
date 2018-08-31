@@ -137,7 +137,8 @@ impl<'a> View<'a> {
 
     /// Returns the offset into the parent buffer in bytes.
     pub fn offset(&self) -> usize {
-        self.json.byte_offset as usize
+        self.json.byte_offset.unwrap_or_else(
+            json::buffer::View::byte_offset_default) as usize
     }
 
     /// Returns the stride in bytes between vertex attributes or other interleavable
