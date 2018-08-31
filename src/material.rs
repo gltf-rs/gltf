@@ -96,7 +96,10 @@ impl<'a> Material<'a> {
     /// Physically-Based Rendering (PBR) methodology.
     #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
     pub fn pbr_specular_glossiness(&self) -> Option<PbrSpecularGlossiness<'a>> {
-        self.json.extensions.pbr_specular_glossiness.as_ref().map(|x| PbrSpecularGlossiness::new(self.document, x))
+        self.json.extensions
+            .as_ref()?
+            .pbr_specular_glossiness.as_ref()
+            .map(|x| PbrSpecularGlossiness::new(self.document, x))
     }
 
     /// A tangent space normal map.
