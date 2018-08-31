@@ -232,7 +232,7 @@ pub struct Accessor {
     pub name: Option<String>,
 
     /// Specifies whether integer data values should be normalized.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_normalized_default")]
     pub normalized: bool,
     
     /// Sparse storage of attributes that deviate from their initialization
@@ -240,6 +240,11 @@ pub struct Accessor {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sparse: Option<sparse::Sparse>,
+}
+
+// Help serde avoid serializing this glTF 2.0 default value.
+fn is_normalized_default(b: &bool) -> bool {
+    *b == bool::default()
 }
 
 /// The data type of an index.
