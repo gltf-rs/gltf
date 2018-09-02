@@ -75,20 +75,6 @@ pub struct Node {
     pub weights: Option<Vec<f32>>,
 }
 
-impl Node {
-    pub fn translation_default() -> [f32; 3] {
-        [0.0, 0.0, 0.0]
-    }
-
-    pub fn rotation_default() -> UnitQuaternion {
-        UnitQuaternion::default()
-    }
-
-    pub fn scale_default() -> [f32; 3] {
-        [1.0, 1.0, 1.0]
-    }
-}
-
 /// The root `Node`s of a scene.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Scene {

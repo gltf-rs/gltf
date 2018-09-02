@@ -244,7 +244,7 @@ pub struct Accessor {
 
 // Help serde avoid serializing this glTF 2.0 default value.
 fn is_normalized_default(b: &bool) -> bool {
-    *b == bool::default()
+    !*b
 }
 
 /// The data type of an index.

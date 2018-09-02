@@ -112,12 +112,6 @@ pub struct View {
     pub extras: Extras,
 }
 
-impl View {
-    pub fn byte_offset_default() -> u32 {
-        0
-    }
-}
-
 /// The stride, in bytes, between vertex attributes.
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct ByteStride(pub u32);
