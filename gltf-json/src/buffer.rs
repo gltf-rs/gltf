@@ -60,8 +60,8 @@ pub struct Buffer {
     pub uri: Option<String>,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::buffer::Buffer,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::buffer::Buffer>,
 
     /// Optional application specific data.
     #[serde(default)]
@@ -70,6 +70,9 @@ pub struct Buffer {
 }
 
 /// A view into a buffer generally representing a subset of the buffer.
+///
+/// <https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#reference-bufferview>
+///
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct View {
     /// The parent `Buffer`.
@@ -80,8 +83,8 @@ pub struct View {
     pub byte_length: u32,
 
     /// Offset into the parent buffer in bytes.
-    #[serde(default, rename = "byteOffset")]
-    pub byte_offset: u32,
+    #[serde(default, rename = "byteOffset", skip_serializing_if = "Option::is_none")]
+    pub byte_offset: Option<u32>,
 
     /// The stride in bytes between vertex attributes or other interleavable data.
     ///
@@ -100,8 +103,8 @@ pub struct View {
     pub target: Option<Checked<Target>>,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::buffer::View,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::buffer::View>,
 
     /// Optional application specific data.
     #[serde(default)]

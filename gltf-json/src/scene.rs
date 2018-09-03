@@ -22,8 +22,8 @@ pub struct Node {
     pub children: Option<Vec<Index<scene::Node>>>,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::scene::Node,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::scene::Node>,
     
     /// Optional application specific data.
     #[serde(default)]
@@ -31,6 +31,15 @@ pub struct Node {
     pub extras: Extras,
     
     /// 4x4 column-major transformation matrix.
+    ///
+    /// glTF 2.0 specification:
+    ///     When a node is targeted for animation (referenced by an
+    ///     animation.channel.target), only TRS properties may be present;
+    ///     matrix will not be present.
+    /// 
+    /// TODO: Ensure that .matrix is set to None or otherwise skipped during
+    ///       serialization, if the node is targeted for animation.
+    ///
     #[serde(skip_serializing_if = "Option::is_none")]
     pub matrix: Option<[f32; 16]>,
 
@@ -45,16 +54,16 @@ pub struct Node {
     
     /// The node's unit quaternion rotation in the order (x, y, z, w), where w is
     /// the scalar.
-    #[serde(default)]
-    pub rotation: UnitQuaternion,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rotation: Option<UnitQuaternion>,
 
     /// The node's non-uniform scale.
-    #[serde(default = "node_scale_default")]
-    pub scale: [f32; 3],
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scale: Option<[f32; 3]>,
 
     /// The node's translation.
-    #[serde(default)]
-    pub translation: [f32; 3],
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub translation: Option<[f32; 3]>,
     
     /// The index of the skin referenced by this node.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -66,16 +75,12 @@ pub struct Node {
     pub weights: Option<Vec<f32>>,
 }
 
-fn node_scale_default() -> [f32; 3] {
-    [1.0, 1.0, 1.0]
-}
-
 /// The root `Node`s of a scene.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Scene {
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::scene::Scene,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::scene::Scene>,
     
     /// Optional application specific data.
     #[serde(default)]

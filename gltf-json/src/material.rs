@@ -118,7 +118,8 @@ pub struct Material {
     pub emissive_factor: EmissiveFactor,
 
     /// Extension specific data.
-    pub extensions: extensions::material::Material,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::material::Material>,
 
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
@@ -163,7 +164,8 @@ pub struct PbrMetallicRoughness {
     pub metallic_roughness_texture: Option<texture::Info>,
 
     /// Extension specific data.
-    pub extensions: extensions::material::PbrMetallicRoughness,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::material::PbrMetallicRoughness>,
 
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
@@ -187,8 +189,8 @@ pub struct NormalTexture {
     pub tex_coord: u32,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::material::NormalTexture,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::material::NormalTexture>,
 
     /// Optional application specific data.
     #[serde(default)]
@@ -215,8 +217,8 @@ pub struct OcclusionTexture {
     pub tex_coord: u32,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::material::OcclusionTexture,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::material::OcclusionTexture>,
 
     /// Optional application specific data.
     #[serde(default)]

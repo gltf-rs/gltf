@@ -121,8 +121,8 @@ pub mod sparse {
         pub component_type: Checked<IndexComponentType>,
 
         /// Extension specific data.
-        #[serde(default)]
-        pub extensions: extensions::accessor::sparse::Indices,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub extensions: Option<extensions::accessor::sparse::Indices>,
 
         /// Optional application specific data.
         #[serde(default)]
@@ -150,8 +150,8 @@ pub mod sparse {
         pub values: Values,
 
         /// Extension specific data.
-        #[serde(default)]
-        pub extensions: extensions::accessor::sparse::Sparse,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub extensions: Option<extensions::accessor::sparse::Sparse>,
 
         /// Optional application specific data.
         #[serde(default)]
@@ -175,8 +175,8 @@ pub mod sparse {
         pub byte_offset: u32,
 
         /// Extension specific data.
-        #[serde(default)]
-        pub extensions: extensions::accessor::sparse::Values,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub extensions: Option<extensions::accessor::sparse::Values>,
 
         /// Optional application specific data.
         #[serde(default)]
@@ -205,8 +205,8 @@ pub struct Accessor {
     pub component_type: Checked<GenericComponentType>,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::accessor::Accessor,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::accessor::Accessor>,
 
     /// Optional application specific data.
     #[serde(default)]
@@ -232,7 +232,7 @@ pub struct Accessor {
     pub name: Option<String>,
 
     /// Specifies whether integer data values should be normalized.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_normalized_default")]
     pub normalized: bool,
     
     /// Sparse storage of attributes that deviate from their initialization
@@ -240,6 +240,11 @@ pub struct Accessor {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sparse: Option<sparse::Sparse>,
+}
+
+// Help serde avoid serializing this glTF 2.0 default value.
+fn is_normalized_default(b: &bool) -> bool {
+    !*b
 }
 
 /// The data type of an index.

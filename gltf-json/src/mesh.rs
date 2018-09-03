@@ -76,8 +76,8 @@ pub enum Mode {
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Mesh {
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::mesh::Mesh,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::mesh::Mesh>,
 
     /// Optional application specific data.
     #[serde(default)]
@@ -106,8 +106,8 @@ pub struct Primitive {
     pub attributes: HashMap<Checked<Semantic>, Index<accessor::Accessor>>,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::mesh::Primitive,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::mesh::Primitive>,
 
     /// Optional application specific data.
     #[serde(default)]
@@ -123,7 +123,7 @@ pub struct Primitive {
     pub material: Option<Index<material::Material>>,
 
     /// The type of primitives to render.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "is_primitive_mode_default")]
     pub mode: Checked<Mode>,
 
     /// An array of Morph Targets, each  Morph Target is a dictionary mapping
@@ -131,6 +131,10 @@ pub struct Primitive {
     /// deviations in the Morph Target.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub targets: Option<Vec<MorphTarget>>,
+}
+
+fn is_primitive_mode_default(mode: &Checked<Mode>) -> bool {
+    *mode == Checked::Valid(Mode::Triangles)
 }
 
     impl Validate for Primitive {

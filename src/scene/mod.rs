@@ -176,9 +176,12 @@ impl<'a> Node<'a> {
             }
         } else {
             Transform::Decomposed {
-                translation: self.json.translation,
-                rotation: self.json.rotation.0,
-                scale: self.json.scale,
+                translation: self.json.translation
+                    .unwrap_or_else(|| [0.0, 0.0, 0.0]),
+                rotation: self.json.rotation
+                    .unwrap_or_else(json::scene::UnitQuaternion::default).0,
+                scale: self.json.scale
+                    .unwrap_or_else(|| [1.0, 1.0, 1.0]),
             }
         }
     }

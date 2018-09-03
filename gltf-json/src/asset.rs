@@ -8,8 +8,8 @@ pub struct Asset {
     pub copyright: Option<String>,
     
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::asset::Asset,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::asset::Asset>,
     
     /// Optional application specific data.
     #[serde(default)]

@@ -161,8 +161,8 @@ pub struct Sampler {
     pub wrap_t: Checked<WrappingMode>,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::texture::Sampler,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::texture::Sampler>,
 
     /// Optional application specific data.
     #[serde(default)]
@@ -186,8 +186,8 @@ pub struct Texture {
     pub source: Index<image::Image>,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::texture::Texture,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::texture::Texture>,
 
     /// Optional application specific data.
     #[serde(default)]
@@ -206,8 +206,8 @@ pub struct Info {
     pub tex_coord: u32,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::texture::Info,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::texture::Info>,
 
     /// Optional application specific data.
     #[serde(default)]

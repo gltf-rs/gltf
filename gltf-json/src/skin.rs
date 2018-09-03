@@ -4,8 +4,8 @@ use {accessor, extensions, scene, Extras, Index};
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Skin {
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::skin::Skin,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::skin::Skin>,
     
     /// Optional application specific data.
     #[serde(default)]

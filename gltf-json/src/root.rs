@@ -51,8 +51,8 @@ pub struct Root {
     pub scene: Option<Index<Scene>>,
 
     /// Extension specific data.
-    #[serde(default)]
-    pub extensions: extensions::root::Root,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<extensions::root::Root>,
 
     /// Optional application specific data.
     #[serde(default)]
@@ -182,7 +182,7 @@ impl Root {
 
 impl<T> Index<T> {
     /// Creates a new `Index` representing an offset into an array containing `T`.
-    fn new(value: u32) -> Self {
+    pub fn new(value: u32) -> Self {
         Index(value, std::marker::PhantomData)
     }
 
