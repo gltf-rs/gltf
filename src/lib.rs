@@ -98,7 +98,7 @@ pub mod image;
 
 /// The reference importer.
 #[cfg(feature = "import")]
-mod import;
+pub mod import;
 
 /// Iterators for walking the glTF node hierarchy.
 pub mod iter;
@@ -131,6 +131,9 @@ pub use self::image::Image;
 #[cfg(feature = "import")]
 #[doc(inline)]
 pub use self::import::import;
+#[cfg(feature = "import")]
+#[doc(inline)]
+pub use self::import::import_slice;
 #[doc(inline)]
 pub use self::material::Material;
 #[doc(inline)]
