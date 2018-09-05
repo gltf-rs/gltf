@@ -162,11 +162,7 @@ pub fn import_image_data(
     Ok(images)
 }
 
-fn import_impl(path: &Path) -> Result<Import> {
-    let base = path.parent().unwrap_or(Path::new("./"));
-    let file = fs::File::open(path).map_err(Error::Io)?;
-    let reader = io::BufReader::new(file);
-    let Gltf { document, blob } = Gltf::from_reader(reader)?;
+fn import_impl(Gltf { document, blob }: Gltf, base: &Path) -> Result<Import> {
     let buffer_data = import_buffer_data(&document, base, blob)?;
     let image_data = import_image_data(&document, base, &buffer_data)?;
     let import = (document, buffer_data, image_data);
@@ -203,5 +199,32 @@ fn import_impl(path: &Path) -> Result<Import> {
 pub fn import<P>(path: P) -> Result<Import>
     where P: AsRef<Path>
 {
-    import_impl(path.as_ref())
+    let path = path.as_ref();
+    let base = path.parent().unwrap_or(Path::new("./"));
+    let file = fs::File::open(path).map_err(Error::Io)?;
+    let reader = io::BufReader::new(file);
+    import_impl(Gltf::from_reader(reader)?, base)
+}
+
+/// Import some glTF 2.0 from a slice
+///
+/// ```
+/// # extern crate gltf;
+/// # use std::fs;
+/// # use std::io::Read;
+/// # fn run() -> Result<(), gltf::Error> {
+/// # let path = "examples/Box.glb";
+/// # let mut file = fs::File::open(path).map_err(gltf::Error::Io)?;
+/// # let mut bytes = Vec::new();
+/// # file.read_to_end(&mut bytes).map_err(gltf::Error::Io)?;
+/// # #[allow(unused)]
+/// let (document, buffers, images) = gltf::import_slice(bytes.as_slice())?;
+/// # Ok(())
+/// # }
+/// # fn main() {
+/// #     run().expect("test failure");
+/// # }
+/// ```
+pub fn import_slice(slice: &[u8]) -> Result<Import> {
+    import_impl(Gltf::from_slice(slice)?, Path::new("./"))
 }
