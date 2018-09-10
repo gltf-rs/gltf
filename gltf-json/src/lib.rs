@@ -1,5 +1,7 @@
+extern crate byteorder;
 #[macro_use]
 extern crate gltf_derive;
+extern crate num_traits;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -16,6 +18,9 @@ pub mod asset;
 
 /// Contains `Buffer`, `View`, and other related data structures.
 pub mod buffer;
+
+/// Contains builders intended to help with gltf export.
+pub mod builders;
 
 /// Contains `Camera` and other related data structures.
 pub mod camera;
