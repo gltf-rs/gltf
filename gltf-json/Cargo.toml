@@ -10,7 +10,7 @@ license = "MIT/Apache-2.0"
 gltf-derive = { path = "../gltf-derive", version = "0.11.2" }
 serde = "1.0"
 serde_derive = "1.0"
-serde_json = "1.0"
+serde_json = { features = ["raw_value"], version = "1.0" }
 
 [features]
 default = []
