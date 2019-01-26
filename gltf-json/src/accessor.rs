@@ -218,12 +218,11 @@ pub struct Accessor {
     pub type_: Checked<Type>,
 
     /// Minimum value of each component in this attribute.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub min: Option<Value>,
 
     /// Maximum value of each component in this attribute.
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max: Option<Value>,
 
     /// Optional user-defined name for this object.
