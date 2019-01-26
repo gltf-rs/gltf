@@ -41,5 +41,9 @@ name = "gltf-display"
 path = "examples/display/main.rs"
 
 [[example]]
+name = "gltf-export"
+path = "examples/export/main.rs"
+
+[[example]]
 name = "gltf-tree"
 path = "examples/tree/main.rs"

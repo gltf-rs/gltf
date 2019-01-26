@@ -51,6 +51,13 @@ Demonstrates how the glTF JSON is deserialized.
 ```sh
 cargo run --example gltf-display path/to/asset.gltf
 ```
+#### gltf-export
+
+Demonstrates how glTF JSON can be built and exported using the `gltf-json` crate.
+
+```sh
+cargo run --example gltf-export
+```
 
 #### gltf-tree
 
