@@ -24,7 +24,7 @@ This crate is intended to load [glTF 2.0](https://www.khronos.org/gltf), a file 
 
 ### Reference infographic
 
-![infographic](https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/figures/gltfOverview-2.0.0a.png)
+![infographic](https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/figures/gltfOverview-2.0.0b.png)
 
 <p align="center">From <a href="https://github.com/javagl/gltfOverview">javagl/gltfOverview.</a></p>
 
