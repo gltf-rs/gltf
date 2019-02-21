@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.11.3] - 2019-02-21
+
+### Added
+
+- New function `gltf_json::Index::new` for export.
+- Support for the `KHR_materials_pbrSpecularGlossiness` extension.
+- Extra `Eq` and `PartialEq` implementations.
+
+### Fixed
+
+- `Accessor::min` is no longer serialized if `None`.
+- `Extras::_allow_unknown_fields` is no longer serialized.
+- `bufferView.byteOffset` is now optional.
+- Node translation/rotation/scale values are now optional.
+- Removed serialization of some default values.
+- `extras::Void` is no longer serialized.
+
 ## [0.11.2] - 2018-07-08
 
 ### Fixed
