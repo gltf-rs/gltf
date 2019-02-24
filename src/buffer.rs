@@ -143,7 +143,15 @@ impl<'a> View<'a> {
     /// Returns the stride in bytes between vertex attributes or other interleavable
     /// data. When `None`, data is assumed to be tightly packed.
     pub fn stride(&self) -> Option<usize> {
-        self.json.byte_stride.map(|x| x.0 as usize)
+        self.json.byte_stride.and_then(|x| {
+                // Treat byte_stride == 0 same as not specifying stride.
+                // This is technically a validation error, but best way we can handle it here
+                if x.0 == 0 {
+                    None
+                } else {
+                    Some(x.0 as usize)  
+                }
+            })
     }
 
     /// Optional user-defined name for this object.
