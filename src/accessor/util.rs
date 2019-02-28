@@ -93,7 +93,7 @@ impl<'a, T> Iter<'a, T> {
         debug_assert!(mem::size_of::<T>() > 0);
         let view = accessor.view();
         let stride = view.stride().unwrap_or(mem::size_of::<T>());
-        debug_assert!(stride >= mem::size_of::<T>());
+        debug_assert!(stride >= mem::size_of::<T>(), "Mismatch in stride, expected at least {} stride but found {}", mem::size_of::<T>(), stride);
         let start = view.offset() + accessor.offset();
         let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
         let data = &buffer_data[start .. end];
