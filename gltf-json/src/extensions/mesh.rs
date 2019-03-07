@@ -1,3 +1,6 @@
+use gltf_derive::Validate;
+use serde_derive::{Serialize, Deserialize};
+
 /// A set of primitives to be rendered.
 ///
 /// A node can contain one or more meshes and its transform places the meshes in

@@ -1,8 +1,10 @@
-use {buffer, extensions, Extras, Index};
+use gltf_derive::Validate;
+use serde_derive::{Serialize, Deserialize};
+use crate::{buffer, extensions, Extras, Index};
 use serde::{de, ser};
 use serde_json::Value;
 use std::fmt;
-use validation::Checked;
+use crate::validation::Checked;
 
 /// The component data type.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize)]
@@ -100,7 +102,7 @@ pub const VALID_ACCESSOR_TYPES: &'static [&'static str] = &[
 /// Contains data structures for sparse storage.
 pub mod sparse {
     use super::*;
-    use ::extensions;
+    use crate::extensions;
 
     /// Indices of those attributes that deviate from their initialization value.
     #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
@@ -270,7 +272,7 @@ impl<'de> de::Deserialize<'de> for Checked<GenericComponentType> {
                 where E: de::Error
             {
                 use self::ComponentType::*;
-                use validation::Checked::*;
+                use crate::validation::Checked::*;
                 Ok(match value as u32 {
                     BYTE => Valid(GenericComponentType(I8)),
                     UNSIGNED_BYTE => Valid(GenericComponentType(U8)),
@@ -302,7 +304,7 @@ impl<'de> de::Deserialize<'de> for Checked<IndexComponentType> {
                 where E: de::Error
             {
                 use self::ComponentType::*;
-                use validation::Checked::*;
+                use crate::validation::Checked::*;
                 Ok(match value as u32 {
                     UNSIGNED_BYTE => Valid(IndexComponentType(U8)),
                     UNSIGNED_SHORT => Valid(IndexComponentType(U16)),
@@ -331,7 +333,7 @@ impl<'de> de::Deserialize<'de> for Checked<Type> {
                 where E: de::Error
             {
                 use self::Type::*;
-                use validation::Checked::*;
+                use crate::validation::Checked::*;
                 Ok(match value {
                     "SCALAR" => Valid(Scalar),
                     "VEC2" => Valid(Vec2),

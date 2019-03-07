@@ -1,4 +1,4 @@
-use {json, Document};
+use crate::Document;
 
 /// A camera's projection.
 #[derive(Clone, Debug)]
@@ -23,7 +23,7 @@ pub struct Camera<'a> {
     /// The corresponding JSON struct.
     json: &'a json::camera::Camera,
 }
-  
+
 ///  Values for an orthographic camera projection.
 #[derive(Clone, Debug)]
 pub struct Orthographic<'a> {
@@ -33,7 +33,7 @@ pub struct Orthographic<'a> {
     /// The corresponding JSON struct.
     json: &'a json::camera::Orthographic,
 }
-  
+
 /// Values for a perspective camera projection.
 #[derive(Clone, Debug)]
 pub struct Perspective<'a> {
@@ -77,7 +77,7 @@ impl<'a> Camera<'a> {
                 Projection::Perspective(Perspective::new(self.document, json))
             },
         }
-    } 
+    }
 
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {

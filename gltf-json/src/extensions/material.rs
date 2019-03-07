@@ -1,6 +1,7 @@
-use validation::{Error, Validate};
-use material::StrengthFactor;
-use {texture, Extras, Root, Path};
+use gltf_derive::Validate;
+use serde_derive::{Serialize, Deserialize};
+use crate::{Extras, Path, Root, texture, validation::Error,
+validation::Validate, material::StrengthFactor};
 
 /// The material appearance of a primitive.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]

@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
-use Normalize;
+use crate::Normalize;
 
-use mesh::util::ReadColors;
+use super::ReadColors;
 
 /// Casting iterator for `Colors`.
 #[derive(Clone, Debug)]

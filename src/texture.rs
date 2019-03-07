@@ -1,4 +1,4 @@
-use {image, json, Document};
+use crate::{image, Document};
 
 pub use json::texture::{MagFilter, MinFilter, WrappingMode};
 

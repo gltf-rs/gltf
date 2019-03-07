@@ -118,7 +118,7 @@ fn align_to_multiple_of_four(n: &mut usize) {
 
 impl<'a> Glb<'a> {
     /// Writes binary glTF to a writer.
-    pub fn to_writer<W>(&self, mut writer: W) -> Result<(), ::Error>
+    pub fn to_writer<W>(&self, mut writer: W) -> Result<(), crate::Error>
         where W: io::Write
     {
         // Write GLB header
@@ -170,7 +170,7 @@ impl<'a> Glb<'a> {
     }
 
     /// Writes binary glTF to a byte vector.
-    pub fn to_vec(&self) -> Result<Vec<u8>, ::Error> {
+    pub fn to_vec(&self) -> Result<Vec<u8>, crate::Error> {
         let mut length = mem::size_of::<Header>() + mem::size_of::<ChunkHeader>() + self.json.len();
         align_to_multiple_of_four(&mut length);
         if let Some(bin) = self.bin.as_ref() {
@@ -188,7 +188,7 @@ impl<'a> Glb<'a> {
     /// * Mandatory GLB header.
     /// * Mandatory JSON chunk.
     /// * Optional BIN chunk.
-    pub fn from_slice(mut data: &'a [u8]) -> Result<Self, ::Error> {
+    pub fn from_slice(mut data: &'a [u8]) -> Result<Self, crate::Error> {
         let header = Header::from_reader(&mut data)
             .and_then(|header| {
                 let contents_length = header.length as usize - Header::size_of();
@@ -201,26 +201,26 @@ impl<'a> Glb<'a> {
                     })
                 }
             })
-            .map_err(::Error::Binary)?;
+            .map_err(crate::Error::Binary)?;
         match header.version {
             2 => Self::from_v2(data)
                 .map(|(json, bin)| Glb { header, json: json.into(), bin: bin.map(Into::into) })
-                .map_err(::Error::Binary),
-            x => Err(::Error::Binary(Error::Version(x)))
+                .map_err(crate::Error::Binary),
+            x => Err(crate::Error::Binary(Error::Version(x)))
         }
     }
 
     /// Does the loading job for you.  Provided buf will be cleared before new
     /// data will be written.  When error happens, if only header was read, buf
     /// will not be mutated, otherwise, buf will be empty.
-    pub fn from_reader<R: io::Read>(mut reader: R) -> Result<Self, ::Error> {
-        let header = Header::from_reader(&mut reader).map_err(::Error::Binary)?;
+    pub fn from_reader<R: io::Read>(mut reader: R) -> Result<Self, crate::Error> {
+        let header = Header::from_reader(&mut reader).map_err(crate::Error::Binary)?;
         match header.version {
             2 => {
                 let glb_len = header.length - Header::size_of() as u32;
                 let mut buf = vec![0; glb_len as usize];
                 if let Err(e) = reader.read_exact(&mut buf).map_err(Error::Io) {
-                    Err(::Error::Binary(e))
+                    Err(crate::Error::Binary(e))
                 } else {
                     Self::from_v2(&buf)
                         .map(|(json, bin)| Glb {
@@ -228,10 +228,10 @@ impl<'a> Glb<'a> {
                             json: json.to_vec().into(),
                             bin: bin.map(<[u8]>::to_vec).map(Into::into),
                         })
-                        .map_err(::Error::Binary)
+                        .map_err(crate::Error::Binary)
                 }
             }
-            x => Err(::Error::Binary(Error::Version(x)))
+            x => Err(crate::Error::Binary(Error::Version(x)))
         }
     }
 

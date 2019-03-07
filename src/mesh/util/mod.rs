@@ -13,10 +13,10 @@ pub mod tex_coords;
 /// Casting iterator adapters for node weights.
 pub mod weights;
 
-use mesh;
+use crate::mesh;
 
-use accessor::Iter;
-use Buffer;
+use crate::accessor::Iter;
+use crate::Buffer;
 
 /// XYZ vertex positions of type `[f32; 3]`.
 pub type ReadPositions<'a> = Iter<'a, [f32; 3]>;

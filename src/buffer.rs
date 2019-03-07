@@ -1,9 +1,7 @@
-use json;
-
 #[cfg(feature = "import")]
 use std::ops;
 
-use {Document};
+use crate::Document;
 
 pub use json::buffer::Target;
 

@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
-use Normalize;
+use crate::Normalize;
 
-use mesh::util::ReadTexCoords;
+use super::ReadTexCoords;
 
 /// Casting iterator for `TexCoords`.
 #[derive(Clone, Debug)]

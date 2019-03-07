@@ -4,10 +4,10 @@ pub mod rotations;
 /// Casting iterator adapters for morph target weights.
 pub mod morph_target_weights;
 
-use accessor;
+use crate::accessor;
 
-use animation::Channel;
-use Buffer;
+use crate::animation::Channel;
+use crate::Buffer;
 
 /// Animation input sampler values of type `f32`.
 pub type ReadInputs<'a> = accessor::Iter<'a, f32>;
@@ -152,7 +152,7 @@ where F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>,
     /// Visits the output samples of a channel.
     pub fn read_outputs(&self) -> Option<ReadOutputs<'s>> {
         use accessor::{DataType, Iter};
-        use animation::Property;
+        use crate::animation::Property;
 
         let output = self.channel.sampler().output();
         if let Some(slice) = (self.get_buffer_data)(output.view().buffer()) {
@@ -177,7 +177,7 @@ where F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>,
                         _ => unreachable!()
                     }),
                 }
-            )            
+            )
         } else {
             None
         }

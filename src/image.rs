@@ -1,5 +1,4 @@
-use {buffer, json};
-use Document;
+use crate::{buffer, Document};
 
 #[cfg(feature = "import")]
 use image_crate::DynamicImage;

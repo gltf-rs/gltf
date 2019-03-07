@@ -1,5 +1,3 @@
-extern crate gltf;
-
 use std::{fs, path};
 use std::error::Error as StdError;
 

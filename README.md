@@ -20,7 +20,7 @@
 
 This crate is intended to load [glTF 2.0](https://www.khronos.org/gltf), a file format designed for the efficient transmission of 3D assets.
 
-`rustc` version 1.19 or above is required; version 1.26 and above is recommended.
+`rustc` version 1.32 or above is required.
 
 ### Reference infographic
 

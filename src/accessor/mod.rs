@@ -56,9 +56,7 @@
 //! # }
 //! ```
 
-use {buffer, json};
-
-use Document;
+use crate::{buffer, Document};
 
 pub use json::accessor::ComponentType as DataType;
 pub use json::accessor::Type as Dimensions;

@@ -1,7 +1,9 @@
+use gltf_derive::Validate;
+use serde_derive::{Serialize, Deserialize};
 use serde::{de, ser};
 use std::fmt;
-use validation::Checked;
-use {extensions, image, Extras, Index};
+use crate::validation::Checked;
+use crate::{extensions, image, Extras, Index};
 
 /// Corresponds to `GL_NEAREST`.
 pub const NEAREST: u32 = 9728;
@@ -231,7 +233,7 @@ impl<'de> de::Deserialize<'de> for Checked<MagFilter> {
                 where E: de::Error
             {
                 use self::MagFilter::*;
-                use validation::Checked::*;
+                use crate::validation::Checked::*;
                 Ok(match value as u32 {
                     NEAREST => Valid(Nearest),
                     LINEAR => Valid(Linear),
@@ -259,7 +261,7 @@ impl<'de> de::Deserialize<'de> for Checked<MinFilter> {
                 where E: de::Error
             {
                 use self::MinFilter::*;
-                use validation::Checked::*;
+                use crate::validation::Checked::*;
                 Ok(match value as u32 {
                     NEAREST => Valid(Nearest),
                     LINEAR => Valid(Linear),
@@ -300,7 +302,7 @@ impl<'de> de::Deserialize<'de> for Checked<WrappingMode> {
                 where E: de::Error
             {
                 use self::WrappingMode::*;
-                use validation::Checked::*;
+                use crate::validation::Checked::*;
                 Ok(match value as u32 {
                     CLAMP_TO_EDGE => Valid(ClampToEdge),
                     MIRRORED_REPEAT => Valid(MirroredRepeat),

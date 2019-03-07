@@ -1,3 +1,6 @@
+use gltf_derive::Validate;
+use serde_derive::{Serialize, Deserialize};
+
 /// A node in the node hierarchy.  When the node contains `skin`, all
 /// `mesh.primitives` must contain `JOINTS_0` and `WEIGHTS_0` attributes.
 /// A node can have either a `matrix` or any combination of

@@ -1,11 +1,13 @@
+use gltf_derive::Validate;
+use serde_derive::{Serialize, Deserialize};
 use std::fmt;
 
 #[cfg(feature = "extras")]
-use ::{Path, Root};
+use crate::{Path, Root};
 #[cfg(feature = "extras")]
 pub use serde_json::value::RawValue;
 #[cfg(feature = "extras")]
-use validation::{Error, Validate};
+use crate::validation::{Error, Validate};
 
 /// Data type of the `extras` attribute on all glTF objects.
 #[cfg(feature = "extras")]

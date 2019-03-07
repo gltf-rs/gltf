@@ -1,7 +1,9 @@
+use gltf_derive::Validate;
+use serde_derive::{Serialize, Deserialize};
 use serde::{de, ser};
 use std::fmt;
-use validation::{Checked, Error, Validate};
-use {extensions, Extras, Index, Root, Path};
+use crate::validation::{Checked, Error, Validate};
+use crate::{extensions, Extras, Index, Root, Path};
 
 /// Corresponds to `GL_ARRAY_BUFFER`.
 pub const ARRAY_BUFFER: u32 = 34_962;
@@ -149,7 +151,7 @@ impl<'de> de::Deserialize<'de> for Checked<Target> {
                 where E: de::Error
             {
                 use self::Target::*;
-                use validation::Checked::*;
+                use crate::validation::Checked::*;
                 Ok(match value as u32 {
                     ARRAY_BUFFER => Valid(ArrayBuffer),
                     ELEMENT_ARRAY_BUFFER => Valid(ElementArrayBuffer),

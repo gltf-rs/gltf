@@ -1,8 +1,6 @@
-use cgmath;
 use cgmath::prelude::*;
-use json;
 
-use {Camera, Document, Mesh, Skin};
+use crate::{Camera, Document, Mesh, Skin};
 
 /// Iterators.
 pub mod iter;
@@ -240,9 +238,9 @@ impl<'a> Scene<'a> {
 
 #[cfg(test)]
 mod tests {
-    use ::cgmath::{vec3, InnerSpace, Matrix4, Quaternion, Rad, Rotation3};
-    use ::scene::Transform;
-    use ::std::f32::consts::PI;
+    use cgmath::{vec3, InnerSpace, Matrix4, Quaternion, Rad, Rotation3};
+    use crate::scene::Transform;
+    use std::f32::consts::PI;
 
     fn rotate(x: f32, y: f32, z: f32, r: f32) -> [f32; 4] {
         let r = Quaternion::from_axis_angle(vec3(x, y, z).normalize(), Rad(r));

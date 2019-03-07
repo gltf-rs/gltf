@@ -1,6 +1,6 @@
-use animation::util::MorphTargetWeights;
+use super::MorphTargetWeights;
 use std::marker::PhantomData;
-use Normalize;
+use crate::Normalize;
 
 /// Casting iterator for `MorphTargetWeights`.
 #[derive(Clone, Debug)]

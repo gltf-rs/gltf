@@ -67,10 +67,6 @@
 #[macro_use]
 extern crate approx;
 #[cfg(feature = "import")]
-extern crate base64;
-extern crate byteorder;
-extern crate cgmath;
-#[cfg(feature = "import")]
 extern crate image as image_crate;
 #[macro_use]
 extern crate lazy_static;
