@@ -17,8 +17,7 @@ pub trait Get<T> {
 }
 
 /// Represents an offset into an array of type `T` owned by the root glTF object.
-#[derive(Clone, Copy)]
-pub struct Index<T>(u32, marker::PhantomData<T>);
+pub struct Index<T>(u32, marker::PhantomData<*const T>);
 
 /// The root object of a glTF 2.0 asset.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
@@ -221,6 +220,17 @@ impl<'de, T> serde::Deserialize<'de> for Index<T> {
         deserializer.deserialize_u64(Visitor::<T>(marker::PhantomData))
     }
 }
+
+impl<T> Clone for Index<T> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<T> Copy for Index<T> {}
+
+unsafe impl<T> Send for Index<T> {}
+unsafe impl<T> Sync for Index<T> {}
 
 impl<T> fmt::Debug for Index<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
