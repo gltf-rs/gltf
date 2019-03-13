@@ -85,9 +85,6 @@ pub struct Accessor<'a> {
 
     /// The corresponding JSON struct.
     json: &'a json::accessor::Accessor,
-
-    /// The buffer view this accessor reads from.
-    view: buffer::View<'a>,
 }
 
 impl<'a> Accessor<'a> {
@@ -97,12 +94,10 @@ impl<'a> Accessor<'a> {
         index: usize,
         json: &'a json::accessor::Accessor,
     ) -> Self {
-        let view = document.views().nth(json.buffer_view.value()).unwrap();
         Self {
             document,
             index,
             json,
-            view,
         }
     }
 
