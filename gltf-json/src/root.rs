@@ -13,12 +13,11 @@ use {Accessor, Animation, Asset, Buffer, Camera, Error, Extras, Image, Material,
 /// Helper trait for retrieving top-level objects by a universal identifier.
 pub trait Get<T> {
     /// Retrieves a single value at the given index.
-    fn get(&self, id: &Index<T>) -> Option<&T>;
+    fn get(&self, id: Index<T>) -> Option<&T>;
 }
 
 /// Represents an offset into an array of type `T` owned by the root glTF object.
-#[derive(Clone, Copy)]
-pub struct Index<T>(u32, marker::PhantomData<T>);
+pub struct Index<T>(u32, marker::PhantomData<*const T>);
 
 /// The root object of a glTF 2.0 asset.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
@@ -117,7 +116,7 @@ pub struct Root {
 
 impl Root {
     /// Returns a single item from the root object.
-    pub fn get<T>(&self, index: &Index<T>) -> Option<&T>
+    pub fn get<T>(&self, index: Index<T>) -> Option<&T>
         where Self: Get<T>
     {
         (self as &Get<T>).get(index)
@@ -222,6 +221,17 @@ impl<'de, T> serde::Deserialize<'de> for Index<T> {
     }
 }
 
+impl<T> Clone for Index<T> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<T> Copy for Index<T> {}
+
+unsafe impl<T> Send for Index<T> {}
+unsafe impl<T> Sync for Index<T> {}
+
 impl<T> fmt::Debug for Index<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
@@ -240,7 +250,7 @@ impl<T: Validate> Validate for Index<T>
     fn validate_minimally<P, R>(&self, root: &Root, path: P, report: &mut R)
         where P: Fn() -> Path, R: FnMut(&Fn() -> Path, validation::Error)
     {
-        if root.get(self).is_none() {
+        if root.get(*self).is_none() {
             report(&path, validation::Error::IndexOutOfBounds);
         }
     }
@@ -249,7 +259,7 @@ impl<T: Validate> Validate for Index<T>
 macro_rules! impl_get {
     ($ty:ty, $field:ident) => {
         impl<'a> Get<$ty> for Root {
-            fn get(&self, index: &Index<$ty>) -> Option<&$ty> {
+            fn get(&self, index: Index<$ty>) -> Option<&$ty> {
                 self.$field.get(index.value())
             }
         }
