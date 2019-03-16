@@ -1,9 +1,7 @@
-use json;
-
-use {Accessor, Document, Node};
+use crate::{Accessor, Document, Node};
 
 #[cfg(feature = "utils")]
-use Buffer;
+use crate::Buffer;
 
 /// Iterators.
 pub mod iter;

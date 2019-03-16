@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
-use Normalize;
+use crate::Normalize;
 
-use mesh::util::ReadWeights;
+use super::ReadWeights;
 
 /// Casting iterator for `Weights`.
 #[derive(Clone, Debug)]

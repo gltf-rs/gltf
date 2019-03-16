@@ -1,5 +1,3 @@
-extern crate gltf;
-
 use std::{fs, io};
 
 use std::boxed::Box;

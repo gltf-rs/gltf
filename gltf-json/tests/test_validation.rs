@@ -1,6 +1,5 @@
 use std::{fs, io};
 
-extern crate gltf_json;
 use gltf_json::validation::{Validate, Error};
 use gltf_json::Path;
 

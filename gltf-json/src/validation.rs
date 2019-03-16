@@ -1,12 +1,8 @@
-use serde::ser;
-use serde_json;
-use std;
-
-use serde::{Serialize, Serializer};
+use serde::{ser, Serialize, Serializer};
 use std::collections::HashMap;
 use std::hash::Hash;
 
-use {Path, Root};
+use crate::{Path, Root};
 
 /// Trait for validating glTF JSON data against the 2.0 specification.
 pub trait Validate {

@@ -55,11 +55,10 @@ pub mod iter;
 #[cfg(feature = "utils")]
 pub mod util;
 
-use json;
-use {Accessor, Buffer, Document, Material};
+use crate::{Accessor, Buffer, Document, Material};
 
 #[cfg(feature = "utils")]
-use accessor;
+use crate::accessor;
 
 pub use json::mesh::{Mode, Semantic};
 use json::validation::Checked;

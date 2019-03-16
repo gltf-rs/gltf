@@ -1,12 +1,11 @@
 use base64;
-use buffer;
-use image;
-use image_crate;
+use crate::buffer;
+use crate::image;
 use std::{fs, io};
 
 use image_crate::ImageFormat::{JPEG as Jpeg, PNG as Png};
 use std::path::Path;
-use {Document, Error, Gltf, Result};
+use crate::{Document, Error, Gltf, Result};
 
 /// Return type of `import`.
 type Import = (Document, Vec<buffer::Data>, Vec<image::Data>);
@@ -177,7 +176,6 @@ fn import_impl(path: &Path) -> Result<Import> {
 /// Import some glTF 2.0 from the file system.
 ///
 /// ```
-/// # extern crate gltf;
 /// # fn run() -> Result<(), gltf::Error> {
 /// # let path = "examples/Box.gltf";
 /// # #[allow(unused)]

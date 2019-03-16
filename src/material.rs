@@ -1,4 +1,4 @@
-use {json, texture, Document};
+use crate::{texture, Document};
 
 pub use json::material::AlphaMode;
 

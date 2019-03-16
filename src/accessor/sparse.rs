@@ -1,5 +1,4 @@
-use Document;
-use {buffer, json};
+use crate::{buffer, Document};
 
 /// The index data type.
 #[derive(Clone, Debug)]

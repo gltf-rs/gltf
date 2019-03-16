@@ -1,6 +1,6 @@
-use animation::util::Rotations;
+use super::Rotations;
 use std::marker::PhantomData;
-use Normalize;
+use crate::Normalize;
 
 /// Casting iterator for `Rotations`.
 #[derive(Clone, Debug)]

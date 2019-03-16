@@ -1,7 +1,7 @@
-use {accessor, json, scene, Document};
+use crate::{accessor, scene, Document};
 
 #[cfg(feature = "utils")]
-use Buffer;
+use crate::Buffer;
 
 pub use json::animation::{Interpolation, Property};
 

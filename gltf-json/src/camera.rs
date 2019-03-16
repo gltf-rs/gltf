@@ -1,7 +1,8 @@
 use serde::{de, ser};
+use serde_derive::{Serialize, Deserialize};
 use std::fmt;
-use validation::{Checked, Error, Validate};
-use {extensions, Extras, Root, Path};
+use crate::validation::{Checked, Error, Validate};
+use crate::{extensions, Extras, Root, Path};
 
 /// All valid camera types.
 pub const VALID_CAMERA_TYPES: &'static [&'static str] = &[
@@ -194,7 +195,7 @@ impl<'de> de::Deserialize<'de> for Checked<Type> {
                 where E: de::Error
             {
                 use self::Type::*;
-                use validation::Checked::*;
+                use crate::validation::Checked::*;
                 Ok(match value {
                     "perspective" => Valid(Perspective),
                     "orthographic" => Valid(Orthographic),

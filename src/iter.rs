@@ -1,17 +1,16 @@
-use json;
 use std::{iter, slice};
 
-use accessor::Accessor;
-use animation::Animation;
-use buffer::{Buffer, View};
-use camera::Camera;
-use image::Image;
-use material::Material;
-use mesh::Mesh;
-use scene::{Node, Scene};
-use skin::Skin;
-use texture::{Sampler, Texture};
-use ::Document;
+use crate::accessor::Accessor;
+use crate::animation::Animation;
+use crate::buffer::{Buffer, View};
+use crate::camera::Camera;
+use crate::image::Image;
+use crate::material::Material;
+use crate::mesh::Mesh;
+use crate::scene::{Node, Scene};
+use crate::skin::Skin;
+use crate::texture::{Sampler, Texture};
+use crate::Document;
 
 /// An `Iterator` that visits extension strings used by a glTF asset.
 #[derive(Clone, Debug)]

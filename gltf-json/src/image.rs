@@ -1,5 +1,7 @@
-use validation::{Error, Validate};
-use {buffer, extensions, Extras, Index, Root, Path};
+use gltf_derive::Validate;
+use serde_derive::{Serialize, Deserialize};
+use crate::validation::{Error, Validate};
+use crate::{buffer, extensions, Extras, Index, Root, Path};
 
 /// All valid MIME types.
 pub const VALID_MIME_TYPES: &'static [&'static str] = &[

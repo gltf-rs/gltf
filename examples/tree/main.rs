@@ -1,5 +1,3 @@
-extern crate gltf;
-
 use std::{fs, io};
 use std::boxed::Box;
 use std::error::Error as StdError;
@@ -9,7 +7,7 @@ fn print_tree(node: &gltf::Node, depth: i32) {
         print!("  ");
     }
     print!(" -");
-    print!(" Node {}", node.index());   
+    print!(" Node {}", node.index());
     #[cfg(feature = "names")]
     print!(" ({})", node.name().unwrap_or("<Unnamed>"));
     println!();

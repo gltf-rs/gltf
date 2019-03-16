@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use mesh::util::ReadJoints;
+use super::ReadJoints;
 
 /// Casting iterator for `Joints`.
 #[derive(Clone, Debug)]

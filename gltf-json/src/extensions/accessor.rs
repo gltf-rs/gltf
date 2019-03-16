@@ -1,5 +1,10 @@
+use gltf_derive::Validate;
+use serde_derive::{Serialize, Deserialize};
+
 /// Contains data structures for sparse storage.
 pub mod sparse {
+    use super::*;
+
     /// Indices of those attributes that deviate from their initialization value.
     #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
     pub struct Indices {}

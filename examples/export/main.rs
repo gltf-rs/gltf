@@ -1,5 +1,4 @@
-extern crate gltf;
-extern crate gltf_json as json;
+use gltf_json as json;
 
 use std::{fs, mem};
 

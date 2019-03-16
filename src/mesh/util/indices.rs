@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use mesh::util::ReadIndices;
+use super::ReadIndices;
 
 /// Casting iterator for `Indices`.
 #[derive(Clone, Debug)]

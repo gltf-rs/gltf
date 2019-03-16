@@ -3,8 +3,6 @@
 //! Read some binary glTF, write it to disk, and compare to the original.
 //! The test will succeed if the output is the same as the original.
 
-extern crate gltf;
-
 use std::{boxed, error, fs, io, path};
 use std::io::Read;
 

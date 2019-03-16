@@ -1,6 +1,6 @@
-use accessor;
+use crate::accessor;
 
-use {Buffer, Skin};
+use crate::{Buffer, Skin};
 
 /// Inverse Bind Matrices of type `[[f32; 4]; 4]`.
 pub type ReadInverseBindMatrices<'a> = accessor::Iter<'a, [[f32; 4]; 4]>;

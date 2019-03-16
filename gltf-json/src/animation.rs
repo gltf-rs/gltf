@@ -1,7 +1,9 @@
+use gltf_derive::Validate;
+use serde_derive::{Serialize, Deserialize};
 use serde::{de, ser};
 use std::fmt;
-use validation::{Checked, Error, Validate};
-use {accessor, extensions, scene, Extras, Index, Path, Root};
+use crate::validation::{Checked, Error, Validate};
+use crate::{accessor, extensions, scene, Extras, Index, Path, Root};
 
 /// All valid animation interpolation algorithms.
 pub const VALID_INTERPOLATIONS: &'static [&'static str] = &[
@@ -203,7 +205,7 @@ impl<'de> de::Deserialize<'de> for Checked<Interpolation> {
                 where E: de::Error
             {
                 use self::Interpolation::*;
-                use validation::Checked::*;
+                use crate::validation::Checked::*;
                 Ok(match value {
                     "LINEAR" => Valid(Linear),
                     "STEP" => Valid(Step),
@@ -247,7 +249,7 @@ impl<'de> de::Deserialize<'de> for Checked<Property> {
                 where E: de::Error
             {
                 use self::Property::*;
-                use validation::Checked::*;
+                use crate::validation::Checked::*;
                 Ok(match value {
                     "translation" => Valid(Translation),
                     "rotation" => Valid(Rotation),
