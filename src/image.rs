@@ -18,6 +18,12 @@ pub enum Format {
 
     /// Red, green, blue, alpha.
     R8G8B8A8,
+
+    /// Blue, green, red.
+    B8G8R8,
+
+    /// Blue, green, red, alpha.
+    B8G8R8A8,
 }
 
 /// Describes an image data source.
@@ -127,12 +133,14 @@ impl Data {
     /// Note: We don't implement `From<DynamicImage>` since we don't want
     /// to expose such functionality to the user.
     pub(crate) fn new(image: DynamicImage) -> Self {
-        use image_crate::GenericImage;
+        use image_crate::GenericImageView;
         let format = match image {
             DynamicImage::ImageLuma8(_) => Format::R8,
             DynamicImage::ImageLumaA8(_) => Format::R8G8,
             DynamicImage::ImageRgb8(_) => Format::R8G8B8,
             DynamicImage::ImageRgba8(_) => Format::R8G8B8A8,
+            DynamicImage::ImageBgr8(_) => Format::B8G8R8,
+            DynamicImage::ImageBgra8(_) => Format::B8G8R8A8,
         };
         let (width, height) = image.dimensions();
         let pixels = image.raw_pixels();

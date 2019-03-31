@@ -26,8 +26,13 @@ base64 = { optional = true, version = "0.6" }
 byteorder = "1.1"
 cgmath = "0.15"
 gltf-json = { path = "gltf-json", version = "0.11.3" }
-image = { optional = true, version = "0.19" }
 lazy_static = "0.2"
+
+[dependencies.image]
+default-features = false
+features = ["jpeg", "png_codec"]
+optional = true
+version = "0.21"
 
 [features]
 default = ["import", "utils", "names"]
@@ -36,6 +41,7 @@ names = ["gltf-json/names"]
 utils = []
 import = ["base64", "image"]
 KHR_materials_pbrSpecularGlossiness = ["gltf-json/KHR_materials_pbrSpecularGlossiness"]
+image_jpeg_rayon = ["image/jpeg_rayon"]
 
 [[example]]
 name = "gltf-display"
