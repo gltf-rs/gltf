@@ -4,31 +4,31 @@
 
 #![recursion_limit = "128"]
 
-#[macro_use]
-extern crate quote;
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
+use syn::DeriveInput;
 
 #[proc_macro_derive(Validate)]
 pub fn derive_validate(input: TokenStream) -> TokenStream {
-    let source = input.to_string();
-    let ast = syn::parse_macro_input(&source).unwrap();
-    let tokens = expand(&ast);
-    tokens.parse().unwrap()
+    expand(&syn::parse_macro_input!(input as DeriveInput)).into()
 }
 
-fn expand(ast: &syn::MacroInput) -> quote::Tokens {
-    let fields = match ast.body {
-        syn::Body::Struct(syn::VariantData::Struct(ref fields)) => fields,
+fn expand(ast: &DeriveInput) -> proc_macro2::TokenStream {
+    use proc_macro2::TokenStream;
+    use quote::quote;
+
+    let fields = match ast.data {
+        syn::Data::Struct(ref data_struct) => &data_struct.fields,
         _ => panic!("#[derive(Validate)] only works on `struct`s"),
     };
     let ident = &ast.ident;
-    let minimal_validations: Vec<quote::Tokens> = fields.iter()
+    let minimal_validations: Vec<TokenStream> = fields
+        .iter()
         .map(|f| f.ident.as_ref().unwrap())
         .map(|ident| {
             use inflections::Inflect;
-            let field = ident.as_ref().to_camel_case();
+            let field = ident.to_string().to_camel_case();
             quote!(
                 self.#ident.validate_minimally(
                     _root,
@@ -38,11 +38,12 @@ fn expand(ast: &syn::MacroInput) -> quote::Tokens {
             )
         })
         .collect();
-    let complete_validations: Vec<quote::Tokens> = fields.iter()
+    let complete_validations: Vec<TokenStream> = fields
+        .iter()
         .map(|f| f.ident.as_ref().unwrap())
         .map(|ident| {
             use inflections::Inflect;
-            let field = ident.as_ref().to_camel_case();
+            let field = ident.to_string().to_camel_case();
             quote!(
                 self.#ident.validate_completely(
                     _root,

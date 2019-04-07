@@ -19,15 +19,20 @@ travis-ci = { repository = "gltf-rs/gltf" }
 members = ["gltf-derive", "gltf-json"]
 
 [dev-dependencies]
-approx = "0.1.1"
+approx = "0.3"
 
 [dependencies]
-base64 = { optional = true, version = "0.6" }
+base64 = { optional = true, version = "0.10" }
 byteorder = "1.1"
-cgmath = "0.15"
+cgmath = "0.17"
 gltf-json = { path = "gltf-json", version = "0.11.3" }
-image = { optional = true, version = "0.19" }
-lazy_static = "0.2"
+lazy_static = "1"
+
+[dependencies.image]
+default-features = false
+features = ["jpeg", "png_codec"]
+optional = true
+version = "0.21"
 
 [features]
 default = ["import", "utils", "names"]
@@ -36,6 +41,7 @@ names = ["gltf-json/names"]
 utils = []
 import = ["base64", "image"]
 KHR_materials_pbrSpecularGlossiness = ["gltf-json/KHR_materials_pbrSpecularGlossiness"]
+image_jpeg_rayon = ["image/jpeg_rayon"]
 
 [[example]]
 name = "gltf-display"
