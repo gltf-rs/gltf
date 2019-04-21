@@ -116,6 +116,52 @@ fn align_to_multiple_of_four(n: &mut usize) {
     *n = (*n + 3) & !3;
 }
 
+fn split_binary_gltf<'a>(mut data: &'a [u8]) -> Result<(&'a [u8], Option<&'a [u8]>), Error> {
+    let (json, mut data) = ChunkHeader::from_reader(&mut data)
+        .and_then(|json_h| if let ChunkType::Json = json_h.ty {
+            Ok(json_h)
+        } else {
+            Err(Error::ChunkType(json_h.ty))
+        })
+        .and_then(|json_h| if json_h.length as usize <= data.len() {
+            Ok(json_h)
+        } else {
+            Err(Error::ChunkLength {
+                ty: json_h.ty,
+                length: json_h.length,
+                length_read: data.len(),
+            })
+        })
+        // We have verified that json_h.length is no greater than that of
+        // data.len().
+        .map(|json_h| data.split_at(json_h.length as usize))?;
+
+    let bin = if data.len() > 0 {
+        ChunkHeader::from_reader(&mut data)
+            .and_then(|bin_h| if let ChunkType::Bin = bin_h.ty {
+                Ok(bin_h)
+            } else {
+                Err(Error::ChunkType(bin_h.ty))
+            })
+            .and_then(|bin_h| if bin_h.length as usize <= data.len() {
+                Ok(bin_h)
+            } else {
+                Err(Error::ChunkLength {
+                    ty: bin_h.ty,
+                    length: bin_h.length,
+                    length_read: data.len(),
+                })
+            })
+            // We have verified that bin_h.length is no greater than that
+            // of data.len().
+            .map(|bin_h| data.split_at(bin_h.length as usize))
+            .map(|(x, _)| Some(x))?
+    } else {
+        None
+    };
+    Ok((json, bin))
+}
+
 impl<'a> Glb<'a> {
     /// Writes binary glTF to a writer.
     pub fn to_writer<W>(&self, mut writer: W) -> Result<(), crate::Error>
@@ -203,7 +249,7 @@ impl<'a> Glb<'a> {
             })
             .map_err(crate::Error::Binary)?;
         match header.version {
-            2 => Self::from_v2(data)
+            2 => split_binary_gltf(data)
                 .map(|(json, bin)| Glb { header, json: json.into(), bin: bin.map(Into::into) })
                 .map_err(crate::Error::Binary),
             x => Err(crate::Error::Binary(Error::Version(x)))
@@ -222,7 +268,7 @@ impl<'a> Glb<'a> {
                 if let Err(e) = reader.read_exact(&mut buf).map_err(Error::Io) {
                     Err(crate::Error::Binary(e))
                 } else {
-                    Self::from_v2(&buf)
+                    split_binary_gltf(&buf)
                         .map(|(json, bin)| Glb {
                             header,
                             json: json.to_vec().into(),
@@ -233,52 +279,6 @@ impl<'a> Glb<'a> {
             }
             x => Err(crate::Error::Binary(Error::Version(x)))
         }
-    }
-
-    fn from_v2(mut data: &'a [u8]) -> Result<(&'a [u8], Option<&'a [u8]>), Error> {
-        let (json, mut data) = ChunkHeader::from_reader(&mut data)
-            .and_then(|json_h| if let ChunkType::Json = json_h.ty {
-                Ok(json_h)
-            } else {
-                Err(Error::ChunkType(json_h.ty))
-            })
-            .and_then(|json_h| if json_h.length as usize <= data.len() {
-                Ok(json_h)
-            } else {
-                Err(Error::ChunkLength {
-                    ty: json_h.ty,
-                    length: json_h.length,
-                    length_read: data.len(),
-                })
-            })
-            // We have verified that json_h.length is no greater than that of
-            // data.len().
-            .map(|json_h| data.split_at(json_h.length as usize))?;
-
-        let bin = if data.len() > 0 {
-            ChunkHeader::from_reader(&mut data)
-                .and_then(|bin_h| if let ChunkType::Bin = bin_h.ty {
-                    Ok(bin_h)
-                } else {
-                    Err(Error::ChunkType(bin_h.ty))
-                })
-                .and_then(|bin_h| if bin_h.length as usize <= data.len() {
-                    Ok(bin_h)
-                } else {
-                    Err(Error::ChunkLength {
-                        ty: bin_h.ty,
-                        length: bin_h.length,
-                        length_read: data.len(),
-                    })
-                })
-                // We have verified that bin_h.length is no greater than that
-                // of data.len().
-                .map(|bin_h| data.split_at(bin_h.length as usize))
-                .map(|(x, _)| Some(x))?
-        } else {
-            None
-        };
-        Ok((json, bin))
     }
 }
 

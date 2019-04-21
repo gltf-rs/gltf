@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2019-04-21
+
+### Added
+
+- New image format variants `B8G8R8` and `B8G8R8A8`.
+- New export example.
+
+### Changed
+
+- The crate now builds with Rust 2018 edition.
+- `Extras` are now exposed as `RawValue`.
+- `Index` now implements `Copy`.
+- Meshes will no longer report a zero byte stride.
+- Updated the following dependendies:
+  - approx
+  - base64
+  - cgmath
+  - image
+  - lazy_static
+  - proc_macro2
+  - quote
+  - syn
+
+### Fixed
+
+- Removed an unused field in `Accessor` which was a cause of poor performance.
+- Borrow checker complaint regarding `Glb::from_reader`.
+
 ## [0.11.3] - 2019-02-21
 
 ### Added
