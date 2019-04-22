@@ -33,7 +33,7 @@ pub enum Error {
     UnknownChunkType([u8; 4]),
 }
 
-/// The contents of a .glb file.
+/// Binary glTF contents.
 #[derive(Clone, Debug)]
 pub struct Glb<'a> {
     /// The header section of the `.glb` file.
@@ -256,9 +256,12 @@ impl<'a> Glb<'a> {
         }
     }
 
-    /// Does the loading job for you.  Provided buf will be cleared before new
-    /// data will be written.  When error happens, if only header was read, buf
-    /// will not be mutated, otherwise, buf will be empty.
+    /// Reads binary glTF from a generic stream of data.
+    ///
+    /// # Note
+    ///
+    /// Reading terminates early if the stream does not contain valid binary
+    /// glTF.
     pub fn from_reader<R: io::Read>(mut reader: R) -> Result<Self, crate::Error> {
         let header = Header::from_reader(&mut reader).map_err(crate::Error::Binary)?;
         match header.version {
