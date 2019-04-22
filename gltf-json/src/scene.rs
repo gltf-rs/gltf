@@ -109,16 +109,4 @@ impl Default for UnitQuaternion {
     }
 }
 
-impl Validate for UnitQuaternion {
-    fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
-    {
-        for x in &self.0 {
-            if *x < -1.0 || *x > 1.0 {
-                report(&path, Error::Invalid);
-                // Only report once
-                break;
-            }
-        }
-    }
-}
+impl Validate for UnitQuaternion {}

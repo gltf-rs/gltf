@@ -315,7 +315,7 @@ impl Document {
     pub(crate) fn validate(&self) -> Result<()> {
         use json::validation::Validate;
         let mut errors = Vec::new();
-        self.0.validate_minimally(
+        self.0.validate(
             &self.0,
             json::Path::new,
             &mut |path, error| errors.push((path(), error)),
