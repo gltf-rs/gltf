@@ -186,6 +186,20 @@ fn import_impl(path: &Path) -> Result<Import> {
 /// #     run().expect("test failure");
 /// # }
 /// ```
+///
+/// ### Note
+///
+/// This function is provided as a convenience for loading glTF and associated
+/// resources from the file system. It is suitable for real world use but may
+/// not be suitable for all real world use cases. More complex import scenarios
+/// such downloading from web URLs are not handled by this function. These
+/// scenarios are delegated to the user.
+///
+/// You can read glTF without loading resources by constructing the [`Gltf`]
+/// (standard glTF) or [`Glb`] (binary glTF) data structures explicitly.
+///
+/// [`Gltf`]: struct.Gltf.html
+/// [`Glb`]: struct.Glb.html
 pub fn import<P>(path: P) -> Result<Import>
     where P: AsRef<Path>
 {

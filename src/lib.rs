@@ -9,11 +9,11 @@
 //!
 //! # Installation
 //!
-//! Add `gltf` version 0.11 to your `Cargo.toml`.
+//! Add `gltf` version 0.12 to your `Cargo.toml`.
 //!
 //! ```toml
 //! [dependencies.gltf]
-//! version = "0.11"
+//! version = "0.12"
 //! ```
 //!
 //! # Examples
@@ -59,7 +59,20 @@
 //! # }
 //! ```
 //!
+//! ### Note
+//!
+//! This function is provided as a convenience for loading glTF and associated
+//! resources from the file system. It is suitable for real world use but may
+//! not be suitable for all real world use cases. More complex import scenarios
+//! such downloading from web URLs are not handled by this function. These
+//! scenarios are delegated to the user.
+//!
+//! You can read glTF without loading resources by constructing the [`Gltf`]
+//! (standard glTF) or [`Glb`] (binary glTF) data structures explicitly.
+//!
 //! [glTF 2.0]: https://www.khronos.org/gltf
+//! [`Gltf`]: struct.Gltf.html
+//! [`Glb`]: struct.Glb.html
 //! [`Node`]: struct.Node.html
 //! [`Scene`]: struct.Scene.html
 
@@ -118,6 +131,8 @@ pub mod texture;
 pub use self::animation::Animation;
 #[doc(inline)]
 pub use self::accessor::Accessor;
+#[doc(inline)]
+pub use self::binary::Glb;
 #[doc(inline)]
 pub use self::buffer::Buffer;
 #[doc(inline)]
