@@ -191,7 +191,8 @@ impl<'a> PbrMetallicRoughness<'a> {
         self.json.base_color_factor.0
     }
 
-    /// Returns the base color texture.
+    /// Returns the base color texture. The texture contians RGB(A) components
+    /// in sRGB color space.
     pub fn base_color_texture(&self) -> Option<texture::Info<'a>> {
         self.json.base_color_texture.as_ref().map(|json| {
             let texture = self.document.textures().nth(json.index.value()).unwrap();
