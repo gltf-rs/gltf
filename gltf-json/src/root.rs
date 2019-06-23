@@ -247,7 +247,7 @@ impl<T> fmt::Display for Index<T> {
 impl<T: Validate> Validate for Index<T>
     where Root: Get<T>
 {
-    fn validate_minimally<P, R>(&self, root: &Root, path: P, report: &mut R)
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
         where P: Fn() -> Path, R: FnMut(&Fn() -> Path, validation::Error)
     {
         if root.get(*self).is_none() {

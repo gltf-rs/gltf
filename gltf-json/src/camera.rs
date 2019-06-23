@@ -1,3 +1,4 @@
+use gltf_derive::Validate;
 use serde::{de, ser};
 use serde_derive::{Serialize, Deserialize};
 use std::fmt;
@@ -56,7 +57,7 @@ pub struct Camera {
 }
 
 /// Values for an orthographic camera.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Orthographic {
     /// The horizontal magnification of the view.
     pub xmag: f32,
@@ -81,7 +82,7 @@ pub struct Orthographic {
 }
 
 /// Values for a perspective camera.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Perspective {
     /// Aspect ratio of the field of view.
     #[serde(rename = "aspectRatio")]
@@ -109,73 +110,18 @@ pub struct Perspective {
 }
 
 impl Validate for Camera {
-    fn validate_minimally<P, R>(&self, root: &Root, path: P, report: &mut R)
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
         where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
     {
         if self.orthographic.is_none() && self.perspective.is_none() {
             report(&path, Error::Missing);
         }
 
-        self.orthographic
-            .validate_minimally(root, || path().field("orthographic"), report);
-        self.perspective
-            .validate_minimally(root, || path().field("perspective"), report);
-        self.type_
-            .validate_minimally(root, || path().field("type"), report);
-        self.extensions
-            .validate_minimally(root, || path().field("extensions"), report);
-        self.extras
-            .validate_minimally(root, || path().field("extras"), report);
-    }
-}
-
-impl Validate for Orthographic {
-    fn validate_completely<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
-    {
-        if self.znear < 0.0 {
-            report(&path, Error::Invalid);
-        }
- 
-        if self.zfar < 0.0  || self.zfar < self.znear {
-            report(&path, Error::Invalid);
-        }
-
-        self.extensions
-            .validate_completely(root, || path().field("extensions"), report);
-        self.extras
-            .validate_completely(root, || path().field("extras"), report);
-    }
-}
-
-impl Validate for Perspective {
-    fn validate_completely<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
-    {
-        self.aspect_ratio.map(|aspect_ratio| {
-            if aspect_ratio < 0.0 {
-                report(&path, Error::Invalid);
-            }
-        });
-
-        if self.yfov < 0.0 {
-            report(&path, Error::Invalid);
-        }
-
-        if self.znear < 0.0 {
-            report(&path, Error::Invalid);
-        }
-
-        self.zfar.map(|zfar| {
-            if zfar < 0.0 || zfar < self.znear {
-                report(&path, Error::Invalid);
-            }
-        });
-
-        self.extensions
-            .validate_completely(root, || path().field("extensions"), report);
-        self.extras
-            .validate_completely(root, || path().field("extras"), report);
+        self.orthographic.validate(root, || path().field("orthographic"), report);
+        self.perspective.validate(root, || path().field("perspective"), report);
+        self.type_.validate(root, || path().field("type"), report);
+        self.extensions.validate(root, || path().field("extensions"), report);
+        self.extras.validate(root, || path().field("extras"), report);
     }
 }
 

@@ -23,29 +23,14 @@ fn expand(ast: &DeriveInput) -> proc_macro2::TokenStream {
         _ => panic!("#[derive(Validate)] only works on `struct`s"),
     };
     let ident = &ast.ident;
-    let minimal_validations: Vec<TokenStream> = fields
+    let validations: Vec<TokenStream> = fields
         .iter()
         .map(|f| f.ident.as_ref().unwrap())
         .map(|ident| {
             use inflections::Inflect;
             let field = ident.to_string().to_camel_case();
             quote!(
-                self.#ident.validate_minimally(
-                    _root,
-                    || _path().field(#field),
-                    _report,
-                )
-            )
-        })
-        .collect();
-    let complete_validations: Vec<TokenStream> = fields
-        .iter()
-        .map(|f| f.ident.as_ref().unwrap())
-        .map(|ident| {
-            use inflections::Inflect;
-            let field = ident.to_string().to_camel_case();
-            quote!(
-                self.#ident.validate_completely(
+                self.#ident.validate(
                     _root,
                     || _path().field(#field),
                     _report,
@@ -58,7 +43,7 @@ fn expand(ast: &DeriveInput) -> proc_macro2::TokenStream {
         impl #impl_generics crate::validation::Validate
             for #ident #ty_generics #where_clause
         {
-            fn validate_minimally<P, R>(
+            fn validate<P, R>(
                 &self,
                 _root: &crate::Root,
                 _path: P,
@@ -68,21 +53,7 @@ fn expand(ast: &DeriveInput) -> proc_macro2::TokenStream {
                 R: FnMut(&Fn() -> crate::Path, crate::validation::Error),
             {
                 #(
-                    #minimal_validations;
-                )*
-            }
-
-            fn validate_completely<P, R>(
-                &self,
-                _root: &crate::Root,
-                _path: P,
-                _report: &mut R
-            ) where
-                P: Fn() -> crate::Path,
-                R: FnMut(&Fn() -> crate::Path, crate::validation::Error),
-            {
-                #(
-                    #complete_validations;
+                    #validations;
                 )*
             }
         }

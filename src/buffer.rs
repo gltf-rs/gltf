@@ -144,10 +144,10 @@ impl<'a> View<'a> {
         self.json.byte_stride.and_then(|x| {
                 // Treat byte_stride == 0 same as not specifying stride.
                 // This is technically a validation error, but best way we can handle it here
-                if x.0 == 0 {
+                if x == 0 {
                     None
                 } else {
-                    Some(x.0 as usize)  
+                    Some(x as usize)
                 }
             })
     }

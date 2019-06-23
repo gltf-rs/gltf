@@ -8,9 +8,17 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+### Changed
+
+- Renamed `validate_minimally` as `validate`.
+
 ### Fixed
 
 - Incorrect version in README instructions.
+
+### Removed
+
+- Trait function `Validate::validate_completely` and its implementations.
 
 ## [0.12.0] - 2019-04-21
 

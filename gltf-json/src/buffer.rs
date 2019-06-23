@@ -93,7 +93,7 @@ pub struct View {
     /// When zero, data is assumed to be tightly packed.
     #[serde(rename = "byteStride")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub byte_stride: Option<ByteStride>,
+    pub byte_stride: Option<u32>,
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
@@ -112,27 +112,6 @@ pub struct View {
     #[serde(default)]
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
-}
-
-/// The stride, in bytes, between vertex attributes.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct ByteStride(pub u32);
-
-impl Validate for ByteStride {
-    fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
-    where
-        P: Fn() -> Path,
-        R: FnMut(&Fn() -> Path, Error),
-    {
-        if self.0 % 4 != 0 {
-            // Not a multiple of 4
-            report(&path, Error::Invalid);
-        }
-
-        if self.0 < MIN_BYTE_STRIDE || self.0 > MAX_BYTE_STRIDE {
-            report(&path, Error::Invalid);
-        }
-    }
 }
 
 impl<'de> de::Deserialize<'de> for Checked<Target> {

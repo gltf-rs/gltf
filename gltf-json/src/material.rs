@@ -250,19 +250,11 @@ impl Default for AlphaCutoff {
     }
 }
 
+impl Validate for AlphaCutoff {}
+
 impl Default for AlphaMode {
     fn default() -> Self {
         AlphaMode::Opaque
-    }
-}
-
-impl Validate for AlphaCutoff {
-    fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
-    {
-        if self.0 < 0.0 {
-            report(&path, Error::Invalid);
-        }
     }
 }
 
@@ -295,19 +287,7 @@ impl<'de> de::Deserialize<'de> for Checked<AlphaMode> {
     }
 }
 
-impl Validate for EmissiveFactor {
-    fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
-    {
-        for x in &self.0 {
-            if *x < 0.0 || *x > 1.0 {
-                report(&path, Error::Invalid);
-                // Only report once
-                break;
-            }
-        }
-    }
-}
+impl Validate for EmissiveFactor {}
 
 impl Default for PbrBaseColorFactor {
     fn default() -> Self {
@@ -315,19 +295,7 @@ impl Default for PbrBaseColorFactor {
     }
 }
 
-impl Validate for PbrBaseColorFactor {
-    fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
-    {
-        for x in &self.0 {
-            if *x < 0.0 || *x > 1.0 {
-                report(&path, Error::Invalid);
-                // Only report once
-                break;
-            }
-        }
-    }
-}
+impl Validate for PbrBaseColorFactor {}
 
 impl Default for StrengthFactor {
     fn default() -> Self {
@@ -335,13 +303,4 @@ impl Default for StrengthFactor {
     }
 }
 
-impl Validate for StrengthFactor {
-    fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
-    {
-        if self.0 < 0.0 || self.0 > 1.0 {
-            report(&path, Error::Invalid);
-        }
-    }
-}
-
+impl Validate for StrengthFactor {}

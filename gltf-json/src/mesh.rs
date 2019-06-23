@@ -139,56 +139,49 @@ fn is_primitive_mode_default(mode: &Checked<Mode>) -> bool {
     *mode == Checked::Valid(Mode::Triangles)
 }
 
-    impl Validate for Primitive {
-        fn validate_minimally<P, R>(&self, root: &crate::Root, path: P, report: &mut R)
+impl Validate for Primitive {
+    fn validate<P, R>(&self, root: &crate::Root, path: P, report: &mut R)
         where
-            P: Fn() -> crate::Path,
-            R: FnMut(&Fn() -> crate::Path, crate::validation::Error),
-        {
-            // Generated part
-            self.attributes
-                .validate_minimally(root, || path().field("attributes"), report);
-            self.extensions
-                .validate_minimally(root, || path().field("extensions"), report);
-            self.extras
-                .validate_minimally(root, || path().field("extras"), report);
-            self.indices
-                .validate_minimally(root, || path().field("indices"), report);
-            self.material
-                .validate_minimally(root, || path().field("material"), report);
-            self.mode
-                .validate_minimally(root, || path().field("mode"), report);
-            self.targets
-                .validate_minimally(root, || path().field("targets"), report);
+        P: Fn() -> crate::Path,
+        R: FnMut(&Fn() -> crate::Path, crate::validation::Error),
+    {
+        // Generated part
+        self.attributes.validate(root, || path().field("attributes"), report);
+        self.extensions.validate(root, || path().field("extensions"), report);
+        self.extras.validate(root, || path().field("extras"), report);
+        self.indices.validate(root, || path().field("indices"), report);
+        self.material.validate(root, || path().field("material"), report);
+        self.mode.validate(root, || path().field("mode"), report);
+        self.targets.validate(root, || path().field("targets"), report);
 
-            // Custom part
-            let position_path = &|| path().field("attributes").key("POSITION");
-            if let Some(pos_accessor_index) = self.attributes.get(&Checked::Valid(Semantic::Positions)) {
-                // spec: POSITION accessor **must** have `min` and `max` properties defined.
-                let pos_accessor = &root.accessors[pos_accessor_index.value()];
+        // Custom part
+        let position_path = &|| path().field("attributes").key("POSITION");
+        if let Some(pos_accessor_index) = self.attributes.get(&Checked::Valid(Semantic::Positions)) {
+            // spec: POSITION accessor **must** have `min` and `max` properties defined.
+            let pos_accessor = &root.accessors[pos_accessor_index.value()];
 
-                let min_path = &|| position_path().field("min");
-                if let Some(ref min) = pos_accessor.min {
-                    if from_value::<[f32; 3]>(min.clone()).is_err() {
-                        report(min_path, Error::Invalid);
-                    }
-                } else {
-                    report(min_path, Error::Missing);
-                }
-
-                let max_path = &|| position_path().field("max");
-                if let Some(ref max) = pos_accessor.max {
-                    if from_value::<[f32; 3]>(max.clone()).is_err() {
-                        report(max_path, Error::Invalid);
-                    }
-                } else {
-                    report(max_path, Error::Missing);
+            let min_path = &|| position_path().field("min");
+            if let Some(ref min) = pos_accessor.min {
+                if from_value::<[f32; 3]>(min.clone()).is_err() {
+                    report(min_path, Error::Invalid);
                 }
             } else {
-                report(position_path, Error::Missing);
+                report(min_path, Error::Missing);
             }
+
+            let max_path = &|| position_path().field("max");
+            if let Some(ref max) = pos_accessor.max {
+                if from_value::<[f32; 3]>(max.clone()).is_err() {
+                    report(max_path, Error::Invalid);
+                }
+            } else {
+                report(max_path, Error::Missing);
+            }
+        } else {
+            report(position_path, Error::Missing);
         }
     }
+}
 
 /// A dictionary mapping attributes to their deviations in the Morph Target.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]

@@ -10,11 +10,11 @@ fn import_json(filename: &str) -> gltf_json::Root {
 }
 
 #[test]
-fn test_accessor_bounds_validate_minimally() {
+fn test_accessor_bounds_validate() {
     // file with missing min/max values
     let json = import_json("tests/minimal_accessor_invalid.gltf");
     let mut errs = vec![];
-    json.validate_minimally(
+    json.validate(
         &json,
         gltf_json::Path::new,
         &mut |path, err| errs.push((path(), err)),

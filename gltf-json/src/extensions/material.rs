@@ -67,7 +67,6 @@ pub struct PbrSpecularGlossiness {
     pub extras: Extras,
 }
 
-
 /// Defines the normal texture of a material.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct NormalTexture {}
@@ -89,19 +88,7 @@ impl Default for PbrDiffuseFactor {
 }
 
 #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
-impl Validate for PbrDiffuseFactor {
-    fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
-    {
-        for x in &self.0 {
-            if *x < 0.0 || *x > 1.0 {
-                report(&path, Error::Invalid);
-                // Only report once
-                break;
-            }
-        }
-    }
-}
+impl Validate for PbrDiffuseFactor {}
 
 /// The specular factor of a material.
 #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
@@ -116,16 +103,4 @@ impl Default for PbrSpecularFactor {
 }
 
 #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
-impl Validate for PbrSpecularFactor {
-    fn validate_completely<P, R>(&self, _: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
-    {
-        for x in &self.0 {
-            if *x < 0.0 || *x > 1.0 {
-                report(&path, Error::Invalid);
-                // Only report once
-                break;
-            }
-        }
-    }
-}
+impl Validate for PbrSpecularFactor {}

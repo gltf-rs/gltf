@@ -66,7 +66,7 @@ fn export(output: Output) {
         buffer: json::Index::new(0),
         byte_length: buffer.byte_length,
         byte_offset: None,
-        byte_stride: Some(json::buffer::ByteStride(mem::size_of::<Vertex>() as u32)),
+        byte_stride: Some(mem::size_of::<Vertex>() as u32),
         extensions: Default::default(),
         extras: Default::default(),
         name: None,
