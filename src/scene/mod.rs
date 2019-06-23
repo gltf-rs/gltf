@@ -1,13 +1,8 @@
-use cgmath::prelude::*;
-
+use crate::math::*;
 use crate::{Camera, Document, Mesh, Skin};
 
 /// Iterators.
 pub mod iter;
-
-type Matrix3 = cgmath::Matrix3<f32>;
-type Matrix4 = cgmath::Matrix4<f32>;
-type Quaternion = cgmath::Quaternion<f32>;
 
 /// The transform for a `Node`.
 #[derive(Clone, Debug)]
@@ -40,10 +35,10 @@ impl Transform {
         match self {
             Transform::Matrix { matrix } => matrix,
             Transform::Decomposed { translation: t, rotation: r, scale: s } => {
-                let t = Matrix4::from_translation(t.into());
-                let r = Matrix4::from(Quaternion::new(r[3], r[0], r[1], r[2]));
+                let t = Matrix4::from_translation(Vector3::new(t[0], t[1], t[2]));
+                let r = Matrix4::from_quaternion(Quaternion::new(r[3], r[0], r[1], r[2]));
                 let s = Matrix4::from_nonuniform_scale(s[0], s[1], s[2]);
-                (t * r * s).into()
+                (t * r * s).as_array()
             },
         }
     }
@@ -65,10 +60,10 @@ impl Transform {
                 let sy = i.y.magnitude();
                 let sz = i.determinant().signum() * i.z.magnitude();
                 let scale = [sx, sy, sz];
-                i.x /= sx;
-                i.y /= sy;
-                i.z /= sz;
-                let r = Quaternion::from(i);
+                i.x.multiply(1.0 / sx);
+                i.y.multiply(1.0 / sy);
+                i.z.multiply(1.0 / sz);
+                let r = Quaternion::from_matrix(i);
                 let rotation = [r.v.x, r.v.y, r.v.z, r.s];
                 (translation, rotation, scale)
             },
@@ -238,13 +233,13 @@ impl<'a> Scene<'a> {
 
 #[cfg(test)]
 mod tests {
-    use cgmath::{vec3, InnerSpace, Matrix4, Quaternion, Rad, Rotation3};
     use crate::scene::Transform;
+    use crate::math::*;
     use std::f32::consts::PI;
 
     fn rotate(x: f32, y: f32, z: f32, r: f32) -> [f32; 4] {
-        let r = Quaternion::from_axis_angle(vec3(x, y, z).normalize(), Rad(r));
-        [r[1], r[2], r[3], r[0]]
+        let r = Quaternion::from_axis_angle(Vector3::new(x, y, z).normalize(), r);
+        [r.v.x, r.v.y, r.v.z, r.s]
     }
 
     fn test_decompose(translation: [f32; 3], rotation: [f32; 4], scale: [f32; 3]) {
@@ -252,8 +247,8 @@ mod tests {
         let (translation, rotation, scale) = Transform::Matrix { matrix }.decomposed();
         let check = Transform::Decomposed { translation, rotation, scale }.matrix();
         assert_relative_eq!(
-            Matrix4::from(check),
-            Matrix4::from(matrix),
+            Matrix4::from_array(check),
+            Matrix4::from_array(matrix),
             epsilon = 0.05
         );
     }
