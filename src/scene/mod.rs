@@ -1,13 +1,14 @@
-use cgmath::prelude::*;
-
 use crate::{Camera, Document, Mesh, Skin};
+use nalgebra::{Unit, Rotation};
 
 /// Iterators.
 pub mod iter;
 
-type Matrix3 = cgmath::Matrix3<f32>;
-type Matrix4 = cgmath::Matrix4<f32>;
-type Quaternion = cgmath::Quaternion<f32>;
+type Matrix3 = nalgebra::Matrix3<f32>;
+type Matrix4 = nalgebra::Matrix4<f32>;
+type Quaternion = nalgebra::Quaternion<f32>;
+type UnitQuaternion = nalgebra::Unit<Quaternion>;
+type Vector3 = nalgebra::Vector3<f32>;
 
 /// The transform for a `Node`.
 #[derive(Clone, Debug)]
@@ -40,9 +41,9 @@ impl Transform {
         match self {
             Transform::Matrix { matrix } => matrix,
             Transform::Decomposed { translation: t, rotation: r, scale: s } => {
-                let t = Matrix4::from_translation(t.into());
-                let r = Matrix4::from(Quaternion::new(r[3], r[0], r[1], r[2]));
-                let s = Matrix4::from_nonuniform_scale(s[0], s[1], s[2]);
+                let t = Matrix4::new_translation(&Vector3::new(t[0], t[1], t[2]));
+                let r = Matrix4::from(Unit::new_unchecked(Quaternion::new(r[3], r[0], r[1], r[2])));
+                let s = Matrix4::new_nonuniform_scaling(&Vector3::new(s[0], s[1], s[2]));
                 (t * r * s).into()
             },
         }
@@ -56,20 +57,18 @@ impl Transform {
         match self {
             Transform::Matrix { matrix: m } => {
                 let translation = [m[3][0], m[3][1], m[3][2]];
-                let mut i = Matrix3::new(
-                    m[0][0], m[0][1], m[0][2],
-                    m[1][0], m[1][1], m[1][2],
-                    m[2][0], m[2][1], m[2][2],
-                );
-                let sx = i.x.magnitude();
-                let sy = i.y.magnitude();
-                let sz = i.determinant().signum() * i.z.magnitude();
+                let r0 = Vector3::new(m[0][0], m[0][1], m[0][2]);
+                let r1 = Vector3::new(m[1][0], m[1][1], m[1][2]);
+                let r2 = Vector3::new(m[2][0], m[2][1], m[2][2]);
+                let mut i = Matrix3::from_columns(&[r0, r1, r2]);
+                let sx = r0.magnitude();
+                let sy = r1.magnitude();
+                let sz = i.determinant().signum() * r2.magnitude();
                 let scale = [sx, sy, sz];
-                i.x /= sx;
-                i.y /= sy;
-                i.z /= sz;
-                let r = Quaternion::from(i);
-                let rotation = [r.v.x, r.v.y, r.v.z, r.s];
+                i = Matrix3::from_columns(&[r0 / sx, r1 / sy, r2 / sz]);
+                let q = UnitQuaternion::from(Rotation::from_matrix_unchecked(i));
+                let v = q.as_vector();
+                let rotation = [v.x, v.y, v.z, v.w];
                 (translation, rotation, scale)
             },
             Transform::Decomposed { translation, rotation, scale } => {
@@ -238,13 +237,17 @@ impl<'a> Scene<'a> {
 
 #[cfg(test)]
 mod tests {
-    use cgmath::{vec3, InnerSpace, Matrix4, Quaternion, Rad, Rotation3};
     use crate::scene::Transform;
     use std::f32::consts::PI;
+    use super::*;
+
+    type Vector3 = nalgebra::Vector3<f32>;
 
     fn rotate(x: f32, y: f32, z: f32, r: f32) -> [f32; 4] {
-        let r = Quaternion::from_axis_angle(vec3(x, y, z).normalize(), Rad(r));
-        [r[1], r[2], r[3], r[0]]
+        let v = Unit::new_normalize(Vector3::new(x, y, z));
+        let q = UnitQuaternion::from_axis_angle(&v, r);
+        let v2 = q.as_vector();
+        [v2.x, v2.y, v2.z, v2.w]
     }
 
     fn test_decompose(translation: [f32; 3], rotation: [f32; 4], scale: [f32; 3]) {
