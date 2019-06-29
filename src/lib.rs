@@ -115,6 +115,9 @@ pub mod iter;
 /// Material properties of primitives.
 pub mod material;
 
+/// For internal use.
+mod math;
+
 /// Meshes and their primitives.
 pub mod mesh;
 
