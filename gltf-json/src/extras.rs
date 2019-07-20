@@ -35,12 +35,3 @@ impl fmt::Display for Void {
         write!(f, "{{}}")
     }
 }
-
-#[cfg(feature = "extras")]
-impl Validate for ::std::boxed::Box<RawValue> {
-    fn validate<P, R>(&self, _: &Root, _: P, _: &mut R)
-        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
-    {
-        // nop
-    }
-}

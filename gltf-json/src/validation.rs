@@ -131,6 +131,14 @@ impl<T: Validate> Validate for Vec<T> {
     }
 }
 
+impl Validate for std::boxed::Box<serde_json::value::RawValue> {
+    fn validate<P, R>(&self, _: &Root, _: P, _: &mut R)
+        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
+    {
+        // nop
+    }
+}
+
 impl std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {

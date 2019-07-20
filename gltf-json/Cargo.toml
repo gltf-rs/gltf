@@ -17,4 +17,5 @@ serde_json = { features = ["raw_value"], version = "1.0" }
 default = []
 names = []
 extras = []
+KHR_lights_punctual = []
 KHR_materials_pbrSpecularGlossiness = []
