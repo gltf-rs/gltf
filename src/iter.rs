@@ -80,6 +80,18 @@ pub struct Images<'a> {
     pub(crate) document: &'a Document,
 }
 
+
+/// An `Iterator` that visits every light in a glTF asset.
+#[cfg(feature = "KHR_lights_punctual")]
+#[derive(Clone, Debug)]
+pub struct Lights<'a> {
+    /// Internal image iterator.
+    pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::extensions::scene::khr_lights_punctual::Light>>,
+
+    /// The internal root glTF object.
+    pub(crate) document: &'a Document,
+}
+
 /// An `Iterator` that visits every material in a glTF asset.
 #[derive(Clone, Debug)]
 pub struct Materials<'a> {
@@ -241,6 +253,23 @@ impl<'a> Iterator for Images<'a> {
         self.iter
             .next()
             .map(|(index, json)| Image::new(self.document, index, json))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+}
+
+#[cfg(feature = "KHR_lights_punctual")]
+impl<'a> ExactSizeIterator for Lights<'a> {}
+
+#[cfg(feature = "KHR_lights_punctual")]
+impl<'a> Iterator for Lights<'a> {
+    type Item = crate::khr_lights_punctual::Light<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter
+            .next()
+            .map(|(index, json)| crate::khr_lights_punctual::Light::new(self.document, index, json))
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {

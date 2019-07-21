@@ -39,6 +39,7 @@ extras = ["gltf-json/extras"]
 names = ["gltf-json/names"]
 utils = []
 import = ["base64", "image"]
+KHR_lights_punctual = ["gltf-json/KHR_lights_punctual"]
 KHR_materials_pbrSpecularGlossiness = ["gltf-json/KHR_materials_pbrSpecularGlossiness"]
 image_jpeg_rayon = ["image/jpeg_rayon"]
 

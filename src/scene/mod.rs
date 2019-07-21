@@ -143,6 +143,21 @@ impl<'a> Node<'a> {
         &self.json.extras
     }
 
+    /// Returns the light at this node as defined by the `KHR_lights_punctual` extension.
+    #[cfg(feature = "KHR_lights_punctual")]
+    pub fn light(&self) -> Option<crate::khr_lights_punctual::Light> {
+        if let Some(extensions) = self.json.extensions.as_ref() {
+            if let Some(khr_lights_punctual) = extensions.khr_lights_punctual.as_ref() {
+                let mut lights = self.document.lights().unwrap();
+                Some(lights.nth(khr_lights_punctual.light.value()).unwrap())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
     /// Returns the mesh referenced by this node.
     pub fn mesh(&self) -> Option<Mesh> {
         self.json.mesh.as_ref().map(|index| {

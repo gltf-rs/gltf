@@ -112,6 +112,10 @@ mod import;
 /// Iterators for walking the glTF node hierarchy.
 pub mod iter;
 
+/// Support for the `KHR_lights_punctual` extension.
+#[cfg(feature = "KHR_lights_punctual")]
+pub mod khr_lights_punctual;
+
 /// Material properties of primitives.
 pub mod material;
 
@@ -400,6 +404,24 @@ impl Document {
         iter::Images {
             iter: self.0.images.iter().enumerate(),
             document: self,
+        }
+    }
+
+    /// Returns an `Iterator` that visits the lights of the glTF asset as defined by the
+    /// `KHR_lights_punctual` extension.
+    #[cfg(feature = "KHR_lights_punctual")]
+    pub fn lights(&self) -> Option<iter::Lights> {
+        if let Some(extensions) = self.0.extensions.as_ref() {
+            if let Some(khr_lights_punctual) = extensions.khr_lights_punctual.as_ref() {
+                Some(iter::Lights {
+                    iter: khr_lights_punctual.lights.iter().enumerate(),
+                    document: self,
+                })
+            } else {
+                None
+            }
+        } else {
+            None
         }
     }
 

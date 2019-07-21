@@ -8,6 +8,10 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+### Added
+
+- Support for the `KHR_lights_punctual` extension.
+
 ### Changed
 
 - Renamed `validate_minimally` as `validate`.
