@@ -11,6 +11,7 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 - Support for the `KHR_lights_punctual` extension.
+- `gltf-roundtrip` example.
 
 ### Changed
 
