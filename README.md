@@ -12,9 +12,6 @@
    <a href="https://docs.rs/gltf">
       <img src="https://docs.rs/gltf/badge.svg" alt="docs.rs">
    </a>
-   <a href="https://gitter.im/gltf-rs/Lobby">
-      <img src="https://badges.gitter.im/gltf-rs/Lobby.svg" alt="gitter">
-   </a>
 </p>
 <hr>
 
