@@ -56,6 +56,14 @@ Demonstrates how glTF JSON can be built and exported using the `gltf-json` crate
 cargo run --example gltf-export
 ```
 
+#### gltf-roundtrip
+
+Deserializes and serializes the JSON part of a glTF asset.
+
+```sh
+cargo run --example gltf-roundtrip path/to/asset.gltf
+```
+
 #### gltf-tree
 
 Visualises the scene heirarchy of a glTF asset, which is a strict tree of nodes.

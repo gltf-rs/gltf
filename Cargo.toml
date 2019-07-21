@@ -52,5 +52,9 @@ name = "gltf-export"
 path = "examples/export/main.rs"
 
 [[example]]
+name = "gltf-roundtrip"
+path = "examples/roundtrip/main.rs"
+
+[[example]]
 name = "gltf-tree"
 path = "examples/tree/main.rs"
