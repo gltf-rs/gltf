@@ -143,7 +143,7 @@ impl Validate for Primitive {
     fn validate<P, R>(&self, root: &crate::Root, path: P, report: &mut R)
         where
         P: Fn() -> crate::Path,
-        R: FnMut(&Fn() -> crate::Path, crate::validation::Error),
+        R: FnMut(&dyn Fn() -> crate::Path, crate::validation::Error),
     {
         // Generated part
         self.attributes.validate(root, || path().field("attributes"), report);

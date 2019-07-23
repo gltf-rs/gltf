@@ -10,7 +10,7 @@ pub trait Validate {
     fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
     where
         P: Fn() -> Path,
-        R: FnMut(&Fn() -> Path, Error),
+        R: FnMut(&dyn Fn() -> Path, Error),
     {
         // nop
     }
@@ -91,7 +91,7 @@ impl<T: Default> Default for Checked<T> {
 
 impl<T> Validate for Checked<T> {
     fn validate<P, R>(&self, _root: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
+        where P: Fn() -> Path, R: FnMut(&dyn Fn() -> Path, Error)
     {
         match *self {
             Checked::Valid(_) => {},
@@ -102,7 +102,7 @@ impl<T> Validate for Checked<T> {
 
 impl<K: Eq + Hash + ToString + Validate, V: Validate> Validate for HashMap<K, V> {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
+        where P: Fn() -> Path, R: FnMut(&dyn Fn() -> Path, Error)
     {
         for (key, value) in self.iter() {
             key.validate(root, || path().key(&key.to_string()), report);
@@ -113,7 +113,7 @@ impl<K: Eq + Hash + ToString + Validate, V: Validate> Validate for HashMap<K, V>
 
 impl<T: Validate> Validate for Option<T> {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
+        where P: Fn() -> Path, R: FnMut(&dyn Fn() -> Path, Error)
     {
         if let Some(value) = self.as_ref() {
             value.validate(root, path, report);
@@ -123,7 +123,7 @@ impl<T: Validate> Validate for Option<T> {
 
 impl<T: Validate> Validate for Vec<T> {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
+        where P: Fn() -> Path, R: FnMut(&dyn Fn() -> Path, Error)
     {
         for (index, value) in self.iter().enumerate() {
             value.validate(root, || path().index(index), report);
@@ -133,7 +133,7 @@ impl<T: Validate> Validate for Vec<T> {
 
 impl Validate for std::boxed::Box<serde_json::value::RawValue> {
     fn validate<P, R>(&self, _: &Root, _: P, _: &mut R)
-        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
+        where P: Fn() -> Path, R: FnMut(&dyn Fn() -> Path, Error)
     {
         // nop
     }
