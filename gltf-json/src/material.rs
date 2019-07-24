@@ -2,8 +2,8 @@ use gltf_derive::Validate;
 use serde_derive::{Serialize, Deserialize};
 use serde::{de, ser};
 use std::fmt;
-use crate::validation::{Checked, Error, Validate};
-use crate::{extensions, texture, Extras, Index, Root, Path};
+use crate::validation::{Checked, Validate};
+use crate::{extensions, texture, Extras, Index};
 
 /// All valid alpha modes.
 pub const VALID_ALPHA_MODES: &'static [&'static str] = &[

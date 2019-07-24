@@ -111,7 +111,7 @@ pub mod khr_lights_punctual {
 
     impl Validate for Light {
         fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-            where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
+            where P: Fn() -> Path, R: FnMut(&dyn Fn() -> Path, Error)
         {
             if let Checked::Valid(ty) = self.type_.as_ref() {
                 if *ty == Type::Spot && self.spot.is_none() {
