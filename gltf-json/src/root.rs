@@ -119,7 +119,7 @@ impl Root {
     pub fn get<T>(&self, index: Index<T>) -> Option<&T>
         where Self: Get<T>
     {
-        (self as &Get<T>).get(index)
+        (self as &dyn Get<T>).get(index)
     }
 
     /// Deserialize from a JSON string slice.
@@ -248,7 +248,7 @@ impl<T: Validate> Validate for Index<T>
     where Root: Get<T>
 {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, validation::Error)
+        where P: Fn() -> Path, R: FnMut(&dyn Fn() -> Path, validation::Error)
     {
         if root.get(*self).is_none() {
             report(&path, validation::Error::IndexOutOfBounds);

@@ -111,7 +111,7 @@ pub struct Perspective {
 
 impl Validate for Camera {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&Fn() -> Path, Error)
+        where P: Fn() -> Path, R: FnMut(&dyn Fn() -> Path, Error)
     {
         if self.orthographic.is_none() && self.perspective.is_none() {
             report(&path, Error::Missing);

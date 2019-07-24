@@ -171,7 +171,7 @@ impl Validate for Animation {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
     where
         P: Fn() -> Path,
-        R: FnMut(&Fn() -> Path, Error),
+        R: FnMut(&dyn Fn() -> Path, Error),
     {
         self.samplers.validate(root, || path().field("samplers"), report);
         for (index, channel) in self.channels.iter().enumerate() {

@@ -225,7 +225,7 @@ impl<'a> Glb<'a> {
         }
 
         let mut vec = Vec::with_capacity(length);
-        self.to_writer(&mut vec as &mut io::Write)?;
+        self.to_writer(&mut vec as &mut dyn io::Write)?;
         Ok(vec)
     }
 
