@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.13.0] - 2019-07-27
 
 ### Added
 
@@ -16,11 +16,12 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 
 - Renamed `validate_minimally` as `validate`.
-- Removed depedency on `cgmath`.
+- Removed dependency on `cgmath`.
 
 ### Fixed
 
 - Incorrect version in README instructions.
+- Compiler warnings.
 
 ### Removed
 

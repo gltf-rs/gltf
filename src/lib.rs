@@ -9,11 +9,11 @@
 //!
 //! # Installation
 //!
-//! Add `gltf` version 0.12 to your `Cargo.toml`.
+//! Add `gltf` version 0.13 to your `Cargo.toml`.
 //!
 //! ```toml
 //! [dependencies.gltf]
-//! version = "0.12"
+//! version = "0.13"
 //! ```
 //!
 //! # Examples
