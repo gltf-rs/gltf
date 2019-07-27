@@ -1,8 +1,6 @@
 use gltf_derive::Validate;
 use serde_derive::{Serialize, Deserialize};
 
-use crate::Index;
-
 /// The root object of a glTF 2.0 asset.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct Root {
@@ -20,7 +18,7 @@ pub struct KhrLightsPunctual {
 
 #[cfg(feature = "KHR_lights_punctual")]
 impl crate::root::Get<crate::extensions::scene::khr_lights_punctual::Light> for crate::Root {
-    fn get(&self, id: Index<crate::extensions::scene::khr_lights_punctual::Light>)
+    fn get(&self, id: crate::Index<crate::extensions::scene::khr_lights_punctual::Light>)
         -> Option<&crate::extensions::scene::khr_lights_punctual::Light>
     {
         if let Some(extensions) = self.extensions.as_ref() {

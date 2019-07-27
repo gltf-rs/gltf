@@ -1,7 +1,7 @@
 use gltf_derive::Validate;
 use serde_derive::{Serialize, Deserialize};
-use crate::validation::{Error, Validate};
-use crate::{camera, extensions, mesh, scene, skin, Extras, Index, Root, Path};
+use crate::validation::Validate;
+use crate::{camera, extensions, mesh, scene, skin, Extras, Index};
 
 /// A node in the node hierarchy.  When the node contains `skin`, all
 /// `mesh.primitives` must contain `JOINTS_0` and `WEIGHTS_0` attributes.

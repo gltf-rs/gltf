@@ -2,8 +2,8 @@ use gltf_derive::Validate;
 use serde_derive::{Serialize, Deserialize};
 use serde::{de, ser};
 use std::fmt;
-use crate::validation::{Checked, Error, Validate};
-use crate::{extensions, Extras, Index, Root, Path};
+use crate::validation::Checked;
+use crate::{extensions, Extras, Index};
 
 /// Corresponds to `GL_ARRAY_BUFFER`.
 pub const ARRAY_BUFFER: u32 = 34_962;
