@@ -1,10 +1,10 @@
 use crate::{buffer, Document};
 
-#[cfg(feature = "import")]
+#[cfg(feature = "import_data_reference")]
 use image_crate::DynamicImage;
 
 /// Format of image pixel data.
-#[cfg(feature = "import")]
+#[cfg(feature = "import_data_reference")]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum Format {
     /// Red only.
@@ -62,7 +62,7 @@ pub struct Image<'a> {
 }
 
 /// Image data belonging to an imported glTF asset.
-#[cfg(feature = "import")]
+#[cfg(feature = "import_data_reference")]
 #[derive(Clone, Debug)]
 pub struct Data {
     /// The image pixel data (8 bits per channel).
@@ -128,7 +128,7 @@ impl<'a> Image<'a> {
     }
 }
 
-#[cfg(feature = "import")]
+#[cfg(feature = "import_data_reference")]
 impl Data {
     /// Note: We don't implement `From<DynamicImage>` since we don't want
     /// to expose such functionality to the user.
