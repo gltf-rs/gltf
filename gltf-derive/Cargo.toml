@@ -12,6 +12,6 @@ proc-macro = true
 
 [dependencies]
 inflections = "1.1"
-proc-macro2 = "0.4"
-quote = "0.6"
-syn = "0.15"
+proc-macro2 = "1"
+quote = "1"
+syn = "1"
