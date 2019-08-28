@@ -7,6 +7,7 @@ lazy_static! {
 }
 
 /// The material appearance of a primitive.
+#[derive(Clone, Debug)]
 pub struct Material<'a> {
     /// The parent `Document` struct.
     document: &'a Document,
