@@ -328,6 +328,11 @@ impl Document {
         Document(json)
     }
 
+    /// Yields a reference to the contained glTF document.
+    pub fn json(&self) -> &json::Root {
+        &self.0
+    }
+
     /// Unwraps the glTF document.
     pub fn into_json(self) -> json::Root {
         self.0
