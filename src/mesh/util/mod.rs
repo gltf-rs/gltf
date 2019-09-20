@@ -130,36 +130,15 @@ where
             .morph_targets()
             .nth(self.index - 1)
             .map(|morph_target| {
-                let positions = if let Some(accessor) = morph_target.positions() {
-                    let buffer = accessor.view().buffer();
-                    if let Some(slice) = ((self.reader).get_buffer_data)(buffer) {
-                        Some(Iter::new(accessor, slice))
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                };
-                let normals = if let Some(accessor) = morph_target.normals() {
-                    let buffer = accessor.view().buffer();
-                    if let Some(slice) = ((self.reader).get_buffer_data)(buffer) {
-                        Some(Iter::new(accessor, slice))
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                };
-                let tangents = if let Some(accessor) = morph_target.tangents() {
-                    let buffer = accessor.view().buffer();
-                    if let Some(slice) = ((self.reader).get_buffer_data)(buffer) {
-                        Some(Iter::new(accessor, slice))
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                };
+                let positions = morph_target
+                    .positions()
+                    .and_then(|accessor| Iter::new(accessor, self.reader.get_buffer_data.clone()));
+                let normals = morph_target
+                    .normals()
+                    .and_then(|accessor| Iter::new(accessor, self.reader.get_buffer_data.clone()));
+                let tangents = morph_target
+                    .tangents()
+                    .and_then(|accessor| Iter::new(accessor, self.reader.get_buffer_data.clone()));
                 (positions, normals, tangents)
             })
     }

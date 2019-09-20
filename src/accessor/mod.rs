@@ -33,15 +33,14 @@
 //! [`mesh::Reader`]: ../mesh/struct.Reader.html
 //!
 //! ```
-//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! # fn run() -> Result<(), Box<dyn std::error::Error>> {
 //! # use gltf::accessor::{DataType, Dimensions, Iter};
 //! let (gltf, buffers, _) = gltf::import("examples/Box.gltf")?;
+//! let get_buffer_data = |buffer: gltf::Buffer| buffers.get(buffer.index()).map(|x| &*x.0);
 //! for accessor in gltf.accessors() {
 //!     match (accessor.data_type(), accessor.dimensions()) {
 //!         (DataType::F32, Dimensions::Vec3) => {
-//!             let buffer_index = accessor.view().buffer().index();
-//!             let buffer_data = buffers[buffer_index].0.as_slice();
-//!             let iter = Iter::<[f32; 3]>::new(accessor, buffer_data);
+//!             let iter = Iter::<[f32; 3]>::new(accessor, get_buffer_data);
 //!             for item in iter {
 //!                 println!("{:?}", item);
 //!             }
@@ -163,7 +162,7 @@ impl<'a> Accessor<'a> {
 
     /// Returns sparse storage of attributes that deviate from their initialization
     /// value.
-    pub fn sparse(&self) -> Option<sparse::Sparse> {
+    pub fn sparse(&self) -> Option<sparse::Sparse<'a>> {
         self.json.sparse.as_ref().map(|json| {
             sparse::Sparse::new(self.document, json)
         })

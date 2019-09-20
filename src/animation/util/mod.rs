@@ -141,45 +141,37 @@ where F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>,
 {
     /// Visits the input samples of a channel.
     pub fn read_inputs(&self) -> Option<ReadInputs<'s>> {
-        let buffer = self.channel.sampler().input().view().buffer();
-        if let Some(slice) = (self.get_buffer_data)(buffer) {
-            Some(accessor::Iter::new(self.channel.sampler().input(), slice))
-        } else {
-            None
-        }
+        accessor::Iter::new(self.channel.sampler().input(), self.get_buffer_data.clone())
     }
 
     /// Visits the output samples of a channel.
     pub fn read_outputs(&self) -> Option<ReadOutputs<'s>> {
         use accessor::{DataType, Iter};
         use crate::animation::Property;
-
         let output = self.channel.sampler().output();
-        if let Some(slice) = (self.get_buffer_data)(output.view().buffer()) {
-            Some(
-                match self.channel.target().property() {
-                    Property::Translation => ReadOutputs::Translations(Iter::new(output, slice)),
-                    Property::Rotation => ReadOutputs::Rotations(match output.data_type() {
-                        DataType::I8 => Rotations::I8(Iter::new(output, slice)),
-                        DataType::U8 => Rotations::U8(Iter::new(output, slice)),
-                        DataType::I16 => Rotations::I16(Iter::new(output, slice)),
-                        DataType::U16 => Rotations::U16(Iter::new(output, slice)),
-                        DataType::F32 => Rotations::F32(Iter::new(output, slice)),
-                        _ => unreachable!()
-                    }),
-                    Property::Scale => ReadOutputs::Scales(Iter::new(output, slice)),
-                    Property::MorphTargetWeights => ReadOutputs::MorphTargetWeights(match output.data_type() {
-                        DataType::I8 => MorphTargetWeights::I8(Iter::new(output, slice)),
-                        DataType::U8 => MorphTargetWeights::U8(Iter::new(output, slice)),
-                        DataType::I16 => MorphTargetWeights::I16(Iter::new(output, slice)),
-                        DataType::U16 => MorphTargetWeights::U16(Iter::new(output, slice)),
-                        DataType::F32 => MorphTargetWeights::F32(Iter::new(output, slice)),
-                        _ => unreachable!()
-                    }),
+        match self.channel.target().property() {
+            Property::Translation => Iter::new(output, self.get_buffer_data.clone()).map(ReadOutputs::Translations),
+            Property::Rotation => {
+                match output.data_type() {
+                    DataType::I8 => Iter::new(output, self.get_buffer_data.clone()).map(|x| ReadOutputs::Rotations(Rotations::I8(x))),
+                    DataType::U8 => Iter::new(output, self.get_buffer_data.clone()).map(|x| ReadOutputs::Rotations(Rotations::U8(x))),
+                    DataType::I16 => Iter::new(output, self.get_buffer_data.clone()).map(|x| ReadOutputs::Rotations(Rotations::I16(x))),
+                    DataType::U16 => Iter::new(output, self.get_buffer_data.clone()).map(|x| ReadOutputs::Rotations(Rotations::U16(x))),
+                    DataType::F32 => Iter::new(output, self.get_buffer_data.clone()).map(|x| ReadOutputs::Rotations(Rotations::F32(x))),
+                    _ => unreachable!()
                 }
-            )
-        } else {
-            None
+            },
+            Property::Scale => Iter::new(output, self.get_buffer_data.clone()).map(ReadOutputs::Scales),
+            Property::MorphTargetWeights => {
+                match output.data_type() {
+                    DataType::I8 => Iter::new(output, self.get_buffer_data.clone()).map(|x| ReadOutputs::MorphTargetWeights(MorphTargetWeights::I8(x))),
+                    DataType::U8 => Iter::new(output, self.get_buffer_data.clone()).map(|x| ReadOutputs::MorphTargetWeights(MorphTargetWeights::U8(x))),
+                    DataType::I16 => Iter::new(output, self.get_buffer_data.clone()).map(|x| ReadOutputs::MorphTargetWeights(MorphTargetWeights::I16(x))),
+                    DataType::U16 => Iter::new(output, self.get_buffer_data.clone()).map(|x| ReadOutputs::MorphTargetWeights(MorphTargetWeights::U16(x))),
+                    DataType::F32 => Iter::new(output, self.get_buffer_data.clone()).map(|x| ReadOutputs::MorphTargetWeights(MorphTargetWeights::F32(x))),
+                    _ => unreachable!()
+                }
+            },
         }
     }
 }

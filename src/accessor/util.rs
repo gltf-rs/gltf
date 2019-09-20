@@ -1,6 +1,116 @@
-use std::mem;
+use std::{iter, mem};
 use byteorder::{LE, ByteOrder};
 use std::marker::PhantomData;
+
+use crate::{accessor, buffer};
+
+fn buffer_view_slice<'a, 's>(
+    view: buffer::View<'a>,
+    get_buffer_data: &dyn Fn(buffer::Buffer<'a>) -> Option<&'s [u8]>,
+) -> Option<&'s [u8]> {
+    let start = view.offset();
+    let end = start + view.length();
+    get_buffer_data(view.buffer())
+        .map(|slice| &slice[start..end])
+}
+
+/// General iterator for an accessor.
+#[derive(Clone, Debug)]
+pub enum Iter<'a, T: Item> {
+    /// Standard accessor iterator.
+    Standard(ItemIter<'a, T>),
+
+    /// Iterator for accessor with sparse values.
+    Sparse(SparseIter<'a, T>),
+}
+
+impl<'a, T: Item> Iterator for Iter<'a, T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            &mut Iter::Standard(ref mut iter) => iter.next(),
+            &mut Iter::Sparse(ref mut iter) => iter.next(),
+        }
+    }
+}
+
+/// Iterator over indices of sparse accessor.
+#[derive(Clone, Debug)]
+pub enum SparseIndicesIter<'a> {
+    /// 8-bit indices.
+    U8(ItemIter<'a, u8>),
+    /// 16-bit indices.
+    U16(ItemIter<'a, u16>),
+    /// 32-bit indices.
+    U32(ItemIter<'a, u32>),
+}
+
+impl<'a> Iterator for SparseIndicesIter<'a> {
+    type Item = u32;
+    fn next(&mut self) -> Option<Self::Item> {
+        match *self {
+            SparseIndicesIter::U8(ref mut iter) => iter.next().map(|x| x as u32),
+            SparseIndicesIter::U16(ref mut iter) => iter.next().map(|x| x as u32),
+            SparseIndicesIter::U32(ref mut iter) => iter.next(),
+        }
+    }
+}
+
+/// Iterates over a sparse accessor.
+#[derive(Clone, Debug)]
+pub struct SparseIter<'a, T: Item> {
+    /// Base value iterator.
+    base: ItemIter<'a, T>,
+
+    /// Sparse indices iterator.
+    indices: iter::Peekable<SparseIndicesIter<'a>>,
+
+    /// Sparse values iterator.
+    values: ItemIter<'a, T>,
+
+    /// Iterator counter.
+    counter: u32,
+}
+
+impl<'a, T: Item> SparseIter<'a, T> {
+    /// Constructor.
+    pub fn new(
+        base: ItemIter<'a, T>,
+        indices: SparseIndicesIter<'a>,
+        values: ItemIter<'a, T>,
+    ) -> Self {
+        SparseIter {
+            base: base,
+            indices: indices.peekable(),
+            values: values,
+            counter: 0,
+        }
+    }
+}
+
+impl<'a, T: Item> Iterator for SparseIter<'a, T> {
+    type Item = T;
+    fn next(&mut self) -> Option<Self::Item> {
+        let next_base_value = self.base.next();
+        if next_base_value.is_none() {
+            return None;
+        }
+
+        let mut next_value = next_base_value.unwrap();
+        let next_sparse_index = self.indices.peek().clone();
+        if let Some(index) = next_sparse_index {
+            if *index == self.counter {
+                self.indices.next(); // advance
+                next_value = self.values.next().unwrap();
+            }
+        }
+
+        self.counter += 1;
+
+        Some(next_value)
+    }
+}
 
 /// Represents items that can be read by an [`Accessor`].
 ///
@@ -14,7 +124,7 @@ pub trait Item {
 ///
 /// [`Accessor`]: struct.Accessor.html
 #[derive(Copy, Clone, Debug)]
-pub struct Iter<'a, T> {
+pub struct ItemIter<'a, T: Item> {
     stride: usize,
     data: &'a [u8],
     _phantom: PhantomData<T>,
@@ -83,26 +193,93 @@ impl<T: Item> Item for [T; 4] {
     }
 }
 
-impl<'a, T> Iter<'a, T> {
+impl<'a, T: Item> ItemIter<'a, T> {
     /// Constructor.
-    pub fn new(
-        accessor: super::Accessor,
-        buffer_data: &'a [u8],
-    ) -> Iter<'a, T> {
-        debug_assert_eq!(mem::size_of::<T>(), accessor.size());
-        debug_assert!(mem::size_of::<T>() > 0);
-        let view = accessor.view();
-        let stride = view.stride().unwrap_or(mem::size_of::<T>());
-        debug_assert!(stride >= mem::size_of::<T>(), "Mismatch in stride, expected at least {} stride but found {}", mem::size_of::<T>(), stride);
-        let start = view.offset() + accessor.offset();
-        let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
-        let data = &buffer_data[start .. end];
-        Iter { stride, data, _phantom: PhantomData }
+    pub fn new(slice: &'a [u8], stride: usize) -> Self {
+        ItemIter {
+            data: slice,
+            stride: stride,
+            _phantom: PhantomData,
+        }
     }
 }
 
-impl<'a, T: Item> ExactSizeIterator for Iter<'a, T> {}
-impl<'a, T: Item> Iterator for Iter<'a, T> {
+impl<'a, 's, T: Item> Iter<'s, T> {
+    /// Constructor.
+    pub fn new<F>(
+        accessor: super::Accessor<'a>,
+        get_buffer_data: F,
+    ) -> Option<Iter<'s, T>>
+        where F: Clone + Fn(buffer::Buffer<'a>) -> Option<&'s [u8]>,
+    {
+        let is_sparse = accessor.sparse().is_some();
+        if is_sparse {
+            let sparse = accessor.sparse();
+            let indices = sparse.as_ref().unwrap().indices();
+            let values = sparse.as_ref().unwrap().values();
+            let base_iter = {
+                let view = accessor.view();
+                let stride = view.stride().unwrap_or(mem::size_of::<T>());
+                let start = accessor.offset();
+                let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
+                let subslice = if let Some(slice) = buffer_view_slice(view, &get_buffer_data) {
+                    &slice[start..end]
+                } else {
+                    return None
+                };
+                ItemIter::new(subslice, stride)
+            };
+            let sparse_count = sparse.as_ref().unwrap().count() as usize;
+            let index_iter = {
+                let view = indices.view();
+                let index_size = indices.index_type().size();
+                let stride = view.stride().unwrap_or(index_size);
+                let subslice = if let Some(slice) = buffer_view_slice(view, &get_buffer_data) {
+                    let start = indices.offset() as usize;
+                    let end = start + stride * (sparse_count - 1) + index_size;
+                    &slice[start..end]
+                } else {
+                    return None
+                };
+                match indices.index_type() {
+                    accessor::sparse::IndexType::U8 => SparseIndicesIter::U8(ItemIter::new(subslice, stride)),
+                    accessor::sparse::IndexType::U16 => SparseIndicesIter::U16(ItemIter::new(subslice, stride)),
+                    accessor::sparse::IndexType::U32 => SparseIndicesIter::U32(ItemIter::new(subslice, stride)),
+                }
+            };
+            let value_iter = {
+                let view = values.view();
+                let stride = view.stride().unwrap_or(mem::size_of::<T>());
+                let subslice = if let Some(slice) = buffer_view_slice(view, &get_buffer_data) {
+                    let start = values.offset() as usize;
+                    let end = start + stride * (sparse_count - 1) + mem::size_of::<T>();
+                    &slice[start..end]
+                } else {
+                    return None
+                };
+                ItemIter::new(subslice, stride)
+            };
+            Some(Iter::Sparse(SparseIter::new(base_iter, index_iter, value_iter)))
+        } else {
+            debug_assert_eq!(mem::size_of::<T>(), accessor.size());
+            debug_assert!(mem::size_of::<T>() > 0);
+            let view = accessor.view();
+            let stride = view.stride().unwrap_or(mem::size_of::<T>());
+            debug_assert!(stride >= mem::size_of::<T>(), "Mismatch in stride, expected at least {} stride but found {}", mem::size_of::<T>(), stride);
+            let start = accessor.offset();
+            let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
+            let subslice = if let Some(slice) = buffer_view_slice(view, &get_buffer_data) {
+                &slice[start..end]
+            } else {
+                return None
+            };
+            Some(Iter::Standard(ItemIter { stride, data: subslice, _phantom: PhantomData }))
+        }
+    }
+}
+
+impl<'a, T: Item> ExactSizeIterator for ItemIter<'a, T> {}
+impl<'a, T: Item> Iterator for ItemIter<'a, T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
