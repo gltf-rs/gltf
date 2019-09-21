@@ -22,12 +22,8 @@ where
     /// Returns an `Iterator` that reads the inverse bind matrices of
     /// the skin.
     pub fn read_inverse_bind_matrices(&self) -> Option<ReadInverseBindMatrices<'s>> {
-        if let Some(accessor) = self.skin.inverse_bind_matrices() {
-            if let Some(slice) = (self.get_buffer_data)(accessor.view().buffer()) {
-                return Some(accessor::Iter::new(accessor, slice))
-            }
-        }
-
-        None
+        self.skin
+            .inverse_bind_matrices()
+            .and_then(|accessor| accessor::Iter::new(accessor, self.get_buffer_data.clone()))
     }
 }

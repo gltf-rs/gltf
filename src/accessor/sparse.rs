@@ -128,7 +128,7 @@ impl<'a> Values<'a> {
     }
 
     /// Returns the buffer view containing the sparse values.
-    pub fn view(&self) -> buffer::View {
+    pub fn view(&self) -> buffer::View<'a> {
         self.document.views().nth(self.json.buffer_view.value()).unwrap()
     }
 

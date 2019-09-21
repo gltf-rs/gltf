@@ -276,32 +276,23 @@ impl<'a, 's, F> Reader<'a, 's, F>
 {
     /// Visits the vertex positions of a primitive.
     pub fn read_positions(&self) -> Option<util::ReadPositions<'s>> {
-        if let Some(accessor) = self.primitive.get(&Semantic::Positions) {
-            if let Some(slice) = (self.get_buffer_data)(accessor.clone().view().buffer()) {
-                return Some(accessor::Iter::new(accessor, slice))
-            }
-        }
-        None
+        self.primitive
+            .get(&Semantic::Positions)
+            .and_then(|accessor| accessor::Iter::new(accessor, self.get_buffer_data.clone()))
     }
 
     /// Visits the vertex normals of a primitive.
     pub fn read_normals(&self) -> Option<util::ReadNormals<'s>> {
-        if let Some(accessor) = self.primitive.get(&Semantic::Normals) {
-            if let Some(slice) = (self.get_buffer_data)(accessor.clone().view().buffer()) {
-                return Some(accessor::Iter::new(accessor, slice))
-            }
-        }
-        None
+        self.primitive
+            .get(&Semantic::Normals)
+            .and_then(|accessor| accessor::Iter::new(accessor, self.get_buffer_data.clone()))
     }
 
     /// Visits the vertex tangents of a primitive.
     pub fn read_tangents(&self) -> Option<util::ReadTangents<'s>> {
-        if let Some(accessor) = self.primitive.get(&Semantic::Tangents) {
-            if let Some(slice) = (self.get_buffer_data)(accessor.clone().view().buffer()) {
-                return Some(accessor::Iter::new(accessor, slice))
-            }
-        }
-        None
+        self.primitive
+            .get(&Semantic::Tangents)
+            .and_then(|accessor| accessor::Iter::new(accessor, self.get_buffer_data.clone()))
     }
 
     /// Visits the vertex colors of a primitive.
@@ -309,107 +300,82 @@ impl<'a, 's, F> Reader<'a, 's, F>
         use accessor::DataType::{U8, U16, F32};
         use accessor::Dimensions::{Vec3, Vec4};
         use self::util::ReadColors;
-
-        if let Some(accessor) = self.primitive.get(&Semantic::Colors(set)) {
-            if let Some(slice) = (self.get_buffer_data)(accessor.clone().view().buffer()) {
-                return Some(
-                    match (accessor.data_type(), accessor.dimensions()) {
-                        (U8, Vec3)  => ReadColors::RgbU8(accessor::Iter::new(accessor, slice)),
-                        (U16, Vec3) => ReadColors::RgbU16(accessor::Iter::new(accessor, slice)),
-                        (F32, Vec3) => ReadColors::RgbF32(accessor::Iter::new(accessor, slice)),
-                        (U8, Vec4)  => ReadColors::RgbaU8(accessor::Iter::new(accessor, slice)),
-                        (U16, Vec4) => ReadColors::RgbaU16(accessor::Iter::new(accessor, slice)),
-                        (F32, Vec4) => ReadColors::RgbaF32(accessor::Iter::new(accessor, slice)),
-                        _ => unreachable!(),
-                    }
-                )
-            }
-        }
-
-        None
+        self.primitive
+            .get(&Semantic::Colors(set))
+            .and_then(|accessor| {
+                match (accessor.data_type(), accessor.dimensions()) {
+                    (U8, Vec3)  => accessor::Iter::new(accessor, self.get_buffer_data.clone()).map(ReadColors::RgbU8),
+                    (U16, Vec3) => accessor::Iter::new(accessor, self.get_buffer_data.clone()).map(ReadColors::RgbU16),
+                    (F32, Vec3) => accessor::Iter::new(accessor, self.get_buffer_data.clone()).map(ReadColors::RgbF32),
+                    (U8, Vec4)  => accessor::Iter::new(accessor, self.get_buffer_data.clone()).map(ReadColors::RgbaU8),
+                    (U16, Vec4) => accessor::Iter::new(accessor, self.get_buffer_data.clone()).map(ReadColors::RgbaU16),
+                    (F32, Vec4) => accessor::Iter::new(accessor, self.get_buffer_data.clone()).map(ReadColors::RgbaF32),
+                    _ => unreachable!(),
+                }
+            })
     }
 
     /// Visits the vertex draw sequence of a primitive.
     pub fn read_indices(&self) -> Option<util::ReadIndices<'s>> {
         use accessor::DataType;
         use self::util::ReadIndices;
-
-        if let Some(accessor) = self.primitive.indices() {
-            if let Some(slice) = (self.get_buffer_data)(accessor.clone().view().buffer()) {
-                return Some(
-                    match accessor.data_type() {
-                        DataType::U8  => ReadIndices::U8(accessor::Iter::new(accessor, slice)),
-                        DataType::U16 => ReadIndices::U16(accessor::Iter::new(accessor, slice)),
-                        DataType::U32 => ReadIndices::U32(accessor::Iter::new(accessor, slice)),
-                        _ => unreachable!(),
-                    }
-                )
-            }
-        }
-
-        None
+        self.primitive
+            .indices()
+            .and_then(|accessor| {
+                match accessor.data_type() {
+                    DataType::U8  => accessor::Iter::new(accessor, self.get_buffer_data.clone()).map(ReadIndices::U8),
+                    DataType::U16 => accessor::Iter::new(accessor, self.get_buffer_data.clone()).map(ReadIndices::U16),
+                    DataType::U32 => accessor::Iter::new(accessor, self.get_buffer_data.clone()).map(ReadIndices::U32),
+                    _ => unreachable!(),
+                }
+            })
     }
 
     /// Visits the joint indices of the primitive.
     pub fn read_joints(&self, set: u32) -> Option<util::ReadJoints<'s>> {
         use accessor::DataType;
         use self::util::ReadJoints;
-
-        if let Some(accessor) = self.primitive.get(&Semantic::Joints(set)) {
-            if let Some(slice) = (self.get_buffer_data)(accessor.view().buffer()) {
-                return Some(
-                    match accessor.data_type() {
-                        DataType::U8  => ReadJoints::U8(accessor::Iter::new(accessor, slice)),
-                        DataType::U16 => ReadJoints::U16(accessor::Iter::new(accessor, slice)),
-                        _ => unreachable!(),
-                    }
-                )
-            }
-        }
-
-        None
+        self.primitive
+            .get(&Semantic::Joints(set))
+            .and_then(|accessor| {
+                match accessor.data_type() {
+                    DataType::U8  => accessor::Iter::new(accessor, self.get_buffer_data.clone()).map(ReadJoints::U8),
+                    DataType::U16 => accessor::Iter::new(accessor, self.get_buffer_data.clone()).map(ReadJoints::U16),
+                    _ => unreachable!(),
+                }
+            })
     }
 
     /// Visits the vertex texture co-ordinates of a primitive.
     pub fn read_tex_coords(&self, set: u32) -> Option<util::ReadTexCoords<'s>> {
         use accessor::DataType;
         use self::util::ReadTexCoords;
-
-        if let Some(accessor) = self.primitive.get(&Semantic::TexCoords(set)) {
-            if let Some(slice) = (self.get_buffer_data)(accessor.view().buffer()) {
-                return Some(
-                    match accessor.data_type() {
-                        DataType::U8  => ReadTexCoords::U8(accessor::Iter::new(accessor, slice)),
-                        DataType::U16 => ReadTexCoords::U16(accessor::Iter::new(accessor, slice)),
-                        DataType::F32 => ReadTexCoords::F32(accessor::Iter::new(accessor, slice)),
-                        _ => unreachable!(),
-                    }
-                )
-            }
-        }
-
-        None
+        self.primitive
+            .get(&Semantic::TexCoords(set))
+            .and_then(|accessor| {
+                match accessor.data_type() {
+                    DataType::U8  => accessor::Iter::new(accessor, self.get_buffer_data.clone()).map(ReadTexCoords::U8),
+                    DataType::U16 => accessor::Iter::new(accessor, self.get_buffer_data.clone()).map(ReadTexCoords::U16),
+                    DataType::F32 => accessor::Iter::new(accessor, self.get_buffer_data.clone()).map(ReadTexCoords::F32),
+                    _ => unreachable!(),
+                }
+            })
     }
 
     /// Visits the joint weights of the primitive.
     pub fn read_weights(&self, set: u32) -> Option<util::ReadWeights<'s>>  {
         use self::accessor::DataType;
         use self::util::ReadWeights;
-
-        if let Some(accessor) = self.primitive.get(&Semantic::Weights(set)) {
-            if let Some(slice) = (self.get_buffer_data)(accessor.view().buffer()) {
-                return Some(
-                    match accessor.data_type() {
-                        DataType::U8  => ReadWeights::U8(accessor::Iter::new(accessor, slice)),
-                        DataType::U16 => ReadWeights::U16(accessor::Iter::new(accessor, slice)),
-                        DataType::F32 => ReadWeights::F32(accessor::Iter::new(accessor, slice)),
-                        _ => unreachable!(),
-                    }
-                )
-            }
-        }
-
-        None
+        self.primitive
+            .get(&Semantic::Weights(set))
+            .and_then(|accessor| {
+                match accessor.data_type() {
+                    DataType::U8  => accessor::Iter::new(accessor, self.get_buffer_data.clone()).map(ReadWeights::U8),
+                    DataType::U16 => accessor::Iter::new(accessor, self.get_buffer_data.clone()).map(ReadWeights::U16),
+                    DataType::F32 => accessor::Iter::new(accessor, self.get_buffer_data.clone()).map(ReadWeights::F32),
+                    _ => unreachable!(),
+                }
+            })
     }
 
     /// Visits the morph targets of the primitive.
