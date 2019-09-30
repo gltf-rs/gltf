@@ -157,7 +157,7 @@ pub fn import_image_data(
                 let decoded_image = image_crate::load_from_memory_with_format(encoded_image, encoded_format)?;
                 images.push(image::Data::new(decoded_image));
             },
-            _ => Err(Error::MissingBlob)
+            _ => return Err(Error::MissingBlob)
         }
     }
 
