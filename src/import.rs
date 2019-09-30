@@ -78,14 +78,15 @@ where P: AsRef<Path>
 /// Import the buffer data referenced by a glTF document.
 pub fn import_buffer_data(
     document: &Document,
-    base: &Path,
+    base: Option<&Path>,
     mut blob: Option<Vec<u8>>,
 ) -> Result<Vec<buffer::Data>> {
     let mut buffers = Vec::new();
     for buffer in document.buffers() {
         let mut data = match buffer.source() {
-            buffer::Source::Uri(uri) => Scheme::read(base, uri),
+            buffer::Source::Uri(uri) if base.is_some() => Scheme::read(base.unwrap(), uri),
             buffer::Source::Bin => blob.take().ok_or(Error::MissingBlob),
+            _ => Err(Error::MissingBlob)
         }?;
         if data.len() < buffer.length() {
             return Err(
@@ -107,13 +108,13 @@ pub fn import_buffer_data(
 /// Import the image data referenced by a glTF document.
 pub fn import_image_data(
     document: &Document,
-    base: &Path,
+    base: Option<&Path>,
     buffer_data: &[buffer::Data],
 ) -> Result<Vec<image::Data>> {
     let mut images = Vec::new();
     for image in document.images() {
         match image.source() {
-            image::Source::Uri { uri, mime_type } => {
+            image::Source::Uri { uri, mime_type } if base.is_some() => {
                 match Scheme::parse(uri) {
                     Scheme::Data(Some(annoying_case), base64) => {
                         let format = match annoying_case.as_ref() {
@@ -129,7 +130,7 @@ pub fn import_image_data(
                     Scheme::Unsupported => return Err(Error::UnsupportedScheme),
                     _ => {},
                 }
-                let encoded_image = Scheme::read(base, uri)?;
+                let encoded_image = Scheme::read(base.unwrap(), uri)?;
                 let encoded_format =  match mime_type {
                     Some("image/png") => Png,
                     Some("image/jpeg") => Jpeg,
@@ -156,13 +157,14 @@ pub fn import_image_data(
                 let decoded_image = image_crate::load_from_memory_with_format(encoded_image, encoded_format)?;
                 images.push(image::Data::new(decoded_image));
             },
+            _ => Err(Error::MissingBlob)
         }
     }
 
     Ok(images)
 }
 
-fn import_impl(Gltf { document, blob }: Gltf, base: &Path) -> Result<Import> {
+fn import_impl(Gltf { document, blob }: Gltf, base: Option<&Path>) -> Result<Import> {
     let buffer_data = import_buffer_data(&document, base, blob)?;
     let image_data = import_image_data(&document, base, &buffer_data)?;
     let import = (document, buffer_data, image_data);
@@ -203,7 +205,7 @@ pub fn import<P>(path: P) -> Result<Import>
     let base = path.parent().unwrap_or(Path::new("./"));
     let file = fs::File::open(path).map_err(Error::Io)?;
     let reader = io::BufReader::new(file);
-    import_impl(Gltf::from_reader(reader)?, base)
+    import_impl(Gltf::from_reader(reader)?, Some(base))
 }
 
 /// Import some glTF 2.0 from a slice
@@ -226,5 +228,5 @@ pub fn import<P>(path: P) -> Result<Import>
 /// # }
 /// ```
 pub fn import_slice(slice: &[u8]) -> Result<Import> {
-    import_impl(Gltf::from_slice(slice)?, Path::new("./"))
+    import_impl(Gltf::from_slice(slice)?, None)
 }
