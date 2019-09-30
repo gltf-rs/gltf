@@ -86,7 +86,7 @@ pub fn import_buffer_data(
         let mut data = match buffer.source() {
             buffer::Source::Uri(uri) if base.is_some() => Scheme::read(base.unwrap(), uri),
             buffer::Source::Bin => blob.take().ok_or(Error::MissingBlob),
-            _ => Err(Error::MissingBlob)
+            _ => Err(Error::ExternalReferenceInSliceImport)
         }?;
         if data.len() < buffer.length() {
             return Err(
@@ -157,7 +157,7 @@ pub fn import_image_data(
                 let decoded_image = image_crate::load_from_memory_with_format(encoded_image, encoded_format)?;
                 images.push(image::Data::new(decoded_image));
             },
-            _ => return Err(Error::MissingBlob)
+            _ => return Err(Error::ExternalReferenceInSliceImport)
         }
     }
 
