@@ -107,7 +107,7 @@ pub mod image;
 
 /// The reference importer.
 #[cfg(feature = "import_data_reference")]
-pub mod import;
+mod import;
 
 /// Iterators for walking the glTF node hierarchy.
 pub mod iter;

@@ -171,6 +171,13 @@ fn import_impl(Gltf { document, blob }: Gltf, base: Option<&Path>) -> Result<Imp
     Ok(import)
 }
 
+fn import_path(path: &Path) -> Result<Import> {
+    let base = path.parent().unwrap_or(Path::new("./"));
+    let file = fs::File::open(path).map_err(Error::Io)?;
+    let reader = io::BufReader::new(file);
+    import_impl(Gltf::from_reader(reader)?, Some(base))
+}
+
 /// Import some glTF 2.0 from the file system.
 ///
 /// ```
@@ -201,11 +208,11 @@ fn import_impl(Gltf { document, blob }: Gltf, base: Option<&Path>) -> Result<Imp
 pub fn import<P>(path: P) -> Result<Import>
     where P: AsRef<Path>
 {
-    let path = path.as_ref();
-    let base = path.parent().unwrap_or(Path::new("./"));
-    let file = fs::File::open(path).map_err(Error::Io)?;
-    let reader = io::BufReader::new(file);
-    import_impl(Gltf::from_reader(reader)?, Some(base))
+    import_path(path.as_ref())
+}
+
+pub fn import_slice_impl(slice: &[u8]) -> Result<Import> {
+    import_impl(Gltf::from_slice(slice)?, None)
 }
 
 /// Import some glTF 2.0 from a slice
@@ -227,6 +234,8 @@ pub fn import<P>(path: P) -> Result<Import>
 /// #     run().expect("test failure");
 /// # }
 /// ```
-pub fn import_slice(slice: &[u8]) -> Result<Import> {
-    import_impl(Gltf::from_slice(slice)?, None)
+pub fn import_slice<S>(slice: S) -> Result<Import>
+    where S: AsRef<[u8]>
+{
+    import_slice_impl(slice.as_ref())
 }
