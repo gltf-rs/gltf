@@ -149,6 +149,9 @@ pub use self::image::Image;
 #[cfg(feature = "import_data_reference")]
 #[doc(inline)]
 pub use self::import::import;
+#[cfg(feature = "import_data_reference")]
+#[doc(inline)]
+pub use self::import::import_slice;
 #[doc(inline)]
 pub use self::material::Material;
 #[doc(inline)]
@@ -206,6 +209,10 @@ pub enum Error {
     /// The `BIN` chunk of binary glTF is referenced but does not exist.
     #[cfg(feature = "import")]
     MissingBlob,
+
+    /// An external file is referenced in a slice only import without path
+    #[cfg(feature = "import")]
+    ExternalReferenceInSliceImport,
 
     /// Unsupported image encoding.
     #[cfg(feature = "import")]
@@ -514,6 +521,8 @@ impl std::fmt::Display for Error {
             #[cfg(feature = "import")]
             Error::MissingBlob => write!(f, "missing binary portion of binary glTF"),
             #[cfg(feature = "import")]
+            Error::ExternalReferenceInSliceImport => write!(f, "external reference in slice only import"),
+            #[cfg(feature = "import")]
             Error::UnsupportedImageEncoding => write!(f, "unsupported image encoding"),
             #[cfg(feature = "import")]
             Error::UnsupportedScheme => write!(f, "unsupported URI scheme"),
@@ -542,6 +551,8 @@ impl std::error::Error for Error {
             Error::Image(ref e) => e.description(),
             #[cfg(feature = "import")]
             Error::MissingBlob => "missing BIN section of binary glTF",
+            #[cfg(feature = "import")]
+            Error::ExternalReferenceInSliceImport => "external reference in slice only import",
             #[cfg(feature = "import")]
             Error::UnsupportedImageEncoding => "unsupported image encoding",
             #[cfg(feature = "import")]
