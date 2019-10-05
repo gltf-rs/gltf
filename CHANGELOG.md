@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - Unreleased
+
+### Added
+
+- `import_slice` function.
+- `Clone` and `Debug` implementations for `Material`.
+- `accessor::util::SparseIter` and `accessor::util::SparseIndicesIter` which
+  iterate over items and indices in sparse accessors respectively.
+
+### Changed
+
+- `accessor::util::Iter` is now an enum; sparse accessors are now read correctly.
+- The original version of `accessor::util::Iter` has been renamed as `ItemIter`.
+
 ## [0.13.0] - 2019-07-27
 
 ### Added
