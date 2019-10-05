@@ -79,7 +79,7 @@
 #[cfg(test)]
 #[macro_use]
 extern crate approx;
-#[cfg(feature = "import_data_reference")]
+#[cfg(feature = "import")]
 extern crate image as image_crate;
 #[macro_use]
 extern crate lazy_static;
@@ -106,7 +106,7 @@ pub mod camera;
 pub mod image;
 
 /// The reference importer.
-#[cfg(feature = "import_data_reference")]
+#[cfg(feature = "import")]
 mod import;
 
 /// Iterators for walking the glTF node hierarchy.
@@ -146,10 +146,10 @@ pub use self::buffer::Buffer;
 pub use self::camera::Camera;
 #[doc(inline)]
 pub use self::image::Image;
-#[cfg(feature = "import_data_reference")]
+#[cfg(feature = "import")]
 #[doc(inline)]
 pub use self::import::import;
-#[cfg(feature = "import_data_reference")]
+#[cfg(feature = "import")]
 #[doc(inline)]
 pub use self::import::import_slice;
 #[doc(inline)]
@@ -177,7 +177,7 @@ pub type Result<T> = result::Result<T, Error>;
 #[derive(Debug)]
 pub enum Error {
     /// Base 64 decoding error.
-    #[cfg(feature = "import_data_reference")]
+    #[cfg(feature = "import")]
     Base64(base64::DecodeError),
 
     /// GLB parsing error.
@@ -203,7 +203,7 @@ pub enum Error {
     Io(std::io::Error),
 
     /// Image decoding error.
-    #[cfg(feature = "import_data_reference")]
+    #[cfg(feature = "import")]
     Image(image_crate::ImageError),
     
     /// The `BIN` chunk of binary glTF is referenced but does not exist.
@@ -501,7 +501,7 @@ impl Document {
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
-            #[cfg(feature = "import_data_reference")]
+            #[cfg(feature = "import")]
             Error::Base64(ref e) => e.fmt(f),
             Error::Binary(ref e) => e.fmt(f),
             #[cfg(feature = "import")]
@@ -516,7 +516,7 @@ impl std::fmt::Display for Error {
             },
             Error::Deserialize(ref e) => e.fmt(f),
             Error::Io(ref e) => e.fmt(f),
-            #[cfg(feature = "import_data_reference")]
+            #[cfg(feature = "import")]
             Error::Image(ref e) => e.fmt(f),
             #[cfg(feature = "import")]
             Error::MissingBlob => write!(f, "missing binary portion of binary glTF"),
@@ -540,14 +540,14 @@ impl std::fmt::Display for Error {
 impl std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {
-            #[cfg(feature = "import_data_reference")]
+            #[cfg(feature = "import")]
             Error::Base64(ref e) => e.description(),
             Error::Binary(ref e) => e.description(),
             #[cfg(feature = "import")]
             Error::BufferLength { .. } => "buffer length does not match expected length",
             Error::Deserialize(ref e) => e.description(),
             Error::Io(ref e) => e.description(),
-            #[cfg(feature = "import_data_reference")]
+            #[cfg(feature = "import")]
             Error::Image(ref e) => e.description(),
             #[cfg(feature = "import")]
             Error::MissingBlob => "missing BIN section of binary glTF",
@@ -574,7 +574,7 @@ impl From<std::io::Error> for Error {
     }
 }
 
-#[cfg(feature = "import_data_reference")]
+#[cfg(feature = "import")]
 impl From<image_crate::ImageError> for Error {
     fn from(err: image_crate::ImageError) -> Self {
         Error::Image(err)
