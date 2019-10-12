@@ -9,7 +9,6 @@ use crate::{accessor, extensions, scene, Extras, Index, Path, Root};
 pub const VALID_INTERPOLATIONS: &'static [&'static str] = &[
     "LINEAR",
     "STEP",
-    "CATMULLROMSPLINE",
     "CUBICSPLINE",
 ];
 
@@ -38,15 +37,6 @@ pub enum Interpolation {
     /// until the next keyframe. The number of output elements must equal the number
     /// of input elements.
     Step,
-
-    /// Uniform Catmull-Rom spline interpolation.
-    ///
-    /// The animation's interpolation is computed using a uniform Catmull-Rom spline.
-    /// The number of output elements must equal two more than the number of input
-    /// elements. The first and last output elements represent the start and end
-    /// tangents of the spline. There must be at least four keyframes when using this
-    /// interpolation.
-    CatmullRomSpline,
 
     /// Cubic spline interpolation.
     ///
@@ -209,7 +199,6 @@ impl<'de> de::Deserialize<'de> for Checked<Interpolation> {
                 Ok(match value {
                     "LINEAR" => Valid(Linear),
                     "STEP" => Valid(Step),
-                    "CATMULLROMSPLINE" => Valid(CatmullRomSpline),
                     "CUBICSPLINE" => Valid(CubicSpline),
                     _ => Invalid,
                 })
@@ -227,7 +216,6 @@ impl ser::Serialize for Interpolation {
         serializer.serialize_str(match *self {
             Interpolation::Linear => "LINEAR",
             Interpolation::Step => "STEP",
-            Interpolation::CatmullRomSpline => "CATMULLROMSPLINE",
             Interpolation::CubicSpline => "CUBICSPLINE",
         })
     }
