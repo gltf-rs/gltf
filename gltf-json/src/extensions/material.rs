@@ -9,6 +9,10 @@ pub struct Material {
     #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
     #[serde(default, rename = "KHR_materials_pbrSpecularGlossiness", skip_serializing_if = "Option::is_none")]
     pub pbr_specular_glossiness: Option<PbrSpecularGlossiness>,
+
+    #[cfg(feature = "KHR_materials_unlit")]
+    #[serde(default, rename = "KHR_materials_unlit", skip_serializing_if = "Option::is_none")]
+    pub unlit: Option<Unlit>,
 }
 
 /// A set of parameter values that are used to define the metallic-roughness
@@ -104,3 +108,8 @@ impl Default for PbrSpecularFactor {
 
 #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
 impl Validate for PbrSpecularFactor {}
+
+/// Empty struct that should be present for primitives which should not be shaded with the PBR shading model.
+#[cfg(feature = "KHR_materials_unlit")]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+pub struct Unlit {}

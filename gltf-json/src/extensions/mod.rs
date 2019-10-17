@@ -42,10 +42,13 @@ pub const ENABLED_EXTENSIONS: &'static [&'static str] = &[
     "KHR_lights_punctual",
     #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
     "KHR_materials_pbrSpecularGlossiness",
+    #[cfg(feature = "KHR_materials_unlit")]
+    "KHR_materials_unlit",
 ];
 
 /// Names of glTF 2.0 extensions supported by the library.
 pub const SUPPORTED_EXTENSIONS: &'static [&'static str] = &[
     "KHR_lights_punctual",
     "KHR_materials_pbrSpecularGlossiness",
+    "KHR_materials_unlit",
 ];
