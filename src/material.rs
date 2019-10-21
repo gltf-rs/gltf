@@ -157,6 +157,19 @@ impl<'a> Material<'a> {
         self.json.emissive_factor.0
     }
 
+    /// Specifies whether the material is unlit.
+    /// 
+    /// Returns `true` if the [`KHR_materials_unlit`] property was specified, in which 
+    /// case the renderer should prefer to ignore all PBR values except `baseColor`.
+    /// 
+    /// [`KHR_materials_unlit`](https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit#overview)
+    #[cfg(feature = "KHR_materials_unlit")]
+    pub fn unlit(&self) -> bool {
+        self.json.extensions
+            .as_ref()
+            .map_or(false, |extensions| extensions.unlit.is_some())
+    }
+
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
