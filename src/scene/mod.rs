@@ -124,14 +124,14 @@ impl<'a> Node<'a> {
     }
 
     /// Returns the camera referenced by this node.
-    pub fn camera(&self) -> Option<Camera> {
+    pub fn camera(&self) -> Option<Camera<'a>> {
         self.json.camera.as_ref().map(|index| {
             self.document.cameras().nth(index.value()).unwrap()
         })
     }
 
     /// Returns an `Iterator` that visits the node's children.
-    pub fn children(&self) -> iter::Children {
+    pub fn children(&self) -> iter::Children<'a> {
         iter::Children {
             document: self.document,
             iter: self.json.children.as_ref().map_or([].iter(), |x| x.iter()),
@@ -139,13 +139,13 @@ impl<'a> Node<'a> {
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
 
     /// Returns the light at this node as defined by the `KHR_lights_punctual` extension.
     #[cfg(feature = "KHR_lights_punctual")]
-    pub fn light(&self) -> Option<crate::khr_lights_punctual::Light> {
+    pub fn light(&self) -> Option<crate::khr_lights_punctual::Light<'a>> {
         if let Some(extensions) = self.json.extensions.as_ref() {
             if let Some(khr_lights_punctual) = extensions.khr_lights_punctual.as_ref() {
                 let mut lights = self.document.lights().unwrap();
@@ -159,7 +159,7 @@ impl<'a> Node<'a> {
     }
 
     /// Returns the mesh referenced by this node.
-    pub fn mesh(&self) -> Option<Mesh> {
+    pub fn mesh(&self) -> Option<Mesh<'a>> {
         self.json.mesh.as_ref().map(|index| {
             self.document.meshes().nth(index.value()).unwrap()
         })
@@ -167,7 +167,7 @@ impl<'a> Node<'a> {
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
-    pub fn name(&self) -> Option<&str> {
+    pub fn name(&self) -> Option<&'a str> {
         self.json.name.as_ref().map(String::as_str)
     }
 
@@ -195,14 +195,14 @@ impl<'a> Node<'a> {
     }
 
     /// Returns the skin referenced by this node.
-    pub fn skin(&self) -> Option<Skin> {
+    pub fn skin(&self) -> Option<Skin<'a>> {
         self.json.skin.as_ref().map(|index| {
             self.document.skins().nth(index.value()).unwrap()
         })
     }
 
     /// Returns the weights of the instantiated morph target.
-    pub fn weights(&self) -> Option<&[f32]> {
+    pub fn weights(&self) -> Option<&'a [f32]> {
         self.json.weights.as_ref().map(Vec::as_slice)
     }
 }
