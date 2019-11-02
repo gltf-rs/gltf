@@ -78,7 +78,7 @@ impl<'a> Animation<'a> {
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
 
@@ -94,7 +94,7 @@ impl<'a> Animation<'a> {
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
-    pub fn name(&self) -> Option<&str> {
+    pub fn name(&self) -> Option<&'a str> {
         self.json.name.as_ref().map(String::as_str)
     }
 
@@ -151,7 +151,7 @@ impl<'a> Channel<'a> {
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
 }
@@ -174,12 +174,12 @@ impl<'a> Target<'a> {
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
 
     /// Returns the target node.
-    pub fn node(&self) -> scene::Node {
+    pub fn node(&self) -> scene::Node<'a> {
         self.anim.document.nodes().nth(self.json.node.value()).unwrap()
     }
 
@@ -208,7 +208,7 @@ impl<'a> Sampler<'a> {
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
 

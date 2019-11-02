@@ -20,7 +20,7 @@ pub struct Attributes<'a> {
     pub(crate) document: &'a Document,
 
     /// The parent `Primitive` struct.
-    pub(crate) prim: &'a Primitive<'a>,
+    pub(crate) prim: Primitive<'a>,
 
     /// The internal attribute iterator.
     pub(crate) iter: collections::hash_map::Iter<
@@ -34,7 +34,7 @@ pub struct Attributes<'a> {
 #[derive(Clone, Debug)]
 pub struct Primitives<'a>  {
     /// The parent `Mesh` struct.
-    pub(crate) mesh: &'a Mesh<'a>,
+    pub(crate) mesh: Mesh<'a>,
 
     /// The internal JSON primitive iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::mesh::Primitive>>,
@@ -62,7 +62,7 @@ impl<'a> ExactSizeIterator for Primitives<'a> {}
 impl<'a> Iterator for Primitives<'a> {
     type Item = Primitive<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|(index, json)| Primitive::new(self.mesh, index, json))
+        self.iter.next().map(|(index, json)| Primitive::new(self.mesh.clone(), index, json))
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
