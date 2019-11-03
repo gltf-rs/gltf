@@ -83,7 +83,7 @@ impl<'a> Material<'a> {
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
-    pub fn name(&self) -> Option<&str> {
+    pub fn name(&self) -> Option<&'a str> {
         self.json.name.as_ref().map(String::as_str)
     }
 
@@ -171,7 +171,7 @@ impl<'a> Material<'a> {
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
 }
@@ -245,7 +245,7 @@ impl<'a> PbrMetallicRoughness<'a> {
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
 }
@@ -320,7 +320,7 @@ impl<'a> PbrSpecularGlossiness<'a> {
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
 }
@@ -362,7 +362,7 @@ impl<'a> NormalTexture<'a> {
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
 }
@@ -404,7 +404,7 @@ impl<'a> OcclusionTexture<'a> {
     }
     
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
 }

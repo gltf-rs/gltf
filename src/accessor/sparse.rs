@@ -56,7 +56,7 @@ impl<'a> Indices<'a> {
 
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
 }
@@ -100,7 +100,7 @@ impl<'a> Sparse<'a> {
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
 }
@@ -138,7 +138,7 @@ impl<'a> Values<'a> {
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
 }

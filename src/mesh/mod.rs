@@ -109,7 +109,7 @@ pub struct MorphTarget<'a> {
 #[derive(Clone, Debug)]
 pub struct Primitive<'a>  {
     /// The parent `Mesh` struct.
-    mesh: &'a Mesh<'a>,
+    mesh: Mesh<'a>,
 
     /// The corresponding JSON index.
     index: usize,
@@ -148,26 +148,26 @@ impl<'a> Mesh<'a>  {
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
-    pub fn name(&self) -> Option<&str> {
+    pub fn name(&self) -> Option<&'a str> {
         self.json.name.as_ref().map(String::as_str)
     }
 
     /// Defines the geometry to be renderered with a material.
-    pub fn primitives(&'a self) -> iter::Primitives<'a> {
+    pub fn primitives(&self) -> iter::Primitives<'a> {
         iter::Primitives {
-            mesh: self,
+            mesh: self.clone(),
             iter: self.json.primitives.iter().enumerate(),
         }
     }
 
     /// Defines the weights to be applied to the morph targets.
-    pub fn weights(&self) -> Option<&[f32]> {
+    pub fn weights(&self) -> Option<&'a [f32]> {
         self.json.weights.as_ref().map(Vec::as_slice)
     }
 }
@@ -175,7 +175,7 @@ impl<'a> Mesh<'a>  {
 impl<'a> Primitive<'a> {
     /// Constructs a `Primitive`.
     pub(crate) fn new(
-        mesh: &'a Mesh<'a>,
+        mesh: Mesh<'a>,
         index: usize,
         json: &'a json::mesh::Primitive,
     ) -> Self {
@@ -197,12 +197,12 @@ impl<'a> Primitive<'a> {
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras {
+    pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
 
     /// Return the accessor with the given semantic.
-    pub fn get(&self, semantic: &Semantic) -> Option<Accessor> {
+    pub fn get(&self, semantic: &Semantic) -> Option<Accessor<'a>> {
         self.json.attributes
             .get(&json::validation::Checked::Valid(semantic.clone()))
             .map(|index| self.mesh.document.accessors().nth(index.value()).unwrap())
@@ -214,23 +214,23 @@ impl<'a> Primitive<'a> {
     }
 
     /// Returns the accessor containing the primitive indices, if provided.
-    pub fn indices(&self) -> Option<Accessor> {
+    pub fn indices(&self) -> Option<Accessor<'a>> {
         self.json.indices
             .as_ref()
             .map(|index| self.mesh.document.accessors().nth(index.value()).unwrap())
     }
 
     /// Returns an `Iterator` that visits the vertex attributes.
-    pub fn attributes(&self) -> iter::Attributes {
+    pub fn attributes(&self) -> iter::Attributes<'a> {
         iter::Attributes {
             document: self.mesh.document,
-            prim: self,
+            prim: self.clone(),
             iter: self.json.attributes.iter(),
         }
     }
 
     /// Returns the material to apply to this primitive when rendering
-    pub fn material(&self) -> Material {
+    pub fn material(&self) -> Material<'a> {
         self.json.material
             .as_ref()
             .map(|index| self.mesh.document.materials().nth(index.value()).unwrap())
@@ -243,7 +243,7 @@ impl<'a> Primitive<'a> {
     }
 
     /// Returns an `Iterator` that visits the morph targets of the primitive.
-    pub fn morph_targets(&self) -> iter::MorphTargets {
+    pub fn morph_targets(&self) -> iter::MorphTargets<'a> {
         if let Some(slice) = self.json.targets.as_ref() {
             iter::MorphTargets {
                 document: self.mesh.document,

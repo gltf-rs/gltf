@@ -227,13 +227,13 @@ impl<'a> Scene<'a> {
     }
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &json::Extras{
+    pub fn extras(&self) -> &'a json::Extras{
         &self.json.extras
     }
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
-    pub fn name(&self) -> Option<&str> {
+    pub fn name(&self) -> Option<&'a str> {
         self.json.name.as_ref().map(String::as_str)
     }
 
