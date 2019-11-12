@@ -61,7 +61,9 @@ impl<'a> Iterator for SparseIndicesIter<'a> {
 #[derive(Clone, Debug)]
 pub struct SparseIter<'a, T: Item> {
     /// Base value iterator.
-    base: ItemIter<'a, T>,
+    ///
+    /// This can be `None` if the base buffer view is not set. In this case the base values are all zero.
+    base: Option<ItemIter<'a, T>>,
 
     /// Sparse indices iterator.
     indices: iter::Peekable<SparseIndicesIter<'a>>,
@@ -75,13 +77,15 @@ pub struct SparseIter<'a, T: Item> {
 
 impl<'a, T: Item> SparseIter<'a, T> {
     /// Constructor.
+    /// 
+    /// Here `base` is allowed to be `None` when the base buffer view is not explicitly specified.
     pub fn new(
-        base: ItemIter<'a, T>,
+        base: Option<ItemIter<'a, T>>,
         indices: SparseIndicesIter<'a>,
         values: ItemIter<'a, T>,
     ) -> Self {
         SparseIter {
-            base: base,
+            base,
             indices: indices.peekable(),
             values: values,
             counter: 0,
@@ -92,7 +96,7 @@ impl<'a, T: Item> SparseIter<'a, T> {
 impl<'a, T: Item> Iterator for SparseIter<'a, T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
-        let next_base_value = self.base.next();
+        let next_base_value = self.base.as_mut().map(|iter| iter.next()).unwrap_or(Some(T::zero()));
         if next_base_value.is_none() {
             return None;
         }
@@ -118,6 +122,8 @@ impl<'a, T: Item> Iterator for SparseIter<'a, T> {
 pub trait Item {
     /// Create an object of this type from a byte slice.
     fn from_slice(slice: &[u8]) -> Self;
+    /// Create an object of this type that represents a zero value.
+    fn zero() -> Self;
 }
 
 /// Visits the items in an [`Accessor`].
@@ -134,11 +140,17 @@ impl Item for i8 {
     fn from_slice(slice: &[u8]) -> Self {
         slice[0] as i8
     }
+    fn zero() -> Self {
+        0
+    }
 }
 
 impl Item for i16 {
     fn from_slice(slice: &[u8]) -> Self {
         LE::read_i16(slice)
+    }
+    fn zero() -> Self {
+        0
     }
 }
 
@@ -146,11 +158,17 @@ impl Item for u8 {
     fn from_slice(slice: &[u8]) -> Self {
         slice[0]
     }
+    fn zero() -> Self {
+        0
+    }
 }
 
 impl Item for u16 {
     fn from_slice(slice: &[u8]) -> Self {
         LE::read_u16(slice)
+    }
+    fn zero() -> Self {
+        0
     }
 }
 
@@ -158,38 +176,53 @@ impl Item for u32 {
     fn from_slice(slice: &[u8]) -> Self {
         LE::read_u32(slice)
     }
+    fn zero() -> Self {
+        0
+    }
 }
 
 impl Item for f32 {
     fn from_slice(slice: &[u8]) -> Self {
         LE::read_f32(slice)
     }
+    fn zero() -> Self {
+        0.0
+    }
 }
 
-impl<T: Item> Item for [T; 2] {
+impl<T: Item + Copy> Item for [T; 2] {
     fn from_slice(slice: &[u8]) -> Self {
         assert!(slice.len() >= 2 * mem::size_of::<T>());
         [T::from_slice(slice),
          T::from_slice(&slice[mem::size_of::<T>() ..])]
     }
+    fn zero() -> Self {
+        [T::zero(); 2]
+    }
 }
 
-impl<T: Item> Item for [T; 3] {
+impl<T: Item + Copy> Item for [T; 3] {
     fn from_slice(slice: &[u8]) -> Self {
         assert!(slice.len() >= 3 * mem::size_of::<T>());
         [T::from_slice(slice),
          T::from_slice(&slice[1 * mem::size_of::<T>() ..]),
          T::from_slice(&slice[2 * mem::size_of::<T>() ..])]
     }
+    fn zero() -> Self {
+        [T::zero(); 3]
+    }
 }
 
-impl<T: Item> Item for [T; 4] {
+impl<T: Item + Copy> Item for [T; 4] {
     fn from_slice(slice: &[u8]) -> Self {
         assert!(slice.len() >= 4 * mem::size_of::<T>());
         [T::from_slice(slice),
          T::from_slice(&slice[1 * mem::size_of::<T>() ..]),
          T::from_slice(&slice[2 * mem::size_of::<T>() ..]),
          T::from_slice(&slice[3 * mem::size_of::<T>() ..])]
+    }
+    fn zero() -> Self {
+        [T::zero(); 4]
     }
 }
 
@@ -218,16 +251,20 @@ impl<'a, 's, T: Item> Iter<'s, T> {
             let indices = sparse.as_ref().unwrap().indices();
             let values = sparse.as_ref().unwrap().values();
             let base_iter = {
-                let view = accessor.view();
-                let stride = view.stride().unwrap_or(mem::size_of::<T>());
-                let start = accessor.offset();
-                let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
-                let subslice = if let Some(slice) = buffer_view_slice(view, &get_buffer_data) {
-                    &slice[start..end]
+                // Using `if let` here instead of map to preserve the early return behavior.
+                if let Some(view) = accessor.view() {
+                    let stride = view.stride().unwrap_or(mem::size_of::<T>());
+                    let start = accessor.offset();
+                    let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
+                    let subslice = if let Some(slice) = buffer_view_slice(view, &get_buffer_data) {
+                        &slice[start..end]
+                    } else {
+                        return None
+                    };
+                    Some(ItemIter::new(subslice, stride))
                 } else {
-                    return None
-                };
-                ItemIter::new(subslice, stride)
+                    None
+                }
             };
             let sparse_count = sparse.as_ref().unwrap().count() as usize;
             let index_iter = {
@@ -263,17 +300,20 @@ impl<'a, 's, T: Item> Iter<'s, T> {
         } else {
             debug_assert_eq!(mem::size_of::<T>(), accessor.size());
             debug_assert!(mem::size_of::<T>() > 0);
-            let view = accessor.view();
-            let stride = view.stride().unwrap_or(mem::size_of::<T>());
-            debug_assert!(stride >= mem::size_of::<T>(), "Mismatch in stride, expected at least {} stride but found {}", mem::size_of::<T>(), stride);
-            let start = accessor.offset();
-            let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
-            let subslice = if let Some(slice) = buffer_view_slice(view, &get_buffer_data) {
-                &slice[start..end]
+            if let Some(view) = accessor.view() {
+                let stride = view.stride().unwrap_or(mem::size_of::<T>());
+                debug_assert!(stride >= mem::size_of::<T>(), "Mismatch in stride, expected at least {} stride but found {}", mem::size_of::<T>(), stride);
+                let start = accessor.offset();
+                let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
+                let subslice = if let Some(slice) = buffer_view_slice(view, &get_buffer_data) {
+                    &slice[start..end]
+                } else {
+                    return None
+                };
+                Some(Iter::Standard(ItemIter { stride, data: subslice, _phantom: PhantomData }))
             } else {
-                return None
-            };
-            Some(Iter::Standard(ItemIter { stride, data: subslice, _phantom: PhantomData }))
+                None
+            }
         }
     }
 }

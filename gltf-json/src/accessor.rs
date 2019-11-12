@@ -191,8 +191,11 @@ pub mod sparse {
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Accessor {
     /// The parent buffer view this accessor reads from.
+    ///
+    /// This field can be omitted in sparse accessors.
     #[serde(rename = "bufferView")]
-    pub buffer_view: Index<buffer::View>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub buffer_view: Option<Index<buffer::View>>,
 
     /// The offset relative to the start of the parent `BufferView` in bytes.
     #[serde(default, rename = "byteOffset")]
