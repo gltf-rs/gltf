@@ -23,3 +23,16 @@ fn test_accessor_bounds_validate() {
         [(Path("meshes[0].primitives[0].attributes[\"POSITION\"].min".into()), Error::Missing),
          (Path("meshes[0].primitives[0].attributes[\"POSITION\"].max".into()), Error::Invalid)]);
 }
+
+#[test]
+fn test_non_sparse_accessor_without_buffer_view_validate() {
+    let json = import_json("tests/non_sparse_accessor_without_buffer_view.gltf");
+    let mut errs = vec![];
+    json.validate(
+        &json,
+        gltf_json::Path::new,
+        &mut |path, err| errs.push((path(), err)),
+    );
+    assert_eq!(errs,
+        [(Path("accessors[0].bufferView".into()), Error::Missing)]);
+}

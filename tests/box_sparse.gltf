@@ -1,0 +1,210 @@
+{
+  "accessors": [
+    {
+      "bufferView": 0,
+      "byteOffset": 0,
+      "count": 36,
+      "componentType": 5125,
+      "extras": {},
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        7
+      ]
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 0,
+      "count": 8,
+      "componentType": 5126,
+      "extras": {},
+      "type": "VEC3",
+      "min": [
+        -0.5,
+        -0.5,
+        -0.5
+      ],
+      "max": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "byteOffset": 0,
+      "count": 2,
+      "componentType": 5126,
+      "extras": {},
+      "type": "SCALAR",
+      "min": [
+        0.0
+      ],
+      "max": [
+        1.0
+      ],
+      "sparse": {
+        "count": 1,
+        "indices": {
+          "bufferView": 2,
+          "byteOffset": 0,
+          "componentType": 5125,
+          "extras": {}
+        },
+        "values": {
+          "bufferView": 3,
+          "byteOffset": 0,
+          "extras": {}
+        },
+        "extras": {}
+      }
+    },
+    {
+      "bufferView": 4,
+      "byteOffset": 0,
+      "count": 2,
+      "componentType": 5126,
+      "extras": {},
+      "type": "SCALAR",
+      "min": [
+        1.0
+      ],
+      "max": [
+        2.0
+      ]
+    },
+    {
+      "bufferView": 5,
+      "byteOffset": 0,
+      "count": 8,
+      "componentType": 5126,
+      "extras": {},
+      "type": "VEC3",
+      "min": [
+        -0.5,
+        -0.5,
+        -0.5
+      ],
+      "max": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "animations": [
+    {
+      "extras": {},
+      "channels": [
+        {
+          "sampler": 0,
+          "target": {
+            "extras": {},
+            "node": 0,
+            "path": "weights"
+          },
+          "extras": {}
+        }
+      ],
+      "samplers": [
+        {
+          "extras": {},
+          "input": 3,
+          "interpolation": "LINEAR",
+          "output": 2
+        }
+      ]
+    }
+  ],
+  "asset": {
+    "extras": {},
+    "generator": "gltfgen v0.2.0",
+    "version": "2.0"
+  },
+  "buffers": [
+    {
+      "byteLength": 352,
+      "uri": "box_sparse.bin",
+      "extras": {}
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 144,
+      "byteOffset": 0,
+      "target": 34963,
+      "extras": {}
+    },
+    {
+      "buffer": 0,
+      "byteLength": 96,
+      "byteOffset": 144,
+      "byteStride": 12,
+      "target": 34962,
+      "extras": {}
+    },
+    {
+      "buffer": 0,
+      "byteLength": 4,
+      "byteOffset": 240,
+      "extras": {}
+    },
+    {
+      "buffer": 0,
+      "byteLength": 4,
+      "byteOffset": 244,
+      "extras": {}
+    },
+    {
+      "buffer": 0,
+      "byteLength": 8,
+      "byteOffset": 248,
+      "extras": {}
+    },
+    {
+      "buffer": 0,
+      "byteLength": 96,
+      "byteOffset": 256,
+      "byteStride": 12,
+      "target": 34962,
+      "extras": {}
+    }
+  ],
+  "extras": {},
+  "meshes": [
+    {
+      "extras": {},
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1
+          },
+          "extras": {},
+          "indices": 0,
+          "targets": [
+            {
+              "POSITION": 4
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "extras": {},
+      "mesh": 0,
+      "name": "box"
+    }
+  ],
+  "scenes": [
+    {
+      "extras": {},
+      "nodes": [
+        0
+      ]
+    }
+  ]
+}

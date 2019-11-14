@@ -109,8 +109,10 @@ impl<'a> Accessor<'a> {
     }
 
     /// Returns the buffer view this accessor reads from.
-    pub fn view(&self) -> buffer::View<'a> {
-        self.document.views().nth(self.json.buffer_view.value()).unwrap()
+    ///
+    /// This may be `None` if the corresponding accessor is sparse.
+    pub fn view(&self) -> Option<buffer::View<'a>> {
+        self.json.buffer_view.map(|view| self.document.views().nth(view.value()).unwrap())
     }
 
     /// Returns the offset relative to the start of the parent buffer view in bytes.
