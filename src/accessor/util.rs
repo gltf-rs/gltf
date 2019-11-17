@@ -35,6 +35,15 @@ impl<'a, T: Item> Iterator for Iter<'a, T> {
     }
 }
 
+impl<'a, T: Item> ExactSizeIterator for Iter<'a, T> {
+    fn len(&self) -> usize {
+        match self {
+            &Iter::Standard(ref iter) => iter.len(),
+            &Iter::Sparse(ref iter) => iter.values.len(),
+        }
+    }
+}
+
 /// Iterator over indices of sparse accessor.
 #[derive(Clone, Debug)]
 pub enum SparseIndicesIter<'a> {
