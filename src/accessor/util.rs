@@ -33,7 +33,37 @@ impl<'a, T: Item> Iterator for Iter<'a, T> {
             &mut Iter::Sparse(ref mut iter) => iter.next(),
         }
     }
+
+    fn nth(&mut self, nth: usize) -> Option<Self::Item> {
+        match self {
+            &mut Iter::Standard(ref mut iter) => iter.nth(nth),
+            &mut Iter::Sparse(ref mut iter) => iter.nth(nth),
+        }
+    }
+
+    fn last(self) -> Option<Self::Item> {
+        match self {
+            Iter::Standard(iter) => iter.last(),
+            Iter::Sparse(iter) => iter.last(),
+        }
+    }
+
+    fn count(self) -> usize {
+        match self {
+            Iter::Standard(iter) => iter.count(),
+            Iter::Sparse(iter) => iter.count(),
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self {
+            &Iter::Standard(ref iter) => iter.size_hint(),
+            &Iter::Sparse(ref iter) => iter.size_hint(),
+        }
+    }
 }
+
+impl<'a, T: Item> ExactSizeIterator for Iter<'a, T> {}
 
 /// Iterator over indices of sparse accessor.
 #[derive(Clone, Debug)]
@@ -114,7 +144,14 @@ impl<'a, T: Item> Iterator for SparseIter<'a, T> {
 
         Some(next_value)
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let hint = self.values.len() - self.counter as usize;
+        (hint, Some(hint))
+    }
 }
+
+impl<'a, T: Item> ExactSizeIterator for SparseIter<'a, T> {}
 
 /// Represents items that can be read by an [`Accessor`].
 ///
