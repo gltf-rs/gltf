@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+## [0.15.0] - 2020-01-18
+
+### Added
+
+- Support for the `KHR_materials_unlit` extension, which adds an `unlit` field
+  to `Material`.
+- `ExactSizeIterator` implementations for accessor iterators.
+
+### Fixed
+
+- Some lifetimes for accessing fields (e.g. `Node::children`) have been relaxed.
+- `Accessor::buffer_view` is now optional for the benefit of sparse accessors.
+
+### Removed
+
+- `animation::Interpolation::CatmullRomSpline`
+
 ## [0.14.0] - 2019-10-06
 
 ### Added
