@@ -112,12 +112,17 @@ pub fn import_image_data(
     buffer_data: &[buffer::Data],
 ) -> Result<Vec<image::Data>> {
     let mut images = Vec::new();
+    #[cfg(feature = "guess_mime_type")]
     let guess_format = |encoded_image: &[u8]| {
         match image_crate::guess_format(encoded_image) {
             Ok(image_crate::ImageFormat::PNG) => Some(Png),
             Ok(image_crate::ImageFormat::JPEG) => Some(Jpeg),
             _ => None,
         }
+    };
+    #[cfg(not(feature = "guess_mime_type"))]
+    let guess_format = |_encoded_image: &[u8]| {
+        None
     };
     for image in document.images() {
         match image.source() {
