@@ -43,6 +43,7 @@ KHR_lights_punctual = ["gltf-json/KHR_lights_punctual"]
 KHR_materials_pbrSpecularGlossiness = ["gltf-json/KHR_materials_pbrSpecularGlossiness"]
 KHR_materials_unlit = ["gltf-json/KHR_materials_unlit"]
 image_jpeg_rayon = ["image/jpeg_rayon"]
+guess_mime_type = []
 
 [[example]]
 name = "gltf-display"

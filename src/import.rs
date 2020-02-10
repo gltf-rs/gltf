@@ -112,18 +112,33 @@ pub fn import_image_data(
     buffer_data: &[buffer::Data],
 ) -> Result<Vec<image::Data>> {
     let mut images = Vec::new();
+    #[cfg(feature = "guess_mime_type")]
+    let guess_format = |encoded_image: &[u8]| {
+        match image_crate::guess_format(encoded_image) {
+            Ok(image_crate::ImageFormat::PNG) => Some(Png),
+            Ok(image_crate::ImageFormat::JPEG) => Some(Jpeg),
+            _ => None,
+        }
+    };
+    #[cfg(not(feature = "guess_mime_type"))]
+    let guess_format = |_encoded_image: &[u8]| {
+        None
+    };
     for image in document.images() {
         match image.source() {
             image::Source::Uri { uri, mime_type } if base.is_some() => {
                 match Scheme::parse(uri) {
                     Scheme::Data(Some(annoying_case), base64) => {
-                        let format = match annoying_case.as_ref() {
+                        let encoded_image = base64::decode(&base64).map_err(Error::Base64)?;
+                        let encoded_format = match annoying_case.as_ref() {
                             "image/png" => Png,
                             "image/jpeg" => Jpeg,
-                            _ => return Err(Error::UnsupportedImageEncoding),
+                            _ => match guess_format(&encoded_image) {
+                                Some(format) => format,
+                                None => return Err(Error::UnsupportedImageEncoding),
+                            },
                         };
-                        let encoded_image = base64::decode(&base64).map_err(Error::Base64)?;
-                        let decoded_image = image_crate::load_from_memory_with_format(&encoded_image, format)?;
+                        let decoded_image = image_crate::load_from_memory_with_format(&encoded_image, encoded_format)?;
                         images.push(image::Data::new(decoded_image));
                         continue;
                     },
@@ -134,11 +149,17 @@ pub fn import_image_data(
                 let encoded_format =  match mime_type {
                     Some("image/png") => Png,
                     Some("image/jpeg") => Jpeg,
-                    Some(_) => return Err(Error::UnsupportedImageEncoding),
+                    Some(_) => match guess_format(&encoded_image) {
+                        Some(format) => format,
+                        None => return Err(Error::UnsupportedImageEncoding),
+                    },
                     None => match uri.rsplit(".").next() {
                         Some("png") => Png,
                         Some("jpg") | Some("jpeg") => Jpeg,
-                        _ => return Err(Error::UnsupportedImageEncoding),
+                        _ => match guess_format(&encoded_image) {
+                            Some(format) => format,
+                            None => return Err(Error::UnsupportedImageEncoding),
+                        },
                     },
                 };
                 let decoded_image = image_crate::load_from_memory_with_format(&encoded_image, encoded_format)?;
@@ -152,7 +173,10 @@ pub fn import_image_data(
                 let encoded_format = match mime_type {
                     "image/png" => Png,
                     "image/jpeg" => Jpeg,
-                    _ => return Err(Error::UnsupportedImageEncoding)
+                    _ => match guess_format(encoded_image) {
+                        Some(format) => format,
+                        None => return Err(Error::UnsupportedImageEncoding),
+                    },
                 };
                 let decoded_image = image_crate::load_from_memory_with_format(encoded_image, encoded_format)?;
                 images.push(image::Data::new(decoded_image));
