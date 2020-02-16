@@ -3,7 +3,7 @@ use crate::buffer;
 use crate::image;
 use std::{fs, io};
 
-use image_crate::ImageFormat::{JPEG as Jpeg, PNG as Png};
+use image_crate::ImageFormat::{Jpeg, Png};
 use std::path::Path;
 use crate::{Document, Error, Gltf, Result};
 

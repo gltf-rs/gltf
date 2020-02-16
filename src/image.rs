@@ -24,6 +24,18 @@ pub enum Format {
 
     /// Blue, green, red, alpha.
     B8G8R8A8,
+
+    /// Red only (16 bits).
+    R16,
+
+    /// Red, green (16 bits).
+    R16G16,
+
+    /// Red, green, blue (16 bits).
+    R16G16B16,
+
+    /// Red, green, blue, alpha (16 bits).
+    R16G16B16A16,
 }
 
 /// Describes an image data source.
@@ -91,7 +103,7 @@ impl<'a> Image<'a> {
             json: json,
         }
     }
-    
+
     /// Returns the internal JSON index.
     pub fn index(&self) -> usize {
         self.index
@@ -141,9 +153,13 @@ impl Data {
             DynamicImage::ImageRgba8(_) => Format::R8G8B8A8,
             DynamicImage::ImageBgr8(_) => Format::B8G8R8,
             DynamicImage::ImageBgra8(_) => Format::B8G8R8A8,
+            DynamicImage::ImageLuma16(_) => Format::R16,
+            DynamicImage::ImageLumaA16(_) => Format::R16G16,
+            DynamicImage::ImageRgb16(_) => Format::R16G16B16,
+            DynamicImage::ImageRgba16(_) => Format::R16G16B16A16,
         };
         let (width, height) = image.dimensions();
-        let pixels = image.raw_pixels();
+        let pixels = image.to_bytes();
         Data { format, width, height, pixels }
     }
 }
