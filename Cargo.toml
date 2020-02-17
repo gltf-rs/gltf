@@ -22,16 +22,16 @@ members = ["gltf-derive", "gltf-json"]
 approx = "0.3"
 
 [dependencies]
-base64 = { optional = true, version = "0.10" }
-byteorder = "1.1"
+base64 = { optional = true, version = "0.11" }
+byteorder = "1.3"
 gltf-json = { path = "gltf-json", version = "0.15.0" }
 lazy_static = "1"
 
 [dependencies.image]
 default-features = false
-features = ["jpeg", "png_codec"]
+features = ["jpeg", "png"]
 optional = true
-version = "0.21"
+version = "0.23"
 
 [features]
 default = ["import", "utils", "names"]
