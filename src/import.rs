@@ -115,8 +115,8 @@ pub fn import_image_data(
     #[cfg(feature = "guess_mime_type")]
     let guess_format = |encoded_image: &[u8]| {
         match image_crate::guess_format(encoded_image) {
-            Ok(image_crate::ImageFormat::PNG) => Some(Png),
-            Ok(image_crate::ImageFormat::JPEG) => Some(Jpeg),
+            Ok(image_crate::ImageFormat::Png) => Some(Png),
+            Ok(image_crate::ImageFormat::Jpeg) => Some(Jpeg),
             _ => None,
         }
     };
