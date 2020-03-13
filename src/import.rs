@@ -68,7 +68,10 @@ where P: AsRef<Path>
 {
     use io::Read;
     let file = fs::File::open(path.as_ref()).map_err(Error::Io)?;
-    let length = file.metadata().map(|x| x.len()).unwrap_or(0);
+    // Allocate one extra byte so the buffer doesn't need to grow before the
+    // final `read` call at the end of the file.  Don't worry about `usize`
+    // overflow because reading will fail regardless in that case.
+    let length = file.metadata().map(|x| x.len() + 1).unwrap_or(0);
     let mut reader = io::BufReader::new(file);
     let mut data = Vec::with_capacity(length as usize);
     reader.read_to_end(&mut data).map_err(Error::Io)?;
