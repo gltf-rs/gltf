@@ -60,3 +60,6 @@ path = "examples/roundtrip/main.rs"
 [[example]]
 name = "gltf-tree"
 path = "examples/tree/main.rs"
+
+[package.metadata.docs.rs]
+all-features = true
