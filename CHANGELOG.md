@@ -8,12 +8,23 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.15.1] - 2020-03-15
+
+### Added
+
+- New feature `guess_mime_type` which, as the name suggests, attempts to guess
+  the MIME type of an image if it doesn't exactly match the standard.
+
 ### Changed
 
 - `base64` updated to `0.11`.
 - `byteorder` updated to `1.3`.
 - `image` updated to `0.23.0`.
 - `Format` has additional variants for 16-bit pixel formats.
+
+### Fixed
+
+- Off-by-one error when reading whole files incurring a gratuitous reallocation.
 
 ## [0.15.0] - 2020-01-18
 
