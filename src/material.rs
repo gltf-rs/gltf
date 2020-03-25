@@ -83,6 +83,7 @@ impl<'a> Material<'a> {
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "names")))]
     pub fn name(&self) -> Option<&'a str> {
         self.json.name.as_ref().map(String::as_str)
     }
@@ -96,6 +97,7 @@ impl<'a> Material<'a> {
     /// Parameter values that define the specular-glossiness material model from
     /// Physically-Based Rendering (PBR) methodology.
     #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_pbrSpecularGlossiness")))]
     pub fn pbr_specular_glossiness(&self) -> Option<PbrSpecularGlossiness<'a>> {
         self.json.extensions
             .as_ref()?
@@ -164,6 +166,7 @@ impl<'a> Material<'a> {
     /// 
     /// [`KHR_materials_unlit`](https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit#overview)
     #[cfg(feature = "KHR_materials_unlit")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_unlit")))]
     pub fn unlit(&self) -> bool {
         self.json.extensions
             .as_ref()
@@ -253,6 +256,7 @@ impl<'a> PbrMetallicRoughness<'a> {
 /// A set of parameter values that are used to define the specular-glossiness
 /// material model from Physically-Based Rendering (PBR) methodology.
 #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_pbrSpecularGlossiness")))]
 pub struct PbrSpecularGlossiness<'a> {
     /// The parent `Document` struct.
     document: &'a Document,
@@ -262,6 +266,7 @@ pub struct PbrSpecularGlossiness<'a> {
 }
 
 #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_pbrSpecularGlossiness")))]
 impl<'a> PbrSpecularGlossiness<'a> {
     /// Constructs `PbrSpecularGlossiness`.
     pub(crate) fn new(

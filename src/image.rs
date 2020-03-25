@@ -1,10 +1,12 @@
 use crate::{buffer, Document};
 
 #[cfg(feature = "import")]
+#[cfg_attr(docsrs, doc(cfg(feature = "import")))]
 use image_crate::DynamicImage;
 
 /// Format of image pixel data.
 #[cfg(feature = "import")]
+#[cfg_attr(docsrs, doc(cfg(feature = "import")))]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum Format {
     /// Red only.
@@ -75,6 +77,7 @@ pub struct Image<'a> {
 
 /// Image data belonging to an imported glTF asset.
 #[cfg(feature = "import")]
+#[cfg_attr(docsrs, doc(cfg(feature = "import")))]
 #[derive(Clone, Debug)]
 pub struct Data {
     /// The image pixel data (8 bits per channel).
@@ -111,6 +114,7 @@ impl<'a> Image<'a> {
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "names")))]
     pub fn name(&self) -> Option<&'a str> {
         self.json.name.as_ref().map(String::as_str)
     }

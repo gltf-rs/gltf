@@ -10,6 +10,7 @@ pub mod iter;
 
 /// Utility functions.
 #[cfg(feature = "utils")]
+#[cfg_attr(docsrs, doc(cfg(feature = "utils")))]
 pub mod util;
 
 #[cfg(feature = "utils")]
@@ -140,6 +141,7 @@ impl<'a> Channel<'a> {
 
     /// Constructs an animation channel reader.
     #[cfg(feature = "utils")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "utils")))]
     pub fn reader<'s, F>(&self, get_buffer_data: F) -> Reader<'a, 's, F>
     where
         F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>,

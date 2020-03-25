@@ -145,6 +145,7 @@ impl<'a> Node<'a> {
 
     /// Returns the light at this node as defined by the `KHR_lights_punctual` extension.
     #[cfg(feature = "KHR_lights_punctual")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_lights_punctual")))]
     pub fn light(&self) -> Option<crate::khr_lights_punctual::Light<'a>> {
         if let Some(extensions) = self.json.extensions.as_ref() {
             if let Some(khr_lights_punctual) = extensions.khr_lights_punctual.as_ref() {

@@ -8,6 +8,7 @@ pub mod iter;
 
 /// Utility functions.
 #[cfg(feature = "utils")]
+#[cfg_attr(docsrs, doc(cfg(feature = "utils")))]
 pub mod util;
 
 #[cfg(feature = "utils")]
@@ -68,6 +69,7 @@ impl<'a> Skin<'a> {
 
     /// Constructs a skin reader.
     #[cfg(feature = "utils")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "utils")))]
     pub fn reader<'s, F>(
         &'a self,
         get_buffer_data: F,
@@ -92,6 +94,7 @@ impl<'a> Skin<'a> {
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "names")))]
     pub fn name(&self) -> Option<&'a str> {
         self.json.name.as_ref().map(String::as_str)
     }
