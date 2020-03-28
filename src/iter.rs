@@ -231,9 +231,17 @@ impl<'a> Iterator for ExtensionsUsed<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next().map(String::as_str)
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.0.size_hint()
+    }
+    fn count(self) -> usize {
+        self.0.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        self.0.last().map(String::as_str)
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.0.nth(n).map(String::as_str)
     }
 }
 
@@ -243,9 +251,17 @@ impl<'a> Iterator for ExtensionsRequired<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next().map(String::as_str)
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.0.size_hint()
+    }
+    fn count(self) -> usize {
+        self.0.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        self.0.last().map(String::as_str)
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.0.nth(n).map(String::as_str)
     }
 }
 
