@@ -548,30 +548,7 @@ impl std::fmt::Display for Error {
     }
 }
 
-impl std::error::Error for Error {
-    fn description(&self) -> &str {
-        match *self {
-            #[cfg(feature = "import")]
-            Error::Base64(ref e) => e.description(),
-            Error::Binary(ref e) => e.description(),
-            #[cfg(feature = "import")]
-            Error::BufferLength { .. } => "buffer length does not match expected length",
-            Error::Deserialize(ref e) => e.description(),
-            Error::Io(ref e) => e.description(),
-            #[cfg(feature = "import")]
-            Error::Image(ref e) => e.description(),
-            #[cfg(feature = "import")]
-            Error::MissingBlob => "missing BIN section of binary glTF",
-            #[cfg(feature = "import")]
-            Error::ExternalReferenceInSliceImport => "external reference in slice only import",
-            #[cfg(feature = "import")]
-            Error::UnsupportedImageEncoding => "unsupported image encoding",
-            #[cfg(feature = "import")]
-            Error::UnsupportedScheme => "unsupported URI scheme",
-            Error::Validation(_) => "invalid glTF",
-        }
-    }
-}
+impl std::error::Error for Error {}
 
 impl From<binary::Error> for Error {
     fn from(err: binary::Error) -> Self {
