@@ -168,9 +168,18 @@ impl<'a> Iterator for Accessors<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, json)| Accessor::new(self.document, index, json))
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|(index, json)| Accessor::new(document, index, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|(index, json)| Accessor::new(self.document, index, json))
     }
 }
 
@@ -180,9 +189,18 @@ impl<'a> Iterator for Animations<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, json)| Animation::new(self.document, index, json))
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|(index, json)| Animation::new(document, index, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|(index, json)| Animation::new(self.document, index, json))
     }
 }
 
@@ -192,9 +210,18 @@ impl<'a> Iterator for Buffers<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, json)| Buffer::new(self.document, index, json))
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|(index, json)| Buffer::new(document, index, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|(index, json)| Buffer::new(self.document, index, json))
     }
 }
 
@@ -228,9 +255,18 @@ impl<'a> Iterator for Views<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, json)| View::new(self.document, index, json))
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|(index, json)| View::new(document, index, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|(index, json)| View::new(self.document, index, json))
     }
 }
 
@@ -240,9 +276,18 @@ impl<'a> Iterator for Cameras<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, json)| Camera::new(self.document, index, json))
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|(index, json)| Camera::new(document, index, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|(index, json)| Camera::new(self.document, index, json))
     }
 }
 
@@ -250,13 +295,20 @@ impl<'a> ExactSizeIterator for Images<'a> {}
 impl<'a> Iterator for Images<'a> {
     type Item = Image<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter
-            .next()
-            .map(|(index, json)| Image::new(self.document, index, json))
+        self.iter.next().map(|(index, json)| Image::new(self.document, index, json))
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|(index, json)| Image::new(document, index, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|(index, json)| Image::new(self.document, index, json))
     }
 }
 
@@ -271,9 +323,18 @@ impl<'a> Iterator for Lights<'a> {
             .next()
             .map(|(index, json)| crate::khr_lights_punctual::Light::new(self.document, index, json))
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|(index, json)| crate::khr_lights_punctual::Light::new(document, index, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|(index, json)| crate::khr_lights_punctual::Light::new(self.document, index, json))
     }
 }
 
@@ -283,9 +344,18 @@ impl<'a> Iterator for Materials<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, json)| Material::new(self.document, index, json))
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|(index, json)| Material::new(document, index, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|(index, json)| Material::new(self.document, index, json))
     }
 }
 
@@ -295,9 +365,18 @@ impl<'a> Iterator for Meshes<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, json)| Mesh::new(self.document, index, json))
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|(index, json)| Mesh::new(document, index, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|(index, json)| Mesh::new(self.document, index, json))
     }
 }
 
@@ -307,9 +386,18 @@ impl<'a> Iterator for Nodes<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, json)| Node::new(self.document, index, json))
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|(index, json)| Node::new(document, index, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|(index, json)| Node::new(self.document, index, json))
     }
 }
 
@@ -319,9 +407,18 @@ impl<'a> Iterator for Samplers<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, json)| Sampler::new(self.document, index, json))
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|(index, json)| Sampler::new(document, index, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|(index, json)| Sampler::new(self.document, index, json))
     }
 }
 
@@ -331,9 +428,18 @@ impl<'a> Iterator for Scenes<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, json)| Scene::new(self.document, index, json))
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|(index, json)| Scene::new(document, index, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|(index, json)| Scene::new(self.document, index, json))
     }
 }
 
@@ -343,9 +449,18 @@ impl<'a> Iterator for Skins<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, json)| Skin::new(self.document, index, json))
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|(index, json)| Skin::new(document, index, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|(index, json)| Skin::new(self.document, index, json))
     }
 }
 
@@ -355,8 +470,17 @@ impl<'a> Iterator for Textures<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, json)| Texture::new(self.document, index, json))
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|(index, json)| Texture::new(document, index, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|(index, json)| Texture::new(self.document, index, json))
     }
 }
