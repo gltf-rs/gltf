@@ -139,20 +139,15 @@ impl Validate for std::boxed::Box<serde_json::value::RawValue> {
     }
 }
 
-impl std::error::Error for Error {
-    fn description(&self) -> &str {
-        match *self {
-            Error::IndexOutOfBounds => "Index out of bounds",
-            Error::Invalid => "Invalid value",
-            Error::Missing => "Missing data",
-        }
-    }
-}
+impl std::error::Error for Error {}
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        use std::error::Error;
-        write!(f, "{}", self.description())
+        write!(f, "{}", match *self {
+            Error::IndexOutOfBounds => "Index out of bounds",
+            Error::Invalid => "Invalid value",
+            Error::Missing => "Missing data",
+        })
     }
 }
 

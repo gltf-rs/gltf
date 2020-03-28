@@ -287,27 +287,22 @@ impl<'a> Glb<'a> {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use std::error::Error;
-        write!(f, "{}", self.description())
+        write!(f, "{}", match *self {
+            Error::Io(ref e) => return e.fmt(f),
+            Error::Version(_) => "unsupported version",
+            Error::Magic(_) => "not glTF magic",
+            Error::Length { .. } => "could not completely read the object",
+            Error::ChunkLength { ty, .. } => match ty {
+                ChunkType::Json => "JSON chunk length exceeds that of slice",
+                ChunkType::Bin => "BIN\\0 chunk length exceeds that of slice",
+            },
+            Error::ChunkType(ty) => match ty {
+                ChunkType::Json => "was not expecting JSON chunk",
+                ChunkType::Bin => "was not expecting BIN\\0 chunk",
+            },
+            Error::UnknownChunkType(_) => "unknown chunk type",
+       })
     }
 }
 
-impl ::std::error::Error for Error {
-    fn description(&self) -> &str {
-         match *self {
-             Error::Io(ref e) => e.description(),
-             Error::Version(_) => "unsupported version",
-             Error::Magic(_) => "not glTF magic",
-             Error::Length { .. } => "could not completely read the object",
-             Error::ChunkLength { ty, .. } => match ty {
-                 ChunkType::Json => "JSON chunk length exceeds that of slice",
-                 ChunkType::Bin => "BIN\\0 chunk length exceeds that of slice",
-             },
-             Error::ChunkType(ty) => match ty {
-                 ChunkType::Json => "was not expecting JSON chunk",
-                 ChunkType::Bin => "was not expecting BIN\\0 chunk",
-             },
-             Error::UnknownChunkType(_) => "unknown chunk type",
-        }
-    }
-}
+impl ::std::error::Error for Error {}
