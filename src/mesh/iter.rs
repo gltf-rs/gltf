@@ -64,9 +64,35 @@ impl<'a> Iterator for Primitives<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, json)| Primitive::new(self.mesh.clone(), index, json))
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let mesh = self.mesh;
+        self.iter.last().map(|(index, json)| Primitive::new(mesh, index, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|(index, json)| Primitive::new(self.mesh.clone(), index, json))
+    }
+}
+
+fn map_morph_target<'a>(document: &'a crate::Document, json: &json::mesh::MorphTarget) -> MorphTarget<'a> {
+    let positions = json.positions
+        .as_ref()
+        .map(|index| document.accessors().nth(index.value()).unwrap());
+    let normals = json.normals
+        .as_ref()
+        .map(|index| document.accessors().nth(index.value()).unwrap());
+    let tangents = json.tangents
+        .as_ref()
+        .map(|index| document.accessors().nth(index.value()).unwrap());
+    MorphTarget {
+        positions,
+        normals,
+        tangents,
     }
 }
 
@@ -76,25 +102,19 @@ impl<'a> Iterator for MorphTargets<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
-            .map(|json| {
-                let positions = json.positions
-                    .as_ref()
-                    .map(|index| self.document.accessors().nth(index.value()).unwrap());
-                let normals = json.normals
-                    .as_ref()
-                    .map(|index| self.document.accessors().nth(index.value()).unwrap());
-                let tangents = json.tangents
-                    .as_ref()
-                    .map(|index| self.document.accessors().nth(index.value()).unwrap());
-                MorphTarget {
-                    positions,
-                    normals,
-                    tangents,
-                }
-            })
+            .map(|json| map_morph_target(self.document, json))
     }
-
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|json| map_morph_target(document, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|json| map_morph_target(self.document, json))
     }
 }

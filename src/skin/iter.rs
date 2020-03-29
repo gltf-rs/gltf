@@ -19,4 +19,17 @@ impl<'a> Iterator for Joints<'a>  {
             .next()
             .map(|index| self.document.nodes().nth(index.value()).unwrap())
     }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|index| document.nodes().nth(index.value()).unwrap())
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|index| self.document.nodes().nth(index.value()).unwrap())
+    }
 }
