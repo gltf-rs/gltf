@@ -8,6 +8,17 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.15.2] - 2020-03-29
+
+### Changed
+
+- All features are now exposed in the [online documentation](http://docs.rs/gltf).
+- Primary iterators now implement `Iterator::nth` explicitly for improved performance.
+
+### Fixed
+
+- Compiler warnings regarding deprecation of `std::error::Error::description`.
+
 ## [0.15.1] - 2020-03-15
 
 ### Added
