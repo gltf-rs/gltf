@@ -53,12 +53,15 @@ impl<'a> Scheme<'a> {
         }
     }
 
-    fn read(base: &Path, uri: &str) -> Result<Vec<u8>> {
+    fn read(base: Option<&Path>, uri: &str) -> Result<Vec<u8>> {
         match Scheme::parse(uri) {
+            // The path may be unused in the Scheme::Data case
+            // Example: "uri" : "data:application/octet-stream;base64,wsVHPgA...."
             Scheme::Data(_, base64) => base64::decode(&base64).map_err(Error::Base64),
-            Scheme::File(path) => read_to_end(path),
-            Scheme::Relative => read_to_end(base.join(uri)),
+            Scheme::File(path) if base.is_some() => read_to_end(path),
+            Scheme::Relative if base.is_some() => read_to_end(base.unwrap().join(uri)),
             Scheme::Unsupported => Err(Error::UnsupportedScheme),
+            _ => Err(Error::ExternalReferenceInSliceImport)
         }
     }
 }
@@ -87,9 +90,8 @@ pub fn import_buffer_data(
     let mut buffers = Vec::new();
     for buffer in document.buffers() {
         let mut data = match buffer.source() {
-            buffer::Source::Uri(uri) if base.is_some() => Scheme::read(base.unwrap(), uri),
+            buffer::Source::Uri(uri) => Scheme::read(base, uri),
             buffer::Source::Bin => blob.take().ok_or(Error::MissingBlob),
-            _ => Err(Error::ExternalReferenceInSliceImport)
         }?;
         if data.len() < buffer.length() {
             return Err(
@@ -148,7 +150,7 @@ pub fn import_image_data(
                     Scheme::Unsupported => return Err(Error::UnsupportedScheme),
                     _ => {},
                 }
-                let encoded_image = Scheme::read(base.unwrap(), uri)?;
+                let encoded_image = Scheme::read(base, uri)?;
                 let encoded_format =  match mime_type {
                     Some("image/png") => Png,
                     Some("image/jpeg") => Jpeg,
