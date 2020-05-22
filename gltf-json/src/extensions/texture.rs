@@ -17,25 +17,33 @@ pub struct Info {
     pub texture_transform: Option<TextureTransform>,
 }
 
-/// Foo
+/// Many techniques can be used to optimize resource usage for a 3d scene.
+/// Chief among them is the ability to minimize the number of textures the GPU must load.
+/// To achieve this, many engines encourage packing many objects' low-resolution textures into a single large texture atlas.
+/// The region of the resulting atlas that corresponds with each object is then defined by vertical and horizontal offsets,
+/// and the width and height of the region.
+///
+/// To support this use case, this extension adds `offset`, `rotation`, and `scale` properties to textureInfo structures.
+/// These properties would typically be implemented as an affine transform on the UV coordinates.
 #[cfg(feature = "KHR_texture_transform")]
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 #[serde(default, rename_all = "camelCase")]
 pub struct TextureTransform {
-    /// Foo
+    // The offset of the UV coordinate origin as a factor of the texture dimensions.
     pub offset: TextureTransformOffset,
 
-    /// Foo
+    /// Rotate the UVs by this many radians counter-clockwise around the origin.
+    /// This is equivalent to a similar rotation of the image clockwise.
     pub rotation: TextureTransformRotation,
 
-    /// Foo
+    /// The scale factor applied to the components of the UV coordinates.
     pub scale: TextureTransformScale,
 
-    /// Foo
+    /// Overrides the textureInfo texCoord value if supplied, and if this extension is supported.
     pub tex_coord: Option<u32>,
 }
 
-/// Foo
+/// The offset of the UV coordinate origin as a factor of the texture dimensions.
 #[cfg(feature = "KHR_texture_transform")]
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct TextureTransformOffset(pub [f32; 2]);
@@ -50,7 +58,8 @@ impl Default for TextureTransformOffset {
 #[cfg(feature = "KHR_texture_transform")]
 impl Validate for TextureTransformOffset {}
 
-/// Foo
+/// Rotate the UVs by this many radians counter-clockwise around the origin.
+/// This is equivalent to a similar rotation of the image clockwise.
 #[cfg(feature = "KHR_texture_transform")]
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct TextureTransformRotation(pub f32);
@@ -65,7 +74,7 @@ impl Default for TextureTransformRotation {
 #[cfg(feature = "KHR_texture_transform")]
 impl Validate for TextureTransformRotation {}
 
-/// Foo
+/// The scale factor applied to the components of the UV coordinates.
 #[cfg(feature = "KHR_texture_transform")]
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct TextureTransformScale(pub [f32; 2]);
