@@ -48,6 +48,7 @@ The following glTF extensions are supported by the crate:
 * `KHR_lights_punctual`
 * `KHR_materials_pbrSpecularGlossiness`
 * `KHR_materials_unlit`
+* `KHR_texture_transform`
 
 To use an extension, list its name in the `features` section.
 

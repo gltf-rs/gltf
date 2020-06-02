@@ -1,5 +1,7 @@
+#[cfg(feature = "KHR_texture_transform")]
+use crate::{extras::Extras, validation::Validate};
 use gltf_derive::Validate;
-use serde_derive::{Serialize, Deserialize};
+use serde_derive::{Deserialize, Serialize};
 
 /// Texture sampler properties for filtering and wrapping modes.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
@@ -41,6 +43,10 @@ pub struct TextureTransform {
 
     /// Overrides the textureInfo texCoord value if supplied, and if this extension is supported.
     pub tex_coord: Option<u32>,
+
+    /// Optional application specific data.
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    pub extras: Extras,
 }
 
 /// The offset of the UV coordinate origin as a factor of the texture dimensions.
