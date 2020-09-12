@@ -13,6 +13,14 @@ pub struct Material {
     #[cfg(feature = "KHR_materials_unlit")]
     #[serde(default, rename = "KHR_materials_unlit", skip_serializing_if = "Option::is_none")]
     pub unlit: Option<Unlit>,
+
+    #[cfg(feature = "KHR_materials_transmission")]
+    #[serde(default, rename = "KHR_materials_transmission", skip_serializing_if = "Option::is_none")]
+    pub transmission: Option<Transmission>,
+
+    #[cfg(feature = "KHR_materials_ior")]
+    #[serde(default, rename = "KHR_materials_ior", skip_serializing_if = "Option::is_none")]
+    pub ior: Option<Ior>,
 }
 
 /// A set of parameter values that are used to define the metallic-roughness

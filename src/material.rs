@@ -253,6 +253,92 @@ impl<'a> PbrMetallicRoughness<'a> {
     }
 }
 
+/// A set of parameter values that are used to define the transmissions
+/// factor of the material
+#[cfg(feature = "KHR_materials_transmission")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_transmission")))]
+pub struct Transmission<'a> {
+    /// The parent `Document` struct.
+    document: &'a Document,
+
+    /// The corresponding JSON struct.
+    json: &'a json::extensions::material::Transmission,
+}
+
+#[cfg(feature = "KHR_materials_transmission")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_transmission")))]
+impl<'a> Transmission<'a> {
+    /// Constructs `Ior`.
+    pub(crate) fn new(
+        document: &'a Document,
+        json: &'a json::extensions::material::Transmission,
+    ) -> Self {
+        Self {
+            document: document,
+            json: json,
+        }
+    }
+
+    /// Returns the material's transmission factor.
+    ///
+    /// The default value is `0.0`.
+    pub fn transmission_factor(&self) -> f32 {
+        self.json.transmission_factor.0
+    }
+
+    /// Returns the transmission texture.
+    pub fn transmission_texture(&self) -> Option<texture::Info<'a>> {
+        self.json.transmission_texture.as_ref().map(|json| {
+            let texture = self.document.textures().nth(json.index.value()).unwrap();
+            texture::Info::new(texture, json)
+        })
+    }
+
+    /// Optional application specific data.
+    pub fn extras(&self) -> &'a json::Extras {
+        &self.json.extras
+    }
+}
+
+/// A set of parameter values that are used to define the ior
+/// (index of refraction) of the material
+#[cfg(feature = "KHR_materials_ior")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_ior")))]
+pub struct Ior<'a> {
+    /// The parent `Document` struct.
+    document: &'a Document,
+
+    /// The corresponding JSON struct.
+    json: &'a json::extensions::material::Ior,
+}
+
+#[cfg(feature = "KHR_materials_ior")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_ior")))]
+impl<'a> Ior<'a> {
+    /// Constructs `Ior`.
+    pub(crate) fn new(
+        document: &'a Document,
+        json: &'a json::extensions::material::Ior,
+    ) -> Self {
+        Self {
+            document: document,
+            json: json,
+        }
+    }
+
+    /// Returns the material's ior.
+    ///
+    /// The default value is `1.5`.
+    pub fn ior(&self) -> f32 {
+        self.json.ior
+    }
+
+    /// Optional application specific data.
+    pub fn extras(&self) -> &'a json::Extras {
+        &self.json.extras
+    }
+}
+
 /// A set of parameter values that are used to define the specular-glossiness
 /// material model from Physically-Based Rendering (PBR) methodology.
 #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
