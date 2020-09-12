@@ -1,7 +1,11 @@
 use gltf_derive::Validate;
 use serde_derive::{Serialize, Deserialize};
+#[cfg(any(feature = "KHR_materials_pbrSpecularGlossiness", feature = "KHR_materials_transmission", feature = "KHR_materials_ior"))]
+use crate::{Extras, validation::Validate};
+#[cfg(any(feature = "KHR_materials_pbrSpecularGlossiness", feature = "KHR_materials_transmission"))]
+use crate::texture;
 #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
-use crate::{Extras, texture, validation::Validate, material::StrengthFactor};
+use crate::material::StrengthFactor;
 
 /// The material appearance of a primitive.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
@@ -121,3 +125,75 @@ impl Validate for PbrSpecularFactor {}
 #[cfg(feature = "KHR_materials_unlit")]
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct Unlit {}
+
+/// A number in the inclusive range [0.0, 1.0] with a default value of 0.0.
+#[cfg(feature = "KHR_materials_transmission")]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct TransmissionFactor(pub f32);
+
+#[cfg(feature = "KHR_materials_transmission")]
+impl Default for TransmissionFactor {
+    fn default() -> Self {
+        TransmissionFactor(0.0)
+    }
+}
+
+#[cfg(feature = "KHR_materials_transmission")]
+impl Validate for TransmissionFactor {}
+
+#[cfg(feature = "KHR_materials_transmission")]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[serde(default, rename_all = "camelCase")]
+pub struct Transmission {
+    /// The base percentage of light that is transmitted through the surface.
+    ///
+    /// The amount of light that is transmitted by the surface rather than diffusely re-emitted. 
+    /// This is a percentage of all the light that penetrates a surface (i.e. isn’t specularly reflected) 
+    /// rather than a percentage of the total light that hits a surface. 
+    /// A value of 1.0 means that 100% of the light that penetrates the surface is transmitted through.
+    pub transmission_factor: TransmissionFactor,
+
+    /// The transmission texture.
+    ///
+    /// The R channel of this texture defines the amount of light that is transmitted by the surface 
+    /// rather than diffusely re-emitted. A value of 1.0 in the red channel means that 100% of the light
+    /// that penetrates the surface (i.e. isn’t specularly reflected) is transmitted through. 
+    /// The value is linear and is multiplied by the transmissionFactor to determine the total transmission value.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub transmission_texture: Option<texture::Info>,
+
+    /// Optional application specific data.
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    pub extras: Extras,
+}
+
+/// A positive number with default value of 1.5
+#[cfg(feature = "KHR_materials_ior")]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct IndexOfRefraction(pub f32);
+
+#[cfg(feature = "KHR_materials_ior")]
+impl Default for IndexOfRefraction {
+    fn default() -> Self {
+        IndexOfRefraction(1.5)
+    }
+}
+
+#[cfg(feature = "KHR_materials_ior")]
+impl Validate for IndexOfRefraction {}
+
+#[cfg(feature = "KHR_materials_ior")]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[serde(default, rename_all = "camelCase")]
+pub struct Ior {
+    /// The index of refraction.
+    ///
+    /// Typical values for the index of refraction range from 1 to 2. 
+    /// In rare cases values greater than 2 are possible.
+    /// For example, the ior of water is 1.33, and diamond is 2.42
+    pub ior: IndexOfRefraction,
+
+    /// Optional application specific data.
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    pub extras: Extras,
+}

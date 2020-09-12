@@ -330,7 +330,7 @@ impl<'a> Ior<'a> {
     ///
     /// The default value is `1.5`.
     pub fn ior(&self) -> f32 {
-        self.json.ior
+        self.json.ior.0
     }
 
     /// Optional application specific data.
