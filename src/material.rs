@@ -105,6 +105,26 @@ impl<'a> Material<'a> {
             .map(|x| PbrSpecularGlossiness::new(self.document, x))
     }
 
+    /// Parameter values that define the transmission of light through the material
+    #[cfg(feature = "KHR_materials_transmission")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_transmission")))]
+    pub fn transmission(&self) -> Option<Transmission<'a>> {
+        self.json.extensions
+            .as_ref()?
+            .transmission.as_ref()
+            .map(|x| Transmission::new(self.document, x))
+    }
+
+    /// Parameter values that define the index of refraction of the material
+    #[cfg(feature = "KHR_materials_ior")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_ior")))]
+    pub fn ior(&self) -> Option<f32> {
+        self.json.extensions
+            .as_ref()?
+            .ior.as_ref()
+            .map(|x| x.ior.0)
+    }
+
     /// A tangent space normal map.
     ///
     /// The texture contains RGB components in linear space. Each texel represents
@@ -292,45 +312,6 @@ impl<'a> Transmission<'a> {
             let texture = self.document.textures().nth(json.index.value()).unwrap();
             texture::Info::new(texture, json)
         })
-    }
-
-    /// Optional application specific data.
-    pub fn extras(&self) -> &'a json::Extras {
-        &self.json.extras
-    }
-}
-
-/// A set of parameter values that are used to define the ior
-/// (index of refraction) of the material
-#[cfg(feature = "KHR_materials_ior")]
-#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_ior")))]
-pub struct Ior<'a> {
-    /// The parent `Document` struct.
-    document: &'a Document,
-
-    /// The corresponding JSON struct.
-    json: &'a json::extensions::material::Ior,
-}
-
-#[cfg(feature = "KHR_materials_ior")]
-#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_ior")))]
-impl<'a> Ior<'a> {
-    /// Constructs `Ior`.
-    pub(crate) fn new(
-        document: &'a Document,
-        json: &'a json::extensions::material::Ior,
-    ) -> Self {
-        Self {
-            document: document,
-            json: json,
-        }
-    }
-
-    /// Returns the material's ior.
-    ///
-    /// The default value is `1.5`.
-    pub fn ior(&self) -> f32 {
-        self.json.ior.0
     }
 
     /// Optional application specific data.
