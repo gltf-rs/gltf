@@ -22,7 +22,7 @@ pub enum AlphaMode {
     /// the alpha value and the specified alpha cutoff value.
     Mask,
 
-    /// The alpha value is used, to determine the transparence of the rendered output.
+    /// The alpha value is used, to determine the transparency of the rendered output.
     /// The alpha cutoff value is ignored.
     Blend,
 }
