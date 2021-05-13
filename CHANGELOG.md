@@ -8,6 +8,22 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.16.0] - 2021-05-13
+
+### Added
+
+- Support for the `KHR_texture_transform` extension.
+- Support for the `KHR_materials_transmission_ior extension`.
+
+### Changed
+
+- `Material::alpha_cutoff` is now optional.
+
+### Fixed
+
+- URIs with embedded data failing to import when using `import_slice`.
+- Serialization of empty primitives object being skipped.
+
 ## [0.15.2] - 2020-03-29
 
 ### Changed
