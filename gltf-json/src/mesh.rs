@@ -92,7 +92,6 @@ pub struct Mesh {
     pub name: Option<String>,
 
     /// Defines the geometry to be renderered with a material.
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub primitives: Vec<Primitive>,
 
     /// Defines the weights to be applied to the morph targets.
