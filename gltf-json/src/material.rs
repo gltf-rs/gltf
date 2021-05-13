@@ -22,8 +22,8 @@ pub enum AlphaMode {
     /// the alpha value and the specified alpha cutoff value.
     Mask,
 
-    /// The rendered output is either fully opaque or fully transparent depending on
-    /// the alpha value and the specified alpha cutoff value.
+    /// The alpha value is used, to determine the transparency of the rendered output.
+    /// The alpha cutoff value is ignored.
     Blend,
 }
 
@@ -45,7 +45,9 @@ impl ser::Serialize for AlphaMode {
 pub struct Material {
     /// The alpha cutoff value of the material.
     #[serde(rename = "alphaCutoff")]
-    pub alpha_cutoff: AlphaCutoff,
+    //#[cfg_attr(feature = "alphaCutoff", serde(skip_serializing_if = "Option::is_none"))]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub alpha_cutoff: Option<AlphaCutoff>,
     
     /// The alpha rendering mode of the material.
     ///

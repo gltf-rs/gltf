@@ -49,9 +49,9 @@ impl<'a> Material<'a> {
         self.index
     }
 
-    ///  The alpha cutoff value of the material.
-    pub fn alpha_cutoff(&self) -> f32 {
-        self.json.alpha_cutoff.0
+    ///  The optional alpha cutoff value of the material.
+    pub fn alpha_cutoff(&self) -> Option<f32> {
+        self.json.alpha_cutoff.map(|value| value.0)
     }
 
     /// The alpha rendering mode of the material.  The material's alpha rendering
