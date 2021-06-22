@@ -7,6 +7,10 @@ pub struct Root {
     #[cfg(feature = "KHR_lights_punctual")]
     #[serde(default, rename = "KHR_lights_punctual", skip_serializing_if = "Option::is_none")]
     pub khr_lights_punctual: Option<KhrLightsPunctual>,
+
+    #[cfg(feature = "CESIUM_RTC")]
+    #[serde(default, rename = "CESIUM_RTC", skip_serializing_if = "Option::is_none")]
+    pub cesium_rtc: Option<CesiumRtc>
 }
 
 #[cfg(feature = "KHR_lights_punctual")]
@@ -14,6 +18,12 @@ pub struct Root {
 pub struct KhrLightsPunctual {
     /// Lights at this node.
     pub lights: Vec<crate::extensions::scene::khr_lights_punctual::Light>,
+}
+
+#[cfg(feature = "CESIUM_RTC")]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+pub struct CesiumRtc {
+    pub center: [f32; 3],
 }
 
 #[cfg(feature = "KHR_lights_punctual")]
