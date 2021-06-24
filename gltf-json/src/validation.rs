@@ -157,6 +157,7 @@ impl Validate for u32 {}
 impl Validate for i32 {}
 impl Validate for f32 {}
 impl Validate for [f32; 3] {}
+impl Validate for [f64; 3] {}
 impl Validate for [f32; 4] {}
 impl Validate for [f32; 16] {}
 impl Validate for () {}

@@ -23,7 +23,7 @@ pub struct KhrLightsPunctual {
 #[cfg(feature = "CESIUM_RTC")]
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct CesiumRtc {
-    pub center: [f32; 3],
+    pub center: [f64; 3],
 }
 
 #[cfg(feature = "KHR_lights_punctual")]
