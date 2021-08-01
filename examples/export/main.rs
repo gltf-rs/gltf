@@ -22,10 +22,6 @@ struct Vertex {
     color: [f32; 3],
 }
 
-fn align_to_multiple_of_four(n: &mut u32) {
-    *n = (*n + 3) & !3;
-}
-
 fn to_padded_byte_vector<T>(vec: Vec<T>) -> Vec<u8> {
     let byte_length = vec.len() * mem::size_of::<T>();
     let byte_capacity = vec.capacity() * mem::size_of::<T>();
@@ -170,13 +166,11 @@ fn export(output: Output) {
         Output::Binary => {
             let json_string = json::serialize::to_string(&root)
                 .expect("Serialization error");
-            let mut json_offset = json_string.len() as u32;
-            align_to_multiple_of_four(&mut json_offset);
             let glb = gltf::binary::Glb {
                 header: gltf::binary::Header {
                     magic: b"glTF".clone(),
                     version: 2,
-                    length: json_offset + buffer_length,
+                    length: 0,
                 },
                 bin: Some(Cow::Owned(to_padded_byte_vector(triangle_vertices))),
                 json: Cow::Owned(json_string.into_bytes()),
