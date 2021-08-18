@@ -614,11 +614,11 @@ impl Normalize<i16> for u8 {
 }
 
 impl Normalize<u16> for u8 {
-    fn normalize(self) -> u16 { self.max(0) as u16 * 2 }
+    fn normalize(self) -> u16 { self as u16 * 0x100 }
 }
 
 impl Normalize<f32> for u8 {
-    fn normalize(self) -> f32 { (self as f32 * 32767.0_f32.recip()).max(-1.0) }
+    fn normalize(self) -> f32 { self as f32 * 255.0_f32.recip() }
 }
 
 impl Normalize<i8> for i16 {
