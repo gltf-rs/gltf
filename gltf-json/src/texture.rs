@@ -156,11 +156,13 @@ pub struct Sampler {
 
     /// `s` wrapping mode.
     #[serde(default, rename = "wrapS")]
-    pub wrap_s: Checked<WrappingMode>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub wrap_s: Option<Checked<WrappingMode>>,
 
     /// `t` wrapping mode.
     #[serde(default, rename = "wrapT")]
-    pub wrap_t: Checked<WrappingMode>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub wrap_t: Option<Checked<WrappingMode>>,
 
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -185,7 +187,8 @@ pub struct Texture {
     pub sampler: Option<Index<Sampler>>,
 
     /// The index of the image used by this texture.
-    pub source: Index<image::Image>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source: Option<Index<image::Image>>,
 
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -205,7 +208,8 @@ pub struct Info {
 
     /// The set index of the texture's `TEXCOORD` attribute.
     #[serde(default, rename = "texCoord")]
-    pub tex_coord: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tex_coord: Option<u32>,
 
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]

@@ -67,8 +67,8 @@ impl<'a> Material<'a> {
     ///   destination areas and the rendered output is combined with the background
     ///   using the normal painting operation (i.e. the Porter and Duff over
     ///   operator).
-    pub fn alpha_mode(&self) -> AlphaMode {
-        self.json.alpha_mode.unwrap()
+    pub fn alpha_mode(&self) -> Option<AlphaMode> {
+        self.json.alpha_mode.map(|value| value.unwrap())
     }
 
     /// Specifies whether the material is double-sided.
@@ -77,7 +77,7 @@ impl<'a> Material<'a> {
     /// * When this value is true, back-face culling is disabled and double sided
     ///   lighting is enabled.  The back-face must have its normals reversed before
     ///   the lighting equation is evaluated.
-    pub fn double_sided(&self) -> bool {
+    pub fn double_sided(&self) -> Option<bool> {
         self.json.double_sided
     }
 
@@ -90,8 +90,10 @@ impl<'a> Material<'a> {
 
     /// Parameter values that define the metallic-roughness material model from
     /// Physically-Based Rendering (PBR) methodology.
-    pub fn pbr_metallic_roughness(&self) -> PbrMetallicRoughness<'a> {
-        PbrMetallicRoughness::new(self.document, &self.json.pbr_metallic_roughness)
+    pub fn pbr_metallic_roughness(&self) -> Option<PbrMetallicRoughness<'a>> {
+        self.json.pbr_metallic_roughness.as_ref().map(|pbr| {
+            PbrMetallicRoughness::new(self.document, pbr)
+        })
     }
 
     /// Parameter values that define the specular-glossiness material model from
@@ -175,8 +177,8 @@ impl<'a> Material<'a> {
     /// The emissive color of the material.
     ///
     /// The default value is `[0.0, 0.0, 0.0]`.
-    pub fn emissive_factor(&self) -> [f32; 3] {
-        self.json.emissive_factor.0
+    pub fn emissive_factor(&self) -> Option<[f32; 3]> {
+        self.json.emissive_factor.map(|value| value.0)
     }
 
     /// Specifies whether the material is unlit.
@@ -224,8 +226,8 @@ impl<'a> PbrMetallicRoughness<'a> {
     /// Returns the material's base color factor.
     ///
     /// The default value is `[1.0, 1.0, 1.0, 1.0]`.
-    pub fn base_color_factor(&self) -> [f32; 4] {
-        self.json.base_color_factor.0
+    pub fn base_color_factor(&self) -> Option<[f32; 4]> {
+        self.json.base_color_factor.map(|value| value.0)
     }
 
     /// Returns the base color texture. The texture contains RGB(A) components
@@ -240,8 +242,8 @@ impl<'a> PbrMetallicRoughness<'a> {
     /// Returns the metalness factor of the material.
     ///
     /// The default value is `1.0`.
-    pub fn metallic_factor(&self) -> f32 {
-        self.json.metallic_factor.0
+    pub fn metallic_factor(&self) -> Option<f32> {
+        self.json.metallic_factor.map(|value| value.0)
     }
 
     /// Returns the roughness factor of the material.
@@ -250,8 +252,8 @@ impl<'a> PbrMetallicRoughness<'a> {
     /// * A value of 0.0 means the material is completely smooth.
     ///
     /// The default value is `1.0`.
-    pub fn roughness_factor(&self) -> f32 {
-        self.json.roughness_factor.0
+    pub fn roughness_factor(&self) -> Option<f32> {
+        self.json.roughness_factor.map(|value| value.0)
     }
 
     /// The metallic-roughness texture.
@@ -419,12 +421,12 @@ impl<'a> NormalTexture<'a> {
     }
 
     /// Returns the scalar multiplier applied to each normal vector of the texture.
-    pub fn scale(&self) -> f32 {
+    pub fn scale(&self) -> Option<f32> {
         self.json.scale
     }
 
     /// The set index of the texture's `TEXCOORD` attribute.
-    pub fn tex_coord(&self) -> u32 {
+    pub fn tex_coord(&self) -> Option<u32> {
         self.json.tex_coord
     }
 
@@ -461,12 +463,12 @@ impl<'a> OcclusionTexture<'a> {
     }
 
     /// Returns the scalar multiplier controlling the amount of occlusion applied.
-    pub fn strength(&self) -> f32 {
-        self.json.strength.0
+    pub fn strength(&self) -> Option<f32> {
+        self.json.strength.map(|value| value.0)
     }
 
     /// Returns the set index of the texture's `TEXCOORD` attribute.
-    pub fn tex_coord(&self) -> u32 {
+    pub fn tex_coord(&self) -> Option<u32> {
         self.json.tex_coord
     }
 

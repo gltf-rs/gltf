@@ -127,7 +127,8 @@ pub struct Target {
     pub extras: Extras,
     
     /// The index of the node to target.
-    pub node: Index<scene::Node>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub node: Option<Index<scene::Node>>,
     
     /// The name of the node's property to modify or the 'weights' of the
     /// morph targets it instantiates.
@@ -151,7 +152,8 @@ pub struct Sampler {
     
     /// The interpolation algorithm.
     #[serde(default)]
-    pub interpolation: Checked<Interpolation>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub interpolation: Option<Checked<Interpolation>>,
     
     /// The index of an accessor containing keyframe output values.
     pub output: Index<accessor::Accessor>,

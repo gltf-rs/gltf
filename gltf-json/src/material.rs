@@ -66,7 +66,8 @@ pub struct Material {
     ///   background using the normal painting operation (i.e. the Porter and
     ///   Duff over operator).
     #[serde(rename = "alphaMode")]
-    pub alpha_mode: Checked<AlphaMode>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub alpha_mode: Option<Checked<AlphaMode>>,
 
     /// Specifies whether the material is double-sided.
     ///
@@ -78,7 +79,8 @@ pub struct Material {
     /// The back-face must have its normals reversed before the lighting
     /// equation is evaluated.
     #[serde(rename = "doubleSided")]
-    pub double_sided: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub double_sided: Option<bool>,
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
@@ -89,7 +91,8 @@ pub struct Material {
     /// material model from Physically-Based Rendering (PBR) methodology. When not
     /// specified, all the default values of `pbrMetallicRoughness` apply.
     #[serde(default, rename = "pbrMetallicRoughness")]
-    pub pbr_metallic_roughness: PbrMetallicRoughness,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pbr_metallic_roughness: Option<PbrMetallicRoughness>,
 
     /// A tangent space normal map. The texture contains RGB components in linear
     /// space. Each texel represents the XYZ components of a normal vector in
@@ -119,7 +122,8 @@ pub struct Material {
 
     /// The emissive color of the material.
     #[serde(rename = "emissiveFactor")]
-    pub emissive_factor: EmissiveFactor,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub emissive_factor: Option<EmissiveFactor>,
 
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -137,7 +141,8 @@ pub struct Material {
 pub struct PbrMetallicRoughness {
     /// The material's base color factor.
     #[serde(rename = "baseColorFactor")]
-    pub base_color_factor: PbrBaseColorFactor,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub base_color_factor: Option<PbrBaseColorFactor>,
 
     /// The base color texture.
     #[serde(rename = "baseColorTexture")]
@@ -146,14 +151,16 @@ pub struct PbrMetallicRoughness {
 
     /// The metalness of the material.
     #[serde(rename = "metallicFactor")]
-    pub metallic_factor: StrengthFactor,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub metallic_factor: Option<StrengthFactor>,
 
     /// The roughness of the material.
     ///
     /// * A value of 1.0 means the material is completely rough.
     /// * A value of 0.0 means the material is completely smooth.
     #[serde(rename = "roughnessFactor")]
-    pub roughness_factor: StrengthFactor,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub roughness_factor: Option<StrengthFactor>,
 
     /// The metallic-roughness texture.
     ///
@@ -185,12 +192,13 @@ pub struct NormalTexture {
     /// The scalar multiplier applied to each normal vector of the texture.
     ///
     /// This value is ignored if normalTexture is not specified.
-    #[serde(default = "material_normal_texture_scale_default")]
-    pub scale: f32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scale: Option<f32>,
 
     /// The set index of the texture's `TEXCOORD` attribute.
     #[serde(default, rename = "texCoord")]
-    pub tex_coord: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tex_coord: Option<u32>,
 
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -202,10 +210,6 @@ pub struct NormalTexture {
     pub extras: Extras,
 }
 
-fn material_normal_texture_scale_default() -> f32 {
-    1.0
-}
-
 /// Defines the occlusion texture of a material.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct OcclusionTexture {
@@ -214,11 +218,13 @@ pub struct OcclusionTexture {
 
     /// The scalar multiplier controlling the amount of occlusion applied.
     #[serde(default)]
-    pub strength: StrengthFactor,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub strength: Option<StrengthFactor>,
 
     /// The set index of the texture's `TEXCOORD` attribute.
     #[serde(default, rename = "texCoord")]
-    pub tex_coord: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tex_coord: Option<u32>,
 
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]

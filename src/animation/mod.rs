@@ -181,8 +181,10 @@ impl<'a> Target<'a> {
     }
 
     /// Returns the target node.
-    pub fn node(&self) -> scene::Node<'a> {
-        self.anim.document.nodes().nth(self.json.node.value()).unwrap()
+    pub fn node(&self) -> Option<scene::Node<'a>> {
+        self.json.node.map(|node| {
+            self.anim.document.nodes().nth(node.value()).unwrap()
+        })
     }
 
     /// Returns the node's property to modify or the 'weights' of the morph
@@ -220,8 +222,8 @@ impl<'a> Sampler<'a> {
     }
 
     /// Returns the keyframe interpolation algorithm.
-    pub fn interpolation(&self) -> Interpolation {
-        self.json.interpolation.unwrap()
+    pub fn interpolation(&self) -> Option<Interpolation> {
+        self.json.interpolation.map(|value| value.unwrap())
     }
 
     /// Returns the accessor containing the keyframe output values.

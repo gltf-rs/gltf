@@ -90,13 +90,13 @@ impl<'a> Sampler<'a> {
     }
 
     /// `s` wrapping mode.
-    pub fn wrap_s(&self) -> WrappingMode {
-        self.json.wrap_s.unwrap()
+    pub fn wrap_s(&self) -> Option<WrappingMode> {
+        self.json.wrap_s.map(|value| value.unwrap())
     }
 
     /// `t` wrapping mode.
-    pub fn wrap_t(&self) -> WrappingMode {
-        self.json.wrap_t.unwrap()
+    pub fn wrap_t(&self) -> Option<WrappingMode> {
+        self.json.wrap_t.map(|value| value.unwrap())
     }
 
     /// Optional application specific data.
@@ -139,8 +139,10 @@ impl<'a> Texture<'a> {
     }
 
     /// Returns the image used by this texture.
-    pub fn source(&self) -> image::Image<'a> {
-        self.document.images().nth(self.json.source.value() as usize).unwrap()
+    pub fn source(&self) -> Option<image::Image<'a>> {
+        self.json.source.map(|source| {
+            self.document.images().nth(source.value()).unwrap()
+        })
     }
 
     /// Optional application specific data.
@@ -159,7 +161,7 @@ impl<'a> Info<'a> {
     }
 
     /// The set index of the texture's `TEXCOORD` attribute.
-    pub fn tex_coord(&self) -> u32 {
+    pub fn tex_coord(&self) -> Option<u32> {
         self.json.tex_coord
     }
 
