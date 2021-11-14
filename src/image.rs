@@ -15,9 +15,6 @@ pub enum Format {
     /// Red, green.
     R8G8,
 
-    /// Red, green, blue.
-    R8G8B8,
-
     /// Red, green, blue, alpha.
     R8G8B8A8,
 
@@ -148,12 +145,15 @@ impl<'a> Image<'a> {
 impl Data {
     /// Note: We don't implement `From<DynamicImage>` since we don't want
     /// to expose such functionality to the user.
-    pub(crate) fn new(image: DynamicImage) -> Self {
+    pub(crate) fn new(mut image: DynamicImage) -> Self {
         use image_crate::GenericImageView;
-        let format = match image {
+        let format = match &mut image {
             DynamicImage::ImageLuma8(_) => Format::R8,
             DynamicImage::ImageLumaA8(_) => Format::R8G8,
-            DynamicImage::ImageRgb8(_) => Format::R8G8B8,
+            image @ DynamicImage::ImageRgb8(_) => {
+                *image = DynamicImage::ImageRgba8(image.to_rgba8());
+                Format::R8G8B8A8
+            }
             DynamicImage::ImageRgba8(_) => Format::R8G8B8A8,
             DynamicImage::ImageBgr8(_) => Format::B8G8R8,
             DynamicImage::ImageBgra8(_) => Format::B8G8R8A8,
