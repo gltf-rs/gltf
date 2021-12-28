@@ -193,6 +193,29 @@ pub mod khr_lights_punctual {
     }
 }
 
+#[cfg(feature = "KHR_materials_variants")]
+pub mod khr_materials_variants {
+    use crate::{Extras, Index, Root, Path};
+    use crate::validation::{Checked, Error, Validate};
+    use gltf_derive::Validate;
+    use serde::{de, ser};
+    use serde_derive::{Deserialize, Serialize};
+    use std::fmt;
+
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    pub struct Variant {
+        pub name: String,
+    }
+
+    impl Validate for Variant {
+        fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+            where P: Fn() -> Path, R: FnMut(&dyn Fn() -> Path, Error)
+        {
+            self.name.validate(root, || path().field("name"), report);
+        }
+    }
+}
+
 /// The root `Node`s of a scene.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct Scene {}

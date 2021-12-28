@@ -259,6 +259,30 @@ impl<'a> Primitive<'a> {
         }
     }
 
+    /// Get the material variants.
+    #[cfg(feature = "KHR_materials_variants")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_variants")))]
+    pub fn mappings(&self) -> iter::Mappings<'a> {
+        if let Some(extensions) = self.json.extensions.as_ref() {
+            if let Some(variants) = extensions.khr_materials_variants.as_ref() {
+                iter::Mappings {
+                    document: self.mesh.document,
+                    iter: variants.mappings.iter(),
+                }
+            } else {
+                iter::Mappings {
+                    document: self.mesh.document,
+                    iter: (&[]).iter(),
+                }
+            }
+        } else {
+            iter::Mappings {
+                document: self.mesh.document,
+                iter: (&[]).iter(),
+            }
+        }
+    }
+
     /// Constructs the primitive reader.
     #[cfg(feature = "utils")]
     #[cfg_attr(docsrs, doc(cfg(feature = "utils")))]

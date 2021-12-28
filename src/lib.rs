@@ -119,6 +119,11 @@ pub mod iter;
 #[cfg_attr(docsrs, doc(cfg(feature = "KHR_lights_punctual")))]
 pub mod khr_lights_punctual;
 
+/// Support for the `KHR_materials_variants` extension.
+#[cfg(feature = "KHR_materials_variants")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_variants")))]
+pub mod khr_materials_variants;
+
 /// Material properties of primitives.
 pub mod material;
 
@@ -211,7 +216,7 @@ pub enum Error {
     #[cfg(feature = "import")]
     #[cfg_attr(docsrs, doc(cfg(feature = "import")))]
     Image(image_crate::ImageError),
-    
+
     /// The `BIN` chunk of binary glTF is referenced but does not exist.
     #[cfg(feature = "import")]
     #[cfg_attr(docsrs, doc(cfg(feature = "import")))]
@@ -433,6 +438,26 @@ impl Document {
             if let Some(khr_lights_punctual) = extensions.khr_lights_punctual.as_ref() {
                 Some(iter::Lights {
                     iter: khr_lights_punctual.lights.iter().enumerate(),
+                    document: self,
+                })
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    /// Returns an `Iterator` that visits the variants of the glTF asset as defined by the
+    /// `KHR_materials_variants` extension.
+    #[cfg(feature = "KHR_materials_variants")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_variants")))]
+    pub fn variants(&self) -> Option<iter::Variants> {
+        //dbg!(&self.0.extensions);
+        if let Some(extensions) = self.0.extensions.as_ref() {
+            if let Some(khr_materials_variants) = extensions.khr_materials_variants.as_ref() {
+                Some(iter::Variants {
+                    iter: khr_materials_variants.variants.iter().enumerate(),
                     document: self,
                 })
             } else {

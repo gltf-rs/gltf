@@ -80,13 +80,23 @@ pub struct Images<'a> {
     pub(crate) document: &'a Document,
 }
 
-
 /// An `Iterator` that visits every light in a glTF asset.
 #[cfg(feature = "KHR_lights_punctual")]
 #[derive(Clone, Debug)]
 pub struct Lights<'a> {
     /// Internal image iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::extensions::scene::khr_lights_punctual::Light>>,
+
+    /// The internal root glTF object.
+    pub(crate) document: &'a Document,
+}
+
+/// An `Iterator` that visits every variant in a glTF asset.
+#[cfg(feature = "KHR_materials_variants")]
+#[derive(Clone, Debug)]
+pub struct Variants<'a> {
+    /// Internal variant iterator.
+    pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::extensions::scene::khr_materials_variants::Variant>>,
 
     /// The internal root glTF object.
     pub(crate) document: &'a Document,
@@ -353,6 +363,34 @@ impl<'a> Iterator for Lights<'a> {
         self.iter.nth(n).map(|(index, json)| crate::khr_lights_punctual::Light::new(self.document, index, json))
     }
 }
+
+
+#[cfg(feature = "KHR_materials_variants")]
+impl<'a> ExactSizeIterator for Variants<'a> {}
+
+#[cfg(feature = "KHR_materials_variants")]
+impl<'a> Iterator for Variants<'a> {
+    type Item = crate::khr_materials_variants::Variant<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter
+            .next()
+            .map(|(index, json)| crate::khr_materials_variants::Variant::new(self.document, index, json))
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|(index, json)| crate::khr_materials_variants::Variant::new(document, index, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|(index, json)| crate::khr_materials_variants::Variant::new(self.document, index, json))
+    }
+}
+
 
 impl<'a> ExactSizeIterator for Materials<'a> {}
 impl<'a> Iterator for Materials<'a> {
