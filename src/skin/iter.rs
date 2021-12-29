@@ -12,7 +12,8 @@ pub struct Joints<'a> {
     pub(crate) iter: slice::Iter<'a, json::Index<json::scene::Node>>,
 }
 
-impl<'a> Iterator for Joints<'a>  {
+impl<'a> ExactSizeIterator for Joints<'a> {}
+impl<'a> Iterator for Joints<'a> {
     type Item = Node<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
@@ -27,9 +28,13 @@ impl<'a> Iterator for Joints<'a>  {
     }
     fn last(self) -> Option<Self::Item> {
         let document = self.document;
-        self.iter.last().map(|index| document.nodes().nth(index.value()).unwrap())
+        self.iter
+            .last()
+            .map(|index| document.nodes().nth(index.value()).unwrap())
     }
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        self.iter.nth(n).map(|index| self.document.nodes().nth(index.value()).unwrap())
+        self.iter
+            .nth(n)
+            .map(|index| self.document.nodes().nth(index.value()).unwrap())
     }
 }
