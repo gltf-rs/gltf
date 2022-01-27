@@ -453,19 +453,20 @@ impl Document {
     #[cfg(feature = "KHR_materials_variants")]
     #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_variants")))]
     pub fn variants(&self) -> Option<iter::Variants> {
-        //dbg!(&self.0.extensions);
-        if let Some(extensions) = self.0.extensions.as_ref() {
-            if let Some(khr_materials_variants) = extensions.khr_materials_variants.as_ref() {
-                Some(iter::Variants {
-                    iter: khr_materials_variants.variants.iter().enumerate(),
-                    document: self,
-                })
-            } else {
-                None
-            }
-        } else {
-            None
-        }
+        let iter = self
+            .0
+            .extensions
+            .as_ref()?
+            .khr_materials_variants
+            .as_ref()?
+            .variants
+            .iter()
+            .enumerate();
+
+        Some(iter::Variants {
+            iter,
+            document: self,
+        })
     }
 
     /// Returns an `Iterator` that visits the materials of the glTF asset.

@@ -48,14 +48,11 @@ impl crate::root::Get<crate::extensions::scene::khr_materials_variants::Variant>
     fn get(&self, id: crate::Index<crate::extensions::scene::khr_materials_variants::Variant>)
         -> Option<&crate::extensions::scene::khr_materials_variants::Variant>
     {
-        if let Some(extensions) = self.extensions.as_ref() {
-            if let Some(khr_materials_variants) = extensions.khr_materials_variants.as_ref() {
-                khr_materials_variants.variants.get(id.value())
-            } else {
-                None
-            }
-        } else {
-            None
-        }
+        self.extensions
+            .as_ref()?
+            .khr_materials_variants
+            .as_ref()?
+            .variants
+            .get(id.value())
     }
 }
