@@ -8,8 +8,8 @@ repository = "https://github.com/gltf-rs/gltf"
 homepage = "https://github.com/gltf-rs/gltf"
 readme = "README.md"
 keywords = ["glTF", "3D", "asset", "model", "scene"]
-license = "MIT/Apache-2.0"
-include = ["**/*.rs", "Cargo.toml"]
+license = "MIT OR Apache-2.0"
+include = ["**/*.rs", "Cargo.toml", "LICENSE-*"]
 edition = "2018"
 
 [badges]
