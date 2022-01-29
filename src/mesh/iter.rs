@@ -118,3 +118,41 @@ impl<'a> Iterator for MorphTargets<'a> {
         self.iter.nth(n).map(|json| map_morph_target(self.document, json))
     }
 }
+
+/// An `Iterator` that visits the variant mappings of a `Mesh`.
+#[cfg(feature = "KHR_materials_variants")]
+#[derive(Clone, Debug)]
+pub struct Mappings<'a> {
+    /// Internal mapping iterator.
+    pub(crate) iter: slice::Iter<'a, json::extensions::mesh::Mapping>,
+
+    /// The internal root glTF object.
+    pub(crate) document: &'a Document,
+}
+
+#[cfg(feature = "KHR_materials_variants")]
+impl<'a> ExactSizeIterator for Mappings<'a> {}
+#[cfg(feature = "KHR_materials_variants")]
+impl<'a> Iterator for Mappings<'a> {
+    type Item = crate::khr_materials_variants::Mapping<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter
+            .next()
+            .map(|json| crate::khr_materials_variants::Mapping::new(document, json))
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|json| crate::khr_materials_variants::Mapping::new(document, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.nth(n).map(|json| crate::khr_materials_variants::Mapping::new(document, json))
+    }
+}
