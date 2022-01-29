@@ -1,37 +1,68 @@
-use gltf_derive::Validate;
-use serde_derive::{Serialize, Deserialize};
-#[cfg(any(feature = "KHR_materials_pbrSpecularGlossiness", feature = "KHR_materials_transmission", feature = "KHR_materials_ior"))]
-use crate::{Extras, validation::Validate};
-#[cfg(any(feature = "KHR_materials_pbrSpecularGlossiness", feature = "KHR_materials_transmission"))]
-use crate::texture;
 #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
 use crate::material::StrengthFactor;
+#[cfg(any(
+    feature = "KHR_materials_pbrSpecularGlossiness",
+    feature = "KHR_materials_transmission"
+))]
+use crate::texture;
+#[cfg(any(
+    feature = "KHR_materials_pbrSpecularGlossiness",
+    feature = "KHR_materials_transmission",
+    feature = "KHR_materials_ior"
+))]
+use crate::{validation::Validate, Extras};
+use gltf_derive::Validate;
+use serde_derive::{Deserialize, Serialize};
 
 /// The material appearance of a primitive.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct Material {
     #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
-    #[serde(default, rename = "KHR_materials_pbrSpecularGlossiness", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        rename = "KHR_materials_pbrSpecularGlossiness",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub pbr_specular_glossiness: Option<PbrSpecularGlossiness>,
 
     #[cfg(feature = "KHR_materials_unlit")]
-    #[serde(default, rename = "KHR_materials_unlit", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        rename = "KHR_materials_unlit",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub unlit: Option<Unlit>,
 
     #[cfg(feature = "KHR_materials_transmission")]
-    #[serde(default, rename = "KHR_materials_transmission", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        rename = "KHR_materials_transmission",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub transmission: Option<Transmission>,
 
     #[cfg(feature = "KHR_materials_volume")]
-    #[serde(default, rename = "KHR_materials_volume", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        rename = "KHR_materials_volume",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub volume: Option<Volume>,
 
     #[cfg(feature = "KHR_materials_specular")]
-    #[serde(default, rename = "KHR_materials_specular", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        rename = "KHR_materials_specular",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub specular: Option<Specular>,
 
     #[cfg(feature = "KHR_materials_ior")]
-    #[serde(default, rename = "KHR_materials_ior", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        rename = "KHR_materials_ior",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub ior: Option<Ior>,
 }
 
@@ -155,17 +186,17 @@ impl Validate for TransmissionFactor {}
 pub struct Transmission {
     /// The base percentage of light that is transmitted through the surface.
     ///
-    /// The amount of light that is transmitted by the surface rather than diffusely re-emitted. 
-    /// This is a percentage of all the light that penetrates a surface (i.e. isn’t specularly reflected) 
-    /// rather than a percentage of the total light that hits a surface. 
+    /// The amount of light that is transmitted by the surface rather than diffusely re-emitted.
+    /// This is a percentage of all the light that penetrates a surface (i.e. isn’t specularly reflected)
+    /// rather than a percentage of the total light that hits a surface.
     /// A value of 1.0 means that 100% of the light that penetrates the surface is transmitted through.
     pub transmission_factor: TransmissionFactor,
 
     /// The transmission texture.
     ///
-    /// The R channel of this texture defines the amount of light that is transmitted by the surface 
+    /// The R channel of this texture defines the amount of light that is transmitted by the surface
     /// rather than diffusely re-emitted. A value of 1.0 in the red channel means that 100% of the light
-    /// that penetrates the surface (i.e. isn’t specularly reflected) is transmitted through. 
+    /// that penetrates the surface (i.e. isn’t specularly reflected) is transmitted through.
     /// The value is linear and is multiplied by the transmissionFactor to determine the total transmission value.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub transmission_texture: Option<texture::Info>,
@@ -196,7 +227,7 @@ impl Validate for IndexOfRefraction {}
 pub struct Ior {
     /// The index of refraction.
     ///
-    /// Typical values for the index of refraction range from 1 to 2. 
+    /// Typical values for the index of refraction range from 1 to 2.
     /// In rare cases values greater than 2 are possible.
     /// For example, the ior of water is 1.33, and diamond is 2.42
     pub ior: IndexOfRefraction,

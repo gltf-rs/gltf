@@ -1,5 +1,5 @@
-use std::{fs, io};
 use std::io::Read;
+use std::{fs, io};
 
 use gltf::mesh::Bounds;
 
@@ -14,7 +14,11 @@ fn test_accessor_bounds() {
     let mesh = &gltf.meshes().nth(0).unwrap();
     let prim = mesh.primitives().nth(0).unwrap();
     let bounds = prim.bounding_box();
-    assert_eq!(bounds, Bounds { min: [-0.03, -0.04, -0.05], max: [1.0, 1.01, 0.02]});
+    assert_eq!(
+        bounds,
+        Bounds {
+            min: [-0.03, -0.04, -0.05],
+            max: [1.0, 1.01, 0.02]
+        }
+    );
 }
-
-

@@ -1,5 +1,5 @@
-use gltf_json::Extras;
 use crate::Document;
+use gltf_json::Extras;
 
 /// A light in the scene.
 pub struct Light<'a> {
@@ -16,7 +16,11 @@ pub struct Light<'a> {
 
 impl<'a> Light<'a> {
     /// Constructs a `Light`.
-    pub(crate) fn new(document: &'a Document, index: usize, json: &'a json::extensions::scene::khr_lights_punctual::Light) -> Self {
+    pub(crate) fn new(
+        document: &'a Document,
+        index: usize,
+        json: &'a json::extensions::scene::khr_lights_punctual::Light,
+    ) -> Self {
         Self {
             document,
             index,
@@ -69,7 +73,7 @@ impl<'a> Light<'a> {
                     inner_cone_angle: args.inner_cone_angle,
                     outer_cone_angle: args.outer_cone_angle,
                 }
-            },
+            }
         }
     }
 }

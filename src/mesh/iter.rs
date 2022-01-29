@@ -24,15 +24,15 @@ pub struct Attributes<'a> {
 
     /// The internal attribute iterator.
     pub(crate) iter: collections::hash_map::Iter<
-            'a,
+        'a,
         json::validation::Checked<json::mesh::Semantic>,
         json::Index<json::accessor::Accessor>,
-        >,
+    >,
 }
 
 /// An `Iterator` that visits the primitives of a `Mesh`.
 #[derive(Clone, Debug)]
-pub struct Primitives<'a>  {
+pub struct Primitives<'a> {
     /// The parent `Mesh` struct.
     pub(crate) mesh: Mesh<'a>,
 
@@ -44,13 +44,11 @@ impl<'a> ExactSizeIterator for Attributes<'a> {}
 impl<'a> Iterator for Attributes<'a> {
     type Item = Attribute<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter
-            .next()
-            .map(|(key, index)| {
-                let semantic = key.as_ref().unwrap().clone();
-                let accessor = self.document.accessors().nth(index.value()).unwrap();
-                (semantic, accessor)
-            })
+        self.iter.next().map(|(key, index)| {
+            let semantic = key.as_ref().unwrap().clone();
+            let accessor = self.document.accessors().nth(index.value()).unwrap();
+            (semantic, accessor)
+        })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -62,7 +60,9 @@ impl<'a> ExactSizeIterator for Primitives<'a> {}
 impl<'a> Iterator for Primitives<'a> {
     type Item = Primitive<'a>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|(index, json)| Primitive::new(self.mesh.clone(), index, json))
+        self.iter
+            .next()
+            .map(|(index, json)| Primitive::new(self.mesh.clone(), index, json))
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
@@ -72,21 +72,31 @@ impl<'a> Iterator for Primitives<'a> {
     }
     fn last(self) -> Option<Self::Item> {
         let mesh = self.mesh;
-        self.iter.last().map(|(index, json)| Primitive::new(mesh, index, json))
+        self.iter
+            .last()
+            .map(|(index, json)| Primitive::new(mesh, index, json))
     }
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        self.iter.nth(n).map(|(index, json)| Primitive::new(self.mesh.clone(), index, json))
+        self.iter
+            .nth(n)
+            .map(|(index, json)| Primitive::new(self.mesh.clone(), index, json))
     }
 }
 
-fn map_morph_target<'a>(document: &'a crate::Document, json: &json::mesh::MorphTarget) -> MorphTarget<'a> {
-    let positions = json.positions
+fn map_morph_target<'a>(
+    document: &'a crate::Document,
+    json: &json::mesh::MorphTarget,
+) -> MorphTarget<'a> {
+    let positions = json
+        .positions
         .as_ref()
         .map(|index| document.accessors().nth(index.value()).unwrap());
-    let normals = json.normals
+    let normals = json
+        .normals
         .as_ref()
         .map(|index| document.accessors().nth(index.value()).unwrap());
-    let tangents = json.tangents
+    let tangents = json
+        .tangents
         .as_ref()
         .map(|index| document.accessors().nth(index.value()).unwrap());
     MorphTarget {
@@ -112,10 +122,14 @@ impl<'a> Iterator for MorphTargets<'a> {
     }
     fn last(self) -> Option<Self::Item> {
         let document = self.document;
-        self.iter.last().map(|json| map_morph_target(document, json))
+        self.iter
+            .last()
+            .map(|json| map_morph_target(document, json))
     }
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        self.iter.nth(n).map(|json| map_morph_target(self.document, json))
+        self.iter
+            .nth(n)
+            .map(|json| map_morph_target(self.document, json))
     }
 }
 
@@ -149,10 +163,14 @@ impl<'a> Iterator for Mappings<'a> {
     }
     fn last(self) -> Option<Self::Item> {
         let document = self.document;
-        self.iter.last().map(|json| crate::khr_materials_variants::Mapping::new(document, json))
+        self.iter
+            .last()
+            .map(|json| crate::khr_materials_variants::Mapping::new(document, json))
     }
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
         let document = self.document;
-        self.iter.nth(n).map(|json| crate::khr_materials_variants::Mapping::new(document, json))
+        self.iter
+            .nth(n)
+            .map(|json| crate::khr_materials_variants::Mapping::new(document, json))
     }
 }

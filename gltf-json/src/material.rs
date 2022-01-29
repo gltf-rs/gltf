@@ -1,15 +1,16 @@
-use gltf_derive::Validate;
-use serde_derive::{Serialize, Deserialize};
-use serde::{de, ser};
-use std::fmt;
 use crate::validation::{Checked, Validate};
 use crate::{extensions, texture, Extras, Index};
+use gltf_derive::Validate;
+use serde::{de, ser};
+use serde_derive::{Deserialize, Serialize};
+use std::fmt;
 
 /// All valid alpha modes.
+#[rustfmt::skip]
 pub const VALID_ALPHA_MODES: &'static [&'static str] = &[
     "OPAQUE",
     "MASK",
-    "BLEND",
+    "BLEND"
 ];
 
 /// The alpha rendering mode of a material.
@@ -29,7 +30,8 @@ pub enum AlphaMode {
 
 impl ser::Serialize for AlphaMode {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: ser::Serializer
+    where
+        S: ser::Serializer,
     {
         match *self {
             AlphaMode::Opaque => serializer.serialize_str("OPAQUE"),
@@ -48,7 +50,7 @@ pub struct Material {
     //#[cfg_attr(feature = "alphaCutoff", serde(skip_serializing_if = "Option::is_none"))]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub alpha_cutoff: Option<AlphaCutoff>,
-    
+
     /// The alpha rendering mode of the material.
     ///
     /// The material's alpha rendering mode enumeration specifying the
@@ -262,7 +264,8 @@ impl Default for AlphaMode {
 
 impl<'de> de::Deserialize<'de> for Checked<AlphaMode> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: de::Deserializer<'de>
+    where
+        D: de::Deserializer<'de>,
     {
         struct Visitor;
         impl<'de> de::Visitor<'de> for Visitor {
@@ -273,7 +276,8 @@ impl<'de> de::Deserialize<'de> for Checked<AlphaMode> {
             }
 
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-                where E: de::Error
+            where
+                E: de::Error,
             {
                 use self::AlphaMode::*;
                 use crate::validation::Checked::*;

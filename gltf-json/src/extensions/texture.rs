@@ -15,7 +15,11 @@ pub struct Texture {}
 /// Reference to a `Texture`.
 pub struct Info {
     #[cfg(feature = "KHR_texture_transform")]
-    #[serde(default, rename = "KHR_texture_transform", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        rename = "KHR_texture_transform",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub texture_transform: Option<TextureTransform>,
 }
 

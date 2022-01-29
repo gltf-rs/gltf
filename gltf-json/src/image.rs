@@ -1,12 +1,13 @@
-use gltf_derive::Validate;
-use serde_derive::{Serialize, Deserialize};
 use crate::validation::Validate;
 use crate::{buffer, extensions, Extras, Index};
+use gltf_derive::Validate;
+use serde_derive::{Deserialize, Serialize};
 
 /// All valid MIME types.
+#[rustfmt::skip]
 pub const VALID_MIME_TYPES: &'static [&'static str] = &[
     "image/jpeg",
-    "image/png",
+    "image/png"
 ];
 
 /// Image data used to create a texture.

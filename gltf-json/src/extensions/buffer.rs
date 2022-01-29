@@ -1,5 +1,5 @@
 use gltf_derive::Validate;
-use serde_derive::{Serialize, Deserialize};
+use serde_derive::{Deserialize, Serialize};
 
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]

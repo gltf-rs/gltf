@@ -3,8 +3,8 @@
 //! Read some binary glTF, write it to disk, and compare to the original.
 //! The test will succeed if the output is the same as the original.
 
-use std::{boxed, error, fs, io, path};
 use std::io::Read;
+use std::{boxed, error, fs, io, path};
 
 const SAMPLE_MODELS_DIRECTORY_PATH: &str = "glTF-Sample-Models/2.0";
 
@@ -19,7 +19,8 @@ fn run() -> Result<(), boxed::Box<dyn error::Error>> {
             if let Some(file_name) = entry_path.file_name() {
                 let mut path = entry_path.join("glTF-Binary").join(file_name);
                 path.set_extension("glb");
-                if path.exists() { // not all models have binary versions
+                if path.exists() {
+                    // not all models have binary versions
                     if let Err(err) = test(&path) {
                         println!("{:?}: error: {:?}", path, err);
                         all_tests_passed = false;
@@ -69,7 +70,7 @@ fn test(path: &path::Path) -> Result<(), boxed::Box<dyn error::Error>> {
 }
 
 /// Test a file with a sparse accessor with no buffer view.
-/// 
+///
 /// Return true if the test passes, and false otherwise.
 fn sparse_accessor_without_buffer_view_test() -> bool {
     let path = path::Path::new("tests/box_sparse.glb");

@@ -1,6 +1,6 @@
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use std::{fmt, io, mem};
 use std::borrow::Cow;
+use std::{fmt, io, mem};
 
 /// Represents a Glb loader error.
 #[derive(Debug)]
@@ -94,7 +94,9 @@ impl Header {
         }
     }
 
-    fn size_of() -> usize { 12 }
+    fn size_of() -> usize {
+        12
+    }
 }
 
 impl ChunkHeader {
@@ -118,19 +120,23 @@ fn align_to_multiple_of_four(n: &mut usize) {
 
 fn split_binary_gltf<'a>(mut data: &'a [u8]) -> Result<(&'a [u8], Option<&'a [u8]>), Error> {
     let (json, mut data) = ChunkHeader::from_reader(&mut data)
-        .and_then(|json_h| if let ChunkType::Json = json_h.ty {
-            Ok(json_h)
-        } else {
-            Err(Error::ChunkType(json_h.ty))
+        .and_then(|json_h| {
+            if let ChunkType::Json = json_h.ty {
+                Ok(json_h)
+            } else {
+                Err(Error::ChunkType(json_h.ty))
+            }
         })
-        .and_then(|json_h| if json_h.length as usize <= data.len() {
-            Ok(json_h)
-        } else {
-            Err(Error::ChunkLength {
-                ty: json_h.ty,
-                length: json_h.length,
-                length_read: data.len(),
-            })
+        .and_then(|json_h| {
+            if json_h.length as usize <= data.len() {
+                Ok(json_h)
+            } else {
+                Err(Error::ChunkLength {
+                    ty: json_h.ty,
+                    length: json_h.length,
+                    length_read: data.len(),
+                })
+            }
         })
         // We have verified that json_h.length is no greater than that of
         // data.len().
@@ -138,19 +144,23 @@ fn split_binary_gltf<'a>(mut data: &'a [u8]) -> Result<(&'a [u8], Option<&'a [u8
 
     let bin = if data.len() > 0 {
         ChunkHeader::from_reader(&mut data)
-            .and_then(|bin_h| if let ChunkType::Bin = bin_h.ty {
-                Ok(bin_h)
-            } else {
-                Err(Error::ChunkType(bin_h.ty))
+            .and_then(|bin_h| {
+                if let ChunkType::Bin = bin_h.ty {
+                    Ok(bin_h)
+                } else {
+                    Err(Error::ChunkType(bin_h.ty))
+                }
             })
-            .and_then(|bin_h| if bin_h.length as usize <= data.len() {
-                Ok(bin_h)
-            } else {
-                Err(Error::ChunkLength {
-                    ty: bin_h.ty,
-                    length: bin_h.length,
-                    length_read: data.len(),
-                })
+            .and_then(|bin_h| {
+                if bin_h.length as usize <= data.len() {
+                    Ok(bin_h)
+                } else {
+                    Err(Error::ChunkLength {
+                        ty: bin_h.ty,
+                        length: bin_h.length,
+                        length_read: data.len(),
+                    })
+                }
             })
             // We have verified that bin_h.length is no greater than that
             // of data.len().
@@ -165,13 +175,15 @@ fn split_binary_gltf<'a>(mut data: &'a [u8]) -> Result<(&'a [u8], Option<&'a [u8
 impl<'a> Glb<'a> {
     /// Writes binary glTF to a writer.
     pub fn to_writer<W>(&self, mut writer: W) -> Result<(), crate::Error>
-        where W: io::Write
+    where
+        W: io::Write,
     {
         // Write GLB header
         {
             let magic = b"glTF";
             let version = 2;
-            let mut length = mem::size_of::<Header>() + mem::size_of::<ChunkHeader>() + self.json.len();
+            let mut length =
+                mem::size_of::<Header>() + mem::size_of::<ChunkHeader>() + self.json.len();
             align_to_multiple_of_four(&mut length);
             if let Some(bin) = self.bin.as_ref() {
                 length += mem::size_of::<ChunkHeader>() + bin.len();
@@ -250,9 +262,13 @@ impl<'a> Glb<'a> {
             .map_err(crate::Error::Binary)?;
         match header.version {
             2 => split_binary_gltf(data)
-                .map(|(json, bin)| Glb { header, json: json.into(), bin: bin.map(Into::into) })
+                .map(|(json, bin)| Glb {
+                    header,
+                    json: json.into(),
+                    bin: bin.map(Into::into),
+                })
                 .map_err(crate::Error::Binary),
-            x => Err(crate::Error::Binary(Error::Version(x)))
+            x => Err(crate::Error::Binary(Error::Version(x))),
         }
     }
 
@@ -280,28 +296,32 @@ impl<'a> Glb<'a> {
                         .map_err(crate::Error::Binary)
                 }
             }
-            x => Err(crate::Error::Binary(Error::Version(x)))
+            x => Err(crate::Error::Binary(Error::Version(x))),
         }
     }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", match *self {
-            Error::Io(ref e) => return e.fmt(f),
-            Error::Version(_) => "unsupported version",
-            Error::Magic(_) => "not glTF magic",
-            Error::Length { .. } => "could not completely read the object",
-            Error::ChunkLength { ty, .. } => match ty {
-                ChunkType::Json => "JSON chunk length exceeds that of slice",
-                ChunkType::Bin => "BIN\\0 chunk length exceeds that of slice",
-            },
-            Error::ChunkType(ty) => match ty {
-                ChunkType::Json => "was not expecting JSON chunk",
-                ChunkType::Bin => "was not expecting BIN\\0 chunk",
-            },
-            Error::UnknownChunkType(_) => "unknown chunk type",
-       })
+        write!(
+            f,
+            "{}",
+            match *self {
+                Error::Io(ref e) => return e.fmt(f),
+                Error::Version(_) => "unsupported version",
+                Error::Magic(_) => "not glTF magic",
+                Error::Length { .. } => "could not completely read the object",
+                Error::ChunkLength { ty, .. } => match ty {
+                    ChunkType::Json => "JSON chunk length exceeds that of slice",
+                    ChunkType::Bin => "BIN\\0 chunk length exceeds that of slice",
+                },
+                Error::ChunkType(ty) => match ty {
+                    ChunkType::Json => "was not expecting JSON chunk",
+                    ChunkType::Bin => "was not expecting BIN\\0 chunk",
+                },
+                Error::UnknownChunkType(_) => "unknown chunk type",
+            }
+        )
     }
 }
 

@@ -52,9 +52,13 @@ impl<'a> Iterator for Children<'a> {
     }
     fn last(self) -> Option<Self::Item> {
         let document = self.document;
-        self.iter.last().map(|index| document.nodes().nth(index.value()).unwrap())
+        self.iter
+            .last()
+            .map(|index| document.nodes().nth(index.value()).unwrap())
     }
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        self.iter.nth(n).map(|index| self.document.nodes().nth(index.value()).unwrap())
+        self.iter
+            .nth(n)
+            .map(|index| self.document.nodes().nth(index.value()).unwrap())
     }
 }

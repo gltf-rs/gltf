@@ -132,15 +132,24 @@ impl<'a> Texture<'a> {
 
     /// Returns the sampler used by this texture.
     pub fn sampler(&self) -> Sampler<'a> {
-        self.json.sampler
+        self.json
+            .sampler
             .as_ref()
-            .map(|index| self.document.samplers().nth(index.value() as usize).unwrap())
+            .map(|index| {
+                self.document
+                    .samplers()
+                    .nth(index.value() as usize)
+                    .unwrap()
+            })
             .unwrap_or_else(|| Sampler::default(self.document))
     }
 
     /// Returns the image used by this texture.
     pub fn source(&self) -> image::Image<'a> {
-        self.document.images().nth(self.json.source.value() as usize).unwrap()
+        self.document
+            .images()
+            .nth(self.json.source.value() as usize)
+            .unwrap()
     }
 
     /// Optional application specific data.

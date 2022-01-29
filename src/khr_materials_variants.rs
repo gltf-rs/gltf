@@ -1,5 +1,5 @@
-use gltf_json::Extras;
 use crate::{Document, Material};
+use gltf_json::Extras;
 
 /// A variant.
 pub struct Variant<'a> {
@@ -16,7 +16,11 @@ pub struct Variant<'a> {
 
 impl<'a> Variant<'a> {
     /// Constructs a `Variant`.
-    pub(crate) fn new(document: &'a Document, index: usize, json: &'a json::extensions::scene::khr_materials_variants::Variant) -> Self {
+    pub(crate) fn new(
+        document: &'a Document,
+        index: usize,
+        json: &'a json::extensions::scene::khr_materials_variants::Variant,
+    ) -> Self {
         Self {
             document,
             index,
@@ -42,10 +46,7 @@ pub struct Mapping<'a> {
 impl<'a> Mapping<'a> {
     /// Constructs a `Mapping`.
     pub(crate) fn new(document: &'a Document, json: &'a json::extensions::mesh::Mapping) -> Self {
-        Self {
-            document,
-            json,
-        }
+        Self { document, json }
     }
 
     /// Get the variant indices that use this material.
@@ -55,7 +56,9 @@ impl<'a> Mapping<'a> {
 
     /// Get the corresponding material.
     pub fn material(&self) -> Material<'a> {
-        self.document.materials().nth(self.json.material as usize)
-        .unwrap_or_else(|| Material::default(self.document))
+        self.document
+            .materials()
+            .nth(self.json.material as usize)
+            .unwrap_or_else(|| Material::default(self.document))
     }
 }
