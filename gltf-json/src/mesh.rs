@@ -29,7 +29,7 @@ pub const TRIANGLE_STRIP: u32 = 5;
 pub const TRIANGLE_FAN: u32 = 6;
 
 /// All valid primitive rendering modes.
-pub const VALID_MODES: &'static [u32] = &[
+pub const VALID_MODES: &[u32] = &[
     POINTS,
     LINES,
     LINE_LOOP,
@@ -40,7 +40,7 @@ pub const VALID_MODES: &'static [u32] = &[
 ];
 
 /// All valid semantic names for Morph targets.
-pub const VALID_MORPH_TARGETS: &'static [&'static str] = &["POSITION", "NORMAL", "TANGENT"];
+pub const VALID_MORPH_TARGETS: &[&str] = &["POSITION", "NORMAL", "TANGENT"];
 
 /// The type of primitives to render.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
@@ -308,7 +308,7 @@ impl Semantic {
             "POSITION" => Valid(Positions),
             "TANGENT" => Valid(Tangents),
             #[cfg(feature = "extras")]
-            _ if s.starts_with("_") => Valid(Extras(s[1..].to_string())),
+            _ if s.starts_with('_') => Valid(Extras(s[1..].to_string())),
             _ if s.starts_with("COLOR_") => match s["COLOR_".len()..].parse() {
                 Ok(set) => Valid(Colors(set)),
                 Err(_) => Invalid,

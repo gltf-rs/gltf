@@ -9,6 +9,7 @@ pub use json::buffer::Target;
 #[derive(Clone, Debug)]
 pub struct Buffer<'a> {
     /// The parent `Document` struct.
+    #[allow(dead_code)]
     document: &'a Document,
 
     /// The corresponding JSON index.
@@ -31,6 +32,7 @@ pub struct View<'a> {
     json: &'a json::buffer::View,
 
     /// The parent `Buffer`.
+    #[allow(dead_code)]
     parent: Buffer<'a>,
 }
 
@@ -67,9 +69,9 @@ impl<'a> Buffer<'a> {
         json: &'a json::buffer::Buffer,
     ) -> Self {
         Self {
-            document: document,
-            index: index,
-            json: json,
+            document,
+            index,
+            json,
         }
     }
 
@@ -80,7 +82,7 @@ impl<'a> Buffer<'a> {
 
     /// Returns the buffer data source.
     pub fn source(&self) -> Source<'a> {
-        if let Some(uri) = self.json.uri.as_ref().map(String::as_str) {
+        if let Some(uri) = self.json.uri.as_deref() {
             Source::Uri(uri)
         } else {
             Source::Bin
@@ -96,7 +98,7 @@ impl<'a> Buffer<'a> {
     #[cfg(feature = "names")]
     #[cfg_attr(docsrs, doc(cfg(feature = "names")))]
     pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_deref()
     }
 
     /// Optional application specific data.
@@ -158,7 +160,7 @@ impl<'a> View<'a> {
     #[cfg(feature = "names")]
     #[cfg_attr(docsrs, doc(cfg(feature = "names")))]
     pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_deref()
     }
 
     /// Optional target the buffer should be bound to.

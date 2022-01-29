@@ -74,7 +74,7 @@ fn test(path: &path::Path) -> Result<(), boxed::Box<dyn error::Error>> {
 /// Return true if the test passes, and false otherwise.
 fn sparse_accessor_without_buffer_view_test() -> bool {
     let path = path::Path::new("tests/box_sparse.glb");
-    if let Err(err) = test(&path) {
+    if let Err(err) = test(path) {
         println!("{:?}: error: {:?}", path, err);
         false
     } else {

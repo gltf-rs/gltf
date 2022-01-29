@@ -25,10 +25,7 @@ pub struct Indices<'a> {
 impl<'a> Indices<'a> {
     /// Constructs `sparse::Indices`.
     pub(crate) fn new(document: &'a Document, json: &'a json::accessor::sparse::Indices) -> Self {
-        Self {
-            document: document,
-            json: json,
-        }
+        Self { document, json }
     }
 
     /// Returns the buffer view containing the sparse indices.
@@ -72,10 +69,7 @@ pub struct Sparse<'a> {
 impl<'a> Sparse<'a> {
     /// Constructs `Sparse`.
     pub(crate) fn new(document: &'a Document, json: &'a json::accessor::sparse::Sparse) -> Self {
-        Self {
-            document: document,
-            json: json,
-        }
+        Self { document, json }
     }
 
     /// Returns the number of attributes encoded in this sparse accessor.
@@ -114,10 +108,7 @@ pub struct Values<'a> {
 impl<'a> Values<'a> {
     /// Constructs `sparse::Values`.
     pub(crate) fn new(document: &'a Document, json: &'a json::accessor::sparse::Values) -> Self {
-        Self {
-            document: document,
-            json: json,
-        }
+        Self { document, json }
     }
 
     /// Returns the buffer view containing the sparse values.

@@ -133,9 +133,9 @@ impl<'a> Mesh<'a> {
     /// Constructs a `Mesh`.
     pub(crate) fn new(document: &'a Document, index: usize, json: &'a json::mesh::Mesh) -> Self {
         Self {
-            document: document,
-            index: index,
-            json: json,
+            document,
+            index,
+            json,
         }
     }
 
@@ -153,7 +153,7 @@ impl<'a> Mesh<'a> {
     #[cfg(feature = "names")]
     #[cfg_attr(docsrs, doc(cfg(feature = "names")))]
     pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_deref()
     }
 
     /// Defines the geometry to be renderered with a material.
@@ -166,18 +166,14 @@ impl<'a> Mesh<'a> {
 
     /// Defines the weights to be applied to the morph targets.
     pub fn weights(&self) -> Option<&'a [f32]> {
-        self.json.weights.as_ref().map(Vec::as_slice)
+        self.json.weights.as_deref()
     }
 }
 
 impl<'a> Primitive<'a> {
     /// Constructs a `Primitive`.
     pub(crate) fn new(mesh: Mesh<'a>, index: usize, json: &'a json::mesh::Primitive) -> Self {
-        Self {
-            mesh: mesh,
-            index: index,
-            json: json,
-        }
+        Self { mesh, index, json }
     }
 
     /// Returns the bounds of the `POSITION` vertex attribute.

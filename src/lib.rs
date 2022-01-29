@@ -433,18 +433,20 @@ impl Document {
     #[cfg(feature = "KHR_lights_punctual")]
     #[cfg_attr(docsrs, doc(cfg(feature = "KHR_lights_punctual")))]
     pub fn lights(&self) -> Option<iter::Lights> {
-        if let Some(extensions) = self.0.extensions.as_ref() {
-            if let Some(khr_lights_punctual) = extensions.khr_lights_punctual.as_ref() {
-                Some(iter::Lights {
-                    iter: khr_lights_punctual.lights.iter().enumerate(),
-                    document: self,
-                })
-            } else {
-                None
-            }
-        } else {
-            None
-        }
+        let iter = self
+            .0
+            .extensions
+            .as_ref()?
+            .khr_lights_punctual
+            .as_ref()?
+            .lights
+            .iter()
+            .enumerate();
+
+        Some(iter::Lights {
+            iter,
+            document: self,
+        })
     }
 
     /// Returns an `Iterator` that visits the variants of the glTF asset as defined by the

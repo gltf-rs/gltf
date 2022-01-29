@@ -118,7 +118,7 @@ fn align_to_multiple_of_four(n: &mut usize) {
     *n = (*n + 3) & !3;
 }
 
-fn split_binary_gltf<'a>(mut data: &'a [u8]) -> Result<(&'a [u8], Option<&'a [u8]>), Error> {
+fn split_binary_gltf(mut data: &[u8]) -> Result<(&[u8], Option<&[u8]>), Error> {
     let (json, mut data) = ChunkHeader::from_reader(&mut data)
         .and_then(|json_h| {
             if let ChunkType::Json = json_h.ty {
@@ -142,7 +142,7 @@ fn split_binary_gltf<'a>(mut data: &'a [u8]) -> Result<(&'a [u8], Option<&'a [u8
         // data.len().
         .map(|json_h| data.split_at(json_h.length as usize))?;
 
-    let bin = if data.len() > 0 {
+    let bin = if !data.is_empty() {
         ChunkHeader::from_reader(&mut data)
             .and_then(|bin_h| {
                 if let ChunkType::Bin = bin_h.ty {
@@ -218,7 +218,7 @@ impl<'a> Glb<'a> {
 
             writer.write_u32::<LittleEndian>(length as u32)?;
             writer.write_all(&magic[..])?;
-            writer.write_all(&bin)?;
+            writer.write_all(bin)?;
             for _ in 0..padding {
                 writer.write_u8(0)?;
             }

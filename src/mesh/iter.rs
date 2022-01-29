@@ -20,6 +20,7 @@ pub struct Attributes<'a> {
     pub(crate) document: &'a Document,
 
     /// The parent `Primitive` struct.
+    #[allow(dead_code)]
     pub(crate) prim: Primitive<'a>,
 
     /// The internal attribute iterator.

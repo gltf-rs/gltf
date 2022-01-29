@@ -115,9 +115,9 @@ impl<'a> Node<'a> {
     /// Constructs a `Node`.
     pub(crate) fn new(document: &'a Document, index: usize, json: &'a json::scene::Node) -> Self {
         Self {
-            document: document,
-            index: index,
-            json: json,
+            document,
+            index,
+            json,
         }
     }
 
@@ -174,7 +174,7 @@ impl<'a> Node<'a> {
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_deref()
     }
 
     /// Returns the node's transform.
@@ -191,11 +191,7 @@ impl<'a> Node<'a> {
         } else {
             Transform::Decomposed {
                 translation: self.json.translation.unwrap_or_else(|| [0.0, 0.0, 0.0]),
-                rotation: self
-                    .json
-                    .rotation
-                    .unwrap_or_else(json::scene::UnitQuaternion::default)
-                    .0,
+                rotation: self.json.rotation.unwrap_or_default().0,
                 scale: self.json.scale.unwrap_or_else(|| [1.0, 1.0, 1.0]),
             }
         }
@@ -211,7 +207,7 @@ impl<'a> Node<'a> {
 
     /// Returns the weights of the instantiated morph target.
     pub fn weights(&self) -> Option<&'a [f32]> {
-        self.json.weights.as_ref().map(Vec::as_slice)
+        self.json.weights.as_deref()
     }
 }
 
@@ -219,9 +215,9 @@ impl<'a> Scene<'a> {
     /// Constructs a `Scene`.
     pub(crate) fn new(document: &'a Document, index: usize, json: &'a json::scene::Scene) -> Self {
         Self {
-            document: document,
-            index: index,
-            json: json,
+            document,
+            index,
+            json,
         }
     }
 
@@ -238,7 +234,7 @@ impl<'a> Scene<'a> {
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_deref()
     }
 
     /// Returns an `Iterator` that visits each root node of the scene.

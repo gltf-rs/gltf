@@ -32,9 +32,9 @@ impl<'a> Skin<'a> {
     /// Constructs a `Skin`.
     pub(crate) fn new(document: &'a Document, index: usize, json: &'a json::skin::Skin) -> Self {
         Self {
-            document: document,
-            index: index,
-            json: json,
+            document,
+            index,
+            json,
         }
     }
 
@@ -85,7 +85,7 @@ impl<'a> Skin<'a> {
     #[cfg(feature = "names")]
     #[cfg_attr(docsrs, doc(cfg(feature = "names")))]
     pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_deref()
     }
 
     /// Returns the node used as the skeleton root. When `None`, joints

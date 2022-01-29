@@ -179,7 +179,7 @@ fn export(output: Output) {
             align_to_multiple_of_four(&mut json_offset);
             let glb = gltf::binary::Glb {
                 header: gltf::binary::Header {
-                    magic: b"glTF".clone(),
+                    magic: *b"glTF",
                     version: 2,
                     length: json_offset + buffer_length,
                 },
