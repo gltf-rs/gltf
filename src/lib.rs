@@ -14,7 +14,7 @@
 //!
 //! ```toml
 //! [dependencies.gltf]
-//! version = "0.16"
+//! version = "1.0"
 //! ```
 //!
 //! # Examples
