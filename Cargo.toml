@@ -45,6 +45,8 @@ KHR_materials_unlit = ["gltf-json/KHR_materials_unlit"]
 KHR_texture_transform = ["gltf-json/KHR_texture_transform"]
 KHR_materials_transmission = ["gltf-json/KHR_materials_transmission"]
 KHR_materials_ior = ["gltf-json/KHR_materials_ior"]
+KHR_materials_volume = ["gltf-json/KHR_materials_volume"]
+KHR_materials_specular = ["gltf-json/KHR_materials_specular"]
 image_jpeg_rayon = ["image/jpeg_rayon"]
 guess_mime_type = []
 
