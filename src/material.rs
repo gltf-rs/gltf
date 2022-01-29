@@ -125,6 +125,26 @@ impl<'a> Material<'a> {
             .map(|x| x.ior.0)
     }
 
+    /// Parameter values that define a volume for the transmission of light through the material
+    #[cfg(feature = "KHR_materials_volume")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_volume")))]
+    pub fn volume(&self) -> Option<Volume<'a>> {
+        self.json.extensions
+            .as_ref()?
+            .volume.as_ref()
+            .map(|x| Volume::new(self.document, x))
+    }
+
+    /// Parameter values that define the strength and colour of the specular reflection of the material
+    #[cfg(feature = "KHR_materials_specular")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_specular")))]
+    pub fn specular(&self) -> Option<Specular<'a>> {
+        self.json.extensions
+            .as_ref()?
+            .specular.as_ref()
+            .map(|x| Specular::new(self.document, x))
+    }
+
     /// A tangent space normal map.
     ///
     /// The texture contains RGB components in linear space. Each texel represents
@@ -313,6 +333,132 @@ impl<'a> Transmission<'a> {
             texture::Info::new(texture, json)
         })
     }
+
+    /// Optional application specific data.
+    pub fn extras(&self) -> &'a json::Extras {
+        &self.json.extras
+    }
+}
+
+/// Parameter values that define a volume for the transmission of light through the material
+#[cfg(feature = "KHR_materials_volume")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_volume")))]
+pub struct Volume<'a> {
+    /// The parent `Document` struct.
+    document: &'a Document,
+
+    /// The corresponding JSON struct.
+    json: &'a json::extensions::material::Volume,
+}
+
+
+#[cfg(feature = "KHR_materials_volume")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_volume")))]
+impl<'a> Volume<'a> {
+    /// Constructs `Volume`.
+    pub(crate) fn new(
+        document: &'a Document,
+        json: &'a json::extensions::material::Volume,
+    ) -> Self {
+        Self {
+            document: document,
+            json: json,
+        }
+    }
+
+    /// The thickness of the volume beneath the surface. The value is
+    /// given in the coordinate space of the mesh. If the value is 0
+    /// the material is thin-walled. Otherwise the material is a
+    /// volume boundary. The `doubleSided` property has no effect on
+    /// volume boundaries. Range is [0, +inf).
+    pub fn thickness_factor(&self) -> f32 {
+        self.json.thickness_factor.0
+    }
+
+    /// A texture that defines the thickness, stored in the G channel.
+    /// This will be multiplied by `thickness_factor`. Range is [0, 1].
+    pub fn thickness_texture(&self) -> Option<texture::Info<'a>> {
+        self.json.thickness_texture.as_ref().map(|json| {
+            let texture = self.document.textures().nth(json.index.value()).unwrap();
+            texture::Info::new(texture, json)
+        })
+    }
+
+    /// Density of the medium given as the average distance that light
+    /// travels in the medium before interacting with a particle. The
+    /// value is given in world space. Range is (0, +inf).
+    pub fn attenuation_distance(&self) -> f32 {
+        self.json.attenuation_distance.0
+    }
+
+    /// The color that white light turns into due to absorption when
+    /// reaching the attenuation distance.
+    pub fn attenuation_color(&self) -> [f32; 3] {
+        self.json.attenuation_color.0
+    }
+
+    /// Optional application specific data.
+    pub fn extras(&self) -> &'a json::Extras {
+        &self.json.extras
+    }
+}
+
+
+/// Parameter values that define the strength and colour of the specular reflection of the material
+#[cfg(feature = "KHR_materials_specular")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_specular")))]
+pub struct Specular<'a> {
+    /// The parent `Document` struct.
+    document: &'a Document,
+
+    /// The corresponding JSON struct.
+    json: &'a json::extensions::material::Specular,
+}
+
+#[cfg(feature = "KHR_materials_specular")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_specular")))]
+impl<'a> Specular<'a> {
+    /// Constructs `Volume`.
+    pub(crate) fn new(
+        document: &'a Document,
+        json: &'a json::extensions::material::Specular,
+    ) -> Self {
+        Self {
+            document: document,
+            json: json,
+        }
+    }
+
+    /// The strength of the specular reflection.
+    pub fn specular_factor(&self) -> f32 {
+        self.json.specular_factor.0
+    }
+
+    /// A texture that defines the strength of the specular reflection,
+    /// stored in the alpha (`A`) channel. This will be multiplied by
+    /// `specular_factor`.
+    pub fn specular_texture(&self) -> Option<texture::Info<'a>> {
+        self.json.specular_texture.as_ref().map(|json| {
+            let texture = self.document.textures().nth(json.index.value()).unwrap();
+            texture::Info::new(texture, json)
+        })
+    }
+
+    /// The F0 color of the specular reflection (linear RGB).
+    pub fn specular_color_factor(&self) -> [f32; 3] {
+        self.json.specular_color_factor.0
+    }
+
+    /// A texture that defines the F0 color of the specular reflection,
+    /// stored in the `RGB` channels and encoded in sRGB. This texture
+    /// will be multiplied by `specular_color_factor`.
+    pub fn specular_color_texture(&self) -> Option<texture::Info<'a>> {
+        self.json.specular_color_texture.as_ref().map(|json| {
+            let texture = self.document.textures().nth(json.index.value()).unwrap();
+            texture::Info::new(texture, json)
+        })
+    }
+
 
     /// Optional application specific data.
     pub fn extras(&self) -> &'a json::Extras {
