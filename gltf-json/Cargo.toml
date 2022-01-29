@@ -4,7 +4,7 @@ version = "0.16.0"
 authors = ["David Harvey-Macaulay <alteous@outlook.com>"]
 description = "JSON parsing for the gltf crate"
 repository = "https://github.com/gltf-rs/gltf"
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 edition = "2018"
 
 [dependencies]
@@ -18,10 +18,10 @@ default = []
 names = []
 extras = []
 KHR_lights_punctual = []
-KHR_materials_pbrSpecularGlossiness = []
-KHR_materials_unlit = []
-KHR_texture_transform = []
-KHR_materials_transmission = []
 KHR_materials_ior = []
-KHR_materials_volume = []
+KHR_materials_pbrSpecularGlossiness = []
 KHR_materials_specular = []
+KHR_materials_transmission = []
+KHR_materials_unlit = []
+KHR_materials_volume = []
+KHR_texture_transform = []

@@ -10,7 +10,7 @@
 //!
 //! # Installation
 //!
-//! Add `gltf` version 0.15 to your `Cargo.toml`.
+//! Add `gltf` to your `Cargo.toml`:
 //!
 //! ```toml
 //! [dependencies.gltf]
