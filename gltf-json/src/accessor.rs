@@ -61,7 +61,7 @@ pub const UNSIGNED_INT: u32 = 5125;
 pub const FLOAT: u32 = 5126;
 
 /// All valid generic vertex attribute component types.
-pub const VALID_COMPONENT_TYPES: &'static [u32] = &[
+pub const VALID_COMPONENT_TYPES: &[u32] = &[
     BYTE,
     UNSIGNED_BYTE,
     SHORT,
@@ -71,10 +71,10 @@ pub const VALID_COMPONENT_TYPES: &'static [u32] = &[
 ];
 
 /// All valid index component types.
-pub const VALID_INDEX_TYPES: &'static [u32] = &[UNSIGNED_BYTE, UNSIGNED_SHORT, UNSIGNED_INT];
+pub const VALID_INDEX_TYPES: &[u32] = &[UNSIGNED_BYTE, UNSIGNED_SHORT, UNSIGNED_INT];
 
 /// All valid accessor types.
-pub const VALID_ACCESSOR_TYPES: &'static [&'static str] =
+pub const VALID_ACCESSOR_TYPES: &[&str] =
     &["SCALAR", "VEC2", "VEC3", "VEC4", "MAT2", "MAT3", "MAT4"];
 
 /// Contains data structures for sparse storage.

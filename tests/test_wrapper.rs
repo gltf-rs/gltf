@@ -11,8 +11,8 @@ fn test_accessor_bounds() {
     let mut buffer = vec![];
     reader.read_to_end(&mut buffer).unwrap();
     let gltf = gltf::Gltf::from_slice(&buffer).unwrap();
-    let mesh = &gltf.meshes().nth(0).unwrap();
-    let prim = mesh.primitives().nth(0).unwrap();
+    let mesh = &gltf.meshes().next().unwrap();
+    let prim = mesh.primitives().next().unwrap();
     let bounds = prim.bounding_box();
     assert_eq!(
         bounds,

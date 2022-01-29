@@ -28,15 +28,15 @@ impl<'a, T: Item> Iterator for Iter<'a, T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            &mut Iter::Standard(ref mut iter) => iter.next(),
-            &mut Iter::Sparse(ref mut iter) => iter.next(),
+            Iter::Standard(ref mut iter) => iter.next(),
+            Iter::Sparse(ref mut iter) => iter.next(),
         }
     }
 
     fn nth(&mut self, nth: usize) -> Option<Self::Item> {
         match self {
-            &mut Iter::Standard(ref mut iter) => iter.nth(nth),
-            &mut Iter::Sparse(ref mut iter) => iter.nth(nth),
+            Iter::Standard(ref mut iter) => iter.nth(nth),
+            Iter::Sparse(ref mut iter) => iter.nth(nth),
         }
     }
 
@@ -56,8 +56,8 @@ impl<'a, T: Item> Iterator for Iter<'a, T> {
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         match self {
-            &Iter::Standard(ref iter) => iter.size_hint(),
-            &Iter::Sparse(ref iter) => iter.size_hint(),
+            Iter::Standard(ref iter) => iter.size_hint(),
+            Iter::Sparse(ref iter) => iter.size_hint(),
         }
     }
 }
@@ -116,7 +116,7 @@ impl<'a, T: Item> SparseIter<'a, T> {
         SparseIter {
             base,
             indices: indices.peekable(),
-            values: values,
+            values,
             counter: 0,
         }
     }
@@ -125,17 +125,13 @@ impl<'a, T: Item> SparseIter<'a, T> {
 impl<'a, T: Item> Iterator for SparseIter<'a, T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
-        let next_base_value = self
+        let mut next_value = self
             .base
             .as_mut()
             .map(|iter| iter.next())
-            .unwrap_or(Some(T::zero()));
-        if next_base_value.is_none() {
-            return None;
-        }
+            .unwrap_or_else(|| Some(T::zero()))?;
 
-        let mut next_value = next_base_value.unwrap();
-        let next_sparse_index = self.indices.peek().clone();
+        let next_sparse_index = self.indices.peek();
         if let Some(index) = next_sparse_index {
             if *index == self.counter {
                 self.indices.next(); // advance
@@ -248,7 +244,7 @@ impl<T: Item + Copy> Item for [T; 3] {
         assert!(slice.len() >= 3 * mem::size_of::<T>());
         [
             T::from_slice(slice),
-            T::from_slice(&slice[1 * mem::size_of::<T>()..]),
+            T::from_slice(&slice[mem::size_of::<T>()..]),
             T::from_slice(&slice[2 * mem::size_of::<T>()..]),
         ]
     }
@@ -262,7 +258,7 @@ impl<T: Item + Copy> Item for [T; 4] {
         assert!(slice.len() >= 4 * mem::size_of::<T>());
         [
             T::from_slice(slice),
-            T::from_slice(&slice[1 * mem::size_of::<T>()..]),
+            T::from_slice(&slice[mem::size_of::<T>()..]),
             T::from_slice(&slice[2 * mem::size_of::<T>()..]),
             T::from_slice(&slice[3 * mem::size_of::<T>()..]),
         ]
@@ -277,7 +273,7 @@ impl<'a, T: Item> ItemIter<'a, T> {
     pub fn new(slice: &'a [u8], stride: usize) -> Self {
         ItemIter {
             data: slice,
-            stride: stride,
+            stride,
             _phantom: PhantomData,
         }
     }

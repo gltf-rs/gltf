@@ -19,7 +19,6 @@ use std::ops;
 #[cfg(test)]
 mod test {
     use super::*;
-    use approx;
 
     impl approx::AbsDiffEq for Vector4 {
         type Epsilon = f32;
@@ -129,11 +128,6 @@ impl Vector3 {
     pub fn normalize(self) -> Vector3 {
         self * (1.0 / self.magnitude())
     }
-
-    #[cfg(test)]
-    pub fn from_array([x, y, z]: [f32; 3]) -> Self {
-        Self { x, y, z }
-    }
 }
 
 impl ops::Mul<f32> for Vector3 {
@@ -206,6 +200,7 @@ pub struct Matrix3 {
 
 impl Matrix3 {
     #[rustfmt::skip]
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         c0r0: f32, c0r1: f32, c0r2: f32,
         c1r0: f32, c1r1: f32, c1r2: f32,
@@ -240,6 +235,7 @@ pub struct Matrix4 {
 
 impl Matrix4 {
     #[rustfmt::skip]
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         c0r0: f32, c0r1: f32, c0r2: f32, c0r3: f32,
         c1r0: f32, c1r1: f32, c1r2: f32, c1r3: f32,

@@ -33,10 +33,10 @@ pub const MIRRORED_REPEAT: u32 = 33_648;
 pub const REPEAT: u32 = 10_497;
 
 /// All valid magnification filters.
-pub const VALID_MAG_FILTERS: &'static [u32] = &[NEAREST, LINEAR];
+pub const VALID_MAG_FILTERS: &[u32] = &[NEAREST, LINEAR];
 
 /// All valid minification filters.
-pub const VALID_MIN_FILTERS: &'static [u32] = &[
+pub const VALID_MIN_FILTERS: &[u32] = &[
     NEAREST,
     LINEAR,
     NEAREST_MIPMAP_NEAREST,
@@ -46,7 +46,7 @@ pub const VALID_MIN_FILTERS: &'static [u32] = &[
 ];
 
 /// All valid wrapping modes.
-pub const VALID_WRAPPING_MODES: &'static [u32] = &[CLAMP_TO_EDGE, MIRRORED_REPEAT, REPEAT];
+pub const VALID_WRAPPING_MODES: &[u32] = &[CLAMP_TO_EDGE, MIRRORED_REPEAT, REPEAT];
 
 /// Magnification filter.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]

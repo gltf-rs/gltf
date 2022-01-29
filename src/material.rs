@@ -27,16 +27,16 @@ impl<'a> Material<'a> {
         json: &'a json::material::Material,
     ) -> Self {
         Self {
-            document: document,
+            document,
             index: Some(index),
-            json: json,
+            json,
         }
     }
 
     /// Constructs the default `Material`.
     pub(crate) fn default(document: &'a Document) -> Self {
         Self {
-            document: document,
+            document,
             index: None,
             json: &DEFAULT_MATERIAL,
         }
@@ -85,7 +85,7 @@ impl<'a> Material<'a> {
     #[cfg(feature = "names")]
     #[cfg_attr(docsrs, doc(cfg(feature = "names")))]
     pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_deref()
     }
 
     /// Parameter values that define the metallic-roughness material model from
@@ -241,10 +241,7 @@ impl<'a> PbrMetallicRoughness<'a> {
         document: &'a Document,
         json: &'a json::material::PbrMetallicRoughness,
     ) -> Self {
-        Self {
-            document: document,
-            json: json,
-        }
+        Self { document, json }
     }
 
     /// Returns the material's base color factor.
@@ -319,10 +316,7 @@ impl<'a> Transmission<'a> {
         document: &'a Document,
         json: &'a json::extensions::material::Transmission,
     ) -> Self {
-        Self {
-            document: document,
-            json: json,
-        }
+        Self { document, json }
     }
 
     /// Returns the material's transmission factor.
@@ -365,10 +359,7 @@ impl<'a> Volume<'a> {
         document: &'a Document,
         json: &'a json::extensions::material::Volume,
     ) -> Self {
-        Self {
-            document: document,
-            json: json,
-        }
+        Self { document, json }
     }
 
     /// The thickness of the volume beneath the surface. The value is
@@ -427,10 +418,7 @@ impl<'a> Specular<'a> {
         document: &'a Document,
         json: &'a json::extensions::material::Specular,
     ) -> Self {
-        Self {
-            document: document,
-            json: json,
-        }
+        Self { document, json }
     }
 
     /// The strength of the specular reflection.
@@ -489,10 +477,7 @@ impl<'a> PbrSpecularGlossiness<'a> {
         document: &'a Document,
         json: &'a json::extensions::material::PbrSpecularGlossiness,
     ) -> Self {
-        Self {
-            document: document,
-            json: json,
-        }
+        Self { document, json }
     }
 
     /// Returns the material's base color factor.
@@ -561,10 +546,7 @@ impl<'a> NormalTexture<'a> {
         texture: texture::Texture<'a>,
         json: &'a json::material::NormalTexture,
     ) -> Self {
-        Self {
-            texture: texture,
-            json: json,
-        }
+        Self { texture, json }
     }
 
     /// Returns the scalar multiplier applied to each normal vector of the texture.
@@ -603,10 +585,7 @@ impl<'a> OcclusionTexture<'a> {
         texture: texture::Texture<'a>,
         json: &'a json::material::OcclusionTexture,
     ) -> Self {
-        Self {
-            texture: texture,
-            json: json,
-        }
+        Self { texture, json }
     }
 
     /// Returns the scalar multiplier controlling the amount of occlusion applied.

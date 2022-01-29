@@ -51,16 +51,16 @@ impl<'a> Sampler<'a> {
         json: &'a json::texture::Sampler,
     ) -> Self {
         Self {
-            document: document,
+            document,
             index: Some(index),
-            json: json,
+            json,
         }
     }
 
     /// Constructs the default `Sampler`.
     pub(crate) fn default(document: &'a Document) -> Self {
         Self {
-            document: document,
+            document,
             index: None,
             json: &DEFAULT_SAMPLER,
         }
@@ -86,7 +86,7 @@ impl<'a> Sampler<'a> {
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_deref()
     }
 
     /// `s` wrapping mode.
@@ -113,9 +113,9 @@ impl<'a> Texture<'a> {
         json: &'a json::texture::Texture,
     ) -> Self {
         Self {
-            document: document,
-            index: index,
-            json: json,
+            document,
+            index,
+            json,
         }
     }
 
@@ -127,7 +127,7 @@ impl<'a> Texture<'a> {
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_deref()
     }
 
     /// Returns the sampler used by this texture.
@@ -161,10 +161,7 @@ impl<'a> Texture<'a> {
 impl<'a> Info<'a> {
     /// Constructs a reference to a `Texture`.
     pub(crate) fn new(texture: Texture<'a>, json: &'a json::texture::Info) -> Self {
-        Self {
-            texture: texture,
-            json: json,
-        }
+        Self { texture, json }
     }
 
     /// The set index of the texture's `TEXCOORD` attribute.
@@ -186,7 +183,7 @@ impl<'a> Info<'a> {
             .as_ref()?
             .texture_transform
             .as_ref()
-            .map(|x| TextureTransform::new(x))
+            .map(TextureTransform::new)
     }
 
     /// Optional application specific data.

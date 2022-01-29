@@ -127,6 +127,7 @@ impl Root {
     }
 
     /// Deserialize from a JSON string slice.
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(str_: &str) -> Result<Self, Error> {
         serde_json::from_str(str_)
     }

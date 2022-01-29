@@ -158,7 +158,7 @@ impl<'a> Accessor<'a> {
     #[cfg(feature = "names")]
     #[cfg_attr(docsrs, doc(cfg(feature = "names")))]
     pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_deref()
     }
 
     /// Specifies whether integer data values should be normalized.

@@ -28,6 +28,7 @@ pub struct Camera<'a> {
 #[derive(Clone, Debug)]
 pub struct Orthographic<'a> {
     /// The parent `Document` struct.
+    #[allow(dead_code)]
     document: &'a Document,
 
     /// The corresponding JSON struct.
@@ -38,6 +39,7 @@ pub struct Orthographic<'a> {
 #[derive(Clone, Debug)]
 pub struct Perspective<'a> {
     /// The parent `Document` struct.
+    #[allow(dead_code)]
     document: &'a Document,
 
     /// The corresponding JSON struct.
@@ -52,9 +54,9 @@ impl<'a> Camera<'a> {
         json: &'a json::camera::Camera,
     ) -> Self {
         Self {
-            document: document,
-            index: index,
-            json: json,
+            document,
+            index,
+            json,
         }
     }
 
@@ -67,7 +69,7 @@ impl<'a> Camera<'a> {
     #[cfg(feature = "names")]
     #[cfg_attr(docsrs, doc(cfg(feature = "names")))]
     pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_deref()
     }
 
     /// Returns the camera's projection.
@@ -93,10 +95,7 @@ impl<'a> Camera<'a> {
 impl<'a> Orthographic<'a> {
     /// Constructs a `Orthographic` camera projection.
     pub(crate) fn new(document: &'a Document, json: &'a json::camera::Orthographic) -> Self {
-        Self {
-            document: document,
-            json: json,
-        }
+        Self { document, json }
     }
 
     ///  The horizontal magnification of the view.
@@ -128,10 +127,7 @@ impl<'a> Orthographic<'a> {
 impl<'a> Perspective<'a> {
     /// Constructs a `Perspective` camera projection.
     pub(crate) fn new(document: &'a Document, json: &'a json::camera::Perspective) -> Self {
-        Self {
-            document: document,
-            json: json,
-        }
+        Self { document, json }
     }
 
     ///  Aspect ratio of the field of view.

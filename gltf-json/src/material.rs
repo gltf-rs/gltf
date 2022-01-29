@@ -6,7 +6,7 @@ use serde_derive::{Deserialize, Serialize};
 use std::fmt;
 
 /// All valid alpha modes.
-pub const VALID_ALPHA_MODES: &'static [&'static str] = &["OPAQUE", "MASK", "BLEND"];
+pub const VALID_ALPHA_MODES: &[&str] = &["OPAQUE", "MASK", "BLEND"];
 
 /// The alpha rendering mode of a material.
 #[derive(Clone, Copy, Eq, PartialEq, Debug)]

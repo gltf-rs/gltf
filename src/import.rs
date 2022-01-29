@@ -1,6 +1,5 @@
 use crate::buffer;
 use crate::image;
-use base64;
 use std::{fs, io};
 
 use crate::{Document, Error, Gltf, Result};
@@ -29,22 +28,20 @@ enum Scheme<'a> {
 }
 
 impl<'a> Scheme<'a> {
-    fn parse<'s>(uri: &'s str) -> Scheme<'s> {
-        if uri.contains(":") {
-            if uri.starts_with("data:") {
-                let match0 = &uri["data:".len()..].split(";base64,").nth(0);
-                let match1 = &uri["data:".len()..].split(";base64,").nth(1);
-                if match1.is_some() {
-                    Scheme::Data(Some(match0.unwrap()), match1.unwrap())
-                } else if match0.is_some() {
-                    Scheme::Data(None, match0.unwrap())
-                } else {
-                    Scheme::Unsupported
+    fn parse(uri: &str) -> Scheme<'_> {
+        if uri.contains(':') {
+            if let Some(rest) = uri.strip_prefix("data:") {
+                let mut it = rest.split(";base64,");
+
+                match (it.next(), it.next()) {
+                    (match0_opt, Some(match1)) => Scheme::Data(match0_opt, match1),
+                    (Some(match0), _) => Scheme::Data(None, match0),
+                    _ => Scheme::Unsupported,
                 }
-            } else if uri.starts_with("file://") {
-                Scheme::File(&uri["file://".len()..])
-            } else if uri.starts_with("file:") {
-                Scheme::File(&uri["file:".len()..])
+            } else if let Some(rest) = uri.strip_prefix("file://") {
+                Scheme::File(rest)
+            } else if let Some(rest) = uri.strip_prefix("file:") {
+                Scheme::File(rest)
             } else {
                 Scheme::Unsupported
             }
@@ -130,7 +127,7 @@ pub fn import_image_data(
                 match Scheme::parse(uri) {
                     Scheme::Data(Some(annoying_case), base64) => {
                         let encoded_image = base64::decode(&base64).map_err(Error::Base64)?;
-                        let encoded_format = match annoying_case.as_ref() {
+                        let encoded_format = match annoying_case {
                             "image/png" => Png,
                             "image/jpeg" => Jpeg,
                             _ => match guess_format(&encoded_image) {
@@ -156,7 +153,7 @@ pub fn import_image_data(
                         Some(format) => format,
                         None => return Err(Error::UnsupportedImageEncoding),
                     },
-                    None => match uri.rsplit(".").next() {
+                    None => match uri.rsplit('.').next() {
                         Some("png") => Png,
                         Some("jpg") | Some("jpeg") => Jpeg,
                         _ => match guess_format(&encoded_image) {
@@ -201,7 +198,7 @@ fn import_impl(Gltf { document, blob }: Gltf, base: Option<&Path>) -> Result<Imp
 }
 
 fn import_path(path: &Path) -> Result<Import> {
-    let base = path.parent().unwrap_or(Path::new("./"));
+    let base = path.parent().unwrap_or_else(|| Path::new("./"));
     let file = fs::File::open(path).map_err(Error::Io)?;
     let reader = io::BufReader::new(file);
     import_impl(Gltf::from_reader(reader)?, Some(base))

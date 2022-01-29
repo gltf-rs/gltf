@@ -1,5 +1,4 @@
 use crate::{Document, Material};
-use gltf_json::Extras;
 
 /// A variant.
 pub struct Variant<'a> {
@@ -8,6 +7,7 @@ pub struct Variant<'a> {
     document: &'a Document,
 
     /// The corresponding JSON index.
+    #[allow(dead_code)]
     index: usize,
 
     /// The corresponding JSON struct.

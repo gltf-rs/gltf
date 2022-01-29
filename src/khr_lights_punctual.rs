@@ -30,7 +30,7 @@ impl<'a> Light<'a> {
 
     /// Color of the light source.
     pub fn color(&self) -> [f32; 3] {
-        self.json.color.clone()
+        self.json.color
     }
 
     /// Returns the internal JSON index.
@@ -41,7 +41,7 @@ impl<'a> Light<'a> {
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_deref()
     }
 
     /// Optional application specific data.

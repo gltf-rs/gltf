@@ -68,9 +68,9 @@ impl<'a> Animation<'a> {
         json: &'a json::animation::Animation,
     ) -> Self {
         Self {
-            document: document,
-            index: index,
-            json: json,
+            document,
+            index,
+            json,
         }
     }
 
@@ -97,7 +97,7 @@ impl<'a> Animation<'a> {
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
     pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_deref()
     }
 
     /// Returns an `Iterator` over the animation samplers.
@@ -115,10 +115,7 @@ impl<'a> Animation<'a> {
 impl<'a> Channel<'a> {
     /// Constructs a `Channel`.
     pub(crate) fn new(anim: Animation<'a>, json: &'a json::animation::Channel) -> Self {
-        Self {
-            anim: anim,
-            json: json,
-        }
+        Self { anim, json }
     }
 
     /// Returns the parent `Animation` struct.
@@ -159,10 +156,7 @@ impl<'a> Channel<'a> {
 impl<'a> Target<'a> {
     /// Constructs a `Target`.
     pub(crate) fn new(anim: Animation<'a>, json: &'a json::animation::Target) -> Self {
-        Self {
-            anim: anim,
-            json: json,
-        }
+        Self { anim, json }
     }
 
     /// Returns the parent `Animation` struct.
@@ -194,10 +188,7 @@ impl<'a> Target<'a> {
 impl<'a> Sampler<'a> {
     /// Constructs a `Sampler`.
     pub(crate) fn new(anim: Animation<'a>, json: &'a json::animation::Sampler) -> Self {
-        Self {
-            anim: anim,
-            json: json,
-        }
+        Self { anim, json }
     }
 
     /// Returns the parent `Animation` struct.
