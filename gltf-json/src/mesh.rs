@@ -40,12 +40,7 @@ pub const VALID_MODES: &'static [u32] = &[
 ];
 
 /// All valid semantic names for Morph targets.
-#[rustfmt::skip]
-pub const VALID_MORPH_TARGETS: &'static [&'static str] = &[
-    "POSITION",
-    "NORMAL",
-    "TANGENT"
-];
+pub const VALID_MORPH_TARGETS: &'static [&'static str] = &["POSITION", "NORMAL", "TANGENT"];
 
 /// The type of primitives to render.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]

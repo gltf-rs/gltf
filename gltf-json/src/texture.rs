@@ -46,12 +46,7 @@ pub const VALID_MIN_FILTERS: &'static [u32] = &[
 ];
 
 /// All valid wrapping modes.
-#[rustfmt::skip]
-pub const VALID_WRAPPING_MODES: &'static [u32] = &[
-    CLAMP_TO_EDGE,
-    MIRRORED_REPEAT,
-    REPEAT
-];
+pub const VALID_WRAPPING_MODES: &'static [u32] = &[CLAMP_TO_EDGE, MIRRORED_REPEAT, REPEAT];
 
 /// Magnification filter.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]

@@ -71,24 +71,11 @@ pub const VALID_COMPONENT_TYPES: &'static [u32] = &[
 ];
 
 /// All valid index component types.
-#[rustfmt::skip]
-pub const VALID_INDEX_TYPES: &'static [u32] = &[
-    UNSIGNED_BYTE,
-    UNSIGNED_SHORT,
-    UNSIGNED_INT
-];
+pub const VALID_INDEX_TYPES: &'static [u32] = &[UNSIGNED_BYTE, UNSIGNED_SHORT, UNSIGNED_INT];
 
 /// All valid accessor types.
-#[rustfmt::skip]
-pub const VALID_ACCESSOR_TYPES: &'static [&'static str] = &[
-    "SCALAR",
-    "VEC2",
-    "VEC3",
-    "VEC4",
-    "MAT2",
-    "MAT3",
-    "MAT4"
-];
+pub const VALID_ACCESSOR_TYPES: &'static [&'static str] =
+    &["SCALAR", "VEC2", "VEC3", "VEC4", "MAT2", "MAT3", "MAT4"];
 
 /// Contains data structures for sparse storage.
 pub mod sparse {

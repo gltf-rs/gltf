@@ -18,11 +18,7 @@ pub const MIN_BYTE_STRIDE: u32 = 4;
 pub const MAX_BYTE_STRIDE: u32 = 252;
 
 /// All valid GPU buffer targets.
-#[rustfmt::skip]
-pub const VALID_TARGETS: &'static [u32] = &[
-    ARRAY_BUFFER,
-    ELEMENT_ARRAY_BUFFER
-];
+pub const VALID_TARGETS: &'static [u32] = &[ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER];
 
 /// Specifies the target a GPU buffer should be bound to.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

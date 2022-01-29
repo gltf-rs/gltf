@@ -6,21 +6,11 @@ use serde_derive::{Deserialize, Serialize};
 use std::fmt;
 
 /// All valid animation interpolation algorithms.
-#[rustfmt::skip]
-pub const VALID_INTERPOLATIONS: &'static [&'static str] = &[
-    "LINEAR",
-    "STEP",
-    "CUBICSPLINE"
-];
+pub const VALID_INTERPOLATIONS: &'static [&'static str] = &["LINEAR", "STEP", "CUBICSPLINE"];
 
 /// All valid animation property names.
-#[rustfmt::skip]
-pub const VALID_PROPERTIES: &'static [&'static str] = &[
-    "translation",
-    "rotation",
-    "scale",
-    "weights"
-];
+pub const VALID_PROPERTIES: &'static [&'static str] =
+    &["translation", "rotation", "scale", "weights"];
 
 /// Specifies an interpolation algorithm.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize)]

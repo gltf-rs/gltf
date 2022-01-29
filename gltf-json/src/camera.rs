@@ -6,11 +6,7 @@ use serde_derive::{Deserialize, Serialize};
 use std::fmt;
 
 /// All valid camera types.
-#[rustfmt::skip]
-pub const VALID_CAMERA_TYPES: &'static [&'static str] = &[
-    "perspective",
-    "orthographic"
-];
+pub const VALID_CAMERA_TYPES: &'static [&'static str] = &["perspective", "orthographic"];
 
 /// Specifies the camera type.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

@@ -32,12 +32,7 @@ pub mod khr_lights_punctual {
     use std::fmt;
 
     /// All valid light types.
-    #[rustfmt::skip]
-    pub const VALID_TYPES: &'static [&'static str] = &[
-        "directional",
-        "point",
-        "spot"
-    ];
+    pub const VALID_TYPES: &'static [&'static str] = &["directional", "point", "spot"];
 
     #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     pub struct KhrLightsPunctual {
