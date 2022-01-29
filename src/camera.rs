@@ -46,7 +46,11 @@ pub struct Perspective<'a> {
 
 impl<'a> Camera<'a> {
     /// Constructs a `Camera`.
-    pub(crate) fn new(document: &'a Document, index: usize, json: &'a json::camera::Camera) -> Self {
+    pub(crate) fn new(
+        document: &'a Document,
+        index: usize,
+        json: &'a json::camera::Camera,
+    ) -> Self {
         Self {
             document: document,
             index: index,
@@ -72,11 +76,11 @@ impl<'a> Camera<'a> {
             json::camera::Type::Orthographic => {
                 let json = self.json.orthographic.as_ref().unwrap();
                 Projection::Orthographic(Orthographic::new(self.document, json))
-            },
+            }
             json::camera::Type::Perspective => {
                 let json = self.json.perspective.as_ref().unwrap();
                 Projection::Perspective(Perspective::new(self.document, json))
-            },
+            }
         }
     }
 

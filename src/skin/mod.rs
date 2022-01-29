@@ -30,11 +30,7 @@ pub struct Skin<'a> {
 
 impl<'a> Skin<'a> {
     /// Constructs a `Skin`.
-    pub(crate) fn new(
-        document: &'a Document,
-        index: usize,
-        json: &'a json::skin::Skin,
-    ) -> Self {
+    pub(crate) fn new(document: &'a Document, index: usize, json: &'a json::skin::Skin) -> Self {
         Self {
             document: document,
             index: index,
@@ -57,23 +53,16 @@ impl<'a> Skin<'a> {
     /// When `None`, each matrix is assumed to be the 4x4 identity matrix which
     /// implies that the inverse-bind matrices were pre-applied.
     pub fn inverse_bind_matrices(&self) -> Option<Accessor<'a>> {
-        self.json.inverse_bind_matrices
+        self.json
+            .inverse_bind_matrices
             .as_ref()
-            .map(|index| {
-                self.document
-                    .accessors()
-                    .nth(index.value())
-                    .unwrap()
-            })
+            .map(|index| self.document.accessors().nth(index.value()).unwrap())
     }
 
     /// Constructs a skin reader.
     #[cfg(feature = "utils")]
     #[cfg_attr(docsrs, doc(cfg(feature = "utils")))]
-    pub fn reader<'s, F>(
-        &'a self,
-        get_buffer_data: F,
-    ) -> Reader<'a, 's, F>
+    pub fn reader<'s, F>(&'a self, get_buffer_data: F) -> Reader<'a, 's, F>
     where
         F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>,
     {
@@ -102,8 +91,9 @@ impl<'a> Skin<'a> {
     /// Returns the node used as the skeleton root. When `None`, joints
     /// transforms resolve to scene root.
     pub fn skeleton(&self) -> Option<Node<'a>> {
-        self.json.skeleton.as_ref().map(|index| {
-            self.document.nodes().nth(index.value()).unwrap()
-        })
+        self.json
+            .skeleton
+            .as_ref()
+            .map(|index| self.document.nodes().nth(index.value()).unwrap())
     }
 }

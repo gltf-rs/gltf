@@ -1,24 +1,16 @@
-use gltf_derive::Validate;
-use serde_derive::{Serialize, Deserialize};
-use serde::{de, ser};
-use std::fmt;
 use crate::validation::{Checked, Error, Validate};
 use crate::{accessor, extensions, scene, Extras, Index, Path, Root};
+use gltf_derive::Validate;
+use serde::{de, ser};
+use serde_derive::{Deserialize, Serialize};
+use std::fmt;
 
 /// All valid animation interpolation algorithms.
-pub const VALID_INTERPOLATIONS: &'static [&'static str] = &[
-    "LINEAR",
-    "STEP",
-    "CUBICSPLINE",
-];
+pub const VALID_INTERPOLATIONS: &'static [&'static str] = &["LINEAR", "STEP", "CUBICSPLINE"];
 
 /// All valid animation property names.
-pub const VALID_PROPERTIES: &'static [&'static str] = &[
-    "translation",
-    "rotation",
-    "scale",
-    "weights",
-];
+pub const VALID_PROPERTIES: &'static [&'static str] =
+    &["translation", "rotation", "scale", "weights"];
 
 /// Specifies an interpolation algorithm.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize)]
@@ -53,13 +45,10 @@ pub enum Interpolation {
 pub enum Property {
     /// XYZ translation vector.
     Translation = 1,
-
     /// XYZW rotation quaternion.
     Rotation,
-
     /// XYZ scale vector.
     Scale,
-
     /// Weights of morph targets.
     MorphTargetWeights,
 }
@@ -70,24 +59,24 @@ pub struct Animation {
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub extensions: Option<extensions::animation::Animation>,
-    
+
     /// Optional application specific data.
     #[serde(default)]
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
-    
+
     /// An array of channels, each of which targets an animation's sampler at a
     /// node's property.
     ///
     /// Different channels of the same animation must not have equal targets.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub channels: Vec<Channel>,
-    
+
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
     #[cfg_attr(feature = "names", serde(skip_serializing_if = "Option::is_none"))]
     pub name: Option<String>,
-    
+
     /// An array of samplers that combine input and output accessors with an
     /// interpolation algorithm to define a keyframe graph (but not its target).
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -100,14 +89,14 @@ pub struct Channel {
     /// The index of a sampler in this animation used to compute the value for the
     /// target.
     pub sampler: Index<Sampler>,
-    
+
     /// The index of the node and TRS property to target.
     pub target: Target,
-    
+
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub extensions: Option<extensions::animation::Channel>,
-    
+
     /// Optional application specific data.
     #[serde(default)]
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
@@ -120,15 +109,15 @@ pub struct Target {
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub extensions: Option<extensions::animation::Target>,
-    
+
     /// Optional application specific data.
     #[serde(default)]
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
-    
+
     /// The index of the node to target.
     pub node: Index<scene::Node>,
-    
+
     /// The name of the node's property to modify or the 'weights' of the
     /// morph targets it instantiates.
     pub path: Checked<Property>,
@@ -140,19 +129,19 @@ pub struct Sampler {
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub extensions: Option<extensions::animation::Sampler>,
-    
+
     /// Optional application specific data.
     #[serde(default)]
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
-    
+
     /// The index of an accessor containing keyframe input values, e.g., time.
     pub input: Index<accessor::Accessor>,
-    
+
     /// The interpolation algorithm.
     #[serde(default)]
     pub interpolation: Checked<Interpolation>,
-    
+
     /// The index of an accessor containing keyframe output values.
     pub output: Index<accessor::Accessor>,
 }
@@ -163,7 +152,8 @@ impl Validate for Animation {
         P: Fn() -> Path,
         R: FnMut(&dyn Fn() -> Path, Error),
     {
-        self.samplers.validate(root, || path().field("samplers"), report);
+        self.samplers
+            .validate(root, || path().field("samplers"), report);
         for (index, channel) in self.channels.iter().enumerate() {
             if channel.sampler.value() as usize >= self.samplers.len() {
                 let path = || path().field("channels").index(index).field("sampler");
@@ -181,7 +171,8 @@ impl Default for Interpolation {
 
 impl<'de> de::Deserialize<'de> for Checked<Interpolation> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: de::Deserializer<'de>
+    where
+        D: de::Deserializer<'de>,
     {
         struct Visitor;
         impl<'de> de::Visitor<'de> for Visitor {
@@ -192,7 +183,8 @@ impl<'de> de::Deserialize<'de> for Checked<Interpolation> {
             }
 
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-                where E: de::Error
+            where
+                E: de::Error,
             {
                 use self::Interpolation::*;
                 use crate::validation::Checked::*;
@@ -211,7 +203,7 @@ impl<'de> de::Deserialize<'de> for Checked<Interpolation> {
 impl ser::Serialize for Interpolation {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: ser::Serializer
+        S: ser::Serializer,
     {
         serializer.serialize_str(match *self {
             Interpolation::Linear => "LINEAR",
@@ -223,7 +215,8 @@ impl ser::Serialize for Interpolation {
 
 impl<'de> de::Deserialize<'de> for Checked<Property> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: de::Deserializer<'de>
+    where
+        D: de::Deserializer<'de>,
     {
         struct Visitor;
         impl<'de> de::Visitor<'de> for Visitor {
@@ -234,7 +227,8 @@ impl<'de> de::Deserialize<'de> for Checked<Property> {
             }
 
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-                where E: de::Error
+            where
+                E: de::Error,
             {
                 use self::Property::*;
                 use crate::validation::Checked::*;
@@ -254,7 +248,7 @@ impl<'de> de::Deserialize<'de> for Checked<Property> {
 impl ser::Serialize for Property {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: ser::Serializer
+        S: ser::Serializer,
     {
         serializer.serialize_str(match *self {
             Property::Translation => "translation",

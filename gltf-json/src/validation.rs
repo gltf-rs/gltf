@@ -63,7 +63,8 @@ impl<T> Checked<T> {
 
 impl<T: Serialize> Serialize for Checked<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
+    where
+        S: Serializer,
     {
         match *self {
             Checked::Valid(ref item) => item.serialize(serializer),
@@ -91,10 +92,12 @@ impl<T: Default> Default for Checked<T> {
 
 impl<T> Validate for Checked<T> {
     fn validate<P, R>(&self, _root: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&dyn Fn() -> Path, Error)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
     {
         match *self {
-            Checked::Valid(_) => {},
+            Checked::Valid(_) => {}
             Checked::Invalid => report(&path, Error::Invalid),
         }
     }
@@ -102,7 +105,9 @@ impl<T> Validate for Checked<T> {
 
 impl<K: Eq + Hash + ToString + Validate, V: Validate> Validate for HashMap<K, V> {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&dyn Fn() -> Path, Error)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
     {
         for (key, value) in self.iter() {
             key.validate(root, || path().key(&key.to_string()), report);
@@ -113,7 +118,9 @@ impl<K: Eq + Hash + ToString + Validate, V: Validate> Validate for HashMap<K, V>
 
 impl<T: Validate> Validate for Option<T> {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&dyn Fn() -> Path, Error)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
     {
         if let Some(value) = self.as_ref() {
             value.validate(root, path, report);
@@ -123,7 +130,9 @@ impl<T: Validate> Validate for Option<T> {
 
 impl<T: Validate> Validate for Vec<T> {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&dyn Fn() -> Path, Error)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
     {
         for (index, value) in self.iter().enumerate() {
             value.validate(root, || path().index(index), report);
@@ -133,7 +142,9 @@ impl<T: Validate> Validate for Vec<T> {
 
 impl Validate for std::boxed::Box<serde_json::value::RawValue> {
     fn validate<P, R>(&self, _: &Root, _: P, _: &mut R)
-        where P: Fn() -> Path, R: FnMut(&dyn Fn() -> Path, Error)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
     {
         // nop
     }
@@ -143,11 +154,15 @@ impl std::error::Error for Error {}
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", match *self {
-            Error::IndexOutOfBounds => "Index out of bounds",
-            Error::Invalid => "Invalid value",
-            Error::Missing => "Missing data",
-        })
+        write!(
+            f,
+            "{}",
+            match *self {
+                Error::IndexOutOfBounds => "Index out of bounds",
+                Error::Invalid => "Invalid value",
+                Error::Missing => "Missing data",
+            }
+        )
     }
 }
 

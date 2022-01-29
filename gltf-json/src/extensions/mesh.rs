@@ -1,5 +1,5 @@
 use gltf_derive::Validate;
-use serde_derive::{Serialize, Deserialize};
+use serde_derive::{Deserialize, Serialize};
 
 /// A set of primitives to be rendered.
 ///
@@ -12,7 +12,11 @@ pub struct Mesh {}
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct Primitive {
     #[cfg(feature = "KHR_materials_variants")]
-    #[serde(default, rename = "KHR_materials_variants", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        rename = "KHR_materials_variants",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub khr_materials_variants: Option<KhrMaterialsVariants>,
 }
 

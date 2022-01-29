@@ -1,29 +1,24 @@
+use crate::validation::{Checked, Error, Validate};
+use crate::{buffer, extensions, Extras, Index, Path, Root};
 use gltf_derive::Validate;
-use serde_derive::{Serialize, Deserialize};
-use crate::{buffer, extensions, Extras, Index, Root, Path};
 use serde::{de, ser};
+use serde_derive::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fmt;
-use crate::validation::{Checked, Error, Validate};
 
 /// The component data type.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize)]
 pub enum ComponentType {
     /// Corresponds to `GL_BYTE`.
     I8 = 1,
-
     /// Corresponds to `GL_UNSIGNED_BYTE`.
     U8,
-
     /// Corresponds to `GL_SHORT`.
     I16,
-
     /// Corresponds to `GL_UNSIGNED_SHORT`.
     U16,
-
     /// Corresponds to `GL_UNSIGNED_INT`.
     U32,
-
     /// Corresponds to `GL_FLOAT`.
     F32,
 }
@@ -33,22 +28,16 @@ pub enum ComponentType {
 pub enum Type {
     /// Scalar quantity.
     Scalar = 1,
-
     /// 2D vector.
     Vec2,
-
     /// 3D vector.
     Vec3,
-
     /// 4D vector.
     Vec4,
-
     /// 2x2 matrix.
     Mat2,
-    
     /// 3x3 matrix.
     Mat3,
-
     /// 4x4 matrix.
     Mat4,
 }
@@ -82,22 +71,11 @@ pub const VALID_COMPONENT_TYPES: &'static [u32] = &[
 ];
 
 /// All valid index component types.
-pub const VALID_INDEX_TYPES: &'static [u32] = &[
-    UNSIGNED_BYTE,
-    UNSIGNED_SHORT,
-    UNSIGNED_INT,
-];
+pub const VALID_INDEX_TYPES: &'static [u32] = &[UNSIGNED_BYTE, UNSIGNED_SHORT, UNSIGNED_INT];
 
 /// All valid accessor types.
-pub const VALID_ACCESSOR_TYPES: &'static [&'static str] = &[
-    "SCALAR",
-    "VEC2",
-    "VEC3",
-    "VEC4",
-    "MAT2",
-    "MAT3",
-    "MAT4",
-];
+pub const VALID_ACCESSOR_TYPES: &'static [&'static str] =
+    &["SCALAR", "VEC2", "VEC3", "VEC4", "MAT2", "MAT3", "MAT4"];
 
 /// Contains data structures for sparse storage.
 pub mod sparse {
@@ -238,7 +216,7 @@ pub struct Accessor {
     /// Specifies whether integer data values should be normalized.
     #[serde(default, skip_serializing_if = "is_normalized_default")]
     pub normalized: bool,
-    
+
     /// Sparse storage of attributes that deviate from their initialization
     /// value.
     #[serde(default)]
@@ -248,7 +226,9 @@ pub struct Accessor {
 
 impl Validate for Accessor {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&dyn Fn() -> Path, Error)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
     {
         if self.sparse.is_none() && self.buffer_view.is_none() {
             // If sparse is missing, then bufferView must be present. Report that bufferView is
@@ -256,17 +236,24 @@ impl Validate for Accessor {
             report(&|| path().field("bufferView"), Error::Missing);
         }
 
-        self.buffer_view.validate(root, || path().field("bufferView"), report);
-        self.byte_offset.validate(root, || path().field("byteOffset"), report);
+        self.buffer_view
+            .validate(root, || path().field("bufferView"), report);
+        self.byte_offset
+            .validate(root, || path().field("byteOffset"), report);
         self.count.validate(root, || path().field("count"), report);
-        self.component_type.validate(root, || path().field("componentType"), report);
-        self.extensions.validate(root, || path().field("extensions"), report);
-        self.extras.validate(root, || path().field("extras"), report);
+        self.component_type
+            .validate(root, || path().field("componentType"), report);
+        self.extensions
+            .validate(root, || path().field("extensions"), report);
+        self.extras
+            .validate(root, || path().field("extras"), report);
         self.type_.validate(root, || path().field("type"), report);
         self.min.validate(root, || path().field("min"), report);
         self.max.validate(root, || path().field("max"), report);
-        self.normalized.validate(root, || path().field("normalized"), report);
-        self.sparse.validate(root, || path().field("sparse"), report);
+        self.normalized
+            .validate(root, || path().field("normalized"), report);
+        self.sparse
+            .validate(root, || path().field("sparse"), report);
     }
 }
 
@@ -285,7 +272,8 @@ pub struct GenericComponentType(pub ComponentType);
 
 impl<'de> de::Deserialize<'de> for Checked<GenericComponentType> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: de::Deserializer<'de>
+    where
+        D: de::Deserializer<'de>,
     {
         struct Visitor;
         impl<'de> de::Visitor<'de> for Visitor {
@@ -296,7 +284,8 @@ impl<'de> de::Deserialize<'de> for Checked<GenericComponentType> {
             }
 
             fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
-                where E: de::Error
+            where
+                E: de::Error,
             {
                 use self::ComponentType::*;
                 use crate::validation::Checked::*;
@@ -317,7 +306,8 @@ impl<'de> de::Deserialize<'de> for Checked<GenericComponentType> {
 
 impl<'de> de::Deserialize<'de> for Checked<IndexComponentType> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: de::Deserializer<'de>
+    where
+        D: de::Deserializer<'de>,
     {
         struct Visitor;
         impl<'de> de::Visitor<'de> for Visitor {
@@ -328,7 +318,8 @@ impl<'de> de::Deserialize<'de> for Checked<IndexComponentType> {
             }
 
             fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
-                where E: de::Error
+            where
+                E: de::Error,
             {
                 use self::ComponentType::*;
                 use crate::validation::Checked::*;
@@ -346,7 +337,8 @@ impl<'de> de::Deserialize<'de> for Checked<IndexComponentType> {
 
 impl<'de> de::Deserialize<'de> for Checked<Type> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: de::Deserializer<'de>
+    where
+        D: de::Deserializer<'de>,
     {
         struct Visitor;
         impl<'de> de::Visitor<'de> for Visitor {
@@ -357,7 +349,8 @@ impl<'de> de::Deserialize<'de> for Checked<Type> {
             }
 
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-                where E: de::Error
+            where
+                E: de::Error,
             {
                 use self::Type::*;
                 use crate::validation::Checked::*;
@@ -380,7 +373,7 @@ impl<'de> de::Deserialize<'de> for Checked<Type> {
 impl ser::Serialize for Type {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: ser::Serializer
+        S: ser::Serializer,
     {
         serializer.serialize_str(match *self {
             Type::Scalar => "SCALAR",
@@ -421,7 +414,7 @@ impl ComponentType {
 impl ser::Serialize for ComponentType {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: ser::Serializer
+        S: ser::Serializer,
     {
         serializer.serialize_u32(self.as_gl_enum())
     }

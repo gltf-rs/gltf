@@ -1,11 +1,11 @@
+use crate::validation::{Checked, Error, Validate};
+use crate::{accessor, extensions, material, Extras, Index};
 use gltf_derive::Validate;
-use serde_derive::{Serialize, Deserialize};
 use serde::{de, ser};
+use serde_derive::{Deserialize, Serialize};
 use serde_json::from_value;
 use std::collections::HashMap;
 use std::fmt;
-use crate::validation::{Checked, Error, Validate};
-use crate::{accessor, extensions, material, Extras, Index};
 
 /// Corresponds to `GL_POINTS`.
 pub const POINTS: u32 = 0;
@@ -40,11 +40,7 @@ pub const VALID_MODES: &'static [u32] = &[
 ];
 
 /// All valid semantic names for Morph targets.
-pub const VALID_MORPH_TARGETS: &'static [&'static str] = &[
-    "POSITION",
-    "NORMAL",
-    "TANGENT",
-];
+pub const VALID_MORPH_TARGETS: &'static [&'static str] = &["POSITION", "NORMAL", "TANGENT"];
 
 /// The type of primitives to render.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
@@ -140,22 +136,29 @@ fn is_primitive_mode_default(mode: &Checked<Mode>) -> bool {
 
 impl Validate for Primitive {
     fn validate<P, R>(&self, root: &crate::Root, path: P, report: &mut R)
-        where
+    where
         P: Fn() -> crate::Path,
         R: FnMut(&dyn Fn() -> crate::Path, crate::validation::Error),
     {
         // Generated part
-        self.attributes.validate(root, || path().field("attributes"), report);
-        self.extensions.validate(root, || path().field("extensions"), report);
-        self.extras.validate(root, || path().field("extras"), report);
-        self.indices.validate(root, || path().field("indices"), report);
-        self.material.validate(root, || path().field("material"), report);
+        self.attributes
+            .validate(root, || path().field("attributes"), report);
+        self.extensions
+            .validate(root, || path().field("extensions"), report);
+        self.extras
+            .validate(root, || path().field("extras"), report);
+        self.indices
+            .validate(root, || path().field("indices"), report);
+        self.material
+            .validate(root, || path().field("material"), report);
         self.mode.validate(root, || path().field("mode"), report);
-        self.targets.validate(root, || path().field("targets"), report);
+        self.targets
+            .validate(root, || path().field("targets"), report);
 
         // Custom part
         let position_path = &|| path().field("attributes").key("POSITION");
-        if let Some(pos_accessor_index) = self.attributes.get(&Checked::Valid(Semantic::Positions)) {
+        if let Some(pos_accessor_index) = self.attributes.get(&Checked::Valid(Semantic::Positions))
+        {
             // spec: POSITION accessor **must** have `min` and `max` properties defined.
             let pos_accessor = &root.accessors[pos_accessor_index.value()];
 
@@ -254,7 +257,8 @@ impl Mode {
 
 impl<'de> de::Deserialize<'de> for Checked<Mode> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: de::Deserializer<'de>
+    where
+        D: de::Deserializer<'de>,
     {
         struct Visitor;
         impl<'de> de::Visitor<'de> for Visitor {
@@ -265,7 +269,8 @@ impl<'de> de::Deserialize<'de> for Checked<Mode> {
             }
 
             fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
-                where E: de::Error
+            where
+                E: de::Error,
             {
                 use self::Mode::*;
                 use crate::validation::Checked::*;
@@ -304,29 +309,21 @@ impl Semantic {
             "TANGENT" => Valid(Tangents),
             #[cfg(feature = "extras")]
             _ if s.starts_with("_") => Valid(Extras(s[1..].to_string())),
-            _ if s.starts_with("COLOR_") => {
-                match s["COLOR_".len()..].parse() {
-                    Ok(set) => Valid(Colors(set)),
-                    Err(_) => Invalid,
-                }
+            _ if s.starts_with("COLOR_") => match s["COLOR_".len()..].parse() {
+                Ok(set) => Valid(Colors(set)),
+                Err(_) => Invalid,
             },
-            _ if s.starts_with("TEXCOORD_") => {
-                match s["TEXCOORD_".len()..].parse() {
-                    Ok(set) => Valid(TexCoords(set)),
-                    Err(_) => Invalid,
-                }
+            _ if s.starts_with("TEXCOORD_") => match s["TEXCOORD_".len()..].parse() {
+                Ok(set) => Valid(TexCoords(set)),
+                Err(_) => Invalid,
             },
-            _ if s.starts_with("JOINTS_") => {
-                match s["JOINTS_".len()..].parse() {
-                    Ok(set) => Valid(Joints(set)),
-                    Err(_) => Invalid,
-                }
+            _ if s.starts_with("JOINTS_") => match s["JOINTS_".len()..].parse() {
+                Ok(set) => Valid(Joints(set)),
+                Err(_) => Invalid,
             },
-            _ if s.starts_with("WEIGHTS_") => {
-                match s["WEIGHTS_".len()..].parse() {
-                    Ok(set) => Valid(Weights(set)),
-                    Err(_) => Invalid,
-                }
+            _ if s.starts_with("WEIGHTS_") => match s["WEIGHTS_".len()..].parse() {
+                Ok(set) => Valid(Weights(set)),
+                Err(_) => Invalid,
             },
             _ => Invalid,
         }
@@ -335,7 +332,8 @@ impl Semantic {
 
 impl ser::Serialize for Semantic {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: ser::Serializer
+    where
+        S: ser::Serializer,
     {
         serializer.serialize_str(&self.to_string())
     }
@@ -369,7 +367,8 @@ impl ToString for Checked<Semantic> {
 
 impl<'de> de::Deserialize<'de> for Checked<Semantic> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: de::Deserializer<'de>
+    where
+        D: de::Deserializer<'de>,
     {
         struct Visitor;
         impl<'de> de::Visitor<'de> for Visitor {
@@ -380,7 +379,8 @@ impl<'de> de::Deserialize<'de> for Checked<Semantic> {
             }
 
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-                where E: de::Error
+            where
+                E: de::Error,
             {
                 Ok(Semantic::checked(value))
             }

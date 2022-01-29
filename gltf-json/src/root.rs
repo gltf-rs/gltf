@@ -1,14 +1,17 @@
-use gltf_derive::Validate;
 use crate::buffer;
 use crate::extensions;
-use serde_derive::{Serialize, Deserialize};
-use std::{self, fmt, io, marker};
 use crate::texture;
 use crate::validation;
+use gltf_derive::Validate;
+use serde_derive::{Deserialize, Serialize};
+use std::{self, fmt, io, marker};
 
 use crate::path::Path;
+use crate::{
+    Accessor, Animation, Asset, Buffer, Camera, Error, Extras, Image, Material, Mesh, Node, Scene,
+    Skin, Texture, Value,
+};
 use validation::Validate;
-use crate::{Accessor, Animation, Asset, Buffer, Camera, Error, Extras, Image, Material, Mesh, Node, Scene, Skin, Texture, Value};
 
 /// Helper trait for retrieving top-level objects by a universal identifier.
 pub trait Get<T> {
@@ -117,7 +120,8 @@ pub struct Root {
 impl Root {
     /// Returns a single item from the root object.
     pub fn get<T>(&self, index: Index<T>) -> Option<&T>
-        where Self: Get<T>
+    where
+        Self: Get<T>,
     {
         (self as &dyn Get<T>).get(index)
     }
@@ -134,7 +138,8 @@ impl Root {
 
     /// Deserialize from a stream of JSON.
     pub fn from_reader<R>(reader: R) -> Result<Self, Error>
-        where R: io::Read
+    where
+        R: io::Read,
     {
         serde_json::from_reader(reader)
     }
@@ -166,14 +171,16 @@ impl Root {
 
     /// Serialize as a JSON byte writertor.
     pub fn to_writer<W>(&self, writer: W) -> Result<(), Error>
-        where W: io::Write,
+    where
+        W: io::Write,
     {
         serde_json::to_writer(writer, self)
     }
 
     /// Serialize as a pretty-printed JSON byte writertor.
     pub fn to_writer_pretty<W>(&self, writer: W) -> Result<(), Error>
-        where W: io::Write,
+    where
+        W: io::Write,
     {
         serde_json::to_writer_pretty(writer, self)
     }
@@ -193,7 +200,8 @@ impl<T> Index<T> {
 
 impl<T> serde::Serialize for Index<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: ::serde::Serializer
+    where
+        S: ::serde::Serializer,
     {
         serializer.serialize_u64(self.value() as u64)
     }
@@ -201,7 +209,8 @@ impl<T> serde::Serialize for Index<T> {
 
 impl<'de, T> serde::Deserialize<'de> for Index<T> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: serde::Deserializer<'de>
+    where
+        D: serde::Deserializer<'de>,
     {
         struct Visitor<T>(marker::PhantomData<T>);
         impl<'de, T> serde::de::Visitor<'de> for Visitor<T> {
@@ -212,7 +221,8 @@ impl<'de, T> serde::Deserialize<'de> for Index<T> {
             }
 
             fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
-                where E: serde::de::Error
+            where
+                E: serde::de::Error,
             {
                 Ok(Index::new(value as u32))
             }
@@ -245,10 +255,13 @@ impl<T> fmt::Display for Index<T> {
 }
 
 impl<T: Validate> Validate for Index<T>
-    where Root: Get<T>
+where
+    Root: Get<T>,
 {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&dyn Fn() -> Path, validation::Error)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, validation::Error),
     {
         if root.get(*self).is_none() {
             report(&path, validation::Error::IndexOutOfBounds);
@@ -263,7 +276,7 @@ macro_rules! impl_get {
                 self.$field.get(index.value())
             }
         }
-    }
+    };
 }
 
 impl_get!(Accessor, accessors);

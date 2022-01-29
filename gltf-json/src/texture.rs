@@ -1,9 +1,9 @@
-use gltf_derive::Validate;
-use serde_derive::{Serialize, Deserialize};
-use serde::{de, ser};
-use std::fmt;
 use crate::validation::Checked;
 use crate::{extensions, image, Extras, Index};
+use gltf_derive::Validate;
+use serde::{de, ser};
+use serde_derive::{Deserialize, Serialize};
+use std::fmt;
 
 /// Corresponds to `GL_NEAREST`.
 pub const NEAREST: u32 = 9728;
@@ -33,10 +33,7 @@ pub const MIRRORED_REPEAT: u32 = 33_648;
 pub const REPEAT: u32 = 10_497;
 
 /// All valid magnification filters.
-pub const VALID_MAG_FILTERS: &'static [u32] = &[
-    NEAREST,
-    LINEAR,
-];
+pub const VALID_MAG_FILTERS: &'static [u32] = &[NEAREST, LINEAR];
 
 /// All valid minification filters.
 pub const VALID_MIN_FILTERS: &'static [u32] = &[
@@ -49,11 +46,7 @@ pub const VALID_MIN_FILTERS: &'static [u32] = &[
 ];
 
 /// All valid wrapping modes.
-pub const VALID_WRAPPING_MODES: &'static [u32] = &[
-    CLAMP_TO_EDGE,
-    MIRRORED_REPEAT,
-    REPEAT,
-];
+pub const VALID_WRAPPING_MODES: &'static [u32] = &[CLAMP_TO_EDGE, MIRRORED_REPEAT, REPEAT];
 
 /// Magnification filter.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
@@ -219,7 +212,8 @@ pub struct Info {
 
 impl<'de> de::Deserialize<'de> for Checked<MagFilter> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: de::Deserializer<'de>
+    where
+        D: de::Deserializer<'de>,
     {
         struct Visitor;
         impl<'de> de::Visitor<'de> for Visitor {
@@ -230,7 +224,8 @@ impl<'de> de::Deserialize<'de> for Checked<MagFilter> {
             }
 
             fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
-                where E: de::Error
+            where
+                E: de::Error,
             {
                 use self::MagFilter::*;
                 use crate::validation::Checked::*;
@@ -247,7 +242,8 @@ impl<'de> de::Deserialize<'de> for Checked<MagFilter> {
 
 impl<'de> de::Deserialize<'de> for Checked<MinFilter> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: de::Deserializer<'de>
+    where
+        D: de::Deserializer<'de>,
     {
         struct Visitor;
         impl<'de> de::Visitor<'de> for Visitor {
@@ -258,7 +254,8 @@ impl<'de> de::Deserialize<'de> for Checked<MinFilter> {
             }
 
             fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
-                where E: de::Error
+            where
+                E: de::Error,
             {
                 use self::MinFilter::*;
                 use crate::validation::Checked::*;
@@ -288,7 +285,8 @@ impl ser::Serialize for MinFilter {
 
 impl<'de> de::Deserialize<'de> for Checked<WrappingMode> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: de::Deserializer<'de>
+    where
+        D: de::Deserializer<'de>,
     {
         struct Visitor;
         impl<'de> de::Visitor<'de> for Visitor {
@@ -299,7 +297,8 @@ impl<'de> de::Deserialize<'de> for Checked<WrappingMode> {
             }
 
             fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
-                where E: de::Error
+            where
+                E: de::Error,
             {
                 use self::WrappingMode::*;
                 use crate::validation::Checked::*;

@@ -107,11 +107,7 @@ impl<'a> Buffer<'a> {
 
 impl<'a> View<'a> {
     /// Constructs a `View`.
-    pub(crate) fn new(
-        document: &'a Document,
-        index: usize,
-        json: &'a json::buffer::View,
-    ) -> Self {
+    pub(crate) fn new(document: &'a Document, index: usize, json: &'a json::buffer::View) -> Self {
         let parent = document.buffers().nth(json.buffer.value()).unwrap();
         Self {
             document,
@@ -128,7 +124,10 @@ impl<'a> View<'a> {
 
     /// Returns the parent `Buffer`.
     pub fn buffer(&self) -> Buffer<'a> {
-        self.document.buffers().nth(self.json.buffer.value()).unwrap()
+        self.document
+            .buffers()
+            .nth(self.json.buffer.value())
+            .unwrap()
     }
 
     /// Returns the length of the buffer view in bytes.
@@ -145,14 +144,14 @@ impl<'a> View<'a> {
     /// data. When `None`, data is assumed to be tightly packed.
     pub fn stride(&self) -> Option<usize> {
         self.json.byte_stride.and_then(|x| {
-                // Treat byte_stride == 0 same as not specifying stride.
-                // This is technically a validation error, but best way we can handle it here
-                if x == 0 {
-                    None
-                } else {
-                    Some(x as usize)
-                }
-            })
+            // Treat byte_stride == 0 same as not specifying stride.
+            // This is technically a validation error, but best way we can handle it here
+            if x == 0 {
+                None
+            } else {
+                Some(x as usize)
+            }
+        })
     }
 
     /// Optional user-defined name for this object.

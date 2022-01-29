@@ -13,3 +13,4 @@ before_test:
 
 test_script:
   - cargo test --all --all-features --release
+  - cargo fmt --all -- --check

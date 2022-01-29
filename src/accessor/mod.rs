@@ -113,7 +113,9 @@ impl<'a> Accessor<'a> {
     ///
     /// This may be `None` if the corresponding accessor is sparse.
     pub fn view(&self) -> Option<buffer::View<'a>> {
-        self.json.buffer_view.map(|view| self.document.views().nth(view.value()).unwrap())
+        self.json
+            .buffer_view
+            .map(|view| self.document.views().nth(view.value()).unwrap())
     }
 
     /// Returns the offset relative to the start of the parent buffer view in bytes.
@@ -167,8 +169,9 @@ impl<'a> Accessor<'a> {
     /// Returns sparse storage of attributes that deviate from their initialization
     /// value.
     pub fn sparse(&self) -> Option<sparse::Sparse<'a>> {
-        self.json.sparse.as_ref().map(|json| {
-            sparse::Sparse::new(self.document, json)
-        })
+        self.json
+            .sparse
+            .as_ref()
+            .map(|json| sparse::Sparse::new(self.document, json))
     }
 }

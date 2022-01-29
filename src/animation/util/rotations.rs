@@ -1,6 +1,6 @@
 use super::Rotations;
-use std::marker::PhantomData;
 use crate::Normalize;
+use std::marker::PhantomData;
 
 /// Casting iterator for `Rotations`.
 #[derive(Clone, Debug)]
@@ -65,8 +65,8 @@ impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         match self.0 {
-            Rotations::I8(ref mut i)  => i.next().map(A::cast_i8),
-            Rotations::U8(ref mut i)  => i.next().map(A::cast_u8),
+            Rotations::I8(ref mut i) => i.next().map(A::cast_i8),
+            Rotations::U8(ref mut i) => i.next().map(A::cast_u8),
             Rotations::I16(ref mut i) => i.next().map(A::cast_i16),
             Rotations::U16(ref mut i) => i.next().map(A::cast_u16),
             Rotations::F32(ref mut i) => i.next().map(A::cast_f32),
@@ -76,8 +76,8 @@ impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
     #[inline]
     fn nth(&mut self, x: usize) -> Option<Self::Item> {
         match self.0 {
-            Rotations::I8(ref mut i)  => i.nth(x).map(A::cast_i8),
-            Rotations::U8(ref mut i)  => i.nth(x).map(A::cast_u8),
+            Rotations::I8(ref mut i) => i.nth(x).map(A::cast_i8),
+            Rotations::U8(ref mut i) => i.nth(x).map(A::cast_u8),
             Rotations::I16(ref mut i) => i.nth(x).map(A::cast_i16),
             Rotations::U16(ref mut i) => i.nth(x).map(A::cast_u16),
             Rotations::F32(ref mut i) => i.nth(x).map(A::cast_f32),
@@ -86,8 +86,8 @@ impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
 
     fn last(self) -> Option<Self::Item> {
         match self.0 {
-            Rotations::I8(i)  => i.last().map(A::cast_i8),
-            Rotations::U8(i)  => i.last().map(A::cast_u8),
+            Rotations::I8(i) => i.last().map(A::cast_i8),
+            Rotations::U8(i) => i.last().map(A::cast_u8),
             Rotations::I16(i) => i.last().map(A::cast_i16),
             Rotations::U16(i) => i.last().map(A::cast_u16),
             Rotations::F32(i) => i.last().map(A::cast_f32),
@@ -101,8 +101,8 @@ impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         match self.0 {
-            Rotations::I8(ref i)  => i.size_hint(),
-            Rotations::U8(ref i)  => i.size_hint(),
+            Rotations::I8(ref i) => i.size_hint(),
+            Rotations::U8(ref i) => i.size_hint(),
             Rotations::I16(ref i) => i.size_hint(),
             Rotations::U16(ref i) => i.size_hint(),
             Rotations::F32(ref i) => i.size_hint(),

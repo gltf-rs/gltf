@@ -60,7 +60,11 @@ fn export(output: Output) {
         extensions: Default::default(),
         extras: Default::default(),
         name: None,
-        uri: if output == Output::Standard { Some("buffer0.bin".into()) } else { None },
+        uri: if output == Output::Standard {
+            Some("buffer0.bin".into())
+        } else {
+            None
+        },
     };
     let buffer_view = json::buffer::View {
         buffer: json::Index::new(0),
@@ -76,7 +80,9 @@ fn export(output: Output) {
         buffer_view: Some(json::Index::new(0)),
         byte_offset: 0,
         count: triangle_vertices.len() as u32,
-        component_type: Valid(json::accessor::GenericComponentType(json::accessor::ComponentType::F32)),
+        component_type: Valid(json::accessor::GenericComponentType(
+            json::accessor::ComponentType::F32,
+        )),
         extensions: Default::default(),
         extras: Default::default(),
         type_: Valid(json::accessor::Type::Vec3),
@@ -90,7 +96,9 @@ fn export(output: Output) {
         buffer_view: Some(json::Index::new(0)),
         byte_offset: (3 * mem::size_of::<f32>()) as u32,
         count: triangle_vertices.len() as u32,
-        component_type: Valid(json::accessor::GenericComponentType(json::accessor::ComponentType::F32)),
+        component_type: Valid(json::accessor::GenericComponentType(
+            json::accessor::ComponentType::F32,
+        )),
         extensions: Default::default(),
         extras: Default::default(),
         type_: Valid(json::accessor::Type::Vec3),
@@ -145,15 +153,13 @@ fn export(output: Output) {
         buffer_views: vec![buffer_view],
         meshes: vec![mesh],
         nodes: vec![node],
-        scenes: vec![
-            json::Scene {
-                extensions: Default::default(),
-                extras: Default::default(),
-                name: None,
-                nodes: vec![json::Index::new(0)],
-            },
-        ],
-        .. Default::default()
+        scenes: vec![json::Scene {
+            extensions: Default::default(),
+            extras: Default::default(),
+            name: None,
+            nodes: vec![json::Index::new(0)],
+        }],
+        ..Default::default()
     };
 
     match output {
@@ -166,10 +172,9 @@ fn export(output: Output) {
             let bin = to_padded_byte_vector(triangle_vertices);
             let mut writer = fs::File::create("triangle/buffer0.bin").expect("I/O error");
             writer.write_all(&bin).expect("I/O error");
-        },
+        }
         Output::Binary => {
-            let json_string = json::serialize::to_string(&root)
-                .expect("Serialization error");
+            let json_string = json::serialize::to_string(&root).expect("Serialization error");
             let mut json_offset = json_string.len() as u32;
             align_to_multiple_of_four(&mut json_offset);
             let glb = gltf::binary::Glb {
@@ -183,8 +188,7 @@ fn export(output: Output) {
             };
             let writer = std::fs::File::create("triangle.glb").expect("I/O error");
             glb.to_writer(writer).expect("glTF binary output error");
-
-        },
+        }
     }
 }
 

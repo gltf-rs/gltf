@@ -1,9 +1,9 @@
-use gltf_derive::Validate;
-use serde_derive::{Serialize, Deserialize};
-use serde::{de, ser};
-use std::fmt;
 use crate::validation::Checked;
 use crate::{extensions, Extras, Index};
+use gltf_derive::Validate;
+use serde::{de, ser};
+use serde_derive::{Deserialize, Serialize};
+use std::fmt;
 
 /// Corresponds to `GL_ARRAY_BUFFER`.
 pub const ARRAY_BUFFER: u32 = 34_962;
@@ -18,10 +18,7 @@ pub const MIN_BYTE_STRIDE: u32 = 4;
 pub const MAX_BYTE_STRIDE: u32 = 252;
 
 /// All valid GPU buffer targets.
-pub const VALID_TARGETS: &'static [u32] = &[
-    ARRAY_BUFFER,
-    ELEMENT_ARRAY_BUFFER,
-];
+pub const VALID_TARGETS: &'static [u32] = &[ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER];
 
 /// Specifies the target a GPU buffer should be bound to.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -35,7 +32,8 @@ pub enum Target {
 
 impl ser::Serialize for Target {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: ser::Serializer
+    where
+        S: ser::Serializer,
     {
         match *self {
             Target::ArrayBuffer => serializer.serialize_u32(ARRAY_BUFFER),
@@ -85,7 +83,11 @@ pub struct View {
     pub byte_length: u32,
 
     /// Offset into the parent buffer in bytes.
-    #[serde(default, rename = "byteOffset", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        rename = "byteOffset",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub byte_offset: Option<u32>,
 
     /// The stride in bytes between vertex attributes or other interleavable data.
@@ -116,7 +118,8 @@ pub struct View {
 
 impl<'de> de::Deserialize<'de> for Checked<Target> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: de::Deserializer<'de>
+    where
+        D: de::Deserializer<'de>,
     {
         struct Visitor;
         impl<'de> de::Visitor<'de> for Visitor {
@@ -127,7 +130,8 @@ impl<'de> de::Deserialize<'de> for Checked<Target> {
             }
 
             fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
-                where E: de::Error
+            where
+                E: de::Error,
             {
                 use self::Target::*;
                 use crate::validation::Checked::*;
@@ -141,4 +145,3 @@ impl<'de> de::Deserialize<'de> for Checked<Target> {
         deserializer.deserialize_u64(Visitor)
     }
 }
-

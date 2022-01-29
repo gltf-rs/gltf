@@ -1,15 +1,12 @@
+use crate::validation::{Checked, Error, Validate};
+use crate::{extensions, Extras, Path, Root};
 use gltf_derive::Validate;
 use serde::{de, ser};
-use serde_derive::{Serialize, Deserialize};
+use serde_derive::{Deserialize, Serialize};
 use std::fmt;
-use crate::validation::{Checked, Error, Validate};
-use crate::{extensions, Extras, Root, Path};
 
 /// All valid camera types.
-pub const VALID_CAMERA_TYPES: &'static [&'static str] = &[
-    "perspective",
-    "orthographic",
-];
+pub const VALID_CAMERA_TYPES: &'static [&'static str] = &["perspective", "orthographic"];
 
 /// Specifies the camera type.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -111,23 +108,30 @@ pub struct Perspective {
 
 impl Validate for Camera {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where P: Fn() -> Path, R: FnMut(&dyn Fn() -> Path, Error)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
     {
         if self.orthographic.is_none() && self.perspective.is_none() {
             report(&path, Error::Missing);
         }
 
-        self.orthographic.validate(root, || path().field("orthographic"), report);
-        self.perspective.validate(root, || path().field("perspective"), report);
+        self.orthographic
+            .validate(root, || path().field("orthographic"), report);
+        self.perspective
+            .validate(root, || path().field("perspective"), report);
         self.type_.validate(root, || path().field("type"), report);
-        self.extensions.validate(root, || path().field("extensions"), report);
-        self.extras.validate(root, || path().field("extras"), report);
+        self.extensions
+            .validate(root, || path().field("extensions"), report);
+        self.extras
+            .validate(root, || path().field("extras"), report);
     }
 }
 
 impl<'de> de::Deserialize<'de> for Checked<Type> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: de::Deserializer<'de>
+    where
+        D: de::Deserializer<'de>,
     {
         struct Visitor;
         impl<'de> de::Visitor<'de> for Visitor {
@@ -138,7 +142,8 @@ impl<'de> de::Deserialize<'de> for Checked<Type> {
             }
 
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-                where E: de::Error
+            where
+                E: de::Error,
             {
                 use self::Type::*;
                 use crate::validation::Checked::*;
@@ -155,7 +160,8 @@ impl<'de> de::Deserialize<'de> for Checked<Type> {
 
 impl ser::Serialize for Type {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: ser::Serializer
+    where
+        S: ser::Serializer,
     {
         match *self {
             Type::Perspective => serializer.serialize_str("perspective"),

@@ -63,7 +63,8 @@ pub struct Target<'a> {
 impl<'a> Animation<'a> {
     /// Constructs an `Animation`.
     pub(crate) fn new(
-        document: &'a Document, index: usize,
+        document: &'a Document,
+        index: usize,
         json: &'a json::animation::Animation,
     ) -> Self {
         Self {
@@ -113,10 +114,7 @@ impl<'a> Animation<'a> {
 
 impl<'a> Channel<'a> {
     /// Constructs a `Channel`.
-    pub(crate) fn new(
-        anim: Animation<'a>,
-        json: &'a json::animation::Channel,
-    ) -> Self {
+    pub(crate) fn new(anim: Animation<'a>, json: &'a json::animation::Channel) -> Self {
         Self {
             anim: anim,
             json: json,
@@ -160,10 +158,7 @@ impl<'a> Channel<'a> {
 
 impl<'a> Target<'a> {
     /// Constructs a `Target`.
-    pub(crate) fn new(
-        anim: Animation<'a>,
-        json: &'a json::animation::Target,
-    ) -> Self {
+    pub(crate) fn new(anim: Animation<'a>, json: &'a json::animation::Target) -> Self {
         Self {
             anim: anim,
             json: json,
@@ -182,7 +177,11 @@ impl<'a> Target<'a> {
 
     /// Returns the target node.
     pub fn node(&self) -> scene::Node<'a> {
-        self.anim.document.nodes().nth(self.json.node.value()).unwrap()
+        self.anim
+            .document
+            .nodes()
+            .nth(self.json.node.value())
+            .unwrap()
     }
 
     /// Returns the node's property to modify or the 'weights' of the morph
@@ -194,10 +193,7 @@ impl<'a> Target<'a> {
 
 impl<'a> Sampler<'a> {
     /// Constructs a `Sampler`.
-    pub(crate) fn new(
-        anim: Animation<'a>,
-        json: &'a json::animation::Sampler,
-    ) -> Self {
+    pub(crate) fn new(anim: Animation<'a>, json: &'a json::animation::Sampler) -> Self {
         Self {
             anim: anim,
             json: json,
@@ -216,7 +212,11 @@ impl<'a> Sampler<'a> {
 
     /// Returns the accessor containing the keyframe input values (e.g. time).
     pub fn input(&self) -> accessor::Accessor<'a> {
-        self.anim.document.accessors().nth(self.json.input.value()).unwrap()
+        self.anim
+            .document
+            .accessors()
+            .nth(self.json.input.value())
+            .unwrap()
     }
 
     /// Returns the keyframe interpolation algorithm.
@@ -226,6 +226,10 @@ impl<'a> Sampler<'a> {
 
     /// Returns the accessor containing the keyframe output values.
     pub fn output(&self) -> accessor::Accessor<'a> {
-        self.anim.document.accessors().nth(self.json.output.value()).unwrap()
+        self.anim
+            .document
+            .accessors()
+            .nth(self.json.output.value())
+            .unwrap()
     }
 }
