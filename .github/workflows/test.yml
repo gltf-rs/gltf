@@ -18,6 +18,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: KhronosGroup/glTF-Sample-Models
+          ref: 18912e9
           path: glTF-Sample-Models
 
       - name: Tests
