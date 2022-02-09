@@ -7,24 +7,16 @@ fn sanity_check(
     document: &gltf::Document,
     buffer_data: &[gltf::buffer::Data],
     image_data: &[gltf::image::Data],
-) -> Result<(), ()> {
+) {
     // Check buffers.
-    if document.buffers().len() != buffer_data.len() {
-        return Err(());
-    }
+    assert_eq!(document.buffers().len(), buffer_data.len());
+
     for (buf, data) in document.buffers().zip(buffer_data.iter()) {
-        if ((buf.length() + 3) & !3) != data.0.len() {
-            return Err(());
-        }
+        assert_eq!((buf.length() + 3) & !3, data.0.len())
     }
 
     // Check images.
-    if document.images().len() != image_data.len() {
-        return Err(());
-    }
-
-    // Cool and good.
-    Ok(())
+    assert_eq!(document.images().len(), image_data.len())
 }
 
 fn run() -> Result<(), Box<dyn StdError>> {
@@ -35,17 +27,13 @@ fn run() -> Result<(), Box<dyn StdError>> {
         if metadata.is_dir() {
             let entry_path = entry.path();
             if let Some(file_name) = entry_path.file_name() {
-                if file_name == "Box With Spaces" {
-                    continue;
-                }
-
                 // Import standard glTF.
                 let mut gltf_path = entry_path.join("glTF").join(file_name);
                 gltf_path.set_extension("gltf");
                 {
                     print!("{:?}: ", gltf_path);
                     let result = gltf::import(&gltf_path)?;
-                    sanity_check(&result.0, &result.1, &result.2).expect("test failure");
+                    sanity_check(&result.0, &result.1, &result.2);
                     println!("ok");
                 }
 
@@ -55,7 +43,7 @@ fn run() -> Result<(), Box<dyn StdError>> {
                 if gle_path.exists() {
                     print!("{:?}: ", gle_path);
                     let result = gltf::import(&gle_path)?;
-                    sanity_check(&result.0, &result.1, &result.2).expect("test failure");
+                    sanity_check(&result.0, &result.1, &result.2);
                     println!("ok");
                 }
 
@@ -65,7 +53,7 @@ fn run() -> Result<(), Box<dyn StdError>> {
                 if glb_path.exists() {
                     print!("{:?}: ", glb_path);
                     let result = gltf::import(&glb_path)?;
-                    sanity_check(&result.0, &result.1, &result.2).expect("test failure");
+                    sanity_check(&result.0, &result.1, &result.2);
                     println!("ok");
                 }
             }
@@ -80,18 +68,18 @@ fn sparse_accessor_without_buffer_view_test() -> Result<(), Box<dyn StdError>> {
     let glb_path = path::Path::new("tests/box_sparse.glb");
     print!("{:?}: ", glb_path);
     let result = gltf::import(&glb_path)?;
-    sanity_check(&result.0, &result.1, &result.2).expect("test failure");
+    sanity_check(&result.0, &result.1, &result.2);
     println!("ok");
 
     let gltf_path = path::Path::new("tests/box_sparse.gltf");
     print!("{:?}: ", gltf_path);
     let result = gltf::import(&gltf_path)?;
-    sanity_check(&result.0, &result.1, &result.2).expect("test failure");
+    sanity_check(&result.0, &result.1, &result.2);
     println!("ok");
     Ok(())
 }
 
 #[test]
 fn import_sanity_check() {
-    run().expect("test failure");
+    assert!(run().is_ok());
 }

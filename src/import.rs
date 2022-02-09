@@ -1,5 +1,6 @@
 use crate::buffer;
 use crate::image;
+use std::borrow::Cow;
 use std::{fs, io};
 
 use crate::{Document, Error, Gltf, Result};
@@ -21,7 +22,7 @@ enum Scheme<'a> {
     File(&'a str),
 
     /// `../foo`, etc.
-    Relative,
+    Relative(Cow<'a, str>),
 
     /// Placeholder for an unsupported URI scheme identifier.
     Unsupported,
@@ -46,7 +47,7 @@ impl<'a> Scheme<'a> {
                 Scheme::Unsupported
             }
         } else {
-            Scheme::Relative
+            Scheme::Relative(urlencoding::decode(uri).unwrap())
         }
     }
 
@@ -56,7 +57,7 @@ impl<'a> Scheme<'a> {
             // Example: "uri" : "data:application/octet-stream;base64,wsVHPgA...."
             Scheme::Data(_, base64) => base64::decode(&base64).map_err(Error::Base64),
             Scheme::File(path) if base.is_some() => read_to_end(path),
-            Scheme::Relative if base.is_some() => read_to_end(base.unwrap().join(uri)),
+            Scheme::Relative(path) if base.is_some() => read_to_end(base.unwrap().join(&*path)),
             Scheme::Unsupported => Err(Error::UnsupportedScheme),
             _ => Err(Error::ExternalReferenceInSliceImport),
         }
