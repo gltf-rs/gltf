@@ -35,6 +35,10 @@ fn run() -> Result<(), Box<dyn StdError>> {
         if metadata.is_dir() {
             let entry_path = entry.path();
             if let Some(file_name) = entry_path.file_name() {
+                if file_name == "Box With Spaces" {
+                    continue;
+                }
+
                 // Import standard glTF.
                 let mut gltf_path = entry_path.join("glTF").join(file_name);
                 gltf_path.set_extension("gltf");
