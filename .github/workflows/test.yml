@@ -17,7 +17,7 @@ jobs:
       - name: Checkout glTF Sample Models
         uses: actions/checkout@v2
         with:
-          name: KhronosGroup/glTF-Sample-Models
+          repository: KhronosGroup/glTF-Sample-Models
 
       - name: Tests
         run: cargo test --all --all-features --release
