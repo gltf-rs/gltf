@@ -1,6 +1,6 @@
 
 <h1 align="center">
-    gltf
+   gltf
 </h1>
 <p align="center">
    <a href="https://travis-ci.org/gltf-rs/gltf">
@@ -13,7 +13,8 @@
       <img src="https://docs.rs/gltf/badge.svg" alt="docs.rs">
    </a>
 </p>
-<hr>
+
+---
 
 This crate is intended to load [glTF 2.0](https://www.khronos.org/gltf), a file format designed for the efficient transmission of 3D assets.
 
@@ -69,6 +70,7 @@ Demonstrates how the glTF JSON is deserialized.
 ```sh
 cargo run --example gltf-display path/to/asset.gltf
 ```
+
 #### gltf-export
 
 Demonstrates how glTF JSON can be built and exported using the `gltf-json` crate.
@@ -93,3 +95,10 @@ Visualises the scene heirarchy of a glTF asset, which is a strict tree of nodes.
 cargo run --example gltf-tree path/to/asset.gltf
 ```
 
+### Tests
+
+Running tests locally requires to clone the [`glTF-Sample-Models`](https://github.com/KhronosGroup/glTF-Sample-Models) repository first.
+
+```sh
+git clone https://github.com/KhronosGroup/glTF-Sample-Models.git
+```
