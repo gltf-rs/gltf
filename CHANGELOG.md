@@ -8,6 +8,8 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+- Update dependency on `image` crate from 0.23 to 0.24.
+
 ## [0.16.0] - 2021-05-13
 
 ### Added
