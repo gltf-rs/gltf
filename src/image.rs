@@ -95,15 +95,11 @@ pub struct Data {
 
 impl<'a> Image<'a> {
     /// Constructs an `Image` from owned data.
-    pub(crate) fn new(
-        document: &'a Document,
-        index: usize,
-        json: &'a json::image::Image,
-    ) -> Self {
+    pub(crate) fn new(document: &'a Document, index: usize, json: &'a json::image::Image) -> Self {
         Self {
-            document: document,
-            index: index,
-            json: json,
+            document,
+            index,
+            json,
         }
     }
 
@@ -116,20 +112,14 @@ impl<'a> Image<'a> {
     #[cfg(feature = "names")]
     #[cfg_attr(docsrs, doc(cfg(feature = "names")))]
     pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_deref()
     }
 
     /// Returns the image data source.
     pub fn source(&self) -> Source<'a> {
         if let Some(index) = self.json.buffer_view.as_ref() {
-            let view = self.document
-                .views()
-                .nth(index.value())
-                .unwrap();
-            let mime_type = self.json.mime_type
-                .as_ref()
-                .map(|x| x.0.as_str())
-                .unwrap();
+            let view = self.document.views().nth(index.value()).unwrap();
+            let mime_type = self.json.mime_type.as_ref().map(|x| x.0.as_str()).unwrap();
             Source::View { view, mime_type }
         } else {
             let uri = self.json.uri.as_ref().unwrap();
@@ -165,6 +155,11 @@ impl Data {
         };
         let (width, height) = image.dimensions();
         let pixels = image.into_bytes();
-        Data { format, width, height, pixels }
+        Data {
+            format,
+            width,
+            height,
+            pixels,
+        }
     }
 }

@@ -1,6 +1,6 @@
-use std::{iter, mem};
-use byteorder::{LE, ByteOrder};
+use byteorder::{ByteOrder, LE};
 use std::marker::PhantomData;
+use std::{iter, mem};
 
 use crate::{accessor, buffer};
 
@@ -10,8 +10,7 @@ fn buffer_view_slice<'a, 's>(
 ) -> Option<&'s [u8]> {
     let start = view.offset();
     let end = start + view.length();
-    get_buffer_data(view.buffer())
-        .map(|slice| &slice[start..end])
+    get_buffer_data(view.buffer()).map(|slice| &slice[start..end])
 }
 
 /// General iterator for an accessor.
@@ -29,15 +28,15 @@ impl<'a, T: Item> Iterator for Iter<'a, T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            &mut Iter::Standard(ref mut iter) => iter.next(),
-            &mut Iter::Sparse(ref mut iter) => iter.next(),
+            Iter::Standard(ref mut iter) => iter.next(),
+            Iter::Sparse(ref mut iter) => iter.next(),
         }
     }
 
     fn nth(&mut self, nth: usize) -> Option<Self::Item> {
         match self {
-            &mut Iter::Standard(ref mut iter) => iter.nth(nth),
-            &mut Iter::Sparse(ref mut iter) => iter.nth(nth),
+            Iter::Standard(ref mut iter) => iter.nth(nth),
+            Iter::Sparse(ref mut iter) => iter.nth(nth),
         }
     }
 
@@ -57,8 +56,8 @@ impl<'a, T: Item> Iterator for Iter<'a, T> {
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         match self {
-            &Iter::Standard(ref iter) => iter.size_hint(),
-            &Iter::Sparse(ref iter) => iter.size_hint(),
+            Iter::Standard(ref iter) => iter.size_hint(),
+            Iter::Sparse(ref iter) => iter.size_hint(),
         }
     }
 }
@@ -107,7 +106,7 @@ pub struct SparseIter<'a, T: Item> {
 
 impl<'a, T: Item> SparseIter<'a, T> {
     /// Constructor.
-    /// 
+    ///
     /// Here `base` is allowed to be `None` when the base buffer view is not explicitly specified.
     pub fn new(
         base: Option<ItemIter<'a, T>>,
@@ -117,7 +116,7 @@ impl<'a, T: Item> SparseIter<'a, T> {
         SparseIter {
             base,
             indices: indices.peekable(),
-            values: values,
+            values,
             counter: 0,
         }
     }
@@ -126,13 +125,13 @@ impl<'a, T: Item> SparseIter<'a, T> {
 impl<'a, T: Item> Iterator for SparseIter<'a, T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
-        let next_base_value = self.base.as_mut().map(|iter| iter.next()).unwrap_or(Some(T::zero()));
-        if next_base_value.is_none() {
-            return None;
-        }
+        let mut next_value = self
+            .base
+            .as_mut()
+            .map(|iter| iter.next())
+            .unwrap_or_else(|| Some(T::zero()))?;
 
-        let mut next_value = next_base_value.unwrap();
-        let next_sparse_index = self.indices.peek().clone();
+        let next_sparse_index = self.indices.peek();
         if let Some(index) = next_sparse_index {
             if *index == self.counter {
                 self.indices.next(); // advance
@@ -230,8 +229,10 @@ impl Item for f32 {
 impl<T: Item + Copy> Item for [T; 2] {
     fn from_slice(slice: &[u8]) -> Self {
         assert!(slice.len() >= 2 * mem::size_of::<T>());
-        [T::from_slice(slice),
-         T::from_slice(&slice[mem::size_of::<T>() ..])]
+        [
+            T::from_slice(slice),
+            T::from_slice(&slice[mem::size_of::<T>()..]),
+        ]
     }
     fn zero() -> Self {
         [T::zero(); 2]
@@ -241,9 +242,11 @@ impl<T: Item + Copy> Item for [T; 2] {
 impl<T: Item + Copy> Item for [T; 3] {
     fn from_slice(slice: &[u8]) -> Self {
         assert!(slice.len() >= 3 * mem::size_of::<T>());
-        [T::from_slice(slice),
-         T::from_slice(&slice[1 * mem::size_of::<T>() ..]),
-         T::from_slice(&slice[2 * mem::size_of::<T>() ..])]
+        [
+            T::from_slice(slice),
+            T::from_slice(&slice[mem::size_of::<T>()..]),
+            T::from_slice(&slice[2 * mem::size_of::<T>()..]),
+        ]
     }
     fn zero() -> Self {
         [T::zero(); 3]
@@ -253,10 +256,12 @@ impl<T: Item + Copy> Item for [T; 3] {
 impl<T: Item + Copy> Item for [T; 4] {
     fn from_slice(slice: &[u8]) -> Self {
         assert!(slice.len() >= 4 * mem::size_of::<T>());
-        [T::from_slice(slice),
-         T::from_slice(&slice[1 * mem::size_of::<T>() ..]),
-         T::from_slice(&slice[2 * mem::size_of::<T>() ..]),
-         T::from_slice(&slice[3 * mem::size_of::<T>() ..])]
+        [
+            T::from_slice(slice),
+            T::from_slice(&slice[mem::size_of::<T>()..]),
+            T::from_slice(&slice[2 * mem::size_of::<T>()..]),
+            T::from_slice(&slice[3 * mem::size_of::<T>()..]),
+        ]
     }
     fn zero() -> Self {
         [T::zero(); 4]
@@ -268,7 +273,7 @@ impl<'a, T: Item> ItemIter<'a, T> {
     pub fn new(slice: &'a [u8], stride: usize) -> Self {
         ItemIter {
             data: slice,
-            stride: stride,
+            stride,
             _phantom: PhantomData,
         }
     }
@@ -276,11 +281,9 @@ impl<'a, T: Item> ItemIter<'a, T> {
 
 impl<'a, 's, T: Item> Iter<'s, T> {
     /// Constructor.
-    pub fn new<F>(
-        accessor: super::Accessor<'a>,
-        get_buffer_data: F,
-    ) -> Option<Iter<'s, T>>
-        where F: Clone + Fn(buffer::Buffer<'a>) -> Option<&'s [u8]>,
+    pub fn new<F>(accessor: super::Accessor<'a>, get_buffer_data: F) -> Option<Iter<'s, T>>
+    where
+        F: Clone + Fn(buffer::Buffer<'a>) -> Option<&'s [u8]>,
     {
         let is_sparse = accessor.sparse().is_some();
         if is_sparse {
@@ -296,7 +299,7 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                     let subslice = if let Some(slice) = buffer_view_slice(view, &get_buffer_data) {
                         &slice[start..end]
                     } else {
-                        return None
+                        return None;
                     };
                     Some(ItemIter::new(subslice, stride))
                 } else {
@@ -313,12 +316,18 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                     let end = start + stride * (sparse_count - 1) + index_size;
                     &slice[start..end]
                 } else {
-                    return None
+                    return None;
                 };
                 match indices.index_type() {
-                    accessor::sparse::IndexType::U8 => SparseIndicesIter::U8(ItemIter::new(subslice, stride)),
-                    accessor::sparse::IndexType::U16 => SparseIndicesIter::U16(ItemIter::new(subslice, stride)),
-                    accessor::sparse::IndexType::U32 => SparseIndicesIter::U32(ItemIter::new(subslice, stride)),
+                    accessor::sparse::IndexType::U8 => {
+                        SparseIndicesIter::U8(ItemIter::new(subslice, stride))
+                    }
+                    accessor::sparse::IndexType::U16 => {
+                        SparseIndicesIter::U16(ItemIter::new(subslice, stride))
+                    }
+                    accessor::sparse::IndexType::U32 => {
+                        SparseIndicesIter::U32(ItemIter::new(subslice, stride))
+                    }
                 }
             };
             let value_iter = {
@@ -329,25 +338,36 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                     let end = start + stride * (sparse_count - 1) + mem::size_of::<T>();
                     &slice[start..end]
                 } else {
-                    return None
+                    return None;
                 };
                 ItemIter::new(subslice, stride)
             };
-            Some(Iter::Sparse(SparseIter::new(base_iter, index_iter, value_iter)))
+            Some(Iter::Sparse(SparseIter::new(
+                base_iter, index_iter, value_iter,
+            )))
         } else {
             debug_assert_eq!(mem::size_of::<T>(), accessor.size());
             debug_assert!(mem::size_of::<T>() > 0);
             if let Some(view) = accessor.view() {
                 let stride = view.stride().unwrap_or(mem::size_of::<T>());
-                debug_assert!(stride >= mem::size_of::<T>(), "Mismatch in stride, expected at least {} stride but found {}", mem::size_of::<T>(), stride);
+                debug_assert!(
+                    stride >= mem::size_of::<T>(),
+                    "Mismatch in stride, expected at least {} stride but found {}",
+                    mem::size_of::<T>(),
+                    stride
+                );
                 let start = accessor.offset();
                 let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
                 let subslice = if let Some(slice) = buffer_view_slice(view, &get_buffer_data) {
                     &slice[start..end]
                 } else {
-                    return None
+                    return None;
                 };
-                Some(Iter::Standard(ItemIter { stride, data: subslice, _phantom: PhantomData }))
+                Some(Iter::Standard(ItemIter {
+                    stride,
+                    data: subslice,
+                    _phantom: PhantomData,
+                }))
             } else {
                 None
             }
@@ -378,10 +398,10 @@ impl<'a, T: Item> Iterator for ItemIter<'a, T> {
     }
 
     fn nth(&mut self, nth: usize) -> Option<Self::Item> {
-        if let Some(val_data) = self.data.get(nth * self.stride ..) {
+        if let Some(val_data) = self.data.get(nth * self.stride..) {
             if val_data.len() >= mem::size_of::<T>() {
                 let val = T::from_slice(val_data);
-                self.data = &val_data[self.stride.min(val_data.len()) ..];
+                self.data = &val_data[self.stride.min(val_data.len())..];
                 Some(val)
             } else {
                 None
@@ -394,7 +414,7 @@ impl<'a, T: Item> Iterator for ItemIter<'a, T> {
     fn last(self) -> Option<Self::Item> {
         if self.data.len() >= mem::size_of::<T>() {
             self.data
-                .get((self.data.len() - 1) / self.stride * self.stride ..)
+                .get((self.data.len() - 1) / self.stride * self.stride..)
                 .map(T::from_slice)
         } else {
             None

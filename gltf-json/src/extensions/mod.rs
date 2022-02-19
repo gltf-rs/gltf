@@ -37,7 +37,7 @@ pub mod texture;
 pub use self::root::Root;
 
 /// Names of glTF 2.0 extensions enabled by the user.
-pub const ENABLED_EXTENSIONS: &'static [&'static str] = &[
+pub const ENABLED_EXTENSIONS: &[&str] = &[
     #[cfg(feature = "KHR_lights_punctual")]
     "KHR_lights_punctual",
     #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
@@ -53,7 +53,7 @@ pub const ENABLED_EXTENSIONS: &'static [&'static str] = &[
 ];
 
 /// Names of glTF 2.0 extensions supported by the library.
-pub const SUPPORTED_EXTENSIONS: &'static [&'static str] = &[
+pub const SUPPORTED_EXTENSIONS: &[&str] = &[
     "KHR_lights_punctual",
     "KHR_materials_pbrSpecularGlossiness",
     "KHR_materials_unlit",

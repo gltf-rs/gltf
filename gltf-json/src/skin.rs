@@ -1,6 +1,6 @@
-use gltf_derive::Validate;
-use serde_derive::{Serialize, Deserialize};
 use crate::{accessor, extensions, scene, Extras, Index};
+use gltf_derive::Validate;
+use serde_derive::{Deserialize, Serialize};
 
 /// Joints and matrices defining a skin.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]

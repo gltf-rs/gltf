@@ -1,29 +1,68 @@
-use gltf_derive::Validate;
-use serde_derive::{Serialize, Deserialize};
-#[cfg(any(feature = "KHR_materials_pbrSpecularGlossiness", feature = "KHR_materials_transmission", feature = "KHR_materials_ior"))]
-use crate::{Extras, validation::Validate};
-#[cfg(any(feature = "KHR_materials_pbrSpecularGlossiness", feature = "KHR_materials_transmission"))]
-use crate::texture;
 #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
 use crate::material::StrengthFactor;
+#[cfg(any(
+    feature = "KHR_materials_pbrSpecularGlossiness",
+    feature = "KHR_materials_transmission"
+))]
+use crate::texture;
+#[cfg(any(
+    feature = "KHR_materials_pbrSpecularGlossiness",
+    feature = "KHR_materials_transmission",
+    feature = "KHR_materials_ior"
+))]
+use crate::{validation::Validate, Extras};
+use gltf_derive::Validate;
+use serde_derive::{Deserialize, Serialize};
 
 /// The material appearance of a primitive.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct Material {
     #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
-    #[serde(default, rename = "KHR_materials_pbrSpecularGlossiness", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        rename = "KHR_materials_pbrSpecularGlossiness",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub pbr_specular_glossiness: Option<PbrSpecularGlossiness>,
 
     #[cfg(feature = "KHR_materials_unlit")]
-    #[serde(default, rename = "KHR_materials_unlit", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        rename = "KHR_materials_unlit",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub unlit: Option<Unlit>,
 
     #[cfg(feature = "KHR_materials_transmission")]
-    #[serde(default, rename = "KHR_materials_transmission", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        rename = "KHR_materials_transmission",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub transmission: Option<Transmission>,
 
+    #[cfg(feature = "KHR_materials_volume")]
+    #[serde(
+        default,
+        rename = "KHR_materials_volume",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub volume: Option<Volume>,
+
+    #[cfg(feature = "KHR_materials_specular")]
+    #[serde(
+        default,
+        rename = "KHR_materials_specular",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub specular: Option<Specular>,
+
     #[cfg(feature = "KHR_materials_ior")]
-    #[serde(default, rename = "KHR_materials_ior", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        rename = "KHR_materials_ior",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub ior: Option<Ior>,
 }
 
@@ -147,17 +186,17 @@ impl Validate for TransmissionFactor {}
 pub struct Transmission {
     /// The base percentage of light that is transmitted through the surface.
     ///
-    /// The amount of light that is transmitted by the surface rather than diffusely re-emitted. 
-    /// This is a percentage of all the light that penetrates a surface (i.e. isn’t specularly reflected) 
-    /// rather than a percentage of the total light that hits a surface. 
+    /// The amount of light that is transmitted by the surface rather than diffusely re-emitted.
+    /// This is a percentage of all the light that penetrates a surface (i.e. isn’t specularly reflected)
+    /// rather than a percentage of the total light that hits a surface.
     /// A value of 1.0 means that 100% of the light that penetrates the surface is transmitted through.
     pub transmission_factor: TransmissionFactor,
 
     /// The transmission texture.
     ///
-    /// The R channel of this texture defines the amount of light that is transmitted by the surface 
+    /// The R channel of this texture defines the amount of light that is transmitted by the surface
     /// rather than diffusely re-emitted. A value of 1.0 in the red channel means that 100% of the light
-    /// that penetrates the surface (i.e. isn’t specularly reflected) is transmitted through. 
+    /// that penetrates the surface (i.e. isn’t specularly reflected) is transmitted through.
     /// The value is linear and is multiplied by the transmissionFactor to determine the total transmission value.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub transmission_texture: Option<texture::Info>,
@@ -188,10 +227,142 @@ impl Validate for IndexOfRefraction {}
 pub struct Ior {
     /// The index of refraction.
     ///
-    /// Typical values for the index of refraction range from 1 to 2. 
+    /// Typical values for the index of refraction range from 1 to 2.
     /// In rare cases values greater than 2 are possible.
     /// For example, the ior of water is 1.33, and diamond is 2.42
     pub ior: IndexOfRefraction,
+
+    /// Optional application specific data.
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    pub extras: Extras,
+}
+
+/// A number in the inclusive range [0.0, +inf] with a default value of 0.0.
+#[cfg(feature = "KHR_materials_volume")]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct ThicknessFactor(pub f32);
+
+#[cfg(feature = "KHR_materials_volume")]
+impl Default for ThicknessFactor {
+    fn default() -> Self {
+        ThicknessFactor(0.0)
+    }
+}
+
+#[cfg(feature = "KHR_materials_volume")]
+impl Validate for ThicknessFactor {}
+
+/// A number in the inclusive range [0.0, +inf] with a default value of +inf.
+#[cfg(feature = "KHR_materials_volume")]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct AttenuationDistance(pub f32);
+
+#[cfg(feature = "KHR_materials_volume")]
+impl Default for AttenuationDistance {
+    fn default() -> Self {
+        AttenuationDistance(f32::INFINITY)
+    }
+}
+
+#[cfg(feature = "KHR_materials_volume")]
+impl Validate for AttenuationDistance {}
+
+/// A colour in the inclusive range [[0.0; 3], [1.0; 3]] with a default value of [1.0; 3].
+#[cfg(feature = "KHR_materials_volume")]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct AttenuationColor(pub [f32; 3]);
+
+#[cfg(feature = "KHR_materials_volume")]
+impl Default for AttenuationColor {
+    fn default() -> Self {
+        AttenuationColor([1.0, 1.0, 1.0])
+    }
+}
+
+#[cfg(feature = "KHR_materials_volume")]
+impl Validate for AttenuationColor {}
+
+#[cfg(feature = "KHR_materials_volume")]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[serde(default, rename_all = "camelCase")]
+pub struct Volume {
+    /// The thickness of the volume beneath the surface. The value is
+    /// given in the coordinate space of the mesh. If the value is 0
+    /// the material is thin-walled. Otherwise the material is a
+    /// volume boundary. The `doubleSided` property has no effect on
+    /// volume boundaries. Range is [0, +inf).
+    pub thickness_factor: ThicknessFactor,
+
+    /// A texture that defines the thickness, stored in the G channel.
+    /// This will be multiplied by `thickness_factor`. Range is [0, 1].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub thickness_texture: Option<texture::Info>,
+
+    /// Density of the medium given as the average distance that light
+    /// travels in the medium before interacting with a particle. The
+    /// value is given in world space. Range is (0, +inf).
+    pub attenuation_distance: AttenuationDistance,
+
+    /// The color that white light turns into due to absorption when
+    /// reaching the attenuation distance.
+    pub attenuation_color: AttenuationColor,
+
+    /// Optional application specific data.
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    pub extras: Extras,
+}
+
+/// A number in the inclusive range [0.0, +inf] with a default value of 1.0.
+#[cfg(feature = "KHR_materials_specular")]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct SpecularFactor(pub f32);
+
+#[cfg(feature = "KHR_materials_specular")]
+impl Default for SpecularFactor {
+    fn default() -> Self {
+        SpecularFactor(1.0)
+    }
+}
+
+#[cfg(feature = "KHR_materials_specular")]
+impl Validate for SpecularFactor {}
+
+/// A colour in the inclusive range [[0.0; 3], [1.0; 3]] with a default value of [1.0; 3].
+#[cfg(feature = "KHR_materials_specular")]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct SpecularColorFactor(pub [f32; 3]);
+
+#[cfg(feature = "KHR_materials_specular")]
+impl Default for SpecularColorFactor {
+    fn default() -> Self {
+        SpecularColorFactor([1.0, 1.0, 1.0])
+    }
+}
+
+#[cfg(feature = "KHR_materials_specular")]
+impl Validate for SpecularColorFactor {}
+
+#[cfg(feature = "KHR_materials_specular")]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[serde(default, rename_all = "camelCase")]
+pub struct Specular {
+    /// The strength of the specular reflection.
+    pub specular_factor: SpecularFactor,
+
+    /// A texture that defines the strength of the specular reflection,
+    /// stored in the alpha (`A`) channel. This will be multiplied by
+    /// `specular_factor`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub specular_texture: Option<texture::Info>,
+
+    /// The F0 color of the specular reflection (linear RGB).
+    pub specular_color_factor: SpecularColorFactor,
+
+    /// A texture that defines the F0 color of the specular reflection,
+    /// stored in the `RGB` channels and encoded in sRGB. This texture
+    /// will be multiplied by `specular_color_factor`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub specular_color_texture: Option<texture::Info>,
 
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]

@@ -1,6 +1,6 @@
-use std::{fs, io};
 use std::boxed::Box;
 use std::error::Error as StdError;
+use std::{fs, io};
 
 fn print_tree(node: &gltf::Node, depth: i32) {
     for _ in 0..(depth - 1) {

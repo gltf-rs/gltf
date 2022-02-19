@@ -8,14 +8,32 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+- Fix relative file path imports with url encoded characters.
 - Update dependency on `image` crate from 0.23 to 0.24.
+
+## [1.0.0] - 2022-01-29
+
+### Added
+
+- Support for the `KHR_materials_specular` extension.
+- Support for the `KHR_materials_variants` extension.
+- Support for the `KHR_materials_volume` extension.
+- `ExactSizeIterator` implementation for `Joints` iterator.
+
+### Changed
+
+- The `mesh.primitives` property is now always serialized.
+
+### Fixed
+
+- Incorrect implementation of `Normalize<u16>` and `Normalize<f32>` for `u16`.
 
 ## [0.16.0] - 2021-05-13
 
 ### Added
 
 - Support for the `KHR_texture_transform` extension.
-- Support for the `KHR_materials_transmission_ior extension`.
+- Support for the `KHR_materials_transmission_ior` extension.
 
 ### Changed
 

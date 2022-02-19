@@ -43,7 +43,7 @@ impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         match self.0 {
-            ReadIndices::U8(ref mut i)  => i.next().map(A::cast_u8),
+            ReadIndices::U8(ref mut i) => i.next().map(A::cast_u8),
             ReadIndices::U16(ref mut i) => i.next().map(A::cast_u16),
             ReadIndices::U32(ref mut i) => i.next().map(A::cast_u32),
         }
@@ -52,7 +52,7 @@ impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
     #[inline]
     fn nth(&mut self, x: usize) -> Option<Self::Item> {
         match self.0 {
-            ReadIndices::U8(ref mut i)  => i.nth(x).map(A::cast_u8),
+            ReadIndices::U8(ref mut i) => i.nth(x).map(A::cast_u8),
             ReadIndices::U16(ref mut i) => i.nth(x).map(A::cast_u16),
             ReadIndices::U32(ref mut i) => i.nth(x).map(A::cast_u32),
         }
@@ -60,7 +60,7 @@ impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
 
     fn last(self) -> Option<Self::Item> {
         match self.0 {
-            ReadIndices::U8(i)  => i.last().map(A::cast_u8),
+            ReadIndices::U8(i) => i.last().map(A::cast_u8),
             ReadIndices::U16(i) => i.last().map(A::cast_u16),
             ReadIndices::U32(i) => i.last().map(A::cast_u32),
         }
@@ -73,7 +73,7 @@ impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         match self.0 {
-            ReadIndices::U8(ref i)  => i.size_hint(),
+            ReadIndices::U8(ref i) => i.size_hint(),
             ReadIndices::U16(ref i) => i.size_hint(),
             ReadIndices::U32(ref i) => i.size_hint(),
         }
@@ -83,7 +83,13 @@ impl<'a, A: Cast> Iterator for CastingIter<'a, A> {
 impl Cast for U32 {
     type Output = u32;
 
-    fn cast_u8(x: u8) -> Self::Output { x as Self::Output }
-    fn cast_u16(x: u16) -> Self::Output { x as Self::Output }
-    fn cast_u32(x: u32) -> Self::Output { x }
+    fn cast_u8(x: u8) -> Self::Output {
+        x as Self::Output
+    }
+    fn cast_u16(x: u16) -> Self::Output {
+        x as Self::Output
+    }
+    fn cast_u32(x: u32) -> Self::Output {
+        x
+    }
 }

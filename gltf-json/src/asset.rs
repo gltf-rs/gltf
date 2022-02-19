@@ -1,6 +1,6 @@
-use gltf_derive::Validate;
-use serde_derive::{Serialize, Deserialize};
 use crate::{extensions, Extras};
+use gltf_derive::Validate;
+use serde_derive::{Deserialize, Serialize};
 
 /// Metadata about the glTF asset.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
@@ -43,4 +43,3 @@ impl Default for Asset {
         }
     }
 }
-

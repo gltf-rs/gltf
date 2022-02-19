@@ -2,9 +2,11 @@
 
 Thank for you taking the time to contribute to `gltf`. Your contributions are valued, no matter how small.
 
-## Branch conventions and pull requests
+## Pull requests
 
  * Please submit all pull requests to the `master` branch.
+ * Please format your patches with `rustfmt` to match the project's code style.
+ * Please note your changes in the project's CHANGELOG.md file under the 'Unreleased' section.
 
 ## Contribution opportunities
 

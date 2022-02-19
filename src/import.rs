@@ -1,11 +1,11 @@
-use base64;
 use crate::buffer;
 use crate::image;
+use std::borrow::Cow;
 use std::{fs, io};
 
+use crate::{Document, Error, Gltf, Result};
 use image_crate::ImageFormat::{Jpeg, Png};
 use std::path::Path;
-use crate::{Document, Error, Gltf, Result};
 
 /// Return type of `import`.
 type Import = (Document, Vec<buffer::Data>, Vec<image::Data>);
@@ -22,34 +22,32 @@ enum Scheme<'a> {
     File(&'a str),
 
     /// `../foo`, etc.
-    Relative,
+    Relative(Cow<'a, str>),
 
     /// Placeholder for an unsupported URI scheme identifier.
     Unsupported,
 }
 
 impl<'a> Scheme<'a> {
-    fn parse<'s>(uri: &'s str) -> Scheme<'s> {
-        if uri.contains(":") {
-            if uri.starts_with("data:") {
-                let match0 = &uri["data:".len()..].split(";base64,").nth(0);
-                let match1 = &uri["data:".len()..].split(";base64,").nth(1);
-                if match1.is_some() {
-                    Scheme::Data(Some(match0.unwrap()), match1.unwrap())
-                } else if match0.is_some() {
-                    Scheme::Data(None, match0.unwrap())
-                } else {
-                    Scheme::Unsupported
+    fn parse(uri: &str) -> Scheme<'_> {
+        if uri.contains(':') {
+            if let Some(rest) = uri.strip_prefix("data:") {
+                let mut it = rest.split(";base64,");
+
+                match (it.next(), it.next()) {
+                    (match0_opt, Some(match1)) => Scheme::Data(match0_opt, match1),
+                    (Some(match0), _) => Scheme::Data(None, match0),
+                    _ => Scheme::Unsupported,
                 }
-            } else if uri.starts_with("file://") {
-                Scheme::File(&uri["file://".len()..])
-            } else if uri.starts_with("file:") {
-                Scheme::File(&uri["file:".len()..])
+            } else if let Some(rest) = uri.strip_prefix("file://") {
+                Scheme::File(rest)
+            } else if let Some(rest) = uri.strip_prefix("file:") {
+                Scheme::File(rest)
             } else {
                 Scheme::Unsupported
             }
         } else {
-            Scheme::Relative
+            Scheme::Relative(urlencoding::decode(uri).unwrap())
         }
     }
 
@@ -59,15 +57,16 @@ impl<'a> Scheme<'a> {
             // Example: "uri" : "data:application/octet-stream;base64,wsVHPgA...."
             Scheme::Data(_, base64) => base64::decode(&base64).map_err(Error::Base64),
             Scheme::File(path) if base.is_some() => read_to_end(path),
-            Scheme::Relative if base.is_some() => read_to_end(base.unwrap().join(uri)),
+            Scheme::Relative(path) if base.is_some() => read_to_end(base.unwrap().join(&*path)),
             Scheme::Unsupported => Err(Error::UnsupportedScheme),
-            _ => Err(Error::ExternalReferenceInSliceImport)
+            _ => Err(Error::ExternalReferenceInSliceImport),
         }
     }
 }
 
 fn read_to_end<P>(path: P) -> Result<Vec<u8>>
-where P: AsRef<Path>
+where
+    P: AsRef<Path>,
 {
     use io::Read;
     let file = fs::File::open(path.as_ref()).map_err(Error::Io)?;
@@ -94,13 +93,11 @@ pub fn import_buffer_data(
             buffer::Source::Bin => blob.take().ok_or(Error::MissingBlob),
         }?;
         if data.len() < buffer.length() {
-            return Err(
-                Error::BufferLength {
-                    buffer: buffer.index(),
-                    expected: buffer.length(),
-                    actual: data.len(),
-                }
-            );
+            return Err(Error::BufferLength {
+                buffer: buffer.index(),
+                expected: buffer.length(),
+                actual: data.len(),
+            });
         }
         while data.len() % 4 != 0 {
             data.push(0);
@@ -118,24 +115,20 @@ pub fn import_image_data(
 ) -> Result<Vec<image::Data>> {
     let mut images = Vec::new();
     #[cfg(feature = "guess_mime_type")]
-    let guess_format = |encoded_image: &[u8]| {
-        match image_crate::guess_format(encoded_image) {
-            Ok(image_crate::ImageFormat::Png) => Some(Png),
-            Ok(image_crate::ImageFormat::Jpeg) => Some(Jpeg),
-            _ => None,
-        }
+    let guess_format = |encoded_image: &[u8]| match image_crate::guess_format(encoded_image) {
+        Ok(image_crate::ImageFormat::Png) => Some(Png),
+        Ok(image_crate::ImageFormat::Jpeg) => Some(Jpeg),
+        _ => None,
     };
     #[cfg(not(feature = "guess_mime_type"))]
-    let guess_format = |_encoded_image: &[u8]| {
-        None
-    };
+    let guess_format = |_encoded_image: &[u8]| None;
     for image in document.images() {
         match image.source() {
             image::Source::Uri { uri, mime_type } if base.is_some() => {
                 match Scheme::parse(uri) {
                     Scheme::Data(Some(annoying_case), base64) => {
                         let encoded_image = base64::decode(&base64).map_err(Error::Base64)?;
-                        let encoded_format = match annoying_case.as_ref() {
+                        let encoded_format = match annoying_case {
                             "image/png" => Png,
                             "image/jpeg" => Jpeg,
                             _ => match guess_format(&encoded_image) {
@@ -143,22 +136,25 @@ pub fn import_image_data(
                                 None => return Err(Error::UnsupportedImageEncoding),
                             },
                         };
-                        let decoded_image = image_crate::load_from_memory_with_format(&encoded_image, encoded_format)?;
+                        let decoded_image = image_crate::load_from_memory_with_format(
+                            &encoded_image,
+                            encoded_format,
+                        )?;
                         images.push(image::Data::new(decoded_image));
                         continue;
-                    },
+                    }
                     Scheme::Unsupported => return Err(Error::UnsupportedScheme),
-                    _ => {},
+                    _ => {}
                 }
                 let encoded_image = Scheme::read(base, uri)?;
-                let encoded_format =  match mime_type {
+                let encoded_format = match mime_type {
                     Some("image/png") => Png,
                     Some("image/jpeg") => Jpeg,
                     Some(_) => match guess_format(&encoded_image) {
                         Some(format) => format,
                         None => return Err(Error::UnsupportedImageEncoding),
                     },
-                    None => match uri.rsplit(".").next() {
+                    None => match uri.rsplit('.').next() {
                         Some("png") => Png,
                         Some("jpg") | Some("jpeg") => Jpeg,
                         _ => match guess_format(&encoded_image) {
@@ -167,9 +163,10 @@ pub fn import_image_data(
                         },
                     },
                 };
-                let decoded_image = image_crate::load_from_memory_with_format(&encoded_image, encoded_format)?;
+                let decoded_image =
+                    image_crate::load_from_memory_with_format(&encoded_image, encoded_format)?;
                 images.push(image::Data::new(decoded_image));
-            },
+            }
             image::Source::View { view, mime_type } => {
                 let parent_buffer_data = &buffer_data[view.buffer().index()].0;
                 let begin = view.offset();
@@ -183,10 +180,11 @@ pub fn import_image_data(
                         None => return Err(Error::UnsupportedImageEncoding),
                     },
                 };
-                let decoded_image = image_crate::load_from_memory_with_format(encoded_image, encoded_format)?;
+                let decoded_image =
+                    image_crate::load_from_memory_with_format(encoded_image, encoded_format)?;
                 images.push(image::Data::new(decoded_image));
-            },
-            _ => return Err(Error::ExternalReferenceInSliceImport)
+            }
+            _ => return Err(Error::ExternalReferenceInSliceImport),
         }
     }
 
@@ -201,7 +199,7 @@ fn import_impl(Gltf { document, blob }: Gltf, base: Option<&Path>) -> Result<Imp
 }
 
 fn import_path(path: &Path) -> Result<Import> {
-    let base = path.parent().unwrap_or(Path::new("./"));
+    let base = path.parent().unwrap_or_else(|| Path::new("./"));
     let file = fs::File::open(path).map_err(Error::Io)?;
     let reader = io::BufReader::new(file);
     import_impl(Gltf::from_reader(reader)?, Some(base))
@@ -235,7 +233,8 @@ fn import_path(path: &Path) -> Result<Import> {
 /// [`Gltf`]: struct.Gltf.html
 /// [`Glb`]: struct.Glb.html
 pub fn import<P>(path: P) -> Result<Import>
-    where P: AsRef<Path>
+where
+    P: AsRef<Path>,
 {
     import_path(path.as_ref())
 }
@@ -264,7 +263,8 @@ pub fn import_slice_impl(slice: &[u8]) -> Result<Import> {
 /// # }
 /// ```
 pub fn import_slice<S>(slice: S) -> Result<Import>
-    where S: AsRef<[u8]>
+where
+    S: AsRef<[u8]>,
 {
     import_slice_impl(slice.as_ref())
 }

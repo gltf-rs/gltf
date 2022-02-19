@@ -24,19 +24,16 @@ pub struct Indices<'a> {
 
 impl<'a> Indices<'a> {
     /// Constructs `sparse::Indices`.
-    pub(crate) fn new(
-        document: &'a Document,
-        json: &'a json::accessor::sparse::Indices,
-    ) -> Self {
-        Self {
-            document: document,
-            json: json,
-        }
+    pub(crate) fn new(document: &'a Document, json: &'a json::accessor::sparse::Indices) -> Self {
+        Self { document, json }
     }
 
     /// Returns the buffer view containing the sparse indices.
     pub fn view(&self) -> buffer::View<'a> {
-        self.document.views().nth(self.json.buffer_view.value()).unwrap()
+        self.document
+            .views()
+            .nth(self.json.buffer_view.value())
+            .unwrap()
     }
 
     /// The offset relative to the start of the parent buffer view in bytes.
@@ -53,7 +50,6 @@ impl<'a> Indices<'a> {
             _ => unreachable!(),
         }
     }
-
 
     /// Optional application specific data.
     pub fn extras(&self) -> &'a json::Extras {
@@ -72,14 +68,8 @@ pub struct Sparse<'a> {
 
 impl<'a> Sparse<'a> {
     /// Constructs `Sparse`.
-    pub(crate) fn new(
-        document: &'a Document,
-        json: &'a json::accessor::sparse::Sparse,
-    ) -> Self {
-        Self {
-            document: document,
-            json: json,
-        }
+    pub(crate) fn new(document: &'a Document, json: &'a json::accessor::sparse::Sparse) -> Self {
+        Self { document, json }
     }
 
     /// Returns the number of attributes encoded in this sparse accessor.
@@ -117,19 +107,16 @@ pub struct Values<'a> {
 
 impl<'a> Values<'a> {
     /// Constructs `sparse::Values`.
-    pub(crate) fn new(
-        document: &'a Document,
-        json: &'a json::accessor::sparse::Values,
-    ) -> Self {
-        Self {
-            document: document,
-            json: json,
-        }
+    pub(crate) fn new(document: &'a Document, json: &'a json::accessor::sparse::Values) -> Self {
+        Self { document, json }
     }
 
     /// Returns the buffer view containing the sparse values.
     pub fn view(&self) -> buffer::View<'a> {
-        self.document.views().nth(self.json.buffer_view.value()).unwrap()
+        self.document
+            .views()
+            .nth(self.json.buffer_view.value())
+            .unwrap()
     }
 
     /// The offset relative to the start of the parent buffer view in bytes.
@@ -142,7 +129,6 @@ impl<'a> Values<'a> {
         &self.json.extras
     }
 }
-
 
 impl IndexType {
     /// Returns the number of bytes this value represents.

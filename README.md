@@ -1,6 +1,6 @@
 
 <h1 align="center">
-    gltf
+   gltf
 </h1>
 <p align="center">
    <a href="https://travis-ci.org/gltf-rs/gltf">
@@ -13,7 +13,8 @@
       <img src="https://docs.rs/gltf/badge.svg" alt="docs.rs">
    </a>
 </p>
-<hr>
+
+---
 
 This crate is intended to load [glTF 2.0](https://www.khronos.org/gltf), a file format designed for the efficient transmission of 3D assets.
 
@@ -21,9 +22,10 @@ This crate is intended to load [glTF 2.0](https://www.khronos.org/gltf), a file 
 
 ### Reference infographic
 
-![infographic](https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/figures/gltfOverview-2.0.0b.png)
+![infographic](https://raw.githubusercontent.com/KhronosGroup/glTF/main/specification/2.0/figures/gltfOverview-2.0.0b.png)
 
-<p align="center">From <a href="https://github.com/javagl/gltfOverview">javagl/gltfOverview.</a></p>
+<p align="center">From <a href="https://github.com/javagl/gltfOverview">javagl/gltfOverview</a></p>
+<p align="center"><a href="https://www.khronos.org/files/gltf20-reference-guide.pdf">PDF version</a></p>
 
 ### Usage
 
@@ -37,7 +39,7 @@ By default, `gltf` ignores all `extras` and `names` included with glTF assets. Y
 
 ```toml
 [dependencies.gltf]
-version = "0.16"
+version = "1.0"
 features = ["extras", "names"]
 ```
 
@@ -49,6 +51,9 @@ The following glTF extensions are supported by the crate:
 * `KHR_materials_pbrSpecularGlossiness`
 * `KHR_materials_unlit`
 * `KHR_texture_transform`
+* `KHR_materials_variants`
+* `KHR_materials_volume`
+* `KHR_materials_specular`
 
 To use an extension, list its name in the `features` section.
 
@@ -66,6 +71,7 @@ Demonstrates how the glTF JSON is deserialized.
 ```sh
 cargo run --example gltf-display path/to/asset.gltf
 ```
+
 #### gltf-export
 
 Demonstrates how glTF JSON can be built and exported using the `gltf-json` crate.
@@ -90,3 +96,10 @@ Visualises the scene heirarchy of a glTF asset, which is a strict tree of nodes.
 cargo run --example gltf-tree path/to/asset.gltf
 ```
 
+### Tests
+
+Running tests locally requires to clone the [`glTF-Sample-Models`](https://github.com/KhronosGroup/glTF-Sample-Models) repository first.
+
+```sh
+git clone https://github.com/KhronosGroup/glTF-Sample-Models.git
+```

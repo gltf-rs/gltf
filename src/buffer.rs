@@ -9,6 +9,7 @@ pub use json::buffer::Target;
 #[derive(Clone, Debug)]
 pub struct Buffer<'a> {
     /// The parent `Document` struct.
+    #[allow(dead_code)]
     document: &'a Document,
 
     /// The corresponding JSON index.
@@ -31,6 +32,7 @@ pub struct View<'a> {
     json: &'a json::buffer::View,
 
     /// The parent `Buffer`.
+    #[allow(dead_code)]
     parent: Buffer<'a>,
 }
 
@@ -67,9 +69,9 @@ impl<'a> Buffer<'a> {
         json: &'a json::buffer::Buffer,
     ) -> Self {
         Self {
-            document: document,
-            index: index,
-            json: json,
+            document,
+            index,
+            json,
         }
     }
 
@@ -80,7 +82,7 @@ impl<'a> Buffer<'a> {
 
     /// Returns the buffer data source.
     pub fn source(&self) -> Source<'a> {
-        if let Some(uri) = self.json.uri.as_ref().map(String::as_str) {
+        if let Some(uri) = self.json.uri.as_deref() {
             Source::Uri(uri)
         } else {
             Source::Bin
@@ -96,7 +98,7 @@ impl<'a> Buffer<'a> {
     #[cfg(feature = "names")]
     #[cfg_attr(docsrs, doc(cfg(feature = "names")))]
     pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_deref()
     }
 
     /// Optional application specific data.
@@ -107,11 +109,7 @@ impl<'a> Buffer<'a> {
 
 impl<'a> View<'a> {
     /// Constructs a `View`.
-    pub(crate) fn new(
-        document: &'a Document,
-        index: usize,
-        json: &'a json::buffer::View,
-    ) -> Self {
+    pub(crate) fn new(document: &'a Document, index: usize, json: &'a json::buffer::View) -> Self {
         let parent = document.buffers().nth(json.buffer.value()).unwrap();
         Self {
             document,
@@ -128,7 +126,10 @@ impl<'a> View<'a> {
 
     /// Returns the parent `Buffer`.
     pub fn buffer(&self) -> Buffer<'a> {
-        self.document.buffers().nth(self.json.buffer.value()).unwrap()
+        self.document
+            .buffers()
+            .nth(self.json.buffer.value())
+            .unwrap()
     }
 
     /// Returns the length of the buffer view in bytes.
@@ -145,21 +146,21 @@ impl<'a> View<'a> {
     /// data. When `None`, data is assumed to be tightly packed.
     pub fn stride(&self) -> Option<usize> {
         self.json.byte_stride.and_then(|x| {
-                // Treat byte_stride == 0 same as not specifying stride.
-                // This is technically a validation error, but best way we can handle it here
-                if x == 0 {
-                    None
-                } else {
-                    Some(x as usize)
-                }
-            })
+            // Treat byte_stride == 0 same as not specifying stride.
+            // This is technically a validation error, but best way we can handle it here
+            if x == 0 {
+                None
+            } else {
+                Some(x as usize)
+            }
+        })
     }
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
     #[cfg_attr(docsrs, doc(cfg(feature = "names")))]
     pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_ref().map(String::as_str)
+        self.json.name.as_deref()
     }
 
     /// Optional target the buffer should be bound to.
