@@ -21,12 +21,6 @@ pub enum Format {
     /// Red, green, blue, alpha.
     R8G8B8A8,
 
-    /// Blue, green, red.
-    B8G8R8,
-
-    /// Blue, green, red, alpha.
-    B8G8R8A8,
-
     /// Red only (16 bits).
     R16,
 
@@ -38,6 +32,12 @@ pub enum Format {
 
     /// Red, green, blue, alpha (16 bits).
     R16G16B16A16,
+
+    /// Red, green, blue (32 bits float)
+    R32G32B32FLOAT,
+
+    /// Red, green, blue, alpha (32 bits float)
+    R32G32B32A32FLOAT,
 }
 
 /// Describes an image data source.
@@ -145,15 +145,16 @@ impl Data {
             DynamicImage::ImageLumaA8(_) => Format::R8G8,
             DynamicImage::ImageRgb8(_) => Format::R8G8B8,
             DynamicImage::ImageRgba8(_) => Format::R8G8B8A8,
-            DynamicImage::ImageBgr8(_) => Format::B8G8R8,
-            DynamicImage::ImageBgra8(_) => Format::B8G8R8A8,
             DynamicImage::ImageLuma16(_) => Format::R16,
             DynamicImage::ImageLumaA16(_) => Format::R16G16,
             DynamicImage::ImageRgb16(_) => Format::R16G16B16,
             DynamicImage::ImageRgba16(_) => Format::R16G16B16A16,
+            DynamicImage::ImageRgb32F(_) => Format::R32G32B32FLOAT,
+            DynamicImage::ImageRgba32F(_) => Format::R32G32B32A32FLOAT,
+            _ => unreachable!("Unmatched DynamicImage format"),
         };
         let (width, height) = image.dimensions();
-        let pixels = image.to_bytes();
+        let pixels = image.into_bytes();
         Data {
             format,
             width,

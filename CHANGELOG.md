@@ -9,6 +9,7 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 
 - Fix relative file path imports with url encoded characters.
+- Update dependency on `image` crate from 0.23 to 0.24.
 
 ## [1.0.0] - 2022-01-29
 
