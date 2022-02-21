@@ -1,4 +1,4 @@
-use crate::{buffer, Document};
+use crate::{buffer, Document, Error, Result};
 
 #[cfg(feature = "import")]
 #[cfg_attr(docsrs, doc(cfg(feature = "import")))]
@@ -138,7 +138,7 @@ impl<'a> Image<'a> {
 impl Data {
     /// Note: We don't implement `From<DynamicImage>` since we don't want
     /// to expose such functionality to the user.
-    pub(crate) fn new(image: DynamicImage) -> Self {
+    pub(crate) fn new(image: DynamicImage) -> Result<Self> {
         use image_crate::GenericImageView;
         let format = match image {
             DynamicImage::ImageLuma8(_) => Format::R8,
@@ -151,15 +151,15 @@ impl Data {
             DynamicImage::ImageRgba16(_) => Format::R16G16B16A16,
             DynamicImage::ImageRgb32F(_) => Format::R32G32B32FLOAT,
             DynamicImage::ImageRgba32F(_) => Format::R32G32B32A32FLOAT,
-            _ => unreachable!("Unmatched DynamicImage format"),
+            image => return Err(Error::UnsupportedImageFormat(image)),
         };
         let (width, height) = image.dimensions();
         let pixels = image.into_bytes();
-        Data {
+        Ok(Data {
             format,
             width,
             height,
             pixels,
-        }
+        })
     }
 }

@@ -123,50 +123,43 @@ pub fn import_image_data(
     #[cfg(not(feature = "guess_mime_type"))]
     let guess_format = |_encoded_image: &[u8]| None;
     for image in document.images() {
-        match image.source() {
-            image::Source::Uri { uri, mime_type } if base.is_some() => {
-                match Scheme::parse(uri) {
-                    Scheme::Data(Some(annoying_case), base64) => {
-                        let encoded_image = base64::decode(&base64).map_err(Error::Base64)?;
-                        let encoded_format = match annoying_case {
-                            "image/png" => Png,
-                            "image/jpeg" => Jpeg,
-                            _ => match guess_format(&encoded_image) {
-                                Some(format) => format,
-                                None => return Err(Error::UnsupportedImageEncoding),
-                            },
-                        };
-                        let decoded_image = image_crate::load_from_memory_with_format(
-                            &encoded_image,
-                            encoded_format,
-                        )?;
-                        images.push(image::Data::new(decoded_image));
-                        continue;
-                    }
-                    Scheme::Unsupported => return Err(Error::UnsupportedScheme),
-                    _ => {}
-                }
-                let encoded_image = Scheme::read(base, uri)?;
-                let encoded_format = match mime_type {
-                    Some("image/png") => Png,
-                    Some("image/jpeg") => Jpeg,
-                    Some(_) => match guess_format(&encoded_image) {
-                        Some(format) => format,
-                        None => return Err(Error::UnsupportedImageEncoding),
-                    },
-                    None => match uri.rsplit('.').next() {
-                        Some("png") => Png,
-                        Some("jpg") | Some("jpeg") => Jpeg,
+        let decoded_image = match image.source() {
+            image::Source::Uri { uri, mime_type } if base.is_some() => match Scheme::parse(uri) {
+                Scheme::Data(Some(annoying_case), base64) => {
+                    let encoded_image = base64::decode(&base64).map_err(Error::Base64)?;
+                    let encoded_format = match annoying_case {
+                        "image/png" => Png,
+                        "image/jpeg" => Jpeg,
                         _ => match guess_format(&encoded_image) {
                             Some(format) => format,
                             None => return Err(Error::UnsupportedImageEncoding),
                         },
-                    },
-                };
-                let decoded_image =
-                    image_crate::load_from_memory_with_format(&encoded_image, encoded_format)?;
-                images.push(image::Data::new(decoded_image));
-            }
+                    };
+
+                    image_crate::load_from_memory_with_format(&encoded_image, encoded_format)?
+                }
+                Scheme::Unsupported => return Err(Error::UnsupportedScheme),
+                _ => {
+                    let encoded_image = Scheme::read(base, uri)?;
+                    let encoded_format = match mime_type {
+                        Some("image/png") => Png,
+                        Some("image/jpeg") => Jpeg,
+                        Some(_) => match guess_format(&encoded_image) {
+                            Some(format) => format,
+                            None => return Err(Error::UnsupportedImageEncoding),
+                        },
+                        None => match uri.rsplit('.').next() {
+                            Some("png") => Png,
+                            Some("jpg") | Some("jpeg") => Jpeg,
+                            _ => match guess_format(&encoded_image) {
+                                Some(format) => format,
+                                None => return Err(Error::UnsupportedImageEncoding),
+                            },
+                        },
+                    };
+                    image_crate::load_from_memory_with_format(&encoded_image, encoded_format)?
+                }
+            },
             image::Source::View { view, mime_type } => {
                 let parent_buffer_data = &buffer_data[view.buffer().index()].0;
                 let begin = view.offset();
@@ -180,12 +173,12 @@ pub fn import_image_data(
                         None => return Err(Error::UnsupportedImageEncoding),
                     },
                 };
-                let decoded_image =
-                    image_crate::load_from_memory_with_format(encoded_image, encoded_format)?;
-                images.push(image::Data::new(decoded_image));
+                image_crate::load_from_memory_with_format(encoded_image, encoded_format)?
             }
             _ => return Err(Error::ExternalReferenceInSliceImport),
-        }
+        };
+
+        images.push(image::Data::new(decoded_image)?);
     }
 
     Ok(images)

@@ -232,6 +232,11 @@ pub enum Error {
     #[cfg_attr(docsrs, doc(cfg(feature = "import")))]
     UnsupportedImageEncoding,
 
+    /// Unsupported image encoding.
+    #[cfg(feature = "import")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "import")))]
+    UnsupportedImageFormat(image_crate::DynamicImage),
+
     /// Unsupported URI scheme.
     #[cfg(feature = "import")]
     #[cfg_attr(docsrs, doc(cfg(feature = "import")))]
@@ -538,7 +543,7 @@ impl Document {
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match *self {
+        match self {
             #[cfg(feature = "import")]
             Error::Base64(ref e) => e.fmt(f),
             Error::Binary(ref e) => e.fmt(f),
@@ -566,6 +571,10 @@ impl std::fmt::Display for Error {
             }
             #[cfg(feature = "import")]
             Error::UnsupportedImageEncoding => write!(f, "unsupported image encoding"),
+            #[cfg(feature = "import")]
+            Error::UnsupportedImageFormat(image) => {
+                write!(f, "unsupported image encoding: {:?}", image)
+            }
             #[cfg(feature = "import")]
             Error::UnsupportedScheme => write!(f, "unsupported URI scheme"),
             Error::Validation(ref xs) => {
