@@ -111,7 +111,7 @@ fn export(output: Output) {
 
     let primitive = json::mesh::Primitive {
         attributes: {
-            let mut map = std::collections::HashMap::new();
+            let mut map = std::collections::BTreeMap::new();
             map.insert(Valid(json::mesh::Semantic::Positions), json::Index::new(0));
             map.insert(Valid(json::mesh::Semantic::Colors(0)), json::Index::new(1));
             map
