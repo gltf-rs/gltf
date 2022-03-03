@@ -24,7 +24,7 @@ pub struct Attributes<'a> {
     pub(crate) prim: Primitive<'a>,
 
     /// The internal attribute iterator.
-    pub(crate) iter: collections::hash_map::Iter<
+    pub(crate) iter: collections::btree_map::Iter<
         'a,
         json::validation::Checked<json::mesh::Semantic>,
         json::Index<json::accessor::Accessor>,

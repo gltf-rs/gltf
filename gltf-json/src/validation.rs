@@ -1,5 +1,5 @@
 use serde::{ser, Serialize, Serializer};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::hash::Hash;
 
 use crate::{Path, Root};
@@ -30,7 +30,7 @@ pub enum Error {
 }
 
 /// Specifies a type that has been pre-validated during deserialization or otherwise.
-#[derive(Debug, Eq, Hash, PartialEq)]
+#[derive(Debug, Eq, Hash, PartialEq, Ord, PartialOrd)]
 pub enum Checked<T> {
     /// The item is valid.
     Valid(T),
@@ -104,6 +104,19 @@ impl<T> Validate for Checked<T> {
 }
 
 impl<K: Eq + Hash + ToString + Validate, V: Validate> Validate for HashMap<K, V> {
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
+    {
+        for (key, value) in self.iter() {
+            key.validate(root, || path().key(&key.to_string()), report);
+            value.validate(root, || path().key(&key.to_string()), report);
+        }
+    }
+}
+
+impl<K: Eq + Hash + ToString + Validate, V: Validate> Validate for BTreeMap<K, V> {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
     where
         P: Fn() -> Path,
