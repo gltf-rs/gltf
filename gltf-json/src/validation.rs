@@ -1,5 +1,5 @@
 use serde::{ser, Serialize, Serializer};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::hash::Hash;
 
 use crate::{Path, Root};
@@ -103,20 +103,7 @@ impl<T> Validate for Checked<T> {
     }
 }
 
-impl<K: Eq + Hash + ToString + Validate, V: Validate> Validate for HashMap<K, V> {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-    where
-        P: Fn() -> Path,
-        R: FnMut(&dyn Fn() -> Path, Error),
-    {
-        for (key, value) in self.iter() {
-            key.validate(root, || path().key(&key.to_string()), report);
-            value.validate(root, || path().key(&key.to_string()), report);
-        }
-    }
-}
-
-impl<K: Eq + Hash + ToString + Validate, V: Validate> Validate for BTreeMap<K, V> {
+impl<K: ToString + Validate, V: Validate> Validate for BTreeMap<K, V> {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
     where
         P: Fn() -> Path,
