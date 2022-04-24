@@ -119,6 +119,7 @@ pub struct PbrSpecularGlossiness {
 
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 }
 
@@ -203,6 +204,7 @@ pub struct Transmission {
 
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 }
 
@@ -234,6 +236,7 @@ pub struct Ior {
 
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 }
 
@@ -309,6 +312,7 @@ pub struct Volume {
 
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 }
 
@@ -366,5 +370,6 @@ pub struct Specular {
 
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 }

@@ -162,6 +162,7 @@ pub struct Sampler {
     /// Optional application specific data.
     #[serde(default)]
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 }
 
@@ -187,6 +188,7 @@ pub struct Texture {
     /// Optional application specific data.
     #[serde(default)]
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 }
 
@@ -207,6 +209,7 @@ pub struct Info {
     /// Optional application specific data.
     #[serde(default)]
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 }
 

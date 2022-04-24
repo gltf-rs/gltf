@@ -124,6 +124,7 @@ pub struct Material {
 
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 }
 
@@ -170,6 +171,7 @@ pub struct PbrMetallicRoughness {
 
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 }
 
@@ -196,6 +198,7 @@ pub struct NormalTexture {
     /// Optional application specific data.
     #[serde(default)]
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 }
 
@@ -224,6 +227,7 @@ pub struct OcclusionTexture {
     /// Optional application specific data.
     #[serde(default)]
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 }
 
