@@ -80,6 +80,35 @@ where
     Ok(data)
 }
 
+impl buffer::Data {
+    /// Construct a buffer data object by reading the given source.
+    /// If `base` is provided, then external filesystem references will
+    /// be resolved from this directory.
+    pub fn from_source(source: buffer::Source<'_>, base: Option<&Path>) -> Result<Self> {
+        Self::from_source_and_blob(source, base, &mut None)
+    }
+
+    /// Construct a buffer data object by reading the given source.
+    /// If `base` is provided, then external filesystem references will
+    /// be resolved from this directory.
+    /// `blob` represents the `BIN` section of a binary glTF file,
+    /// and it will be taken to fill the buffer if the `source` refers to it.
+    pub fn from_source_and_blob(
+        source: buffer::Source<'_>,
+        base: Option<&Path>,
+        blob: &mut Option<Vec<u8>>,
+    ) -> Result<Self> {
+        let mut data = match source {
+            buffer::Source::Uri(uri) => Scheme::read(base, uri),
+            buffer::Source::Bin => blob.take().ok_or(Error::MissingBlob),
+        }?;
+        while data.len() % 4 != 0 {
+            data.push(0);
+        }
+        Ok(buffer::Data(data))
+    }
+}
+
 /// Import the buffer data referenced by a glTF document.
 pub fn import_buffer_data(
     document: &Document,
@@ -88,10 +117,7 @@ pub fn import_buffer_data(
 ) -> Result<Vec<buffer::Data>> {
     let mut buffers = Vec::new();
     for buffer in document.buffers() {
-        let mut data = match buffer.source() {
-            buffer::Source::Uri(uri) => Scheme::read(base, uri),
-            buffer::Source::Bin => blob.take().ok_or(Error::MissingBlob),
-        }?;
+        let data = buffer::Data::from_source_and_blob(buffer.source(), base, &mut blob)?;
         if data.len() < buffer.length() {
             return Err(Error::BufferLength {
                 buffer: buffer.index(),
@@ -99,31 +125,29 @@ pub fn import_buffer_data(
                 actual: data.len(),
             });
         }
-        while data.len() % 4 != 0 {
-            data.push(0);
-        }
-        buffers.push(buffer::Data(data));
+        buffers.push(data);
     }
     Ok(buffers)
 }
 
-/// Import the image data referenced by a glTF document.
-pub fn import_image_data(
-    document: &Document,
-    base: Option<&Path>,
-    buffer_data: &[buffer::Data],
-) -> Result<Vec<image::Data>> {
-    let mut images = Vec::new();
-    #[cfg(feature = "guess_mime_type")]
-    let guess_format = |encoded_image: &[u8]| match image_crate::guess_format(encoded_image) {
-        Ok(image_crate::ImageFormat::Png) => Some(Png),
-        Ok(image_crate::ImageFormat::Jpeg) => Some(Jpeg),
-        _ => None,
-    };
-    #[cfg(not(feature = "guess_mime_type"))]
-    let guess_format = |_encoded_image: &[u8]| None;
-    for image in document.images() {
-        let decoded_image = match image.source() {
+impl image::Data {
+    /// Construct an image data object by reading the given source.
+    /// If `base` is provided, then external filesystem references will
+    /// be resolved from this directory.
+    pub fn from_source(
+        source: image::Source<'_>,
+        base: Option<&Path>,
+        buffer_data: &[buffer::Data],
+    ) -> Result<Self> {
+        #[cfg(feature = "guess_mime_type")]
+        let guess_format = |encoded_image: &[u8]| match image_crate::guess_format(encoded_image) {
+            Ok(image_crate::ImageFormat::Png) => Some(Png),
+            Ok(image_crate::ImageFormat::Jpeg) => Some(Jpeg),
+            _ => None,
+        };
+        #[cfg(not(feature = "guess_mime_type"))]
+        let guess_format = |_encoded_image: &[u8]| None;
+        let decoded_image = match source {
             image::Source::Uri { uri, mime_type } if base.is_some() => match Scheme::parse(uri) {
                 Scheme::Data(Some(annoying_case), base64) => {
                     let encoded_image = base64::decode(&base64).map_err(Error::Base64)?;
@@ -178,9 +202,20 @@ pub fn import_image_data(
             _ => return Err(Error::ExternalReferenceInSliceImport),
         };
 
-        images.push(image::Data::new(decoded_image)?);
+        image::Data::new(decoded_image)
     }
+}
 
+/// Import the image data referenced by a glTF document.
+pub fn import_image_data(
+    document: &Document,
+    base: Option<&Path>,
+    buffer_data: &[buffer::Data],
+) -> Result<Vec<image::Data>> {
+    let mut images = Vec::new();
+    for image in document.images() {
+        images.push(image::Data::from_source(image.source(), base, buffer_data)?);
+    }
     Ok(images)
 }
 
@@ -232,7 +267,7 @@ where
     import_path(path.as_ref())
 }
 
-pub fn import_slice_impl(slice: &[u8]) -> Result<Import> {
+fn import_slice_impl(slice: &[u8]) -> Result<Import> {
     import_impl(Gltf::from_slice(slice)?, None)
 }
 
