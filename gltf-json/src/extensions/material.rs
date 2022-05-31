@@ -64,6 +64,14 @@ pub struct Material {
         skip_serializing_if = "Option::is_none"
     )]
     pub ior: Option<Ior>,
+
+    #[cfg(feature = "KHR_materials_clearcoat")]
+    #[serde(
+        default,
+        rename = "KHR_materials_clearcoat",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub clearcoat: Option<Clearcoat>,
 }
 
 /// A set of parameter values that are used to define the metallic-roughness
@@ -367,4 +375,37 @@ pub struct Specular {
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     pub extras: Extras,
+}
+
+#[cfg(feature = "KHR_materials_clearcoat")]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
+pub struct ClearcoatFactor(pub f32);
+
+#[cfg(feature = "KHR_materials_clearcoat")]
+impl Validate for ClearcoatFactor {}
+
+#[cfg(feature = "KHR_materials_clearcoat")]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
+pub struct ClearcoatRoughnessFactor(pub f32);
+
+#[cfg(feature = "KHR_materials_clearcoat")]
+impl Validate for ClearcoatRoughnessFactor {}
+
+#[cfg(feature = "KHR_materials_clearcoat")]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[serde(default, rename_all = "camelCase")]
+pub struct Clearcoat {
+    /// The clearcoat layer intensity.
+    pub clearcoat_factor: ClearcoatFactor,
+    /// The clearcoat layer intensity texture.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub clearcoat_texture: Option<texture::Info>,
+    /// The clearcoat layer roughness.
+    pub clearcoat_roughness_factor: ClearcoatRoughnessFactor,
+    /// The clearcoat layer roughness texture.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub clearcoat_roughness_texture: Option<texture::Info>,
+    /// The clearcoat normal map texture.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub clearcoat_normal_texture: Option<texture::Info>,
 }
