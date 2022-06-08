@@ -26,7 +26,7 @@
 //! ```
 //! # fn run() -> Result<(), Box<std::error::Error>> {
 //! # use gltf::Gltf;
-//! let gltf = Gltf::open("examples/Box.gltf")?;
+//! let gltf: Gltf = Gltf::open("examples/Box.gltf")?;
 //! for scene in gltf.scenes() {
 //!     for node in scene.nodes() {
 //!         println!(
@@ -50,7 +50,7 @@
 //!
 //! ```
 //! # fn run() -> Result<(), Box<std::error::Error>> {
-//! let (document, buffers, images) = gltf::import("examples/Box.gltf")?;
+//! let (document, buffers, images): (gltf::Document, _, _) = gltf::import("examples/Box.gltf")?;
 //! assert_eq!(buffers.len(), document.buffers().count());
 //! assert_eq!(images.len(), document.images().count());
 //! # Ok(())
@@ -248,7 +248,7 @@ pub enum Error {
 
 /// glTF JSON wrapper plus binary payload.
 #[derive(Clone, Debug)]
-pub struct Gltf<E: json::ThirdPartyExtensions> {
+pub struct Gltf<E: json::ThirdPartyExtensions = ()> {
     /// The glTF JSON wrapper.
     pub document: Document<E>,
 
@@ -258,7 +258,7 @@ pub struct Gltf<E: json::ThirdPartyExtensions> {
 
 /// glTF JSON wrapper.
 #[derive(Clone, Debug)]
-pub struct Document<E: json::ThirdPartyExtensions>(json::Root<E>);
+pub struct Document<E: json::ThirdPartyExtensions = ()>(json::Root<E>);
 
 impl<E: json::ThirdPartyExtensions> Gltf<E> {
     /// Convenience function that loads glTF from the file system.

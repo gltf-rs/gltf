@@ -204,7 +204,7 @@ fn import_path<E: json::ThirdPartyExtensions>(path: &Path) -> Result<Import<E>> 
 /// # fn run() -> Result<(), gltf::Error> {
 /// # let path = "examples/Box.gltf";
 /// # #[allow(unused)]
-/// let (document, buffers, images) = gltf::import(path)?;
+/// let (document, buffers, images): (gltf::Document, _, _) = gltf::import(path)?;
 /// # Ok(())
 /// # }
 /// # fn main() {
@@ -248,7 +248,7 @@ pub fn import_slice_impl<E: json::ThirdPartyExtensions>(slice: &[u8]) -> Result<
 /// # let mut bytes = Vec::new();
 /// # file.read_to_end(&mut bytes).map_err(gltf::Error::Io)?;
 /// # #[allow(unused)]
-/// let (document, buffers, images) = gltf::import_slice(bytes.as_slice())?;
+/// let (document, buffers, images): (gltf::Document, _, _) = gltf::import_slice(bytes.as_slice())?;
 /// # Ok(())
 /// # }
 /// # fn main() {

@@ -4,7 +4,7 @@
 //!
 //! ```
 //! # fn run() -> Result<(), Box<std::error::Error>> {
-//! # let gltf = gltf::Gltf::open("examples/Box.gltf")?;
+//! # let gltf: gltf::Gltf = gltf::Gltf::open("examples/Box.gltf")?;
 //! for accessor in gltf.accessors() {
 //!     println!("Accessor #{}", accessor.index());
 //!     println!("offset: {}", accessor.offset());
@@ -35,7 +35,7 @@
 //! ```
 //! # fn run() -> Result<(), Box<dyn std::error::Error>> {
 //! # use gltf::accessor::{DataType, Dimensions, Iter};
-//! let (gltf, buffers, _) = gltf::import("examples/Box.gltf")?;
+//! let (gltf, buffers, _): (gltf::Document, _, _) = gltf::import("examples/Box.gltf")?;
 //! let get_buffer_data = |buffer: gltf::Buffer| buffers.get(buffer.index()).map(|x| &*x.0);
 //! for accessor in gltf.accessors() {
 //!     match (accessor.data_type(), accessor.dimensions()) {

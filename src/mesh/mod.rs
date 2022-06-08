@@ -4,7 +4,7 @@
 //!
 //! ```
 //! # fn run() -> Result<(), Box<std::error::Error>> {
-//! # let gltf = gltf::Gltf::open("examples/Box.gltf")?;
+//! # let gltf: gltf::Gltf = gltf::Gltf::open("examples/Box.gltf")?;
 //! for mesh in gltf.meshes() {
 //!    println!("Mesh #{}", mesh.index());
 //!    for primitive in mesh.primitives() {
@@ -28,7 +28,7 @@
 //!
 //! ```
 //! # fn run() -> Result<(), Box<std::error::Error>> {
-//! let (gltf, buffers, _) = gltf::import("examples/Box.gltf")?;
+//! let (gltf, buffers, _): (gltf::Document, _, _) = gltf::import("examples/Box.gltf")?;
 //! for mesh in gltf.meshes() {
 //!    println!("Mesh #{}", mesh.index());
 //!    for primitive in mesh.primitives() {

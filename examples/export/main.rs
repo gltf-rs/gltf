@@ -147,7 +147,7 @@ fn export(output: Output) {
         weights: None,
     };
 
-    let root = json::Root {
+    let root: json::Root<()> = json::Root {
         accessors: vec![positions, colors],
         buffers: vec![buffer],
         buffer_views: vec![buffer_view],

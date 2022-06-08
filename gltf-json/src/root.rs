@@ -127,11 +127,21 @@ impl<E: crate::ThirdPartyExtensions> Root<E> {
         (self as &dyn Get<T>).get(index)
     }
 
-    pub fn get_any_contains(&self, index: Box<dyn std::any::Any>) -> bool {
-        if let Ok(animation) = index.downcast::<Index<Animation>>() {
-            self.get(*animation).is_some()
-        } else {
-            panic!()
+    fn index_is_valid(&self, index: IndexEnum) -> bool {
+        match index {
+            IndexEnum::Accessor(index) => self.get(index).is_some(),
+            IndexEnum::Animation(index) => self.get(index).is_some(),
+            IndexEnum::Buffer(index) => self.get(index).is_some(),
+            IndexEnum::BufferView(index) => self.get(index).is_some(),
+            IndexEnum::Camera(index) => self.get(index).is_some(),
+            IndexEnum::Image(index) => self.get(index).is_some(),
+            IndexEnum::Material(index) => self.get(index).is_some(),
+            IndexEnum::Mesh(index) => self.get(index).is_some(),
+            IndexEnum::Node(index) => self.get(index).is_some(),
+            IndexEnum::Sampler(index) => self.get(index).is_some(),
+            IndexEnum::Scene(index) => self.get(index).is_some(),
+            IndexEnum::Skin(index) => self.get(index).is_some(),
+            IndexEnum::Texture(index) => self.get(index).is_some(),
         }
     }
 
@@ -264,13 +274,13 @@ impl<T> fmt::Display for Index<T> {
     }
 }
 
-impl<T: 'static> Validate for Index<T> {
+impl<T: Copy> Validate for T where IndexEnum: From<T> {
     fn validate<P, R, E: crate::ThirdPartyExtensions>(&self, root: &Root<E>, path: P, report: &mut R)
     where
         P: Fn() -> Path,
         R: FnMut(&dyn Fn() -> Path, validation::Error),
     {
-        if !root.get_any_contains(Box::new(*self)) {
+        if !root.index_is_valid(IndexEnum::from(*self)) {
             report(&path, validation::Error::IndexOutOfBounds);
         }
     }
@@ -299,3 +309,97 @@ impl_get!(texture::Sampler, samplers);
 impl_get!(Scene, scenes);
 impl_get!(Skin, skins);
 impl_get!(Texture, textures);
+
+enum IndexEnum {
+    Accessor(Index<Accessor>),
+    Animation(Index<Animation>),
+    Buffer(Index<Buffer>),
+    BufferView(Index<buffer::View>),
+    Camera(Index<Camera>),
+    Image(Index<Image>),
+    Material(Index<Material>),
+    Mesh(Index<Mesh>),
+    Node(Index<Node>),
+    Sampler(Index<texture::Sampler>),
+    Scene(Index<Scene>),
+    Skin(Index<Skin>),
+    Texture(Index<Texture>),
+}
+
+impl From<Index<Accessor>> for IndexEnum {
+    fn from(index: Index<Accessor>) -> Self {
+        Self::Accessor(index)
+    }
+}
+
+impl From<Index<Animation>> for IndexEnum {
+    fn from(index: Index<Animation>) -> Self {
+        Self::Animation(index)
+    }
+}
+
+impl From<Index<Buffer>> for IndexEnum {
+    fn from(index: Index<Buffer>) -> Self {
+        Self::Buffer(index)
+    }
+}
+
+impl From<Index<buffer::View>> for IndexEnum {
+    fn from(index: Index<buffer::View>) -> Self {
+        Self::BufferView(index)
+    }
+}
+
+impl From<Index<Camera>> for IndexEnum {
+    fn from(index: Index<Camera>) -> Self {
+        Self::Camera(index)
+    }
+}
+
+impl From<Index<Image>> for IndexEnum {
+    fn from(index: Index<Image>) -> Self {
+        Self::Image(index)
+    }
+}
+
+impl From<Index<Material>> for IndexEnum {
+    fn from(index: Index<Material>) -> Self {
+        Self::Material(index)
+    }
+}
+
+impl From<Index<Mesh>> for IndexEnum {
+    fn from(index: Index<Mesh>) -> Self {
+        Self::Mesh(index)
+    }
+}
+
+impl From<Index<Node>> for IndexEnum {
+    fn from(index: Index<Node>) -> Self {
+        Self::Node(index)
+    }
+}
+
+impl From<Index<texture::Sampler>> for IndexEnum {
+    fn from(index: Index<texture::Sampler>) -> Self {
+        Self::Sampler(index)
+    }
+}
+
+impl From<Index<Scene>> for IndexEnum {
+    fn from(index: Index<Scene>) -> Self {
+        Self::Scene(index)
+    }
+}
+
+impl From<Index<Skin>> for IndexEnum {
+    fn from(index: Index<Skin>) -> Self {
+        Self::Skin(index)
+    }
+}
+
+impl From<Index<Texture>> for IndexEnum {
+    fn from(index: Index<Texture>) -> Self {
+        Self::Texture(index)
+    }
+}

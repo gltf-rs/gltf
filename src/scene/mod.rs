@@ -86,7 +86,7 @@ impl Transform {
 /// When a node contains a skin, all its meshes contain `JOINTS_0` and `WEIGHTS_0`
 /// attributes.
 #[derive(Clone, Debug)]
-pub struct Node<'a, E: json::ThirdPartyExtensions> {
+pub struct Node<'a, E: json::ThirdPartyExtensions = ()> {
     /// The parent `Document` struct.
     document: &'a Document<E>,
 

@@ -7,7 +7,7 @@ pub use json::buffer::Target;
 
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Clone, Debug)]
-pub struct Buffer<'a, E: json::ThirdPartyExtensions> {
+pub struct Buffer<'a, E: json::ThirdPartyExtensions = ()> {
     /// The parent `Document` struct.
     #[allow(dead_code)]
     document: &'a Document<E>,

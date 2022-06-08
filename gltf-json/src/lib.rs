@@ -109,3 +109,13 @@ pub mod serialize {
 pub trait ThirdPartyExtensions: 'static {
     type Root: serde::Serialize + serde::de::DeserializeOwned + std::fmt::Debug + Clone + validation::Validate;
 }
+
+impl ThirdPartyExtensions for () {
+    type Root = ();
+}
+
+pub struct AllThirdPartyExtensions;
+
+impl ThirdPartyExtensions for AllThirdPartyExtensions {
+    type Root = std::collections::HashMap<String, serde_json::Value>;
+}
