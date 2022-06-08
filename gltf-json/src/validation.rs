@@ -7,7 +7,7 @@ use crate::{Path, Root};
 /// Trait for validating glTF JSON data so that the library can function without panicking.
 pub trait Validate {
     /// Validates the invariants required for the library to function safely.
-    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+    fn validate<P, R, E: crate::ThirdPartyExtensions>(&self, _root: &Root<E>, _path: P, _report: &mut R)
     where
         P: Fn() -> Path,
         R: FnMut(&dyn Fn() -> Path, Error),
@@ -91,7 +91,7 @@ impl<T: Default> Default for Checked<T> {
 }
 
 impl<T> Validate for Checked<T> {
-    fn validate<P, R>(&self, _root: &Root, path: P, report: &mut R)
+    fn validate<P, R, E: crate::ThirdPartyExtensions>(&self, _root: &Root<E>, path: P, report: &mut R)
     where
         P: Fn() -> Path,
         R: FnMut(&dyn Fn() -> Path, Error),
@@ -104,7 +104,7 @@ impl<T> Validate for Checked<T> {
 }
 
 impl<K: Eq + Hash + ToString + Validate, V: Validate> Validate for HashMap<K, V> {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+    fn validate<P, R, E: crate::ThirdPartyExtensions>(&self, root: &Root<E>, path: P, report: &mut R)
     where
         P: Fn() -> Path,
         R: FnMut(&dyn Fn() -> Path, Error),
@@ -117,7 +117,7 @@ impl<K: Eq + Hash + ToString + Validate, V: Validate> Validate for HashMap<K, V>
 }
 
 impl<T: Validate> Validate for Option<T> {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+    fn validate<P, R, E: crate::ThirdPartyExtensions>(&self, root: &Root<E>, path: P, report: &mut R)
     where
         P: Fn() -> Path,
         R: FnMut(&dyn Fn() -> Path, Error),
@@ -129,7 +129,7 @@ impl<T: Validate> Validate for Option<T> {
 }
 
 impl<T: Validate> Validate for Vec<T> {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+    fn validate<P, R, E: crate::ThirdPartyExtensions>(&self, root: &Root<E>, path: P, report: &mut R)
     where
         P: Fn() -> Path,
         R: FnMut(&dyn Fn() -> Path, Error),
@@ -141,7 +141,7 @@ impl<T: Validate> Validate for Vec<T> {
 }
 
 impl Validate for std::boxed::Box<serde_json::value::RawValue> {
-    fn validate<P, R>(&self, _: &Root, _: P, _: &mut R)
+    fn validate<P, R, E: crate::ThirdPartyExtensions>(&self, _: &Root<E>, _: P, _: &mut R)
     where
         P: Fn() -> Path,
         R: FnMut(&dyn Fn() -> Path, Error),

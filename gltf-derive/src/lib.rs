@@ -43,9 +43,9 @@ fn expand(ast: &DeriveInput) -> proc_macro2::TokenStream {
         impl #impl_generics crate::validation::Validate
             for #ident #ty_generics #where_clause
         {
-            fn validate<P, R>(
+            fn validate<P, R, X: crate::ThirdPartyExtensions>(
                 &self,
-                _root: &crate::Root,
+                _root: &crate::Root<X>,
                 _path: P,
                 _report: &mut R
             ) where

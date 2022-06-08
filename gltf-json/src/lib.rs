@@ -105,3 +105,7 @@ pub mod serialize {
         to_string, to_string_pretty, to_value, to_vec, to_vec_pretty, to_writer, to_writer_pretty,
     };
 }
+
+pub trait ThirdPartyExtensions: 'static {
+    type Root: serde::Serialize + serde::de::DeserializeOwned + std::fmt::Debug + Clone + validation::Validate;
+}

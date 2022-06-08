@@ -24,7 +24,8 @@ pub struct Index<T>(u32, marker::PhantomData<*const T>);
 
 /// The root object of a glTF 2.0 asset.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct Root {
+#[serde(bound = "E: 'static")]
+pub struct Root<E: crate::ThirdPartyExtensions> {
     /// An array of accessors.
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -54,7 +55,7 @@ pub struct Root {
 
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub extensions: Option<extensions::root::Root>,
+    pub extensions: Option<extensions::root::Root<E>>,
 
     /// Optional application specific data.
     #[serde(default)]
@@ -117,13 +118,21 @@ pub struct Root {
     pub textures: Vec<Texture>,
 }
 
-impl Root {
+impl<E: crate::ThirdPartyExtensions> Root<E> {
     /// Returns a single item from the root object.
     pub fn get<T>(&self, index: Index<T>) -> Option<&T>
     where
         Self: Get<T>,
     {
         (self as &dyn Get<T>).get(index)
+    }
+
+    pub fn get_any_contains(&self, index: Box<dyn std::any::Any>) -> bool {
+        if let Ok(animation) = index.downcast::<Index<Animation>>() {
+            self.get(*animation).is_some()
+        } else {
+            panic!()
+        }
     }
 
     /// Deserialize from a JSON string slice.
@@ -255,16 +264,13 @@ impl<T> fmt::Display for Index<T> {
     }
 }
 
-impl<T: Validate> Validate for Index<T>
-where
-    Root: Get<T>,
-{
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+impl<T: 'static> Validate for Index<T> {
+    fn validate<P, R, E: crate::ThirdPartyExtensions>(&self, root: &Root<E>, path: P, report: &mut R)
     where
         P: Fn() -> Path,
         R: FnMut(&dyn Fn() -> Path, validation::Error),
     {
-        if root.get(*self).is_none() {
+        if !root.get_any_contains(Box::new(*self)) {
             report(&path, validation::Error::IndexOutOfBounds);
         }
     }
@@ -272,7 +278,7 @@ where
 
 macro_rules! impl_get {
     ($ty:ty, $field:ident) => {
-        impl<'a> Get<$ty> for Root {
+        impl<'a, E: crate::ThirdPartyExtensions> Get<$ty> for Root<E> {
             fn get(&self, index: Index<$ty>) -> Option<&$ty> {
                 self.$field.get(index.value())
             }

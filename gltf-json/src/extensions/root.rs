@@ -3,7 +3,7 @@ use serde_derive::{Deserialize, Serialize};
 
 /// The root object of a glTF 2.0 asset.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct Root {
+pub struct Root<E: crate::ThirdPartyExtensions> {
     #[cfg(feature = "KHR_lights_punctual")]
     #[serde(
         default,
@@ -19,6 +19,9 @@ pub struct Root {
         skip_serializing_if = "Option::is_none"
     )]
     pub khr_materials_variants: Option<KhrMaterialsVariants>,
+
+    #[serde(flatten)]
+    pub third_party: E::Root
 }
 
 #[cfg(feature = "KHR_lights_punctual")]
