@@ -4,9 +4,9 @@ use crate::animation::{Animation, Channel, Sampler};
 
 /// An `Iterator` that visits the channels of an animation.
 #[derive(Clone, Debug)]
-pub struct Channels<'a> {
+pub struct Channels<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Animation` struct.
-    pub(crate) anim: Animation<'a>,
+    pub(crate) anim: Animation<'a, E>,
 
     /// The internal channel iterator.
     pub(crate) iter: slice::Iter<'a, json::animation::Channel>,
@@ -14,16 +14,16 @@ pub struct Channels<'a> {
 
 /// An `Iterator` that visits the samplers of an animation.
 #[derive(Clone, Debug)]
-pub struct Samplers<'a> {
+pub struct Samplers<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Channel` struct.
-    pub(crate) anim: Animation<'a>,
+    pub(crate) anim: Animation<'a, E>,
 
     /// The internal channel iterator.
     pub(crate) iter: slice::Iter<'a, json::animation::Sampler>,
 }
 
-impl<'a> Iterator for Channels<'a> {
-    type Item = Channel<'a>;
+impl<'a, E: json::ThirdPartyExtensions> Iterator for Channels<'a, E> {
+    type Item = Channel<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
@@ -46,8 +46,8 @@ impl<'a> Iterator for Channels<'a> {
     }
 }
 
-impl<'a> Iterator for Samplers<'a> {
-    type Item = Sampler<'a>;
+impl<'a, E: json::ThirdPartyExtensions> Iterator for Samplers<'a, E> {
+    type Item = Sampler<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()

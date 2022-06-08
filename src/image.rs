@@ -42,11 +42,11 @@ pub enum Format {
 
 /// Describes an image data source.
 #[derive(Clone, Debug)]
-pub enum Source<'a> {
+pub enum Source<'a, E: json::ThirdPartyExtensions> {
     /// Image data is contained in a buffer view.
     View {
         /// The buffer view containing the encoded image data.
-        view: buffer::View<'a>,
+        view: buffer::View<'a, E>,
 
         /// The image data MIME type.
         mime_type: &'a str,
@@ -64,9 +64,9 @@ pub enum Source<'a> {
 
 /// Image data used to create a texture.
 #[derive(Clone, Debug)]
-pub struct Image<'a> {
+pub struct Image<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Document` struct.
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON index.
     index: usize,
@@ -93,9 +93,9 @@ pub struct Data {
     pub height: u32,
 }
 
-impl<'a> Image<'a> {
+impl<'a, E: json::ThirdPartyExtensions> Image<'a, E> {
     /// Constructs an `Image` from owned data.
-    pub(crate) fn new(document: &'a Document, index: usize, json: &'a json::image::Image) -> Self {
+    pub(crate) fn new(document: &'a Document<E>, index: usize, json: &'a json::image::Image) -> Self {
         Self {
             document,
             index,
@@ -116,7 +116,7 @@ impl<'a> Image<'a> {
     }
 
     /// Returns the image data source.
-    pub fn source(&self) -> Source<'a> {
+    pub fn source(&self) -> Source<'a, E> {
         if let Some(index) = self.json.buffer_view.as_ref() {
             let view = self.document.views().nth(index.value()).unwrap();
             let mime_type = self.json.mime_type.as_ref().map(|x| x.0.as_str()).unwrap();

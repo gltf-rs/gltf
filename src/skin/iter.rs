@@ -4,17 +4,17 @@ use crate::{Document, Node};
 
 /// An `Iterator` that visits the joints of a `Skin`.
 #[derive(Clone, Debug)]
-pub struct Joints<'a> {
+pub struct Joints<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Document` struct.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 
     /// The internal node index iterator.
     pub(crate) iter: slice::Iter<'a, json::Index<json::scene::Node>>,
 }
 
-impl<'a> ExactSizeIterator for Joints<'a> {}
-impl<'a> Iterator for Joints<'a> {
-    type Item = Node<'a>;
+impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Joints<'a, E> {}
+impl<'a, E: json::ThirdPartyExtensions> Iterator for Joints<'a, E> {
+    type Item = Node<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()

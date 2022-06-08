@@ -8,7 +8,7 @@ use image_crate::ImageFormat::{Jpeg, Png};
 use std::path::Path;
 
 /// Return type of `import`.
-type Import = (Document, Vec<buffer::Data>, Vec<image::Data>);
+type Import<E> = (Document<E>, Vec<buffer::Data>, Vec<image::Data>);
 
 /// Represents the set of URI schemes the importer supports.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -81,8 +81,8 @@ where
 }
 
 /// Import the buffer data referenced by a glTF document.
-pub fn import_buffer_data(
-    document: &Document,
+pub fn import_buffer_data<E: json::ThirdPartyExtensions>(
+    document: &Document<E>,
     base: Option<&Path>,
     mut blob: Option<Vec<u8>>,
 ) -> Result<Vec<buffer::Data>> {
@@ -108,8 +108,8 @@ pub fn import_buffer_data(
 }
 
 /// Import the image data referenced by a glTF document.
-pub fn import_image_data(
-    document: &Document,
+pub fn import_image_data<E: json::ThirdPartyExtensions>(
+    document: &Document<E>,
     base: Option<&Path>,
     buffer_data: &[buffer::Data],
 ) -> Result<Vec<image::Data>> {
@@ -184,14 +184,14 @@ pub fn import_image_data(
     Ok(images)
 }
 
-fn import_impl(Gltf { document, blob }: Gltf, base: Option<&Path>) -> Result<Import> {
+fn import_impl<E: json::ThirdPartyExtensions>(Gltf { document, blob }: Gltf<E>, base: Option<&Path>) -> Result<Import<E>> {
     let buffer_data = import_buffer_data(&document, base, blob)?;
     let image_data = import_image_data(&document, base, &buffer_data)?;
     let import = (document, buffer_data, image_data);
     Ok(import)
 }
 
-fn import_path(path: &Path) -> Result<Import> {
+fn import_path<E: json::ThirdPartyExtensions>(path: &Path) -> Result<Import<E>> {
     let base = path.parent().unwrap_or_else(|| Path::new("./"));
     let file = fs::File::open(path).map_err(Error::Io)?;
     let reader = io::BufReader::new(file);
@@ -225,14 +225,14 @@ fn import_path(path: &Path) -> Result<Import> {
 ///
 /// [`Gltf`]: struct.Gltf.html
 /// [`Glb`]: struct.Glb.html
-pub fn import<P>(path: P) -> Result<Import>
+pub fn import<P, E: json::ThirdPartyExtensions>(path: P) -> Result<Import<E>>
 where
     P: AsRef<Path>,
 {
     import_path(path.as_ref())
 }
 
-pub fn import_slice_impl(slice: &[u8]) -> Result<Import> {
+pub fn import_slice_impl<E: json::ThirdPartyExtensions>(slice: &[u8]) -> Result<Import<E>> {
     import_impl(Gltf::from_slice(slice)?, None)
 }
 
@@ -255,7 +255,7 @@ pub fn import_slice_impl(slice: &[u8]) -> Result<Import> {
 /// #     run().expect("test failure");
 /// # }
 /// ```
-pub fn import_slice<S>(slice: S) -> Result<Import>
+pub fn import_slice<S, E: json::ThirdPartyExtensions>(slice: S) -> Result<Import<E>>
 where
     S: AsRef<[u8]>,
 {

@@ -248,9 +248,9 @@ pub enum Error {
 
 /// glTF JSON wrapper plus binary payload.
 #[derive(Clone, Debug)]
-pub struct Gltf {
+pub struct Gltf<E: json::ThirdPartyExtensions> {
     /// The glTF JSON wrapper.
-    pub document: Document,
+    pub document: Document<E>,
 
     /// The glTF binary payload in the case of binary glTF.
     pub blob: Option<Vec<u8>>,
@@ -258,9 +258,9 @@ pub struct Gltf {
 
 /// glTF JSON wrapper.
 #[derive(Clone, Debug)]
-pub struct Document(json::Root);
+pub struct Document<E: json::ThirdPartyExtensions>(json::Root<E>);
 
-impl Gltf {
+impl<E: json::ThirdPartyExtensions> Gltf<E> {
     /// Convenience function that loads glTF from the file system.
     pub fn open<P>(path: P) -> Result<Self>
     where
@@ -280,7 +280,7 @@ impl Gltf {
         let mut magic = [0u8; 4];
         reader.read_exact(&mut magic)?;
         reader.seek(io::SeekFrom::Start(0))?;
-        let (json, blob): (json::Root, Option<Vec<u8>>);
+        let (json, blob): (json::Root<E>, Option<Vec<u8>>);
         if magic.starts_with(b"glTF") {
             let mut glb = binary::Glb::from_reader(reader)?;
             // TODO: use `json::from_reader` instead of `json::from_slice`
@@ -307,7 +307,7 @@ impl Gltf {
     /// Loads glTF from a slice of bytes without performing validation
     /// checks.
     pub fn from_slice_without_validation(slice: &[u8]) -> Result<Self> {
-        let (json, blob): (json::Root, Option<Vec<u8>>);
+        let (json, blob): (json::Root<E>, Option<Vec<u8>>);
         if slice.starts_with(b"glTF") {
             let mut glb = binary::Glb::from_slice(slice)?;
             json = json::deserialize::from_slice(&glb.json)?;
@@ -328,22 +328,22 @@ impl Gltf {
     }
 }
 
-impl ops::Deref for Gltf {
-    type Target = Document;
+impl<E: json::ThirdPartyExtensions> ops::Deref for Gltf<E> {
+    type Target = Document<E>;
     fn deref(&self) -> &Self::Target {
         &self.document
     }
 }
 
-impl ops::DerefMut for Gltf {
+impl<E: json::ThirdPartyExtensions> ops::DerefMut for Gltf<E> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.document
     }
 }
 
-impl Document {
+impl<E: json::ThirdPartyExtensions> Document<E> {
     /// Loads glTF from pre-deserialized JSON.
-    pub fn from_json(json: json::Root) -> Result<Self> {
+    pub fn from_json(json: json::Root<E>) -> Result<Self> {
         let document = Self::from_json_without_validation(json);
         let _ = document.validate()?;
         Ok(document)
@@ -351,12 +351,12 @@ impl Document {
 
     /// Loads glTF from pre-deserialized JSON without performing
     /// validation checks.
-    pub fn from_json_without_validation(json: json::Root) -> Self {
+    pub fn from_json_without_validation(json: json::Root<E>) -> Self {
         Document(json)
     }
 
     /// Unwraps the glTF document.
-    pub fn into_json(self) -> json::Root {
+    pub fn into_json(self) -> json::Root<E> {
         self.0
     }
 
@@ -376,7 +376,7 @@ impl Document {
     }
 
     /// Returns an `Iterator` that visits the accessors of the glTF asset.
-    pub fn accessors(&self) -> iter::Accessors {
+    pub fn accessors(&self) -> iter::Accessors<E> {
         iter::Accessors {
             iter: self.0.accessors.iter().enumerate(),
             document: self,
@@ -384,7 +384,7 @@ impl Document {
     }
 
     /// Returns an `Iterator` that visits the animations of the glTF asset.
-    pub fn animations(&self) -> iter::Animations {
+    pub fn animations(&self) -> iter::Animations<E> {
         iter::Animations {
             iter: self.0.animations.iter().enumerate(),
             document: self,
@@ -392,7 +392,7 @@ impl Document {
     }
 
     /// Returns an `Iterator` that visits the pre-loaded buffers of the glTF asset.
-    pub fn buffers(&self) -> iter::Buffers {
+    pub fn buffers(&self) -> iter::Buffers<E> {
         iter::Buffers {
             iter: self.0.buffers.iter().enumerate(),
             document: self,
@@ -400,7 +400,7 @@ impl Document {
     }
 
     /// Returns an `Iterator` that visits the cameras of the glTF asset.
-    pub fn cameras(&self) -> iter::Cameras {
+    pub fn cameras(&self) -> iter::Cameras<E> {
         iter::Cameras {
             iter: self.0.cameras.iter().enumerate(),
             document: self,
@@ -408,7 +408,7 @@ impl Document {
     }
 
     /// Returns the default scene, if provided.
-    pub fn default_scene(&self) -> Option<Scene> {
+    pub fn default_scene(&self) -> Option<Scene<E>> {
         self.0
             .scene
             .as_ref()
@@ -426,7 +426,7 @@ impl Document {
     }
 
     /// Returns an `Iterator` that visits the pre-loaded images of the glTF asset.
-    pub fn images(&self) -> iter::Images {
+    pub fn images(&self) -> iter::Images<E> {
         iter::Images {
             iter: self.0.images.iter().enumerate(),
             document: self,
@@ -476,7 +476,7 @@ impl Document {
     }
 
     /// Returns an `Iterator` that visits the materials of the glTF asset.
-    pub fn materials(&self) -> iter::Materials {
+    pub fn materials(&self) -> iter::Materials<E> {
         iter::Materials {
             iter: self.0.materials.iter().enumerate(),
             document: self,
@@ -484,7 +484,7 @@ impl Document {
     }
 
     /// Returns an `Iterator` that visits the meshes of the glTF asset.
-    pub fn meshes(&self) -> iter::Meshes {
+    pub fn meshes(&self) -> iter::Meshes<E> {
         iter::Meshes {
             iter: self.0.meshes.iter().enumerate(),
             document: self,
@@ -492,7 +492,7 @@ impl Document {
     }
 
     /// Returns an `Iterator` that visits the nodes of the glTF asset.
-    pub fn nodes(&self) -> iter::Nodes {
+    pub fn nodes(&self) -> iter::Nodes<E> {
         iter::Nodes {
             iter: self.0.nodes.iter().enumerate(),
             document: self,
@@ -500,7 +500,7 @@ impl Document {
     }
 
     /// Returns an `Iterator` that visits the samplers of the glTF asset.
-    pub fn samplers(&self) -> iter::Samplers {
+    pub fn samplers(&self) -> iter::Samplers<E> {
         iter::Samplers {
             iter: self.0.samplers.iter().enumerate(),
             document: self,
@@ -508,7 +508,7 @@ impl Document {
     }
 
     /// Returns an `Iterator` that visits the scenes of the glTF asset.
-    pub fn scenes(&self) -> iter::Scenes {
+    pub fn scenes(&self) -> iter::Scenes<E> {
         iter::Scenes {
             iter: self.0.scenes.iter().enumerate(),
             document: self,
@@ -516,7 +516,7 @@ impl Document {
     }
 
     /// Returns an `Iterator` that visits the skins of the glTF asset.
-    pub fn skins(&self) -> iter::Skins {
+    pub fn skins(&self) -> iter::Skins<E> {
         iter::Skins {
             iter: self.0.skins.iter().enumerate(),
             document: self,
@@ -524,7 +524,7 @@ impl Document {
     }
 
     /// Returns an `Iterator` that visits the textures of the glTF asset.
-    pub fn textures(&self) -> iter::Textures {
+    pub fn textures(&self) -> iter::Textures<E> {
         iter::Textures {
             iter: self.0.textures.iter().enumerate(),
             document: self,
@@ -533,7 +533,7 @@ impl Document {
 
     /// Returns an `Iterator` that visits the pre-loaded buffer views of the glTF
     /// asset.
-    pub fn views(&self) -> iter::Views {
+    pub fn views(&self) -> iter::Views<E> {
         iter::Views {
             iter: self.0.buffer_views.iter().enumerate(),
             document: self,

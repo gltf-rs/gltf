@@ -2,20 +2,20 @@ use crate::Document;
 
 /// A camera's projection.
 #[derive(Clone, Debug)]
-pub enum Projection<'a> {
+pub enum Projection<'a, E: json::ThirdPartyExtensions> {
     /// Describes an orthographic projection.
-    Orthographic(Orthographic<'a>),
+    Orthographic(Orthographic<'a, E>),
 
     /// Describes a perspective projection.
-    Perspective(Perspective<'a>),
+    Perspective(Perspective<'a, E>),
 }
 
 /// A camera's projection.  A node can reference a camera to apply a transform to
 /// place the camera in the scene.
 #[derive(Clone, Debug)]
-pub struct Camera<'a> {
+pub struct Camera<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Document` struct.
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON index.
     index: usize,
@@ -26,10 +26,10 @@ pub struct Camera<'a> {
 
 ///  Values for an orthographic camera projection.
 #[derive(Clone, Debug)]
-pub struct Orthographic<'a> {
+pub struct Orthographic<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Document` struct.
     #[allow(dead_code)]
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON struct.
     json: &'a json::camera::Orthographic,
@@ -37,19 +37,19 @@ pub struct Orthographic<'a> {
 
 /// Values for a perspective camera projection.
 #[derive(Clone, Debug)]
-pub struct Perspective<'a> {
+pub struct Perspective<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Document` struct.
     #[allow(dead_code)]
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON struct.
     json: &'a json::camera::Perspective,
 }
 
-impl<'a> Camera<'a> {
+impl<'a, E: json::ThirdPartyExtensions> Camera<'a, E> {
     /// Constructs a `Camera`.
     pub(crate) fn new(
-        document: &'a Document,
+        document: &'a Document<E>,
         index: usize,
         json: &'a json::camera::Camera,
     ) -> Self {
@@ -73,7 +73,7 @@ impl<'a> Camera<'a> {
     }
 
     /// Returns the camera's projection.
-    pub fn projection(&self) -> Projection {
+    pub fn projection(&self) -> Projection<E> {
         match self.json.type_.unwrap() {
             json::camera::Type::Orthographic => {
                 let json = self.json.orthographic.as_ref().unwrap();
@@ -92,9 +92,9 @@ impl<'a> Camera<'a> {
     }
 }
 
-impl<'a> Orthographic<'a> {
+impl<'a, E: json::ThirdPartyExtensions> Orthographic<'a, E> {
     /// Constructs a `Orthographic` camera projection.
-    pub(crate) fn new(document: &'a Document, json: &'a json::camera::Orthographic) -> Self {
+    pub(crate) fn new(document: &'a Document<E>, json: &'a json::camera::Orthographic) -> Self {
         Self { document, json }
     }
 
@@ -124,9 +124,9 @@ impl<'a> Orthographic<'a> {
     }
 }
 
-impl<'a> Perspective<'a> {
+impl<'a, E: json::ThirdPartyExtensions> Perspective<'a, E> {
     /// Constructs a `Perspective` camera projection.
-    pub(crate) fn new(document: &'a Document, json: &'a json::camera::Perspective) -> Self {
+    pub(crate) fn new(document: &'a Document<E>, json: &'a json::camera::Perspective) -> Self {
         Self { document, json }
     }
 

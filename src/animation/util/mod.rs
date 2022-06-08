@@ -20,11 +20,11 @@ pub type Scales<'a> = accessor::Iter<'a, [f32; 3]>;
 
 /// Animation channel reader.
 #[derive(Clone, Debug)]
-pub struct Reader<'a, 's, F>
+pub struct Reader<'a, 's, F, E: json::ThirdPartyExtensions>
 where
-    F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>,
+    F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>,
 {
-    pub(crate) channel: Channel<'a>,
+    pub(crate) channel: Channel<'a, E>,
     pub(crate) get_buffer_data: F,
 }
 
@@ -136,9 +136,9 @@ impl<'a> MorphTargetWeights<'a> {
     }
 }
 
-impl<'a, 's, F> Reader<'a, 's, F>
+impl<'a, 's, F, E: json::ThirdPartyExtensions> Reader<'a, 's, F, E>
 where
-    F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>,
+    F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>,
 {
     /// Visits the input samples of a channel.
     pub fn read_inputs(&self) -> Option<ReadInputs<'s>> {

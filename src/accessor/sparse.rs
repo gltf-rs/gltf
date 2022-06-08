@@ -14,22 +14,22 @@ pub enum IndexType {
 }
 
 /// Indices of those attributes that deviate from their initialization value.
-pub struct Indices<'a> {
+pub struct Indices<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Document` struct.
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON struct.
     json: &'a json::accessor::sparse::Indices,
 }
 
-impl<'a> Indices<'a> {
+impl<'a, E: json::ThirdPartyExtensions> Indices<'a, E> {
     /// Constructs `sparse::Indices`.
-    pub(crate) fn new(document: &'a Document, json: &'a json::accessor::sparse::Indices) -> Self {
+    pub(crate) fn new(document: &'a Document<E>, json: &'a json::accessor::sparse::Indices) -> Self {
         Self { document, json }
     }
 
     /// Returns the buffer view containing the sparse indices.
-    pub fn view(&self) -> buffer::View<'a> {
+    pub fn view(&self) -> buffer::View<'a, E> {
         self.document
             .views()
             .nth(self.json.buffer_view.value())
@@ -58,17 +58,17 @@ impl<'a> Indices<'a> {
 }
 
 /// Sparse storage of attributes that deviate from their initialization value.
-pub struct Sparse<'a> {
+pub struct Sparse<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Document` struct.
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON struct.
     json: &'a json::accessor::sparse::Sparse,
 }
 
-impl<'a> Sparse<'a> {
+impl<'a, E: json::ThirdPartyExtensions> Sparse<'a, E> {
     /// Constructs `Sparse`.
-    pub(crate) fn new(document: &'a Document, json: &'a json::accessor::sparse::Sparse) -> Self {
+    pub(crate) fn new(document: &'a Document<E>, json: &'a json::accessor::sparse::Sparse) -> Self {
         Self { document, json }
     }
 
@@ -79,13 +79,13 @@ impl<'a> Sparse<'a> {
 
     /// Returns an index array of size `count` that points to those accessor
     /// attributes that deviate from their initialization value.
-    pub fn indices(&self) -> Indices<'a> {
+    pub fn indices(&self) -> Indices<'a, E> {
         Indices::new(self.document, &self.json.indices)
     }
 
     /// Returns an array of size `count * number_of_components`, storing the
     /// displaced accessor attributes pointed by `indices`.
-    pub fn values(&self) -> Values<'a> {
+    pub fn values(&self) -> Values<'a, E> {
         Values::new(self.document, &self.json.values)
     }
 
@@ -97,22 +97,22 @@ impl<'a> Sparse<'a> {
 
 /// Array of size `count * number_of_components` storing the displaced accessor
 /// attributes pointed by `accessor::sparse::Indices`.
-pub struct Values<'a> {
+pub struct Values<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Document` struct.
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON struct.
     json: &'a json::accessor::sparse::Values,
 }
 
-impl<'a> Values<'a> {
+impl<'a, E: json::ThirdPartyExtensions> Values<'a, E> {
     /// Constructs `sparse::Values`.
-    pub(crate) fn new(document: &'a Document, json: &'a json::accessor::sparse::Values) -> Self {
+    pub(crate) fn new(document: &'a Document<E>, json: &'a json::accessor::sparse::Values) -> Self {
         Self { document, json }
     }
 
     /// Returns the buffer view containing the sparse values.
-    pub fn view(&self) -> buffer::View<'a> {
+    pub fn view(&self) -> buffer::View<'a, E> {
         self.document
             .views()
             .nth(self.json.buffer_view.value())

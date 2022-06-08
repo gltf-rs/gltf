@@ -22,161 +22,161 @@ pub struct ExtensionsRequired<'a>(pub(crate) slice::Iter<'a, String>);
 
 /// An `Iterator` that visits every accessor in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Accessors<'a> {
+pub struct Accessors<'a, E: json::ThirdPartyExtensions> {
     /// Internal accessor iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::accessor::Accessor>>,
 
     /// The internal root glTF object.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 }
 
 /// An `Iterator` that visits every animation in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Animations<'a> {
+pub struct Animations<'a, E: json::ThirdPartyExtensions> {
     /// Internal animation iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::animation::Animation>>,
 
     /// The internal root glTF object.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 }
 
 /// An `Iterator` that visits every buffer in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Buffers<'a> {
+pub struct Buffers<'a, E: json::ThirdPartyExtensions> {
     /// Internal buffer iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::buffer::Buffer>>,
 
     /// The internal root glTF object.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 }
 
 /// An `Iterator` that visits every buffer view in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Views<'a> {
+pub struct Views<'a, E: json::ThirdPartyExtensions> {
     /// Internal buffer view iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::buffer::View>>,
 
     /// The internal root glTF object.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 }
 
 /// An `Iterator` that visits every camera in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Cameras<'a> {
+pub struct Cameras<'a, E: json::ThirdPartyExtensions> {
     /// Internal buffer view iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::camera::Camera>>,
 
     /// The internal root glTF object.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 }
 
 /// An `Iterator` that visits every pre-loaded image in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Images<'a> {
+pub struct Images<'a, E: json::ThirdPartyExtensions> {
     /// Internal image iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::image::Image>>,
 
     /// The internal root glTF object.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 }
 
 /// An `Iterator` that visits every light in a glTF asset.
 #[cfg(feature = "KHR_lights_punctual")]
 #[derive(Clone, Debug)]
-pub struct Lights<'a> {
+pub struct Lights<'a, E: json::ThirdPartyExtensions> {
     /// Internal image iterator.
     pub(crate) iter:
         iter::Enumerate<slice::Iter<'a, json::extensions::scene::khr_lights_punctual::Light>>,
 
     /// The internal root glTF object.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 }
 
 /// An `Iterator` that visits every variant in a glTF asset.
 #[cfg(feature = "KHR_materials_variants")]
 #[derive(Clone, Debug)]
-pub struct Variants<'a> {
+pub struct Variants<'a, E: json::ThirdPartyExtensions> {
     /// Internal variant iterator.
     pub(crate) iter:
         iter::Enumerate<slice::Iter<'a, json::extensions::scene::khr_materials_variants::Variant>>,
 
     /// The internal root glTF object.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 }
 
 /// An `Iterator` that visits every material in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Materials<'a> {
+pub struct Materials<'a, E: json::ThirdPartyExtensions> {
     /// Internal material iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::material::Material>>,
 
     /// The internal root glTF object.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 }
 
 /// An `Iterator` that visits every mesh in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Meshes<'a> {
+pub struct Meshes<'a, E: json::ThirdPartyExtensions> {
     /// Internal mesh iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::mesh::Mesh>>,
 
     /// The internal root glTF object.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 }
 
 /// An `Iterator` that visits every node in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Nodes<'a> {
+pub struct Nodes<'a, E: json::ThirdPartyExtensions> {
     /// Internal node iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::scene::Node>>,
 
     /// The internal root glTF object.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 }
 
 /// An `Iterator` that visits every sampler in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Samplers<'a> {
+pub struct Samplers<'a, E: json::ThirdPartyExtensions> {
     /// Internal sampler iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::texture::Sampler>>,
 
     /// The internal root glTF object.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 }
 
 /// An `Iterator` that visits every scene in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Scenes<'a> {
+pub struct Scenes<'a, E: json::ThirdPartyExtensions> {
     /// Internal scene iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::scene::Scene>>,
 
     /// The internal root glTF object.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 }
 
 /// An `Iterator` that visits every skin in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Skins<'a> {
+pub struct Skins<'a, E: json::ThirdPartyExtensions> {
     /// Internal skin iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::skin::Skin>>,
 
     /// The internal root glTF object.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 }
 
 /// An `Iterator` that visits every texture in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Textures<'a> {
+pub struct Textures<'a, E: json::ThirdPartyExtensions> {
     /// Internal texture iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::texture::Texture>>,
 
     /// The internal root glTF object.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 }
 
-impl<'a> ExactSizeIterator for Accessors<'a> {}
-impl<'a> Iterator for Accessors<'a> {
-    type Item = Accessor<'a>;
+impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Accessors<'a, E> {}
+impl<'a, E: json::ThirdPartyExtensions> Iterator for Accessors<'a, E> {
+    type Item = Accessor<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
@@ -201,9 +201,9 @@ impl<'a> Iterator for Accessors<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for Animations<'a> {}
-impl<'a> Iterator for Animations<'a> {
-    type Item = Animation<'a>;
+impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Animations<'a, E> {}
+impl<'a, E: json::ThirdPartyExtensions> Iterator for Animations<'a, E> {
+    type Item = Animation<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
@@ -228,9 +228,9 @@ impl<'a> Iterator for Animations<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for Buffers<'a> {}
-impl<'a> Iterator for Buffers<'a> {
-    type Item = Buffer<'a>;
+impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Buffers<'a, E> {}
+impl<'a, E: json::ThirdPartyExtensions> Iterator for Buffers<'a, E> {
+    type Item = Buffer<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
@@ -295,9 +295,9 @@ impl<'a> Iterator for ExtensionsRequired<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for Views<'a> {}
-impl<'a> Iterator for Views<'a> {
-    type Item = View<'a>;
+impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Views<'a, E> {}
+impl<'a, E: json::ThirdPartyExtensions> Iterator for Views<'a, E> {
+    type Item = View<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
@@ -322,9 +322,9 @@ impl<'a> Iterator for Views<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for Cameras<'a> {}
-impl<'a> Iterator for Cameras<'a> {
-    type Item = Camera<'a>;
+impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Cameras<'a, E> {}
+impl<'a, E: json::ThirdPartyExtensions> Iterator for Cameras<'a, E> {
+    type Item = Camera<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
@@ -349,9 +349,9 @@ impl<'a> Iterator for Cameras<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for Images<'a> {}
-impl<'a> Iterator for Images<'a> {
-    type Item = Image<'a>;
+impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Images<'a, E> {}
+impl<'a, E: json::ThirdPartyExtensions> Iterator for Images<'a, E> {
+    type Item = Image<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
@@ -436,9 +436,9 @@ impl<'a> Iterator for Variants<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for Materials<'a> {}
-impl<'a> Iterator for Materials<'a> {
-    type Item = Material<'a>;
+impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Materials<'a, E> {}
+impl<'a, E: json::ThirdPartyExtensions> Iterator for Materials<'a, E> {
+    type Item = Material<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
@@ -463,9 +463,9 @@ impl<'a> Iterator for Materials<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for Meshes<'a> {}
-impl<'a> Iterator for Meshes<'a> {
-    type Item = Mesh<'a>;
+impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Meshes<'a, E> {}
+impl<'a, E: json::ThirdPartyExtensions> Iterator for Meshes<'a, E> {
+    type Item = Mesh<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
@@ -490,9 +490,9 @@ impl<'a> Iterator for Meshes<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for Nodes<'a> {}
-impl<'a> Iterator for Nodes<'a> {
-    type Item = Node<'a>;
+impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Nodes<'a, E> {}
+impl<'a, E: json::ThirdPartyExtensions> Iterator for Nodes<'a, E> {
+    type Item = Node<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
@@ -517,9 +517,9 @@ impl<'a> Iterator for Nodes<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for Samplers<'a> {}
-impl<'a> Iterator for Samplers<'a> {
-    type Item = Sampler<'a>;
+impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Samplers<'a, E> {}
+impl<'a, E: json::ThirdPartyExtensions> Iterator for Samplers<'a, E> {
+    type Item = Sampler<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
@@ -544,9 +544,9 @@ impl<'a> Iterator for Samplers<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for Scenes<'a> {}
-impl<'a> Iterator for Scenes<'a> {
-    type Item = Scene<'a>;
+impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Scenes<'a, E> {}
+impl<'a, E: json::ThirdPartyExtensions> Iterator for Scenes<'a, E> {
+    type Item = Scene<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
@@ -571,9 +571,9 @@ impl<'a> Iterator for Scenes<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for Skins<'a> {}
-impl<'a> Iterator for Skins<'a> {
-    type Item = Skin<'a>;
+impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Skins<'a, E> {}
+impl<'a, E: json::ThirdPartyExtensions> Iterator for Skins<'a, E> {
+    type Item = Skin<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
@@ -598,9 +598,9 @@ impl<'a> Iterator for Skins<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for Textures<'a> {}
-impl<'a> Iterator for Textures<'a> {
-    type Item = Texture<'a>;
+impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Textures<'a, E> {}
+impl<'a, E: json::ThirdPartyExtensions> Iterator for Textures<'a, E> {
+    type Item = Texture<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()

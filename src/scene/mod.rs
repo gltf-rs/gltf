@@ -86,9 +86,9 @@ impl Transform {
 /// When a node contains a skin, all its meshes contain `JOINTS_0` and `WEIGHTS_0`
 /// attributes.
 #[derive(Clone, Debug)]
-pub struct Node<'a> {
+pub struct Node<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Document` struct.
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON index.
     index: usize,
@@ -99,10 +99,10 @@ pub struct Node<'a> {
 
 /// The root nodes of a scene.
 #[derive(Clone, Debug)]
-pub struct Scene<'a> {
+pub struct Scene<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Document` struct.
     #[allow(dead_code)]
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON index.
     index: usize,
@@ -111,9 +111,9 @@ pub struct Scene<'a> {
     json: &'a json::scene::Scene,
 }
 
-impl<'a> Node<'a> {
+impl<'a, E: json::ThirdPartyExtensions> Node<'a, E> {
     /// Constructs a `Node`.
-    pub(crate) fn new(document: &'a Document, index: usize, json: &'a json::scene::Node) -> Self {
+    pub(crate) fn new(document: &'a Document<E>, index: usize, json: &'a json::scene::Node) -> Self {
         Self {
             document,
             index,
@@ -127,7 +127,7 @@ impl<'a> Node<'a> {
     }
 
     /// Returns the camera referenced by this node.
-    pub fn camera(&self) -> Option<Camera<'a>> {
+    pub fn camera(&self) -> Option<Camera<'a, E>> {
         self.json
             .camera
             .as_ref()
@@ -135,7 +135,7 @@ impl<'a> Node<'a> {
     }
 
     /// Returns an `Iterator` that visits the node's children.
-    pub fn children(&self) -> iter::Children<'a> {
+    pub fn children(&self) -> iter::Children<'a, E> {
         iter::Children {
             document: self.document,
             iter: self.json.children.as_ref().map_or([].iter(), |x| x.iter()),
@@ -164,7 +164,7 @@ impl<'a> Node<'a> {
     }
 
     /// Returns the mesh referenced by this node.
-    pub fn mesh(&self) -> Option<Mesh<'a>> {
+    pub fn mesh(&self) -> Option<Mesh<'a, E>> {
         self.json
             .mesh
             .as_ref()
@@ -198,7 +198,7 @@ impl<'a> Node<'a> {
     }
 
     /// Returns the skin referenced by this node.
-    pub fn skin(&self) -> Option<Skin<'a>> {
+    pub fn skin(&self) -> Option<Skin<'a, E>> {
         self.json
             .skin
             .as_ref()
@@ -211,9 +211,9 @@ impl<'a> Node<'a> {
     }
 }
 
-impl<'a> Scene<'a> {
+impl<'a, E: json::ThirdPartyExtensions> Scene<'a, E> {
     /// Constructs a `Scene`.
-    pub(crate) fn new(document: &'a Document, index: usize, json: &'a json::scene::Scene) -> Self {
+    pub(crate) fn new(document: &'a Document<E>, index: usize, json: &'a json::scene::Scene) -> Self {
         Self {
             document,
             index,
@@ -238,7 +238,7 @@ impl<'a> Scene<'a> {
     }
 
     /// Returns an `Iterator` that visits each root node of the scene.
-    pub fn nodes(&self) -> iter::Nodes<'a> {
+    pub fn nodes(&self) -> iter::Nodes<'a, E> {
         iter::Nodes {
             document: self.document,
             iter: self.json.nodes.iter(),

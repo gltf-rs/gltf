@@ -8,9 +8,9 @@ lazy_static! {
 
 /// A reference to a `Texture`.
 #[derive(Clone, Debug)]
-pub struct Info<'a> {
+pub struct Info<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Texture` struct.
-    texture: Texture<'a>,
+    texture: Texture<'a, E>,
 
     /// The corresponding JSON struct.
     json: &'a json::texture::Info,
@@ -18,10 +18,10 @@ pub struct Info<'a> {
 
 ///  Texture sampler properties for filtering and wrapping modes.
 #[derive(Clone, Debug)]
-pub struct Sampler<'a> {
+pub struct Sampler<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Document` struct.
     #[allow(dead_code)]
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON index - `None` when the default sampler.
     index: Option<usize>,
@@ -31,10 +31,10 @@ pub struct Sampler<'a> {
 }
 
 /// A texture and its sampler.
-#[derive(Clone, Debug)]
-pub struct Texture<'a> {
+#[derive(Debug)]
+pub struct Texture<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Document` struct.
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON index.
     index: usize,
@@ -43,10 +43,20 @@ pub struct Texture<'a> {
     json: &'a json::texture::Texture,
 }
 
-impl<'a> Sampler<'a> {
+impl<'a, E: json::ThirdPartyExtensions> Clone for Texture<'a, E> {
+    fn clone(&self) -> Self {
+        Self {
+            document: self.document,
+            index: self.index,
+            json: self.json
+        }
+    }
+}
+
+impl<'a, E: json::ThirdPartyExtensions> Sampler<'a, E> {
     /// Constructs a `Sampler`.
     pub(crate) fn new(
-        document: &'a Document,
+        document: &'a Document<E>,
         index: usize,
         json: &'a json::texture::Sampler,
     ) -> Self {
@@ -58,7 +68,7 @@ impl<'a> Sampler<'a> {
     }
 
     /// Constructs the default `Sampler`.
-    pub(crate) fn default(document: &'a Document) -> Self {
+    pub(crate) fn default(document: &'a Document<E>) -> Self {
         Self {
             document,
             index: None,
@@ -105,10 +115,10 @@ impl<'a> Sampler<'a> {
     }
 }
 
-impl<'a> Texture<'a> {
+impl<'a, E: json::ThirdPartyExtensions> Texture<'a, E> {
     /// Constructs a `Texture`.
     pub(crate) fn new(
-        document: &'a Document,
+        document: &'a Document<E>,
         index: usize,
         json: &'a json::texture::Texture,
     ) -> Self {
@@ -131,7 +141,7 @@ impl<'a> Texture<'a> {
     }
 
     /// Returns the sampler used by this texture.
-    pub fn sampler(&self) -> Sampler<'a> {
+    pub fn sampler(&self) -> Sampler<'a, E> {
         self.json
             .sampler
             .as_ref()
@@ -145,7 +155,7 @@ impl<'a> Texture<'a> {
     }
 
     /// Returns the image used by this texture.
-    pub fn source(&self) -> image::Image<'a> {
+    pub fn source(&self) -> image::Image<'a, E> {
         self.document
             .images()
             .nth(self.json.source.value() as usize)
@@ -158,9 +168,9 @@ impl<'a> Texture<'a> {
     }
 }
 
-impl<'a> Info<'a> {
+impl<'a, E: json::ThirdPartyExtensions> Info<'a, E> {
     /// Constructs a reference to a `Texture`.
-    pub(crate) fn new(texture: Texture<'a>, json: &'a json::texture::Info) -> Self {
+    pub(crate) fn new(texture: Texture<'a, E>, json: &'a json::texture::Info) -> Self {
         Self { texture, json }
     }
 
@@ -170,7 +180,7 @@ impl<'a> Info<'a> {
     }
 
     /// Returns the referenced `Texture`.
-    pub fn texture(&self) -> Texture<'a> {
+    pub fn texture(&self) -> Texture<'a, E> {
         self.texture.clone()
     }
 
@@ -192,8 +202,8 @@ impl<'a> Info<'a> {
     }
 }
 
-impl<'a> AsRef<Texture<'a>> for Info<'a> {
-    fn as_ref(&self) -> &Texture<'a> {
+impl<'a, E: json::ThirdPartyExtensions> AsRef<Texture<'a, E>> for Info<'a, E> {
+    fn as_ref(&self) -> &Texture<'a, E> {
         &self.texture
     }
 }

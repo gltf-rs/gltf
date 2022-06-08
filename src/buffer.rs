@@ -7,10 +7,10 @@ pub use json::buffer::Target;
 
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Clone, Debug)]
-pub struct Buffer<'a> {
+pub struct Buffer<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Document` struct.
     #[allow(dead_code)]
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON index.
     index: usize,
@@ -21,9 +21,9 @@ pub struct Buffer<'a> {
 
 /// A view into a buffer generally representing a subset of the buffer.
 #[derive(Clone, Debug)]
-pub struct View<'a> {
+pub struct View<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Document` struct.
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON index.
     index: usize,
@@ -33,7 +33,7 @@ pub struct View<'a> {
 
     /// The parent `Buffer`.
     #[allow(dead_code)]
-    parent: Buffer<'a>,
+    parent: Buffer<'a, E>,
 }
 
 /// Describes a buffer data source.
@@ -61,10 +61,10 @@ impl ops::Deref for Data {
     }
 }
 
-impl<'a> Buffer<'a> {
+impl<'a, E: json::ThirdPartyExtensions> Buffer<'a, E> {
     /// Constructs a `Buffer`.
     pub(crate) fn new(
-        document: &'a Document,
+        document: &'a Document<E>,
         index: usize,
         json: &'a json::buffer::Buffer,
     ) -> Self {
@@ -107,9 +107,9 @@ impl<'a> Buffer<'a> {
     }
 }
 
-impl<'a> View<'a> {
+impl<'a, E: json::ThirdPartyExtensions> View<'a, E> {
     /// Constructs a `View`.
-    pub(crate) fn new(document: &'a Document, index: usize, json: &'a json::buffer::View) -> Self {
+    pub(crate) fn new(document: &'a Document<E>, index: usize, json: &'a json::buffer::View) -> Self {
         let parent = document.buffers().nth(json.buffer.value()).unwrap();
         Self {
             document,
@@ -125,7 +125,7 @@ impl<'a> View<'a> {
     }
 
     /// Returns the parent `Buffer`.
-    pub fn buffer(&self) -> Buffer<'a> {
+    pub fn buffer(&self) -> Buffer<'a, E> {
         self.document
             .buffers()
             .nth(self.json.buffer.value())

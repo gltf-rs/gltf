@@ -5,9 +5,9 @@ use crate::Document;
 
 /// An `Iterator` that visits the morph targets of a `Primitive`.
 #[derive(Clone, Debug)]
-pub struct MorphTargets<'a> {
+pub struct MorphTargets<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Document` struct.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 
     /// The internal JSON iterator.
     pub(crate) iter: slice::Iter<'a, json::mesh::MorphTarget>,
@@ -15,13 +15,13 @@ pub struct MorphTargets<'a> {
 
 /// An `Iterator` that visits the attributes of a `Primitive`.
 #[derive(Clone, Debug)]
-pub struct Attributes<'a> {
+pub struct Attributes<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Document` struct.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 
     /// The parent `Primitive` struct.
     #[allow(dead_code)]
-    pub(crate) prim: Primitive<'a>,
+    pub(crate) prim: Primitive<'a, E>,
 
     /// The internal attribute iterator.
     pub(crate) iter: collections::hash_map::Iter<
@@ -33,17 +33,17 @@ pub struct Attributes<'a> {
 
 /// An `Iterator` that visits the primitives of a `Mesh`.
 #[derive(Clone, Debug)]
-pub struct Primitives<'a> {
+pub struct Primitives<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Mesh` struct.
-    pub(crate) mesh: Mesh<'a>,
+    pub(crate) mesh: Mesh<'a, E>,
 
     /// The internal JSON primitive iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::mesh::Primitive>>,
 }
 
-impl<'a> ExactSizeIterator for Attributes<'a> {}
-impl<'a> Iterator for Attributes<'a> {
-    type Item = Attribute<'a>;
+impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Attributes<'a, E> {}
+impl<'a, E: json::ThirdPartyExtensions> Iterator for Attributes<'a, E> {
+    type Item = Attribute<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(key, index)| {
             let semantic = key.as_ref().unwrap().clone();
@@ -57,9 +57,9 @@ impl<'a> Iterator for Attributes<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for Primitives<'a> {}
-impl<'a> Iterator for Primitives<'a> {
-    type Item = Primitive<'a>;
+impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Primitives<'a, E> {}
+impl<'a, E: json::ThirdPartyExtensions> Iterator for Primitives<'a, E> {
+    type Item = Primitive<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
@@ -84,10 +84,10 @@ impl<'a> Iterator for Primitives<'a> {
     }
 }
 
-fn map_morph_target<'a>(
-    document: &'a crate::Document,
+fn map_morph_target<'a, E: json::ThirdPartyExtensions>(
+    document: &'a crate::Document<E>,
     json: &json::mesh::MorphTarget,
-) -> MorphTarget<'a> {
+) -> MorphTarget<'a, E> {
     let positions = json
         .positions
         .as_ref()
@@ -107,9 +107,9 @@ fn map_morph_target<'a>(
     }
 }
 
-impl<'a> ExactSizeIterator for MorphTargets<'a> {}
-impl<'a> Iterator for MorphTargets<'a> {
-    type Item = MorphTarget<'a>;
+impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for MorphTargets<'a, E> {}
+impl<'a, E: json::ThirdPartyExtensions> Iterator for MorphTargets<'a, E> {
+    type Item = MorphTarget<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()

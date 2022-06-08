@@ -102,22 +102,22 @@ pub enum ReadWeights<'a> {
 
 /// Morph targets.
 #[derive(Clone, Debug)]
-pub struct ReadMorphTargets<'a, 's, F>
+pub struct ReadMorphTargets<'a, 's, F, E: json::ThirdPartyExtensions>
 where
-    F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>,
+    F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>,
 {
     pub(crate) index: usize,
-    pub(crate) reader: mesh::Reader<'a, 's, F>,
+    pub(crate) reader: mesh::Reader<'a, 's, F, E>,
 }
 
-impl<'a, 's, F> ExactSizeIterator for ReadMorphTargets<'a, 's, F> where
-    F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>
+impl<'a, 's, F, E: json::ThirdPartyExtensions> ExactSizeIterator for ReadMorphTargets<'a, 's, F, E> where
+    F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>
 {
 }
 
-impl<'a, 's, F> Iterator for ReadMorphTargets<'a, 's, F>
+impl<'a, 's, F, E: json::ThirdPartyExtensions> Iterator for ReadMorphTargets<'a, 's, F, E>
 where
-    F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>,
+    F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>,
 {
     type Item = (
         Option<ReadPositionDisplacements<'s>>,

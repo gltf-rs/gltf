@@ -65,7 +65,7 @@ pub use json::mesh::{Mode, Semantic};
 use json::validation::Checked;
 
 /// Vertex attribute data.
-pub type Attribute<'a> = (Semantic, Accessor<'a>);
+pub type Attribute<'a, E> = (Semantic, Accessor<'a, E>);
 
 /// Vertex position bounding box.
 pub type BoundingBox = Bounds<[f32; 3]>;
@@ -81,10 +81,10 @@ pub struct Bounds<T> {
 }
 
 /// A set of primitives to be rendered.
-#[derive(Clone, Debug)]
-pub struct Mesh<'a> {
+#[derive(Debug)]
+pub struct Mesh<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Document` struct.
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON index.
     index: usize,
@@ -93,24 +93,34 @@ pub struct Mesh<'a> {
     json: &'a json::mesh::Mesh,
 }
 
+impl<'a, E: json::ThirdPartyExtensions> Clone for Mesh<'a, E> {
+    fn clone(&self) -> Self {
+        Self {
+            document: self.document,
+            index: self.index,
+            json: self.json
+        }
+    }
+}
+
 /// A single morph target for a mesh primitive.
 #[derive(Clone, Debug)]
-pub struct MorphTarget<'a> {
+pub struct MorphTarget<'a, E: json::ThirdPartyExtensions> {
     /// XYZ vertex position displacements.
-    positions: Option<Accessor<'a>>,
+    positions: Option<Accessor<'a, E>>,
 
     /// XYZ vertex normal displacements.
-    normals: Option<Accessor<'a>>,
+    normals: Option<Accessor<'a, E>>,
 
     /// XYZ vertex tangent displacements.
-    tangents: Option<Accessor<'a>>,
+    tangents: Option<Accessor<'a, E>>,
 }
 
 /// Geometry to be rendered with the given material.
-#[derive(Clone, Debug)]
-pub struct Primitive<'a> {
+#[derive(Debug)]
+pub struct Primitive<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Mesh` struct.
-    mesh: Mesh<'a>,
+    mesh: Mesh<'a, E>,
 
     /// The corresponding JSON index.
     index: usize,
@@ -119,19 +129,40 @@ pub struct Primitive<'a> {
     json: &'a json::mesh::Primitive,
 }
 
+impl<'a, E: json::ThirdPartyExtensions> Clone for Primitive<'a, E> {
+    fn clone(&self) -> Self {
+        Self {
+            mesh: self.mesh.clone(),
+            index: self.index,
+            json: self.json,
+        }
+    }
+}
+
 /// Mesh primitive reader.
-#[derive(Clone, Debug)]
-pub struct Reader<'a, 's, F>
+#[derive(Debug)]
+pub struct Reader<'a, 's, F, E: json::ThirdPartyExtensions>
 where
-    F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>,
+    F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>,
 {
-    pub(crate) primitive: &'a Primitive<'a>,
+    pub(crate) primitive: &'a Primitive<'a, E>,
     pub(crate) get_buffer_data: F,
 }
 
-impl<'a> Mesh<'a> {
+impl<'a, 's, F, E: json::ThirdPartyExtensions> Clone for Reader<'a, 's, F, E> where
+F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>,
+{
+    fn clone(&self) -> Self {
+        Self {
+            primitive: self.primitive,
+            get_buffer_data: self.get_buffer_data.clone()
+        }
+    }
+}
+
+impl<'a, E: json::ThirdPartyExtensions> Mesh<'a, E> {
     /// Constructs a `Mesh`.
-    pub(crate) fn new(document: &'a Document, index: usize, json: &'a json::mesh::Mesh) -> Self {
+    pub(crate) fn new(document: &'a Document<E>, index: usize, json: &'a json::mesh::Mesh) -> Self {
         Self {
             document,
             index,
@@ -157,7 +188,7 @@ impl<'a> Mesh<'a> {
     }
 
     /// Defines the geometry to be renderered with a material.
-    pub fn primitives(&self) -> iter::Primitives<'a> {
+    pub fn primitives(&self) -> iter::Primitives<'a, E> {
         iter::Primitives {
             mesh: self.clone(),
             iter: self.json.primitives.iter().enumerate(),
@@ -170,9 +201,9 @@ impl<'a> Mesh<'a> {
     }
 }
 
-impl<'a> Primitive<'a> {
+impl<'a, E: json::ThirdPartyExtensions> Primitive<'a, E> {
     /// Constructs a `Primitive`.
-    pub(crate) fn new(mesh: Mesh<'a>, index: usize, json: &'a json::mesh::Primitive) -> Self {
+    pub(crate) fn new(mesh: Mesh<'a, E>, index: usize, json: &'a json::mesh::Primitive) -> Self {
         Self { mesh, index, json }
     }
 
@@ -201,7 +232,7 @@ impl<'a> Primitive<'a> {
     }
 
     /// Return the accessor with the given semantic.
-    pub fn get(&self, semantic: &Semantic) -> Option<Accessor<'a>> {
+    pub fn get(&self, semantic: &Semantic) -> Option<Accessor<'a, E>> {
         self.json
             .attributes
             .get(&json::validation::Checked::Valid(semantic.clone()))
@@ -214,7 +245,7 @@ impl<'a> Primitive<'a> {
     }
 
     /// Returns the accessor containing the primitive indices, if provided.
-    pub fn indices(&self) -> Option<Accessor<'a>> {
+    pub fn indices(&self) -> Option<Accessor<'a, E>> {
         self.json
             .indices
             .as_ref()
@@ -222,7 +253,7 @@ impl<'a> Primitive<'a> {
     }
 
     /// Returns an `Iterator` that visits the vertex attributes.
-    pub fn attributes(&self) -> iter::Attributes<'a> {
+    pub fn attributes(&self) -> iter::Attributes<'a, E> {
         iter::Attributes {
             document: self.mesh.document,
             prim: self.clone(),
@@ -231,7 +262,7 @@ impl<'a> Primitive<'a> {
     }
 
     /// Returns the material to apply to this primitive when rendering
-    pub fn material(&self) -> Material<'a> {
+    pub fn material(&self) -> Material<'a, E> {
         self.json
             .material
             .as_ref()
@@ -245,7 +276,7 @@ impl<'a> Primitive<'a> {
     }
 
     /// Returns an `Iterator` that visits the morph targets of the primitive.
-    pub fn morph_targets(&self) -> iter::MorphTargets<'a> {
+    pub fn morph_targets(&self) -> iter::MorphTargets<'a, E> {
         if let Some(slice) = self.json.targets.as_ref() {
             iter::MorphTargets {
                 document: self.mesh.document,
@@ -280,9 +311,9 @@ impl<'a> Primitive<'a> {
     /// Constructs the primitive reader.
     #[cfg(feature = "utils")]
     #[cfg_attr(docsrs, doc(cfg(feature = "utils")))]
-    pub fn reader<'s, F>(&'a self, get_buffer_data: F) -> Reader<'a, 's, F>
+    pub fn reader<'s, F>(&'a self, get_buffer_data: F) -> Reader<'a, 's, F, E>
     where
-        F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>,
+        F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>,
     {
         Reader {
             primitive: self,
@@ -292,9 +323,9 @@ impl<'a> Primitive<'a> {
 }
 
 #[cfg(feature = "utils")]
-impl<'a, 's, F> Reader<'a, 's, F>
+impl<'a, 's, F, E: json::ThirdPartyExtensions> Reader<'a, 's, F, E>
 where
-    F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>,
+    F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>,
 {
     /// Visits the vertex positions of a primitive.
     pub fn read_positions(&self) -> Option<util::ReadPositions<'s>> {
@@ -414,7 +445,7 @@ where
     }
 
     /// Visits the morph targets of the primitive.
-    pub fn read_morph_targets(&self) -> util::ReadMorphTargets<'a, 's, F> {
+    pub fn read_morph_targets(&self) -> util::ReadMorphTargets<'a, 's, F, E> {
         util::ReadMorphTargets {
             index: 0,
             reader: self.clone(),
@@ -422,19 +453,19 @@ where
     }
 }
 
-impl<'a> MorphTarget<'a> {
+impl<'a, E: json::ThirdPartyExtensions> MorphTarget<'a, E> {
     /// Returns the XYZ vertex position displacements.
-    pub fn positions(&self) -> Option<Accessor<'a>> {
+    pub fn positions(&self) -> Option<Accessor<'a, E>> {
         self.positions.clone()
     }
 
     /// Returns the XYZ vertex normal displacements.
-    pub fn normals(&self) -> Option<Accessor<'a>> {
+    pub fn normals(&self) -> Option<Accessor<'a, E>> {
         self.normals.clone()
     }
 
     /// Returns the XYZ vertex tangent displacements.
-    pub fn tangents(&self) -> Option<Accessor<'a>> {
+    pub fn tangents(&self) -> Option<Accessor<'a, E>> {
         self.tangents.clone()
     }
 }

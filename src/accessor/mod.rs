@@ -73,10 +73,10 @@ pub mod sparse;
 pub use self::util::{Item, Iter};
 
 /// A typed view into a buffer view.
-#[derive(Clone, Debug)]
-pub struct Accessor<'a> {
+#[derive(Debug)]
+pub struct Accessor<'a, E: json::ThirdPartyExtensions> {
     /// The parent `Document` struct.
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON index.
     index: usize,
@@ -85,10 +85,20 @@ pub struct Accessor<'a> {
     json: &'a json::accessor::Accessor,
 }
 
-impl<'a> Accessor<'a> {
+impl<'a, E: json::ThirdPartyExtensions> Clone for Accessor<'a, E> {
+    fn clone(&self) -> Self {
+        Self {
+            document: self.document,
+            index: self.index,
+            json: self.json
+        }
+    }
+}
+
+impl<'a, E: json::ThirdPartyExtensions> Accessor<'a, E> {
     /// Constructs an `Accessor`.
     pub(crate) fn new(
-        document: &'a Document,
+        document: &'a Document<E>,
         index: usize,
         json: &'a json::accessor::Accessor,
     ) -> Self {
@@ -112,7 +122,7 @@ impl<'a> Accessor<'a> {
     /// Returns the buffer view this accessor reads from.
     ///
     /// This may be `None` if the corresponding accessor is sparse.
-    pub fn view(&self) -> Option<buffer::View<'a>> {
+    pub fn view(&self) -> Option<buffer::View<'a, E>> {
         self.json
             .buffer_view
             .map(|view| self.document.views().nth(view.value()).unwrap())
@@ -168,7 +178,7 @@ impl<'a> Accessor<'a> {
 
     /// Returns sparse storage of attributes that deviate from their initialization
     /// value.
-    pub fn sparse(&self) -> Option<sparse::Sparse<'a>> {
+    pub fn sparse(&self) -> Option<sparse::Sparse<'a, E>> {
         self.json
             .sparse
             .as_ref()
