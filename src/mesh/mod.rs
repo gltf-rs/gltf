@@ -98,7 +98,7 @@ impl<'a, E: json::CustomExtensions> Clone for Mesh<'a, E> {
         Self {
             document: self.document,
             index: self.index,
-            json: self.json
+            json: self.json,
         }
     }
 }
@@ -149,13 +149,14 @@ where
     pub(crate) get_buffer_data: F,
 }
 
-impl<'a, 's, F, E: json::CustomExtensions> Clone for Reader<'a, 's, F, E> where
-F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>,
+impl<'a, 's, F, E: json::CustomExtensions> Clone for Reader<'a, 's, F, E>
+where
+    F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>,
 {
     fn clone(&self) -> Self {
         Self {
             primitive: self.primitive,
-            get_buffer_data: self.get_buffer_data.clone()
+            get_buffer_data: self.get_buffer_data.clone(),
         }
     }
 }

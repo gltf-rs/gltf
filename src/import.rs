@@ -184,7 +184,10 @@ pub fn import_image_data<E: json::CustomExtensions>(
     Ok(images)
 }
 
-fn import_impl<E: json::CustomExtensions>(Gltf { document, blob }: Gltf<E>, base: Option<&Path>) -> Result<Import<E>> {
+fn import_impl<E: json::CustomExtensions>(
+    Gltf { document, blob }: Gltf<E>,
+    base: Option<&Path>,
+) -> Result<Import<E>> {
     let buffer_data = import_buffer_data(&document, base, blob)?;
     let image_data = import_image_data(&document, base, &buffer_data)?;
     let import = (document, buffer_data, image_data);

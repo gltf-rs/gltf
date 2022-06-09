@@ -48,7 +48,7 @@ impl<'a, E: json::CustomExtensions> Clone for Texture<'a, E> {
         Self {
             document: self.document,
             index: self.index,
-            json: self.json
+            json: self.json,
         }
     }
 }

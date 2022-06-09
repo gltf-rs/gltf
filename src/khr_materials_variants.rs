@@ -45,7 +45,10 @@ pub struct Mapping<'a, E: json::CustomExtensions> {
 
 impl<'a, E: json::CustomExtensions> Mapping<'a, E> {
     /// Constructs a `Mapping`.
-    pub(crate) fn new(document: &'a Document<E>, json: &'a json::extensions::mesh::Mapping) -> Self {
+    pub(crate) fn new(
+        document: &'a Document<E>,
+        json: &'a json::extensions::mesh::Mapping,
+    ) -> Self {
         Self { document, json }
     }
 

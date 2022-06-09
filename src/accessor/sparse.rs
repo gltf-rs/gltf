@@ -24,7 +24,10 @@ pub struct Indices<'a, E: json::CustomExtensions> {
 
 impl<'a, E: json::CustomExtensions> Indices<'a, E> {
     /// Constructs `sparse::Indices`.
-    pub(crate) fn new(document: &'a Document<E>, json: &'a json::accessor::sparse::Indices) -> Self {
+    pub(crate) fn new(
+        document: &'a Document<E>,
+        json: &'a json::accessor::sparse::Indices,
+    ) -> Self {
         Self { document, json }
     }
 

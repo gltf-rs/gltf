@@ -281,7 +281,10 @@ impl<'a, T: Item> ItemIter<'a, T> {
 
 impl<'a, 's, T: Item> Iter<'s, T> {
     /// Constructor.
-    pub fn new<F, E: json::CustomExtensions>(accessor: super::Accessor<'a, E>, get_buffer_data: F) -> Option<Iter<'s, T>>
+    pub fn new<F, E: json::CustomExtensions>(
+        accessor: super::Accessor<'a, E>,
+        get_buffer_data: F,
+    ) -> Option<Iter<'s, T>>
     where
         F: Clone + Fn(buffer::Buffer<'a, E>) -> Option<&'s [u8]>,
     {

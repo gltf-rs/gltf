@@ -85,9 +85,9 @@ extern crate image as image_crate;
 #[macro_use]
 extern crate lazy_static;
 
+pub extern crate gltf_derive as derive;
 /// Contains (de)serializable data structures that match the glTF JSON text.
 pub extern crate gltf_json as json;
-pub extern crate gltf_derive as derive;
 
 /// Accessors for reading vertex attributes from buffer views.
 pub mod accessor;

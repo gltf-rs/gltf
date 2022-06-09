@@ -95,7 +95,11 @@ pub struct Data {
 
 impl<'a, E: json::CustomExtensions> Image<'a, E> {
     /// Constructs an `Image` from owned data.
-    pub(crate) fn new(document: &'a Document<E>, index: usize, json: &'a json::image::Image) -> Self {
+    pub(crate) fn new(
+        document: &'a Document<E>,
+        index: usize,
+        json: &'a json::image::Image,
+    ) -> Self {
         Self {
             document,
             index,

@@ -107,7 +107,11 @@ pub mod serialize {
 }
 
 pub trait CustomExtensions: 'static {
-    type Root: serde::Serialize + serde::de::DeserializeOwned + std::fmt::Debug + Clone + validation::Validate;
+    type Root: serde::Serialize
+        + serde::de::DeserializeOwned
+        + std::fmt::Debug
+        + Clone
+        + validation::Validate;
 }
 
 impl CustomExtensions for () {

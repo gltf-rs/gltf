@@ -35,7 +35,7 @@ impl<'a, E: json::CustomExtensions> Clone for Animation<'a, E> {
         Self {
             document: self.document,
             index: self.index,
-            json: self.json
+            json: self.json,
         }
     }
 }
@@ -54,7 +54,7 @@ impl<'a, E: json::CustomExtensions> Clone for Channel<'a, E> {
     fn clone(&self) -> Self {
         Self {
             anim: self.anim.clone(),
-            json: self.json
+            json: self.json,
         }
     }
 }

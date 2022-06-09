@@ -109,7 +109,11 @@ impl<'a, E: json::CustomExtensions> Buffer<'a, E> {
 
 impl<'a, E: json::CustomExtensions> View<'a, E> {
     /// Constructs a `View`.
-    pub(crate) fn new(document: &'a Document<E>, index: usize, json: &'a json::buffer::View) -> Self {
+    pub(crate) fn new(
+        document: &'a Document<E>,
+        index: usize,
+        json: &'a json::buffer::View,
+    ) -> Self {
         let parent = document.buffers().nth(json.buffer.value()).unwrap();
         Self {
             document,

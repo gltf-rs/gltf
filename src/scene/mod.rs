@@ -113,7 +113,11 @@ pub struct Scene<'a, E: json::CustomExtensions> {
 
 impl<'a, E: json::CustomExtensions> Node<'a, E> {
     /// Constructs a `Node`.
-    pub(crate) fn new(document: &'a Document<E>, index: usize, json: &'a json::scene::Node) -> Self {
+    pub(crate) fn new(
+        document: &'a Document<E>,
+        index: usize,
+        json: &'a json::scene::Node,
+    ) -> Self {
         Self {
             document,
             index,
@@ -213,7 +217,11 @@ impl<'a, E: json::CustomExtensions> Node<'a, E> {
 
 impl<'a, E: json::CustomExtensions> Scene<'a, E> {
     /// Constructs a `Scene`.
-    pub(crate) fn new(document: &'a Document<E>, index: usize, json: &'a json::scene::Scene) -> Self {
+    pub(crate) fn new(
+        document: &'a Document<E>,
+        index: usize,
+        json: &'a json::scene::Scene,
+    ) -> Self {
         Self {
             document,
             index,

@@ -256,7 +256,10 @@ impl<T> fmt::Display for Index<T> {
     }
 }
 
-impl<T: Copy> Validate for T where IndexEnum: From<T> {
+impl<T: Copy> Validate for T
+where
+    IndexEnum: From<T>,
+{
     fn validate<P, R, E: crate::CustomExtensions>(&self, root: &Root<E>, path: P, report: &mut R)
     where
         P: Fn() -> Path,
@@ -277,7 +280,7 @@ impl<T: Copy> Validate for T where IndexEnum: From<T> {
             IndexEnum::Skin(index) => root.get(index).is_some(),
             IndexEnum::Texture(index) => root.get(index).is_some(),
             #[cfg(feature = "KHR_lights_punctual")]
-            IndexEnum::Light(index) => root.get(index).is_some()
+            IndexEnum::Light(index) => root.get(index).is_some(),
         };
 
         if !is_valid {
@@ -325,7 +328,7 @@ enum IndexEnum {
     Skin(Index<Skin>),
     Texture(Index<Texture>),
     #[cfg(feature = "KHR_lights_punctual")]
-    Light(Index<crate::extensions::scene::khr_lights_punctual::Light>)
+    Light(Index<crate::extensions::scene::khr_lights_punctual::Light>),
 }
 
 impl From<Index<Accessor>> for IndexEnum {

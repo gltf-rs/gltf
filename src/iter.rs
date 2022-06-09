@@ -138,7 +138,7 @@ impl<'a, E: json::CustomExtensions> Clone for Nodes<'a, E> {
     fn clone(&self) -> Self {
         Self {
             iter: self.iter.clone(),
-            document: self.document
+            document: self.document,
         }
     }
 }
