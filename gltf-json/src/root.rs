@@ -127,24 +127,6 @@ impl<E: crate::ThirdPartyExtensions> Root<E> {
         (self as &dyn Get<T>).get(index)
     }
 
-    fn index_is_valid(&self, index: IndexEnum) -> bool {
-        match index {
-            IndexEnum::Accessor(index) => self.get(index).is_some(),
-            IndexEnum::Animation(index) => self.get(index).is_some(),
-            IndexEnum::Buffer(index) => self.get(index).is_some(),
-            IndexEnum::BufferView(index) => self.get(index).is_some(),
-            IndexEnum::Camera(index) => self.get(index).is_some(),
-            IndexEnum::Image(index) => self.get(index).is_some(),
-            IndexEnum::Material(index) => self.get(index).is_some(),
-            IndexEnum::Mesh(index) => self.get(index).is_some(),
-            IndexEnum::Node(index) => self.get(index).is_some(),
-            IndexEnum::Sampler(index) => self.get(index).is_some(),
-            IndexEnum::Scene(index) => self.get(index).is_some(),
-            IndexEnum::Skin(index) => self.get(index).is_some(),
-            IndexEnum::Texture(index) => self.get(index).is_some(),
-        }
-    }
-
     /// Deserialize from a JSON string slice.
     #[allow(clippy::should_implement_trait)]
     pub fn from_str(str_: &str) -> Result<Self, Error> {
@@ -280,7 +262,23 @@ impl<T: Copy> Validate for T where IndexEnum: From<T> {
         P: Fn() -> Path,
         R: FnMut(&dyn Fn() -> Path, validation::Error),
     {
-        if !root.index_is_valid(IndexEnum::from(*self)) {
+        let is_valid = match IndexEnum::from(*self) {
+            IndexEnum::Accessor(index) => root.get(index).is_some(),
+            IndexEnum::Animation(index) => root.get(index).is_some(),
+            IndexEnum::Buffer(index) => root.get(index).is_some(),
+            IndexEnum::BufferView(index) => root.get(index).is_some(),
+            IndexEnum::Camera(index) => root.get(index).is_some(),
+            IndexEnum::Image(index) => root.get(index).is_some(),
+            IndexEnum::Material(index) => root.get(index).is_some(),
+            IndexEnum::Mesh(index) => root.get(index).is_some(),
+            IndexEnum::Node(index) => root.get(index).is_some(),
+            IndexEnum::Sampler(index) => root.get(index).is_some(),
+            IndexEnum::Scene(index) => root.get(index).is_some(),
+            IndexEnum::Skin(index) => root.get(index).is_some(),
+            IndexEnum::Texture(index) => root.get(index).is_some(),
+        };
+
+        if !is_valid {
             report(&path, validation::Error::IndexOutOfBounds);
         }
     }
