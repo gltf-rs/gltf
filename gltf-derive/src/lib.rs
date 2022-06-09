@@ -40,17 +40,17 @@ fn expand(ast: &DeriveInput) -> proc_macro2::TokenStream {
         .collect();
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
     quote!(
-        impl #impl_generics crate::validation::Validate
+        impl #impl_generics crate::gltf_json::validation::Validate
             for #ident #ty_generics #where_clause
         {
-            fn validate<P, R, CE: crate::CustomExtensions>(
+            fn validate<P, R, CE: crate::gltf_json::CustomExtensions>(
                 &self,
-                _root: &crate::Root<CE>,
+                _root: &crate::gltf_json::Root<CE>,
                 _path: P,
                 _report: &mut R
             ) where
-                P: Fn() -> crate::Path,
-                R: FnMut(&Fn() -> crate::Path, crate::validation::Error),
+                P: Fn() -> crate::gltf_json::Path,
+                R: FnMut(&Fn() -> crate::gltf_json::Path, crate::gltf_json::validation::Error),
             {
                 #(
                     #validations;

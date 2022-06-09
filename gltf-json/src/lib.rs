@@ -123,3 +123,8 @@ pub struct AllExtensions;
 impl CustomExtensions for AllExtensions {
     type Root = std::collections::HashMap<String, serde_json::Value>;
 }
+
+// Small hack to get gltf-derive to work in this crate as well as externally.
+mod gltf_json {
+    pub use super::*;
+}
