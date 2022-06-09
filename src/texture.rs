@@ -32,7 +32,7 @@ pub struct Sampler<'a, E: json::ThirdPartyExtensions> {
 
 /// A texture and its sampler.
 #[derive(Debug)]
-pub struct Texture<'a, E: json::ThirdPartyExtensions> {
+pub struct Texture<'a, E: json::ThirdPartyExtensions = ()> {
     /// The parent `Document` struct.
     document: &'a Document<E>,
 

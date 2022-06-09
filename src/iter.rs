@@ -32,7 +32,7 @@ pub struct Accessors<'a, E: json::ThirdPartyExtensions> {
 
 /// An `Iterator` that visits every animation in a glTF asset.
 #[derive(Clone, Debug)]
-pub struct Animations<'a, E: json::ThirdPartyExtensions> {
+pub struct Animations<'a, E: json::ThirdPartyExtensions = ()> {
     /// Internal animation iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::animation::Animation>>,
 
@@ -125,13 +125,22 @@ pub struct Meshes<'a, E: json::ThirdPartyExtensions> {
 }
 
 /// An `Iterator` that visits every node in a glTF asset.
-#[derive(Clone, Debug)]
-pub struct Nodes<'a, E: json::ThirdPartyExtensions> {
+#[derive(Debug)]
+pub struct Nodes<'a, E: json::ThirdPartyExtensions = ()> {
     /// Internal node iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::scene::Node>>,
 
     /// The internal root glTF object.
     pub(crate) document: &'a Document<E>,
+}
+
+impl<'a, E: json::ThirdPartyExtensions> Clone for Nodes<'a, E> {
+    fn clone(&self) -> Self {
+        Self {
+            iter: self.iter.clone(),
+            document: self.document
+        }
+    }
 }
 
 /// An `Iterator` that visits every sampler in a glTF asset.

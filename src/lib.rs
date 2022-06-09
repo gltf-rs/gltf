@@ -87,6 +87,7 @@ extern crate lazy_static;
 
 /// Contains (de)serializable data structures that match the glTF JSON text.
 pub extern crate gltf_json as json;
+pub extern crate gltf_derive as derive;
 
 /// Accessors for reading vertex attributes from buffer views.
 pub mod accessor;
@@ -358,6 +359,11 @@ impl<E: json::ThirdPartyExtensions> Document<E> {
     /// Unwraps the glTF document.
     pub fn into_json(self) -> json::Root<E> {
         self.0
+    }
+
+    /// Access the inner JSON.
+    pub fn as_json(&self) -> &json::Root<E> {
+        &self.0
     }
 
     /// Perform validation checks on loaded glTF.
