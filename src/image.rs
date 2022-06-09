@@ -42,7 +42,7 @@ pub enum Format {
 
 /// Describes an image data source.
 #[derive(Clone, Debug)]
-pub enum Source<'a, E: json::ThirdPartyExtensions> {
+pub enum Source<'a, E: json::CustomExtensions> {
     /// Image data is contained in a buffer view.
     View {
         /// The buffer view containing the encoded image data.
@@ -64,7 +64,7 @@ pub enum Source<'a, E: json::ThirdPartyExtensions> {
 
 /// Image data used to create a texture.
 #[derive(Clone, Debug)]
-pub struct Image<'a, E: json::ThirdPartyExtensions> {
+pub struct Image<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     document: &'a Document<E>,
 
@@ -93,7 +93,7 @@ pub struct Data {
     pub height: u32,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Image<'a, E> {
+impl<'a, E: json::CustomExtensions> Image<'a, E> {
     /// Constructs an `Image` from owned data.
     pub(crate) fn new(document: &'a Document<E>, index: usize, json: &'a json::image::Image) -> Self {
         Self {

@@ -7,7 +7,7 @@ pub type ReadInverseBindMatrices<'a> = accessor::Iter<'a, [[f32; 4]; 4]>;
 
 /// Skin reader.
 #[derive(Clone, Debug)]
-pub struct Reader<'a, 's, F, E: json::ThirdPartyExtensions>
+pub struct Reader<'a, 's, F, E: json::CustomExtensions>
 where
     F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>,
 {
@@ -15,7 +15,7 @@ where
     pub(crate) get_buffer_data: F,
 }
 
-impl<'a, 's, F, E: json::ThirdPartyExtensions> Reader<'a, 's, F, E>
+impl<'a, 's, F, E: json::CustomExtensions> Reader<'a, 's, F, E>
 where
     F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>,
 {

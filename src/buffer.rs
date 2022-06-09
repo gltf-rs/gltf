@@ -7,7 +7,7 @@ pub use json::buffer::Target;
 
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Clone, Debug)]
-pub struct Buffer<'a, E: json::ThirdPartyExtensions = ()> {
+pub struct Buffer<'a, E: json::CustomExtensions = ()> {
     /// The parent `Document` struct.
     #[allow(dead_code)]
     document: &'a Document<E>,
@@ -21,7 +21,7 @@ pub struct Buffer<'a, E: json::ThirdPartyExtensions = ()> {
 
 /// A view into a buffer generally representing a subset of the buffer.
 #[derive(Clone, Debug)]
-pub struct View<'a, E: json::ThirdPartyExtensions> {
+pub struct View<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     document: &'a Document<E>,
 
@@ -61,7 +61,7 @@ impl ops::Deref for Data {
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Buffer<'a, E> {
+impl<'a, E: json::CustomExtensions> Buffer<'a, E> {
     /// Constructs a `Buffer`.
     pub(crate) fn new(
         document: &'a Document<E>,
@@ -107,7 +107,7 @@ impl<'a, E: json::ThirdPartyExtensions> Buffer<'a, E> {
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> View<'a, E> {
+impl<'a, E: json::CustomExtensions> View<'a, E> {
     /// Constructs a `View`.
     pub(crate) fn new(document: &'a Document<E>, index: usize, json: &'a json::buffer::View) -> Self {
         let parent = document.buffers().nth(json.buffer.value()).unwrap();

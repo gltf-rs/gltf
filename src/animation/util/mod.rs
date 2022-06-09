@@ -20,7 +20,7 @@ pub type Scales<'a> = accessor::Iter<'a, [f32; 3]>;
 
 /// Animation channel reader.
 #[derive(Clone, Debug)]
-pub struct Reader<'a, 's, F, E: json::ThirdPartyExtensions>
+pub struct Reader<'a, 's, F, E: json::CustomExtensions>
 where
     F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>,
 {
@@ -136,7 +136,7 @@ impl<'a> MorphTargetWeights<'a> {
     }
 }
 
-impl<'a, 's, F, E: json::ThirdPartyExtensions> Reader<'a, 's, F, E>
+impl<'a, 's, F, E: json::CustomExtensions> Reader<'a, 's, F, E>
 where
     F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>,
 {

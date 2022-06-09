@@ -249,7 +249,7 @@ pub enum Error {
 
 /// glTF JSON wrapper plus binary payload.
 #[derive(Clone, Debug)]
-pub struct Gltf<E: json::ThirdPartyExtensions = ()> {
+pub struct Gltf<E: json::CustomExtensions = ()> {
     /// The glTF JSON wrapper.
     pub document: Document<E>,
 
@@ -259,9 +259,9 @@ pub struct Gltf<E: json::ThirdPartyExtensions = ()> {
 
 /// glTF JSON wrapper.
 #[derive(Clone, Debug)]
-pub struct Document<E: json::ThirdPartyExtensions = ()>(json::Root<E>);
+pub struct Document<E: json::CustomExtensions = ()>(json::Root<E>);
 
-impl<E: json::ThirdPartyExtensions> Gltf<E> {
+impl<E: json::CustomExtensions> Gltf<E> {
     /// Convenience function that loads glTF from the file system.
     pub fn open<P>(path: P) -> Result<Self>
     where
@@ -329,20 +329,20 @@ impl<E: json::ThirdPartyExtensions> Gltf<E> {
     }
 }
 
-impl<E: json::ThirdPartyExtensions> ops::Deref for Gltf<E> {
+impl<E: json::CustomExtensions> ops::Deref for Gltf<E> {
     type Target = Document<E>;
     fn deref(&self) -> &Self::Target {
         &self.document
     }
 }
 
-impl<E: json::ThirdPartyExtensions> ops::DerefMut for Gltf<E> {
+impl<E: json::CustomExtensions> ops::DerefMut for Gltf<E> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.document
     }
 }
 
-impl<E: json::ThirdPartyExtensions> Document<E> {
+impl<E: json::CustomExtensions> Document<E> {
     /// Loads glTF from pre-deserialized JSON.
     pub fn from_json(json: json::Root<E>) -> Result<Self> {
         let document = Self::from_json_without_validation(json);

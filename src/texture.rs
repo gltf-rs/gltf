@@ -8,7 +8,7 @@ lazy_static! {
 
 /// A reference to a `Texture`.
 #[derive(Clone, Debug)]
-pub struct Info<'a, E: json::ThirdPartyExtensions> {
+pub struct Info<'a, E: json::CustomExtensions> {
     /// The parent `Texture` struct.
     texture: Texture<'a, E>,
 
@@ -18,7 +18,7 @@ pub struct Info<'a, E: json::ThirdPartyExtensions> {
 
 ///  Texture sampler properties for filtering and wrapping modes.
 #[derive(Clone, Debug)]
-pub struct Sampler<'a, E: json::ThirdPartyExtensions> {
+pub struct Sampler<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     #[allow(dead_code)]
     document: &'a Document<E>,
@@ -32,7 +32,7 @@ pub struct Sampler<'a, E: json::ThirdPartyExtensions> {
 
 /// A texture and its sampler.
 #[derive(Debug)]
-pub struct Texture<'a, E: json::ThirdPartyExtensions = ()> {
+pub struct Texture<'a, E: json::CustomExtensions = ()> {
     /// The parent `Document` struct.
     document: &'a Document<E>,
 
@@ -43,7 +43,7 @@ pub struct Texture<'a, E: json::ThirdPartyExtensions = ()> {
     json: &'a json::texture::Texture,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Clone for Texture<'a, E> {
+impl<'a, E: json::CustomExtensions> Clone for Texture<'a, E> {
     fn clone(&self) -> Self {
         Self {
             document: self.document,
@@ -53,7 +53,7 @@ impl<'a, E: json::ThirdPartyExtensions> Clone for Texture<'a, E> {
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Sampler<'a, E> {
+impl<'a, E: json::CustomExtensions> Sampler<'a, E> {
     /// Constructs a `Sampler`.
     pub(crate) fn new(
         document: &'a Document<E>,
@@ -115,7 +115,7 @@ impl<'a, E: json::ThirdPartyExtensions> Sampler<'a, E> {
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Texture<'a, E> {
+impl<'a, E: json::CustomExtensions> Texture<'a, E> {
     /// Constructs a `Texture`.
     pub(crate) fn new(
         document: &'a Document<E>,
@@ -168,7 +168,7 @@ impl<'a, E: json::ThirdPartyExtensions> Texture<'a, E> {
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Info<'a, E> {
+impl<'a, E: json::CustomExtensions> Info<'a, E> {
     /// Constructs a reference to a `Texture`.
     pub(crate) fn new(texture: Texture<'a, E>, json: &'a json::texture::Info) -> Self {
         Self { texture, json }
@@ -202,7 +202,7 @@ impl<'a, E: json::ThirdPartyExtensions> Info<'a, E> {
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> AsRef<Texture<'a, E>> for Info<'a, E> {
+impl<'a, E: json::CustomExtensions> AsRef<Texture<'a, E>> for Info<'a, E> {
     fn as_ref(&self) -> &Texture<'a, E> {
         &self.texture
     }

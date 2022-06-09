@@ -3,7 +3,7 @@ use serde_derive::{Deserialize, Serialize};
 
 /// The root object of a glTF 2.0 asset.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct Root<E: crate::ThirdPartyExtensions> {
+pub struct Root<E: crate::CustomExtensions> {
     #[cfg(feature = "KHR_lights_punctual")]
     #[serde(
         default,

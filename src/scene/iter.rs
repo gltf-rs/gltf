@@ -4,7 +4,7 @@ use crate::{Document, Node};
 
 /// An `Iterator` that visits the nodes in a scene.
 #[derive(Clone, Debug)]
-pub struct Nodes<'a, E: json::ThirdPartyExtensions> {
+pub struct Nodes<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     pub(crate) document: &'a Document<E>,
 
@@ -14,7 +14,7 @@ pub struct Nodes<'a, E: json::ThirdPartyExtensions> {
 
 /// An `Iterator` that visits the children of a node.
 #[derive(Clone, Debug)]
-pub struct Children<'a, E: json::ThirdPartyExtensions> {
+pub struct Children<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     pub(crate) document: &'a Document<E>,
 
@@ -22,8 +22,8 @@ pub struct Children<'a, E: json::ThirdPartyExtensions> {
     pub(crate) iter: slice::Iter<'a, json::Index<json::scene::Node>>,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Nodes<'a, E> {}
-impl<'a, E: json::ThirdPartyExtensions> Iterator for Nodes<'a, E> {
+impl<'a, E: json::CustomExtensions> ExactSizeIterator for Nodes<'a, E> {}
+impl<'a, E: json::CustomExtensions> Iterator for Nodes<'a, E> {
     type Item = Node<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
@@ -36,8 +36,8 @@ impl<'a, E: json::ThirdPartyExtensions> Iterator for Nodes<'a, E> {
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Children<'a, E> {}
-impl<'a, E: json::ThirdPartyExtensions> Iterator for Children<'a, E> {
+impl<'a, E: json::CustomExtensions> ExactSizeIterator for Children<'a, E> {}
+impl<'a, E: json::CustomExtensions> Iterator for Children<'a, E> {
     type Item = Node<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter

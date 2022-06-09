@@ -86,7 +86,7 @@ impl Transform {
 /// When a node contains a skin, all its meshes contain `JOINTS_0` and `WEIGHTS_0`
 /// attributes.
 #[derive(Clone, Debug)]
-pub struct Node<'a, E: json::ThirdPartyExtensions = ()> {
+pub struct Node<'a, E: json::CustomExtensions = ()> {
     /// The parent `Document` struct.
     document: &'a Document<E>,
 
@@ -99,7 +99,7 @@ pub struct Node<'a, E: json::ThirdPartyExtensions = ()> {
 
 /// The root nodes of a scene.
 #[derive(Clone, Debug)]
-pub struct Scene<'a, E: json::ThirdPartyExtensions> {
+pub struct Scene<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     #[allow(dead_code)]
     document: &'a Document<E>,
@@ -111,7 +111,7 @@ pub struct Scene<'a, E: json::ThirdPartyExtensions> {
     json: &'a json::scene::Scene,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Node<'a, E> {
+impl<'a, E: json::CustomExtensions> Node<'a, E> {
     /// Constructs a `Node`.
     pub(crate) fn new(document: &'a Document<E>, index: usize, json: &'a json::scene::Node) -> Self {
         Self {
@@ -211,7 +211,7 @@ impl<'a, E: json::ThirdPartyExtensions> Node<'a, E> {
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Scene<'a, E> {
+impl<'a, E: json::CustomExtensions> Scene<'a, E> {
     /// Constructs a `Scene`.
     pub(crate) fn new(document: &'a Document<E>, index: usize, json: &'a json::scene::Scene) -> Self {
         Self {

@@ -74,7 +74,7 @@ pub use self::util::{Item, Iter};
 
 /// A typed view into a buffer view.
 #[derive(Debug)]
-pub struct Accessor<'a, E: json::ThirdPartyExtensions> {
+pub struct Accessor<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     document: &'a Document<E>,
 
@@ -85,7 +85,7 @@ pub struct Accessor<'a, E: json::ThirdPartyExtensions> {
     json: &'a json::accessor::Accessor,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Clone for Accessor<'a, E> {
+impl<'a, E: json::CustomExtensions> Clone for Accessor<'a, E> {
     fn clone(&self) -> Self {
         Self {
             document: self.document,
@@ -95,7 +95,7 @@ impl<'a, E: json::ThirdPartyExtensions> Clone for Accessor<'a, E> {
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Accessor<'a, E> {
+impl<'a, E: json::CustomExtensions> Accessor<'a, E> {
     /// Constructs an `Accessor`.
     pub(crate) fn new(
         document: &'a Document<E>,

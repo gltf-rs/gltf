@@ -5,7 +5,7 @@ use crate::Document;
 
 /// An `Iterator` that visits the morph targets of a `Primitive`.
 #[derive(Clone, Debug)]
-pub struct MorphTargets<'a, E: json::ThirdPartyExtensions> {
+pub struct MorphTargets<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     pub(crate) document: &'a Document<E>,
 
@@ -15,7 +15,7 @@ pub struct MorphTargets<'a, E: json::ThirdPartyExtensions> {
 
 /// An `Iterator` that visits the attributes of a `Primitive`.
 #[derive(Clone, Debug)]
-pub struct Attributes<'a, E: json::ThirdPartyExtensions> {
+pub struct Attributes<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     pub(crate) document: &'a Document<E>,
 
@@ -33,7 +33,7 @@ pub struct Attributes<'a, E: json::ThirdPartyExtensions> {
 
 /// An `Iterator` that visits the primitives of a `Mesh`.
 #[derive(Clone, Debug)]
-pub struct Primitives<'a, E: json::ThirdPartyExtensions> {
+pub struct Primitives<'a, E: json::CustomExtensions> {
     /// The parent `Mesh` struct.
     pub(crate) mesh: Mesh<'a, E>,
 
@@ -41,8 +41,8 @@ pub struct Primitives<'a, E: json::ThirdPartyExtensions> {
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::mesh::Primitive>>,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Attributes<'a, E> {}
-impl<'a, E: json::ThirdPartyExtensions> Iterator for Attributes<'a, E> {
+impl<'a, E: json::CustomExtensions> ExactSizeIterator for Attributes<'a, E> {}
+impl<'a, E: json::CustomExtensions> Iterator for Attributes<'a, E> {
     type Item = Attribute<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(key, index)| {
@@ -57,8 +57,8 @@ impl<'a, E: json::ThirdPartyExtensions> Iterator for Attributes<'a, E> {
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for Primitives<'a, E> {}
-impl<'a, E: json::ThirdPartyExtensions> Iterator for Primitives<'a, E> {
+impl<'a, E: json::CustomExtensions> ExactSizeIterator for Primitives<'a, E> {}
+impl<'a, E: json::CustomExtensions> Iterator for Primitives<'a, E> {
     type Item = Primitive<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
@@ -84,7 +84,7 @@ impl<'a, E: json::ThirdPartyExtensions> Iterator for Primitives<'a, E> {
     }
 }
 
-fn map_morph_target<'a, E: json::ThirdPartyExtensions>(
+fn map_morph_target<'a, E: json::CustomExtensions>(
     document: &'a crate::Document<E>,
     json: &json::mesh::MorphTarget,
 ) -> MorphTarget<'a, E> {
@@ -107,8 +107,8 @@ fn map_morph_target<'a, E: json::ThirdPartyExtensions>(
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> ExactSizeIterator for MorphTargets<'a, E> {}
-impl<'a, E: json::ThirdPartyExtensions> Iterator for MorphTargets<'a, E> {
+impl<'a, E: json::CustomExtensions> ExactSizeIterator for MorphTargets<'a, E> {}
+impl<'a, E: json::CustomExtensions> Iterator for MorphTargets<'a, E> {
     type Item = MorphTarget<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter

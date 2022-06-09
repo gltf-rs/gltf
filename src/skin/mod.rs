@@ -17,7 +17,7 @@ pub use self::util::Reader;
 
 /// Joints and matrices defining a skin.
 #[derive(Debug)]
-pub struct Skin<'a, E: json::ThirdPartyExtensions> {
+pub struct Skin<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     document: &'a Document<E>,
 
@@ -28,7 +28,7 @@ pub struct Skin<'a, E: json::ThirdPartyExtensions> {
     json: &'a json::skin::Skin,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Clone for Skin<'a, E> {
+impl<'a, E: json::CustomExtensions> Clone for Skin<'a, E> {
     fn clone(&self) -> Self {
         Self {
             document: self.document,
@@ -38,7 +38,7 @@ impl<'a, E: json::ThirdPartyExtensions> Clone for Skin<'a, E> {
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Skin<'a, E> {
+impl<'a, E: json::CustomExtensions> Skin<'a, E> {
     /// Constructs a `Skin`.
     pub(crate) fn new(document: &'a Document<E>, index: usize, json: &'a json::skin::Skin) -> Self {
         Self {

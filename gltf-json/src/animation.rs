@@ -146,7 +146,7 @@ pub struct Sampler {
 }
 
 impl Validate for Animation {
-    fn validate<P, R, E: crate::ThirdPartyExtensions>(&self, root: &Root<E>, path: P, report: &mut R)
+    fn validate<P, R, E: crate::CustomExtensions>(&self, root: &Root<E>, path: P, report: &mut R)
     where
         P: Fn() -> Path,
         R: FnMut(&dyn Fn() -> Path, Error),

@@ -81,7 +81,7 @@ where
 }
 
 /// Import the buffer data referenced by a glTF document.
-pub fn import_buffer_data<E: json::ThirdPartyExtensions>(
+pub fn import_buffer_data<E: json::CustomExtensions>(
     document: &Document<E>,
     base: Option<&Path>,
     mut blob: Option<Vec<u8>>,
@@ -108,7 +108,7 @@ pub fn import_buffer_data<E: json::ThirdPartyExtensions>(
 }
 
 /// Import the image data referenced by a glTF document.
-pub fn import_image_data<E: json::ThirdPartyExtensions>(
+pub fn import_image_data<E: json::CustomExtensions>(
     document: &Document<E>,
     base: Option<&Path>,
     buffer_data: &[buffer::Data],
@@ -184,14 +184,14 @@ pub fn import_image_data<E: json::ThirdPartyExtensions>(
     Ok(images)
 }
 
-fn import_impl<E: json::ThirdPartyExtensions>(Gltf { document, blob }: Gltf<E>, base: Option<&Path>) -> Result<Import<E>> {
+fn import_impl<E: json::CustomExtensions>(Gltf { document, blob }: Gltf<E>, base: Option<&Path>) -> Result<Import<E>> {
     let buffer_data = import_buffer_data(&document, base, blob)?;
     let image_data = import_image_data(&document, base, &buffer_data)?;
     let import = (document, buffer_data, image_data);
     Ok(import)
 }
 
-fn import_path<E: json::ThirdPartyExtensions>(path: &Path) -> Result<Import<E>> {
+fn import_path<E: json::CustomExtensions>(path: &Path) -> Result<Import<E>> {
     let base = path.parent().unwrap_or_else(|| Path::new("./"));
     let file = fs::File::open(path).map_err(Error::Io)?;
     let reader = io::BufReader::new(file);
@@ -225,14 +225,14 @@ fn import_path<E: json::ThirdPartyExtensions>(path: &Path) -> Result<Import<E>> 
 ///
 /// [`Gltf`]: struct.Gltf.html
 /// [`Glb`]: struct.Glb.html
-pub fn import<P, E: json::ThirdPartyExtensions>(path: P) -> Result<Import<E>>
+pub fn import<P, E: json::CustomExtensions>(path: P) -> Result<Import<E>>
 where
     P: AsRef<Path>,
 {
     import_path(path.as_ref())
 }
 
-pub fn import_slice_impl<E: json::ThirdPartyExtensions>(slice: &[u8]) -> Result<Import<E>> {
+pub fn import_slice_impl<E: json::CustomExtensions>(slice: &[u8]) -> Result<Import<E>> {
     import_impl(Gltf::from_slice(slice)?, None)
 }
 
@@ -255,7 +255,7 @@ pub fn import_slice_impl<E: json::ThirdPartyExtensions>(slice: &[u8]) -> Result<
 /// #     run().expect("test failure");
 /// # }
 /// ```
-pub fn import_slice<S, E: json::ThirdPartyExtensions>(slice: S) -> Result<Import<E>>
+pub fn import_slice<S, E: json::CustomExtensions>(slice: S) -> Result<Import<E>>
 where
     S: AsRef<[u8]>,
 {

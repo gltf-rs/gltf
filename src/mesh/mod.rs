@@ -82,7 +82,7 @@ pub struct Bounds<T> {
 
 /// A set of primitives to be rendered.
 #[derive(Debug)]
-pub struct Mesh<'a, E: json::ThirdPartyExtensions> {
+pub struct Mesh<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     document: &'a Document<E>,
 
@@ -93,7 +93,7 @@ pub struct Mesh<'a, E: json::ThirdPartyExtensions> {
     json: &'a json::mesh::Mesh,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Clone for Mesh<'a, E> {
+impl<'a, E: json::CustomExtensions> Clone for Mesh<'a, E> {
     fn clone(&self) -> Self {
         Self {
             document: self.document,
@@ -105,7 +105,7 @@ impl<'a, E: json::ThirdPartyExtensions> Clone for Mesh<'a, E> {
 
 /// A single morph target for a mesh primitive.
 #[derive(Clone, Debug)]
-pub struct MorphTarget<'a, E: json::ThirdPartyExtensions> {
+pub struct MorphTarget<'a, E: json::CustomExtensions> {
     /// XYZ vertex position displacements.
     positions: Option<Accessor<'a, E>>,
 
@@ -118,7 +118,7 @@ pub struct MorphTarget<'a, E: json::ThirdPartyExtensions> {
 
 /// Geometry to be rendered with the given material.
 #[derive(Debug)]
-pub struct Primitive<'a, E: json::ThirdPartyExtensions> {
+pub struct Primitive<'a, E: json::CustomExtensions> {
     /// The parent `Mesh` struct.
     mesh: Mesh<'a, E>,
 
@@ -129,7 +129,7 @@ pub struct Primitive<'a, E: json::ThirdPartyExtensions> {
     json: &'a json::mesh::Primitive,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Clone for Primitive<'a, E> {
+impl<'a, E: json::CustomExtensions> Clone for Primitive<'a, E> {
     fn clone(&self) -> Self {
         Self {
             mesh: self.mesh.clone(),
@@ -141,7 +141,7 @@ impl<'a, E: json::ThirdPartyExtensions> Clone for Primitive<'a, E> {
 
 /// Mesh primitive reader.
 #[derive(Debug)]
-pub struct Reader<'a, 's, F, E: json::ThirdPartyExtensions>
+pub struct Reader<'a, 's, F, E: json::CustomExtensions>
 where
     F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>,
 {
@@ -149,7 +149,7 @@ where
     pub(crate) get_buffer_data: F,
 }
 
-impl<'a, 's, F, E: json::ThirdPartyExtensions> Clone for Reader<'a, 's, F, E> where
+impl<'a, 's, F, E: json::CustomExtensions> Clone for Reader<'a, 's, F, E> where
 F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>,
 {
     fn clone(&self) -> Self {
@@ -160,7 +160,7 @@ F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>,
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Mesh<'a, E> {
+impl<'a, E: json::CustomExtensions> Mesh<'a, E> {
     /// Constructs a `Mesh`.
     pub(crate) fn new(document: &'a Document<E>, index: usize, json: &'a json::mesh::Mesh) -> Self {
         Self {
@@ -201,7 +201,7 @@ impl<'a, E: json::ThirdPartyExtensions> Mesh<'a, E> {
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Primitive<'a, E> {
+impl<'a, E: json::CustomExtensions> Primitive<'a, E> {
     /// Constructs a `Primitive`.
     pub(crate) fn new(mesh: Mesh<'a, E>, index: usize, json: &'a json::mesh::Primitive) -> Self {
         Self { mesh, index, json }
@@ -323,7 +323,7 @@ impl<'a, E: json::ThirdPartyExtensions> Primitive<'a, E> {
 }
 
 #[cfg(feature = "utils")]
-impl<'a, 's, F, E: json::ThirdPartyExtensions> Reader<'a, 's, F, E>
+impl<'a, 's, F, E: json::CustomExtensions> Reader<'a, 's, F, E>
 where
     F: Clone + Fn(Buffer<'a, E>) -> Option<&'s [u8]>,
 {
@@ -453,7 +453,7 @@ where
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> MorphTarget<'a, E> {
+impl<'a, E: json::CustomExtensions> MorphTarget<'a, E> {
     /// Returns the XYZ vertex position displacements.
     pub fn positions(&self) -> Option<Accessor<'a, E>> {
         self.positions.clone()

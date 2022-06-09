@@ -19,7 +19,7 @@ pub use self::util::Reader;
 
 /// A keyframe animation.
 #[derive(Debug)]
-pub struct Animation<'a, E: json::ThirdPartyExtensions> {
+pub struct Animation<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     document: &'a Document<E>,
 
@@ -30,7 +30,7 @@ pub struct Animation<'a, E: json::ThirdPartyExtensions> {
     json: &'a json::animation::Animation,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Clone for Animation<'a, E> {
+impl<'a, E: json::CustomExtensions> Clone for Animation<'a, E> {
     fn clone(&self) -> Self {
         Self {
             document: self.document,
@@ -42,7 +42,7 @@ impl<'a, E: json::ThirdPartyExtensions> Clone for Animation<'a, E> {
 
 /// Targets an animation's sampler at a node's property.
 #[derive(Debug)]
-pub struct Channel<'a, E: json::ThirdPartyExtensions> {
+pub struct Channel<'a, E: json::CustomExtensions> {
     /// The parent `Animation` struct.
     anim: Animation<'a, E>,
 
@@ -50,7 +50,7 @@ pub struct Channel<'a, E: json::ThirdPartyExtensions> {
     json: &'a json::animation::Channel,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Clone for Channel<'a, E> {
+impl<'a, E: json::CustomExtensions> Clone for Channel<'a, E> {
     fn clone(&self) -> Self {
         Self {
             anim: self.anim.clone(),
@@ -61,7 +61,7 @@ impl<'a, E: json::ThirdPartyExtensions> Clone for Channel<'a, E> {
 
 /// Defines a keyframe graph (but not its target).
 #[derive(Clone, Debug)]
-pub struct Sampler<'a, E: json::ThirdPartyExtensions> {
+pub struct Sampler<'a, E: json::CustomExtensions> {
     /// The parent `Animation` struct.
     anim: Animation<'a, E>,
 
@@ -71,7 +71,7 @@ pub struct Sampler<'a, E: json::ThirdPartyExtensions> {
 
 /// The node and TRS property that an animation channel targets.
 #[derive(Clone, Debug)]
-pub struct Target<'a, E: json::ThirdPartyExtensions> {
+pub struct Target<'a, E: json::CustomExtensions> {
     /// The parent `Animation` struct.
     anim: Animation<'a, E>,
 
@@ -79,7 +79,7 @@ pub struct Target<'a, E: json::ThirdPartyExtensions> {
     json: &'a json::animation::Target,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Animation<'a, E> {
+impl<'a, E: json::CustomExtensions> Animation<'a, E> {
     /// Constructs an `Animation`.
     pub(crate) fn new(
         document: &'a Document<E>,
@@ -131,7 +131,7 @@ impl<'a, E: json::ThirdPartyExtensions> Animation<'a, E> {
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Channel<'a, E> {
+impl<'a, E: json::CustomExtensions> Channel<'a, E> {
     /// Constructs a `Channel`.
     pub(crate) fn new(anim: Animation<'a, E>, json: &'a json::animation::Channel) -> Self {
         Self { anim, json }
@@ -172,7 +172,7 @@ impl<'a, E: json::ThirdPartyExtensions> Channel<'a, E> {
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Target<'a, E> {
+impl<'a, E: json::CustomExtensions> Target<'a, E> {
     /// Constructs a `Target`.
     pub(crate) fn new(anim: Animation<'a, E>, json: &'a json::animation::Target) -> Self {
         Self { anim, json }
@@ -204,7 +204,7 @@ impl<'a, E: json::ThirdPartyExtensions> Target<'a, E> {
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Sampler<'a, E> {
+impl<'a, E: json::CustomExtensions> Sampler<'a, E> {
     /// Constructs a `Sampler`.
     pub(crate) fn new(anim: Animation<'a, E>, json: &'a json::animation::Sampler) -> Self {
         Self { anim, json }

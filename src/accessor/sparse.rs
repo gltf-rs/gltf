@@ -14,7 +14,7 @@ pub enum IndexType {
 }
 
 /// Indices of those attributes that deviate from their initialization value.
-pub struct Indices<'a, E: json::ThirdPartyExtensions> {
+pub struct Indices<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     document: &'a Document<E>,
 
@@ -22,7 +22,7 @@ pub struct Indices<'a, E: json::ThirdPartyExtensions> {
     json: &'a json::accessor::sparse::Indices,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Indices<'a, E> {
+impl<'a, E: json::CustomExtensions> Indices<'a, E> {
     /// Constructs `sparse::Indices`.
     pub(crate) fn new(document: &'a Document<E>, json: &'a json::accessor::sparse::Indices) -> Self {
         Self { document, json }
@@ -58,7 +58,7 @@ impl<'a, E: json::ThirdPartyExtensions> Indices<'a, E> {
 }
 
 /// Sparse storage of attributes that deviate from their initialization value.
-pub struct Sparse<'a, E: json::ThirdPartyExtensions> {
+pub struct Sparse<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     document: &'a Document<E>,
 
@@ -66,7 +66,7 @@ pub struct Sparse<'a, E: json::ThirdPartyExtensions> {
     json: &'a json::accessor::sparse::Sparse,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Sparse<'a, E> {
+impl<'a, E: json::CustomExtensions> Sparse<'a, E> {
     /// Constructs `Sparse`.
     pub(crate) fn new(document: &'a Document<E>, json: &'a json::accessor::sparse::Sparse) -> Self {
         Self { document, json }
@@ -97,7 +97,7 @@ impl<'a, E: json::ThirdPartyExtensions> Sparse<'a, E> {
 
 /// Array of size `count * number_of_components` storing the displaced accessor
 /// attributes pointed by `accessor::sparse::Indices`.
-pub struct Values<'a, E: json::ThirdPartyExtensions> {
+pub struct Values<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     document: &'a Document<E>,
 
@@ -105,7 +105,7 @@ pub struct Values<'a, E: json::ThirdPartyExtensions> {
     json: &'a json::accessor::sparse::Values,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Values<'a, E> {
+impl<'a, E: json::CustomExtensions> Values<'a, E> {
     /// Constructs `sparse::Values`.
     pub(crate) fn new(document: &'a Document<E>, json: &'a json::accessor::sparse::Values) -> Self {
         Self { document, json }

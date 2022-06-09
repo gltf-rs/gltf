@@ -2,7 +2,7 @@ use crate::Document;
 
 /// A camera's projection.
 #[derive(Clone, Debug)]
-pub enum Projection<'a, E: json::ThirdPartyExtensions> {
+pub enum Projection<'a, E: json::CustomExtensions> {
     /// Describes an orthographic projection.
     Orthographic(Orthographic<'a, E>),
 
@@ -13,7 +13,7 @@ pub enum Projection<'a, E: json::ThirdPartyExtensions> {
 /// A camera's projection.  A node can reference a camera to apply a transform to
 /// place the camera in the scene.
 #[derive(Clone, Debug)]
-pub struct Camera<'a, E: json::ThirdPartyExtensions> {
+pub struct Camera<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     document: &'a Document<E>,
 
@@ -26,7 +26,7 @@ pub struct Camera<'a, E: json::ThirdPartyExtensions> {
 
 ///  Values for an orthographic camera projection.
 #[derive(Clone, Debug)]
-pub struct Orthographic<'a, E: json::ThirdPartyExtensions> {
+pub struct Orthographic<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     #[allow(dead_code)]
     document: &'a Document<E>,
@@ -37,7 +37,7 @@ pub struct Orthographic<'a, E: json::ThirdPartyExtensions> {
 
 /// Values for a perspective camera projection.
 #[derive(Clone, Debug)]
-pub struct Perspective<'a, E: json::ThirdPartyExtensions> {
+pub struct Perspective<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     #[allow(dead_code)]
     document: &'a Document<E>,
@@ -46,7 +46,7 @@ pub struct Perspective<'a, E: json::ThirdPartyExtensions> {
     json: &'a json::camera::Perspective,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Camera<'a, E> {
+impl<'a, E: json::CustomExtensions> Camera<'a, E> {
     /// Constructs a `Camera`.
     pub(crate) fn new(
         document: &'a Document<E>,
@@ -92,7 +92,7 @@ impl<'a, E: json::ThirdPartyExtensions> Camera<'a, E> {
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Orthographic<'a, E> {
+impl<'a, E: json::CustomExtensions> Orthographic<'a, E> {
     /// Constructs a `Orthographic` camera projection.
     pub(crate) fn new(document: &'a Document<E>, json: &'a json::camera::Orthographic) -> Self {
         Self { document, json }
@@ -124,7 +124,7 @@ impl<'a, E: json::ThirdPartyExtensions> Orthographic<'a, E> {
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Perspective<'a, E> {
+impl<'a, E: json::CustomExtensions> Perspective<'a, E> {
     /// Constructs a `Perspective` camera projection.
     pub(crate) fn new(document: &'a Document<E>, json: &'a json::camera::Perspective) -> Self {
         Self { document, json }

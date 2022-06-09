@@ -8,7 +8,7 @@ lazy_static! {
 
 /// The material appearance of a primitive.
 #[derive(Clone, Debug)]
-pub struct Material<'a, E: json::ThirdPartyExtensions> {
+pub struct Material<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     document: &'a Document<E>,
 
@@ -19,7 +19,7 @@ pub struct Material<'a, E: json::ThirdPartyExtensions> {
     json: &'a json::material::Material,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> Material<'a, E> {
+impl<'a, E: json::CustomExtensions> Material<'a, E> {
     /// Constructs a `Material`.
     pub(crate) fn new(
         document: &'a Document<E>,
@@ -227,7 +227,7 @@ impl<'a, E: json::ThirdPartyExtensions> Material<'a, E> {
 
 /// A set of parameter values that are used to define the metallic-roughness
 /// material model from Physically-Based Rendering (PBR) methodology.
-pub struct PbrMetallicRoughness<'a, E: json::ThirdPartyExtensions> {
+pub struct PbrMetallicRoughness<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     document: &'a Document<E>,
 
@@ -235,7 +235,7 @@ pub struct PbrMetallicRoughness<'a, E: json::ThirdPartyExtensions> {
     json: &'a json::material::PbrMetallicRoughness,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> PbrMetallicRoughness<'a, E> {
+impl<'a, E: json::CustomExtensions> PbrMetallicRoughness<'a, E> {
     /// Constructs `PbrMetallicRoughness`.
     pub(crate) fn new(
         document: &'a Document<E>,
@@ -402,7 +402,7 @@ impl<'a> Volume<'a> {
 /// Parameter values that define the strength and colour of the specular reflection of the material
 #[cfg(feature = "KHR_materials_specular")]
 #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_specular")))]
-pub struct Specular<'a, E: json::ThirdPartyExtensions> {
+pub struct Specular<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     document: &'a Document<E>,
 
@@ -412,7 +412,7 @@ pub struct Specular<'a, E: json::ThirdPartyExtensions> {
 
 #[cfg(feature = "KHR_materials_specular")]
 #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_specular")))]
-impl<'a, E: json::ThirdPartyExtensions> Specular<'a, E> {
+impl<'a, E: json::CustomExtensions> Specular<'a, E> {
     /// Constructs `Volume`.
     pub(crate) fn new(
         document: &'a Document<E>,
@@ -461,7 +461,7 @@ impl<'a, E: json::ThirdPartyExtensions> Specular<'a, E> {
 /// material model from Physically-Based Rendering (PBR) methodology.
 #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
 #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_pbrSpecularGlossiness")))]
-pub struct PbrSpecularGlossiness<'a, E: json::ThirdPartyExtensions> {
+pub struct PbrSpecularGlossiness<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     document: &'a Document<E>,
 
@@ -471,7 +471,7 @@ pub struct PbrSpecularGlossiness<'a, E: json::ThirdPartyExtensions> {
 
 #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
 #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_pbrSpecularGlossiness")))]
-impl<'a, E: json::ThirdPartyExtensions> PbrSpecularGlossiness<'a, E> {
+impl<'a, E: json::CustomExtensions> PbrSpecularGlossiness<'a, E> {
     /// Constructs `PbrSpecularGlossiness`.
     pub(crate) fn new(
         document: &'a Document,
@@ -532,7 +532,7 @@ impl<'a, E: json::ThirdPartyExtensions> PbrSpecularGlossiness<'a, E> {
 }
 
 /// Defines the normal texture of a material.
-pub struct NormalTexture<'a, E: json::ThirdPartyExtensions> {
+pub struct NormalTexture<'a, E: json::CustomExtensions> {
     /// The parent `Texture` struct.
     texture: texture::Texture<'a, E>,
 
@@ -540,7 +540,7 @@ pub struct NormalTexture<'a, E: json::ThirdPartyExtensions> {
     json: &'a json::material::NormalTexture,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> NormalTexture<'a, E> {
+impl<'a, E: json::CustomExtensions> NormalTexture<'a, E> {
     /// Constructs a `NormalTexture`.
     pub(crate) fn new(
         texture: texture::Texture<'a, E>,
@@ -571,7 +571,7 @@ impl<'a, E: json::ThirdPartyExtensions> NormalTexture<'a, E> {
 }
 
 /// Defines the occlusion texture of a material.
-pub struct OcclusionTexture<'a, E: json::ThirdPartyExtensions> {
+pub struct OcclusionTexture<'a, E: json::CustomExtensions> {
     /// The parent `Texture` struct.
     texture: texture::Texture<'a, E>,
 
@@ -579,7 +579,7 @@ pub struct OcclusionTexture<'a, E: json::ThirdPartyExtensions> {
     json: &'a json::material::OcclusionTexture,
 }
 
-impl<'a, E: json::ThirdPartyExtensions> OcclusionTexture<'a, E> {
+impl<'a, E: json::CustomExtensions> OcclusionTexture<'a, E> {
     /// Constructs a `OcclusionTexture`.
     pub(crate) fn new(
         texture: texture::Texture<'a, E>,
@@ -609,13 +609,13 @@ impl<'a, E: json::ThirdPartyExtensions> OcclusionTexture<'a, E> {
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> AsRef<texture::Texture<'a, E>> for NormalTexture<'a, E> {
+impl<'a, E: json::CustomExtensions> AsRef<texture::Texture<'a, E>> for NormalTexture<'a, E> {
     fn as_ref(&self) -> &texture::Texture<'a, E> {
         &self.texture
     }
 }
 
-impl<'a, E: json::ThirdPartyExtensions> AsRef<texture::Texture<'a, E>> for OcclusionTexture<'a, E> {
+impl<'a, E: json::CustomExtensions> AsRef<texture::Texture<'a, E>> for OcclusionTexture<'a, E> {
     fn as_ref(&self) -> &texture::Texture<'a, E> {
         &self.texture
     }

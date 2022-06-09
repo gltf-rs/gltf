@@ -4,7 +4,7 @@ use std::{iter, mem};
 
 use crate::{accessor, buffer};
 
-fn buffer_view_slice<'a, 's, E: json::ThirdPartyExtensions>(
+fn buffer_view_slice<'a, 's, E: json::CustomExtensions>(
     view: buffer::View<'a, E>,
     get_buffer_data: &dyn Fn(buffer::Buffer<'a, E>) -> Option<&'s [u8]>,
 ) -> Option<&'s [u8]> {
@@ -281,7 +281,7 @@ impl<'a, T: Item> ItemIter<'a, T> {
 
 impl<'a, 's, T: Item> Iter<'s, T> {
     /// Constructor.
-    pub fn new<F, E: json::ThirdPartyExtensions>(accessor: super::Accessor<'a, E>, get_buffer_data: F) -> Option<Iter<'s, T>>
+    pub fn new<F, E: json::CustomExtensions>(accessor: super::Accessor<'a, E>, get_buffer_data: F) -> Option<Iter<'s, T>>
     where
         F: Clone + Fn(buffer::Buffer<'a, E>) -> Option<&'s [u8]>,
     {

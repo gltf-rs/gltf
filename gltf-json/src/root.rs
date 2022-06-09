@@ -25,7 +25,7 @@ pub struct Index<T>(u32, marker::PhantomData<*const T>);
 /// The root object of a glTF 2.0 asset.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 #[serde(bound = "E: 'static")]
-pub struct Root<E: crate::ThirdPartyExtensions> {
+pub struct Root<E: crate::CustomExtensions> {
     /// An array of accessors.
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -118,7 +118,7 @@ pub struct Root<E: crate::ThirdPartyExtensions> {
     pub textures: Vec<Texture>,
 }
 
-impl<E: crate::ThirdPartyExtensions> Root<E> {
+impl<E: crate::CustomExtensions> Root<E> {
     /// Returns a single item from the root object.
     pub fn get<T>(&self, index: Index<T>) -> Option<&T>
     where
@@ -257,7 +257,7 @@ impl<T> fmt::Display for Index<T> {
 }
 
 impl<T: Copy> Validate for T where IndexEnum: From<T> {
-    fn validate<P, R, E: crate::ThirdPartyExtensions>(&self, root: &Root<E>, path: P, report: &mut R)
+    fn validate<P, R, E: crate::CustomExtensions>(&self, root: &Root<E>, path: P, report: &mut R)
     where
         P: Fn() -> Path,
         R: FnMut(&dyn Fn() -> Path, validation::Error),
@@ -286,7 +286,7 @@ impl<T: Copy> Validate for T where IndexEnum: From<T> {
 
 macro_rules! impl_get {
     ($ty:ty, $field:ident) => {
-        impl<'a, E: crate::ThirdPartyExtensions> Get<$ty> for Root<E> {
+        impl<'a, E: crate::CustomExtensions> Get<$ty> for Root<E> {
             fn get(&self, index: Index<$ty>) -> Option<&$ty> {
                 self.$field.get(index.value())
             }

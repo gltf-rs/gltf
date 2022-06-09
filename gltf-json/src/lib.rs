@@ -106,16 +106,16 @@ pub mod serialize {
     };
 }
 
-pub trait ThirdPartyExtensions: 'static {
+pub trait CustomExtensions: 'static {
     type Root: serde::Serialize + serde::de::DeserializeOwned + std::fmt::Debug + Clone + validation::Validate;
 }
 
-impl ThirdPartyExtensions for () {
+impl CustomExtensions for () {
     type Root = ();
 }
 
-pub struct AllThirdPartyExtensions;
+pub struct AllExtensions;
 
-impl ThirdPartyExtensions for AllThirdPartyExtensions {
+impl CustomExtensions for AllExtensions {
     type Root = std::collections::HashMap<String, serde_json::Value>;
 }

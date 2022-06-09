@@ -135,7 +135,7 @@ fn is_primitive_mode_default(mode: &Checked<Mode>) -> bool {
 }
 
 impl Validate for Primitive {
-    fn validate<P, R, E: crate::ThirdPartyExtensions>(&self, root: &crate::Root<E>, path: P, report: &mut R)
+    fn validate<P, R, E: crate::CustomExtensions>(&self, root: &crate::Root<E>, path: P, report: &mut R)
     where
         P: Fn() -> crate::Path,
         R: FnMut(&dyn Fn() -> crate::Path, crate::validation::Error),
