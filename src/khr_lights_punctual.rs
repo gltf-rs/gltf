@@ -2,10 +2,10 @@ use crate::Document;
 use gltf_json::Extras;
 
 /// A light in the scene.
-pub struct Light<'a> {
+pub struct Light<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     #[allow(dead_code)]
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON index.
     index: usize,
@@ -14,10 +14,10 @@ pub struct Light<'a> {
     json: &'a json::extensions::scene::khr_lights_punctual::Light,
 }
 
-impl<'a> Light<'a> {
+impl<'a, E: json::CustomExtensions> Light<'a, E> {
     /// Constructs a `Light`.
     pub(crate) fn new(
-        document: &'a Document,
+        document: &'a Document<E>,
         index: usize,
         json: &'a json::extensions::scene::khr_lights_punctual::Light,
     ) -> Self {

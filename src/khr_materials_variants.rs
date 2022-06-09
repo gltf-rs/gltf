@@ -1,10 +1,10 @@
 use crate::{Document, Material};
 
 /// A variant.
-pub struct Variant<'a> {
+pub struct Variant<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
     #[allow(dead_code)]
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON index.
     #[allow(dead_code)]
@@ -14,10 +14,10 @@ pub struct Variant<'a> {
     json: &'a json::extensions::scene::khr_materials_variants::Variant,
 }
 
-impl<'a> Variant<'a> {
+impl<'a, E: json::CustomExtensions> Variant<'a, E> {
     /// Constructs a `Variant`.
     pub(crate) fn new(
-        document: &'a Document,
+        document: &'a Document<E>,
         index: usize,
         json: &'a json::extensions::scene::khr_materials_variants::Variant,
     ) -> Self {
@@ -35,17 +35,17 @@ impl<'a> Variant<'a> {
 }
 
 /// A mapping.
-pub struct Mapping<'a> {
+pub struct Mapping<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON struct.
     json: &'a json::extensions::mesh::Mapping,
 }
 
-impl<'a> Mapping<'a> {
+impl<'a, E: json::CustomExtensions> Mapping<'a, E> {
     /// Constructs a `Mapping`.
-    pub(crate) fn new(document: &'a Document, json: &'a json::extensions::mesh::Mapping) -> Self {
+    pub(crate) fn new(document: &'a Document<E>, json: &'a json::extensions::mesh::Mapping) -> Self {
         Self { document, json }
     }
 
@@ -55,7 +55,7 @@ impl<'a> Mapping<'a> {
     }
 
     /// Get the corresponding material.
-    pub fn material(&self) -> Material<'a> {
+    pub fn material(&self) -> Material<'a, E> {
         self.document
             .materials()
             .nth(self.json.material as usize)

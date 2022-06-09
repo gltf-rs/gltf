@@ -443,7 +443,7 @@ impl<E: json::CustomExtensions> Document<E> {
     /// `KHR_lights_punctual` extension.
     #[cfg(feature = "KHR_lights_punctual")]
     #[cfg_attr(docsrs, doc(cfg(feature = "KHR_lights_punctual")))]
-    pub fn lights(&self) -> Option<iter::Lights> {
+    pub fn lights(&self) -> Option<iter::Lights<E>> {
         let iter = self
             .0
             .extensions
@@ -464,7 +464,7 @@ impl<E: json::CustomExtensions> Document<E> {
     /// `KHR_materials_variants` extension.
     #[cfg(feature = "KHR_materials_variants")]
     #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_variants")))]
-    pub fn variants(&self) -> Option<iter::Variants> {
+    pub fn variants(&self) -> Option<iter::Variants<E>> {
         let iter = self
             .0
             .extensions

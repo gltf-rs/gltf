@@ -293,7 +293,7 @@ impl<'a, E: json::CustomExtensions> Primitive<'a, E> {
     /// Get the material variants.
     #[cfg(feature = "KHR_materials_variants")]
     #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_variants")))]
-    pub fn mappings(&self) -> iter::Mappings<'a> {
+    pub fn mappings(&self) -> iter::Mappings<'a, E> {
         let iter = self
             .json
             .extensions

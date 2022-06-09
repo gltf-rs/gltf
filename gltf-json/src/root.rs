@@ -276,6 +276,8 @@ impl<T: Copy> Validate for T where IndexEnum: From<T> {
             IndexEnum::Scene(index) => root.get(index).is_some(),
             IndexEnum::Skin(index) => root.get(index).is_some(),
             IndexEnum::Texture(index) => root.get(index).is_some(),
+            #[cfg(feature = "KHR_lights_punctual")]
+            IndexEnum::Light(index) => root.get(index).is_some()
         };
 
         if !is_valid {
@@ -322,6 +324,8 @@ enum IndexEnum {
     Scene(Index<Scene>),
     Skin(Index<Skin>),
     Texture(Index<Texture>),
+    #[cfg(feature = "KHR_lights_punctual")]
+    Light(Index<crate::extensions::scene::khr_lights_punctual::Light>)
 }
 
 impl From<Index<Accessor>> for IndexEnum {
@@ -399,5 +403,12 @@ impl From<Index<Skin>> for IndexEnum {
 impl From<Index<Texture>> for IndexEnum {
     fn from(index: Index<Texture>) -> Self {
         Self::Texture(index)
+    }
+}
+
+#[cfg(feature = "KHR_lights_punctual")]
+impl From<Index<crate::extensions::scene::khr_lights_punctual::Light>> for IndexEnum {
+    fn from(index: Index<crate::extensions::scene::khr_lights_punctual::Light>) -> Self {
+        Self::Light(index)
     }
 }

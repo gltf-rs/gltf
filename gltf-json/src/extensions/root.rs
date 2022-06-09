@@ -21,7 +21,7 @@ pub struct Root<E: crate::CustomExtensions> {
     pub khr_materials_variants: Option<KhrMaterialsVariants>,
 
     #[serde(flatten)]
-    pub third_party: E::Root
+    pub custom: E::Root
 }
 
 #[cfg(feature = "KHR_lights_punctual")]
@@ -32,7 +32,7 @@ pub struct KhrLightsPunctual {
 }
 
 #[cfg(feature = "KHR_lights_punctual")]
-impl crate::root::Get<crate::extensions::scene::khr_lights_punctual::Light> for crate::Root {
+impl<E: crate::CustomExtensions> crate::root::Get<crate::extensions::scene::khr_lights_punctual::Light> for crate::Root<E> {
     fn get(
         &self,
         id: crate::Index<crate::extensions::scene::khr_lights_punctual::Light>,
@@ -56,7 +56,7 @@ pub struct KhrMaterialsVariants {
 }
 
 #[cfg(feature = "KHR_materials_variants")]
-impl crate::root::Get<crate::extensions::scene::khr_materials_variants::Variant> for crate::Root {
+impl<E: crate::CustomExtensions> crate::root::Get<crate::extensions::scene::khr_materials_variants::Variant> for crate::Root<E> {
     fn get(
         &self,
         id: crate::Index<crate::extensions::scene::khr_materials_variants::Variant>,

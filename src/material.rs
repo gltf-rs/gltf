@@ -98,7 +98,7 @@ impl<'a, E: json::CustomExtensions> Material<'a, E> {
     /// Physically-Based Rendering (PBR) methodology.
     #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
     #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_pbrSpecularGlossiness")))]
-    pub fn pbr_specular_glossiness(&self) -> Option<PbrSpecularGlossiness<'a>> {
+    pub fn pbr_specular_glossiness(&self) -> Option<PbrSpecularGlossiness<'a, E>> {
         self.json
             .extensions
             .as_ref()?
@@ -110,7 +110,7 @@ impl<'a, E: json::CustomExtensions> Material<'a, E> {
     /// Parameter values that define the transmission of light through the material
     #[cfg(feature = "KHR_materials_transmission")]
     #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_transmission")))]
-    pub fn transmission(&self) -> Option<Transmission<'a>> {
+    pub fn transmission(&self) -> Option<Transmission<'a, E>> {
         self.json
             .extensions
             .as_ref()?
@@ -129,7 +129,7 @@ impl<'a, E: json::CustomExtensions> Material<'a, E> {
     /// Parameter values that define a volume for the transmission of light through the material
     #[cfg(feature = "KHR_materials_volume")]
     #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_volume")))]
-    pub fn volume(&self) -> Option<Volume<'a>> {
+    pub fn volume(&self) -> Option<Volume<'a, E>> {
         self.json
             .extensions
             .as_ref()?
@@ -141,7 +141,7 @@ impl<'a, E: json::CustomExtensions> Material<'a, E> {
     /// Parameter values that define the strength and colour of the specular reflection of the material
     #[cfg(feature = "KHR_materials_specular")]
     #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_specular")))]
-    pub fn specular(&self) -> Option<Specular<'a>> {
+    pub fn specular(&self) -> Option<Specular<'a, E>> {
         self.json
             .extensions
             .as_ref()?
@@ -300,9 +300,9 @@ impl<'a, E: json::CustomExtensions> PbrMetallicRoughness<'a, E> {
 /// factor of the material
 #[cfg(feature = "KHR_materials_transmission")]
 #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_transmission")))]
-pub struct Transmission<'a> {
+pub struct Transmission<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON struct.
     json: &'a json::extensions::material::Transmission,
@@ -310,10 +310,10 @@ pub struct Transmission<'a> {
 
 #[cfg(feature = "KHR_materials_transmission")]
 #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_transmission")))]
-impl<'a> Transmission<'a> {
+impl<'a, E: json::CustomExtensions> Transmission<'a, E> {
     /// Constructs `Ior`.
     pub(crate) fn new(
-        document: &'a Document,
+        document: &'a Document<E>,
         json: &'a json::extensions::material::Transmission,
     ) -> Self {
         Self { document, json }
@@ -327,7 +327,7 @@ impl<'a> Transmission<'a> {
     }
 
     /// Returns the transmission texture.
-    pub fn transmission_texture(&self) -> Option<texture::Info<'a>> {
+    pub fn transmission_texture(&self) -> Option<texture::Info<'a, E>> {
         self.json.transmission_texture.as_ref().map(|json| {
             let texture = self.document.textures().nth(json.index.value()).unwrap();
             texture::Info::new(texture, json)
@@ -343,9 +343,9 @@ impl<'a> Transmission<'a> {
 /// Parameter values that define a volume for the transmission of light through the material
 #[cfg(feature = "KHR_materials_volume")]
 #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_volume")))]
-pub struct Volume<'a> {
+pub struct Volume<'a, E: json::CustomExtensions> {
     /// The parent `Document` struct.
-    document: &'a Document,
+    document: &'a Document<E>,
 
     /// The corresponding JSON struct.
     json: &'a json::extensions::material::Volume,
@@ -353,10 +353,10 @@ pub struct Volume<'a> {
 
 #[cfg(feature = "KHR_materials_volume")]
 #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_volume")))]
-impl<'a> Volume<'a> {
+impl<'a, E: json::CustomExtensions> Volume<'a, E> {
     /// Constructs `Volume`.
     pub(crate) fn new(
-        document: &'a Document,
+        document: &'a Document<E>,
         json: &'a json::extensions::material::Volume,
     ) -> Self {
         Self { document, json }
@@ -373,7 +373,7 @@ impl<'a> Volume<'a> {
 
     /// A texture that defines the thickness, stored in the G channel.
     /// This will be multiplied by `thickness_factor`. Range is [0, 1].
-    pub fn thickness_texture(&self) -> Option<texture::Info<'a>> {
+    pub fn thickness_texture(&self) -> Option<texture::Info<'a, E>> {
         self.json.thickness_texture.as_ref().map(|json| {
             let texture = self.document.textures().nth(json.index.value()).unwrap();
             texture::Info::new(texture, json)
@@ -474,7 +474,7 @@ pub struct PbrSpecularGlossiness<'a, E: json::CustomExtensions> {
 impl<'a, E: json::CustomExtensions> PbrSpecularGlossiness<'a, E> {
     /// Constructs `PbrSpecularGlossiness`.
     pub(crate) fn new(
-        document: &'a Document,
+        document: &'a Document<E>,
         json: &'a json::extensions::material::PbrSpecularGlossiness,
     ) -> Self {
         Self { document, json }

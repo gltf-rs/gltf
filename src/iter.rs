@@ -386,11 +386,11 @@ impl<'a, E: json::CustomExtensions> Iterator for Images<'a, E> {
 }
 
 #[cfg(feature = "KHR_lights_punctual")]
-impl<'a> ExactSizeIterator for Lights<'a> {}
+impl<'a, E: json::CustomExtensions> ExactSizeIterator for Lights<'a, E> {}
 
 #[cfg(feature = "KHR_lights_punctual")]
-impl<'a> Iterator for Lights<'a> {
-    type Item = crate::khr_lights_punctual::Light<'a>;
+impl<'a, E: json::CustomExtensions> Iterator for Lights<'a, E> {
+    type Item = crate::khr_lights_punctual::Light<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
@@ -416,11 +416,11 @@ impl<'a> Iterator for Lights<'a> {
 }
 
 #[cfg(feature = "KHR_materials_variants")]
-impl<'a> ExactSizeIterator for Variants<'a> {}
+impl<'a, E: json::CustomExtensions> ExactSizeIterator for Variants<'a, E> {}
 
 #[cfg(feature = "KHR_materials_variants")]
-impl<'a> Iterator for Variants<'a> {
-    type Item = crate::khr_materials_variants::Variant<'a>;
+impl<'a, E: json::CustomExtensions> Iterator for Variants<'a, E> {
+    type Item = crate::khr_materials_variants::Variant<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, json)| {
             crate::khr_materials_variants::Variant::new(self.document, index, json)

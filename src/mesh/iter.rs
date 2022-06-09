@@ -137,19 +137,19 @@ impl<'a, E: json::CustomExtensions> Iterator for MorphTargets<'a, E> {
 /// An `Iterator` that visits the variant mappings of a `Mesh`.
 #[cfg(feature = "KHR_materials_variants")]
 #[derive(Clone, Debug)]
-pub struct Mappings<'a> {
+pub struct Mappings<'a, E: json::CustomExtensions> {
     /// Internal mapping iterator.
     pub(crate) iter: slice::Iter<'a, json::extensions::mesh::Mapping>,
 
     /// The internal root glTF object.
-    pub(crate) document: &'a Document,
+    pub(crate) document: &'a Document<E>,
 }
 
 #[cfg(feature = "KHR_materials_variants")]
-impl<'a> ExactSizeIterator for Mappings<'a> {}
+impl<'a, E: json::CustomExtensions> ExactSizeIterator for Mappings<'a, E> {}
 #[cfg(feature = "KHR_materials_variants")]
-impl<'a> Iterator for Mappings<'a> {
-    type Item = crate::khr_materials_variants::Mapping<'a>;
+impl<'a, E: json::CustomExtensions> Iterator for Mappings<'a, E> {
+    type Item = crate::khr_materials_variants::Mapping<'a, E>;
     fn next(&mut self) -> Option<Self::Item> {
         let document = self.document;
         self.iter

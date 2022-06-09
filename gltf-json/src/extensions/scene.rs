@@ -110,7 +110,7 @@ pub mod khr_lights_punctual {
     }
 
     impl Validate for Light {
-        fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+        fn validate<P, R, E: crate::CustomExtensions>(&self, root: &Root<E>, path: P, report: &mut R)
         where
             P: Fn() -> Path,
             R: FnMut(&dyn Fn() -> Path, Error),
@@ -211,7 +211,7 @@ pub mod khr_materials_variants {
     }
 
     impl Validate for Variant {
-        fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+        fn validate<P, R, E: crate::CustomExtensions>(&self, root: &Root<E>, path: P, report: &mut R)
         where
             P: Fn() -> Path,
             R: FnMut(&dyn Fn() -> Path, Error),
