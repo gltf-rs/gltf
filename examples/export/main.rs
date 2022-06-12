@@ -22,6 +22,21 @@ struct Vertex {
     color: [f32; 3],
 }
 
+/// Calculate bounding coordinates of a list of vertices, used for the clipping distance of the model
+fn bounding_coords(points: &[Vertex]) -> ([f32; 3], [f32; 3]) {
+    let mut min = [0., 0., 0.];
+    let mut max = [0., 0., 0.];
+
+    for point in points {
+        let p = point.position;
+        for i in 0..3 {
+            min[i] = f32::min(min[i], p[i]);
+            max[i] = f32::max(max[i], p[i]);
+        }
+    }
+    (min, max)
+}
+
 fn align_to_multiple_of_four(n: &mut u32) {
     *n = (*n + 3) & !3;
 }
@@ -53,6 +68,8 @@ fn export(output: Output) {
             color: [0.0, 0.0, 1.0],
         },
     ];
+
+    let (min, max) = bounding_coords(&triangle_vertices);
 
     let buffer_length = (triangle_vertices.len() * mem::size_of::<Vertex>()) as u32;
     let buffer = json::Buffer {
@@ -86,8 +103,8 @@ fn export(output: Output) {
         extensions: Default::default(),
         extras: Default::default(),
         type_: Valid(json::accessor::Type::Vec3),
-        min: Some(json::Value::from(vec![-0.5f32, -0.5f32, 0.0f32])),
-        max: Some(json::Value::from(vec![0.5f32, 0.5f32, 0.0f32])),
+        min: Some(json::Value::from(Vec::from(min))),
+        max: Some(json::Value::from(Vec::from(max))),
         name: None,
         normalized: false,
         sparse: None,
