@@ -8,7 +8,8 @@ use crate::texture;
 #[cfg(any(
     feature = "KHR_materials_pbrSpecularGlossiness",
     feature = "KHR_materials_transmission",
-    feature = "KHR_materials_ior"
+    feature = "KHR_materials_ior",
+    feature = "KHR_materials_emissive_strength"
 ))]
 use crate::{validation::Validate, Extras};
 use gltf_derive::Validate;
