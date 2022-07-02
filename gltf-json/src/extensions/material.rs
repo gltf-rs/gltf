@@ -64,6 +64,14 @@ pub struct Material {
         skip_serializing_if = "Option::is_none"
     )]
     pub ior: Option<Ior>,
+
+    #[cfg(feature = "KHR_materials_emissive_strength")]
+    #[serde(
+        default,
+        rename = "KHR_materials_emissive_strength",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub emissive_strength: Option<EmissiveStrength>,
 }
 
 /// A set of parameter values that are used to define the metallic-roughness
@@ -372,4 +380,25 @@ pub struct Specular {
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
+}
+
+#[cfg(feature = "KHR_materials_emissive_strength")]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct EmissveStrengthInner(pub f32);
+
+#[cfg(feature = "KHR_materials_emissive_strength")]
+impl Default for EmissveStrengthInner {
+    fn default() -> Self {
+        Self(1.0)
+    }
+}
+
+#[cfg(feature = "KHR_materials_emissive_strength")]
+impl Validate for EmissveStrengthInner {}
+
+#[cfg(feature = "KHR_materials_emissive_strength")]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct EmissiveStrength {
+    pub emissive_strength: EmissveStrengthInner,
 }

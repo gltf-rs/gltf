@@ -204,6 +204,23 @@ impl<'a> Material<'a> {
         self.json.emissive_factor.0
     }
 
+    /// The emissive scalar factor of the material.
+    ///
+    /// The default value is `1.0`.
+    ///
+    /// See [`KHR_materials_emissive_strength`].
+    ///
+    /// [`KHR_materials_emissive_strength`](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_emissive_strength)
+    #[cfg(feature = "KHR_materials_emissive_strength")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_emissive_strength")))]
+    pub fn emissive_strength(&self) -> Option<f32> {
+        self.json
+            .extensions
+            .as_ref()
+            .and_then(|extensions| extensions.emissive_strength.as_ref())
+            .map(|ext| ext.emissive_strength.0)
+    }
+
     /// Specifies whether the material is unlit.
     ///
     /// Returns `true` if the [`KHR_materials_unlit`] property was specified, in which
