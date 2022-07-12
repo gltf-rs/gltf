@@ -20,7 +20,7 @@ pub trait Get<T> {
 }
 
 /// Represents an offset into an array of type `T` owned by the root glTF object.
-pub struct Index<T>(u32, marker::PhantomData<*const T>);
+pub struct Index<T>(u32, marker::PhantomData<fn() -> T>);
 
 /// The root object of a glTF 2.0 asset.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
@@ -259,9 +259,6 @@ impl<T> PartialEq for Index<T> {
     }
 }
 
-unsafe impl<T> Send for Index<T> {}
-unsafe impl<T> Sync for Index<T> {}
-
 impl<T> std::hash::Hash for Index<T> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.0.hash(state);
@@ -341,5 +338,11 @@ mod tests {
     #[test]
     fn index_is_ord() {
         assert!(Index::<Node>::new(1) < Index::new(1234));
+    }
+
+    fn _index_is_send_sync()
+    where
+        Index<Material>: Send + Sync,
+    {
     }
 }
