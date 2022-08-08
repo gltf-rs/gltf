@@ -1,4 +1,7 @@
-use crate::{texture, Document};
+use crate::{
+    texture::{self, TextureTransform},
+    Document,
+};
 
 pub use json::material::AlphaMode;
 
@@ -562,6 +565,18 @@ impl<'a> NormalTexture<'a> {
     /// Returns the referenced texture.
     pub fn texture(&self) -> texture::Texture<'a> {
         self.texture.clone()
+    }
+
+    /// Returns texture transform information
+    #[cfg(feature = "KHR_texture_transform")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_texture_transform")))]
+    pub fn texture_transform(&self) -> Option<TextureTransform<'a>> {
+        self.json
+            .extensions
+            .as_ref()?
+            .texture_transform
+            .as_ref()
+            .map(TextureTransform::new)
     }
 
     /// Optional application specific data.

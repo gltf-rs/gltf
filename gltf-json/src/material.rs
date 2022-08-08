@@ -193,7 +193,7 @@ pub struct NormalTexture {
 
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub extensions: Option<extensions::material::NormalTexture>,
+    pub extensions: Option<extensions::texture::Info>,
 
     /// Optional application specific data.
     #[serde(default)]
