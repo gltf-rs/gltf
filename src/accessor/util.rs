@@ -10,7 +10,9 @@ fn buffer_view_slice<'a, 's>(
 ) -> Option<&'s [u8]> {
     let start = view.offset();
     let end = start + view.length();
-    get_buffer_data(view.buffer()).map(|slice| &slice[start..end])
+    get_buffer_data(view.buffer())
+        .map(|slice| slice.get(start..end))
+        .flatten()
 }
 
 /// General iterator for an accessor.
@@ -297,7 +299,7 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                     let start = accessor.offset();
                     let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
                     let subslice = if let Some(slice) = buffer_view_slice(view, &get_buffer_data) {
-                        &slice[start..end]
+                        slice.get(start..end)?
                     } else {
                         return None;
                     };
@@ -314,7 +316,7 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                 let subslice = if let Some(slice) = buffer_view_slice(view, &get_buffer_data) {
                     let start = indices.offset() as usize;
                     let end = start + stride * (sparse_count - 1) + index_size;
-                    &slice[start..end]
+                    slice.get(start..end)?
                 } else {
                     return None;
                 };
@@ -336,7 +338,7 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                 let subslice = if let Some(slice) = buffer_view_slice(view, &get_buffer_data) {
                     let start = values.offset() as usize;
                     let end = start + stride * (sparse_count - 1) + mem::size_of::<T>();
-                    &slice[start..end]
+                    slice.get(start..end)?
                 } else {
                     return None;
                 };
@@ -359,7 +361,7 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                 let start = accessor.offset();
                 let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
                 let subslice = if let Some(slice) = buffer_view_slice(view, &get_buffer_data) {
-                    &slice[start..end]
+                    slice.get(start..end)?
                 } else {
                     return None;
                 };
