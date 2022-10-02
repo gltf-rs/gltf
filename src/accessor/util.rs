@@ -10,9 +10,7 @@ fn buffer_view_slice<'a, 's>(
 ) -> Option<&'s [u8]> {
     let start = view.offset();
     let end = start + view.length();
-    get_buffer_data(view.buffer())
-        .map(|slice| slice.get(start..end))
-        .flatten()
+    get_buffer_data(view.buffer()).and_then(|slice| slice.get(start..end))
 }
 
 /// General iterator for an accessor.
