@@ -24,8 +24,8 @@ struct Vertex {
 
 /// Calculate bounding coordinates of a list of vertices, used for the clipping distance of the model
 fn bounding_coords(points: &[Vertex]) -> ([f32; 3], [f32; 3]) {
-    let mut min = [0., 0., 0.];
-    let mut max = [0., 0., 0.];
+    let mut min = [f32::MAX, f32::MAX, f32::MAX];
+    let mut max = [f32::MIN, f32::MIN, f32::MIN];
 
     for point in points {
         let p = point.position;
