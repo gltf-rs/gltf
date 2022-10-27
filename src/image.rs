@@ -86,10 +86,10 @@ pub struct Data {
     /// The image pixel data format.
     pub format: Format,
 
-    /// The image height in pixels.
+    /// The image width in pixels.
     pub width: u32,
 
-    /// The image width in pixels.
+    /// The image height in pixels.
     pub height: u32,
 }
 
