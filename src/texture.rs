@@ -158,17 +158,16 @@ impl<'a> Texture<'a> {
         let extensions = self.json.extensions;
         let required_extensions = self.document.extensions_required();
 
-        let source_index = match required_extensions
+        let source = match required_extensions
             .any(|required_extension| required_extension == "EXT_texture_webp")
         {
-            true => extensions.unwrap().texture_webp.unwrap().source.value(),
-            false => match extensions.and_then(|extensions| extensions.texture_webp) {
-                Some(webp) => webp.source.value(),
-                None => self.json.source.value(),
-            },
+            true => extensions.unwrap().texture_webp.unwrap().source,
+            false => extensions
+                .and_then(|extensions| Some(extensions.texture_webp?.source))
+                .unwrap_or(self.json.source),
         };
 
-        self.document.images().nth(source_index).unwrap()
+        self.document.images().nth(source.value()).unwrap()
     }
 
     /// Optional application specific data.
