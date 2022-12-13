@@ -144,12 +144,31 @@ impl<'a> Texture<'a> {
             .unwrap_or_else(|| Sampler::default(self.document))
     }
 
+    #[cfg(not(feature = "EXT_texture_webp"))]
     /// Returns the image used by this texture.
     pub fn source(&self) -> image::Image<'a> {
         self.document
             .images()
             .nth(self.json.source.value() as usize)
             .unwrap()
+    }
+
+    #[cfg(feature = "EXT_texture_webp")]
+    pub fn source(&self) -> image::Image<'a> {
+        let extensions = self.json.extensions;
+        let required_extensions = self.document.extensions_required();
+
+        let source_index = match required_extensions
+            .any(|required_extension| required_extension == "EXT_texture_webp")
+        {
+            true => extensions.unwrap().texture_webp.unwrap().source.value(),
+            false => match extensions.and_then(|extensions| extensions.texture_webp) {
+                Some(webp) => webp.source.value(),
+                None => self.json.source.value(),
+            },
+        };
+
+        self.document.images().nth(source_index).unwrap()
     }
 
     /// Optional application specific data.
