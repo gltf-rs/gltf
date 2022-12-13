@@ -1,7 +1,8 @@
-#[cfg(feature = "EXT_texture_webp")]
-use crate::{extras::Extras, image, validation::Validate, Index};
-#[cfg(feature = "KHR_texture_transform")]
+#[cfg(any(feature = "KHR_texture_transform", feature = "EXT_texture_webp"))]
 use crate::{extras::Extras, validation::Validate};
+#[cfg(feature = "EXT_texture_webp")]
+use crate::{image, Index};
+
 use gltf_derive::Validate;
 use serde_derive::{Deserialize, Serialize};
 
