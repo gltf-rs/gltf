@@ -154,11 +154,13 @@ impl<'a> Texture<'a> {
     }
 
     #[cfg(feature = "EXT_texture_webp")]
+    /// Returns the image used by this texture.
     pub fn source(&self) -> image::Image<'a> {
         let source = self
             .json
             .extensions
-            .and_then(|extensions| extensions.texture_webp?.source)
+            .as_ref()
+            .and_then(|extensions| extensions.texture_webp.as_ref()?.source)
             .unwrap_or(self.json.source);
 
         self.document.images().nth(source.value()).unwrap()
