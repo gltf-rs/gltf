@@ -1,16 +1,5 @@
-#[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
-use crate::material::StrengthFactor;
-#[cfg(any(
-    feature = "KHR_materials_pbrSpecularGlossiness",
-    feature = "KHR_materials_transmission"
-))]
-use crate::texture;
-#[cfg(any(
-    feature = "KHR_materials_pbrSpecularGlossiness",
-    feature = "KHR_materials_transmission",
-    feature = "KHR_materials_ior"
-))]
-use crate::{validation::Validate, Extras};
+#[allow(unused_imports)] // different features use different imports
+use crate::{material::StrengthFactor, texture, validation::Validate, Extras};
 use gltf_derive::Validate;
 use serde_derive::{Deserialize, Serialize};
 
