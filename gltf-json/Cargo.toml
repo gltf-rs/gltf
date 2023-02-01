@@ -1,6 +1,6 @@
 [package]
 name = "gltf-json"
-version = "1.0.0"
+version = "1.1.0"
 authors = ["David Harvey-Macaulay <alteous@outlook.com>"]
 description = "JSON parsing for the gltf crate"
 repository = "https://github.com/gltf-rs/gltf"
@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 edition = "2018"
 
 [dependencies]
-gltf-derive = { path = "../gltf-derive", version = "1.0.0" }
+gltf-derive = { path = "../gltf-derive", version = "1.1.0" }
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = { features = ["raw_value"], version = "1.0" }
