@@ -126,6 +126,18 @@ impl<'a> Material<'a> {
         self.json.extensions.as_ref()?.ior.as_ref().map(|x| x.ior.0)
     }
 
+    /// Parameter value that adjusts the strength of emissive material properties
+    #[cfg(feature = "KHR_materials_emissive_strength")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_emissive_strength")))]
+    pub fn emissive_strength(&self) -> Option<f32> {
+        self.json
+            .extensions
+            .as_ref()?
+            .emissive_strength
+            .as_ref()
+            .map(|x| x.emissive_strength.0)
+    }
+
     /// Parameter values that define a volume for the transmission of light through the material
     #[cfg(feature = "KHR_materials_volume")]
     #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_volume")))]
