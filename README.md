@@ -54,6 +54,7 @@ The following glTF extensions are supported by the crate:
 * `KHR_materials_variants`
 * `KHR_materials_volume`
 * `KHR_materials_specular`
+* `KHR_materials_transmission`
 
 To use an extension, list its name in the `features` section.
 
