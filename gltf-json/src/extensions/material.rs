@@ -1,16 +1,5 @@
-#[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
-use crate::material::StrengthFactor;
-#[cfg(any(
-    feature = "KHR_materials_pbrSpecularGlossiness",
-    feature = "KHR_materials_transmission"
-))]
-use crate::texture;
-#[cfg(any(
-    feature = "KHR_materials_pbrSpecularGlossiness",
-    feature = "KHR_materials_transmission",
-    feature = "KHR_materials_ior"
-))]
-use crate::{validation::Validate, Extras};
+#[allow(unused_imports)] // different features use different imports
+use crate::{material::StrengthFactor, texture, validation::Validate, Extras};
 use gltf_derive::Validate;
 use serde_derive::{Deserialize, Serialize};
 
@@ -119,6 +108,7 @@ pub struct PbrSpecularGlossiness {
 
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 }
 
@@ -203,6 +193,7 @@ pub struct Transmission {
 
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 }
 
@@ -234,6 +225,7 @@ pub struct Ior {
 
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 }
 
@@ -309,6 +301,7 @@ pub struct Volume {
 
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 }
 
@@ -366,5 +359,6 @@ pub struct Specular {
 
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 }

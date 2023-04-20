@@ -80,6 +80,7 @@ pub struct Mesh {
     /// Optional application specific data.
     #[serde(default)]
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 
     /// Optional user-defined name for this object.
@@ -109,6 +110,7 @@ pub struct Primitive {
     /// Optional application specific data.
     #[serde(default)]
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 
     /// The index of the accessor that contains the indices.

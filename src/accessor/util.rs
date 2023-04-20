@@ -10,7 +10,7 @@ fn buffer_view_slice<'a, 's>(
 ) -> Option<&'s [u8]> {
     let start = view.offset();
     let end = start + view.length();
-    get_buffer_data(view.buffer()).map(|slice| &slice[start..end])
+    get_buffer_data(view.buffer()).and_then(|slice| slice.get(start..end))
 }
 
 /// General iterator for an accessor.
@@ -285,91 +285,89 @@ impl<'a, 's, T: Item> Iter<'s, T> {
     where
         F: Clone + Fn(buffer::Buffer<'a>) -> Option<&'s [u8]>,
     {
-        let is_sparse = accessor.sparse().is_some();
-        if is_sparse {
-            let sparse = accessor.sparse();
-            let indices = sparse.as_ref().unwrap().indices();
-            let values = sparse.as_ref().unwrap().values();
-            let base_iter = {
+        match accessor.sparse() {
+            Some(sparse) => {
                 // Using `if let` here instead of map to preserve the early return behavior.
-                if let Some(view) = accessor.view() {
+                let base_iter = if let Some(view) = accessor.view() {
                     let stride = view.stride().unwrap_or(mem::size_of::<T>());
+
                     let start = accessor.offset();
                     let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
-                    let subslice = if let Some(slice) = buffer_view_slice(view, &get_buffer_data) {
-                        &slice[start..end]
-                    } else {
-                        return None;
-                    };
+                    let subslice = buffer_view_slice(view, &get_buffer_data)
+                        .and_then(|slice| slice.get(start..end))?;
+
                     Some(ItemIter::new(subslice, stride))
                 } else {
                     None
-                }
-            };
-            let sparse_count = sparse.as_ref().unwrap().count() as usize;
-            let index_iter = {
-                let view = indices.view();
-                let index_size = indices.index_type().size();
-                let stride = view.stride().unwrap_or(index_size);
-                let subslice = if let Some(slice) = buffer_view_slice(view, &get_buffer_data) {
+                };
+
+                let indices = sparse.indices();
+                let values = sparse.values();
+                let sparse_count = sparse.count() as usize;
+
+                let index_iter = {
+                    let view = indices.view();
+                    let index_size = indices.index_type().size();
+                    let stride = view.stride().unwrap_or(index_size);
+
                     let start = indices.offset() as usize;
                     let end = start + stride * (sparse_count - 1) + index_size;
-                    &slice[start..end]
-                } else {
-                    return None;
+                    let subslice = buffer_view_slice(view, &get_buffer_data)
+                        .and_then(|slice| slice.get(start..end))?;
+
+                    match indices.index_type() {
+                        accessor::sparse::IndexType::U8 => {
+                            SparseIndicesIter::U8(ItemIter::new(subslice, stride))
+                        }
+                        accessor::sparse::IndexType::U16 => {
+                            SparseIndicesIter::U16(ItemIter::new(subslice, stride))
+                        }
+                        accessor::sparse::IndexType::U32 => {
+                            SparseIndicesIter::U32(ItemIter::new(subslice, stride))
+                        }
+                    }
                 };
-                match indices.index_type() {
-                    accessor::sparse::IndexType::U8 => {
-                        SparseIndicesIter::U8(ItemIter::new(subslice, stride))
-                    }
-                    accessor::sparse::IndexType::U16 => {
-                        SparseIndicesIter::U16(ItemIter::new(subslice, stride))
-                    }
-                    accessor::sparse::IndexType::U32 => {
-                        SparseIndicesIter::U32(ItemIter::new(subslice, stride))
-                    }
-                }
-            };
-            let value_iter = {
-                let view = values.view();
-                let stride = view.stride().unwrap_or(mem::size_of::<T>());
-                let subslice = if let Some(slice) = buffer_view_slice(view, &get_buffer_data) {
+
+                let value_iter = {
+                    let view = values.view();
+                    let stride = view.stride().unwrap_or(mem::size_of::<T>());
+
                     let start = values.offset() as usize;
                     let end = start + stride * (sparse_count - 1) + mem::size_of::<T>();
-                    &slice[start..end]
-                } else {
-                    return None;
+                    let subslice = buffer_view_slice(view, &get_buffer_data)
+                        .and_then(|slice| slice.get(start..end))?;
+
+                    ItemIter::new(subslice, stride)
                 };
-                ItemIter::new(subslice, stride)
-            };
-            Some(Iter::Sparse(SparseIter::new(
-                base_iter, index_iter, value_iter,
-            )))
-        } else {
-            debug_assert_eq!(mem::size_of::<T>(), accessor.size());
-            debug_assert!(mem::size_of::<T>() > 0);
-            if let Some(view) = accessor.view() {
-                let stride = view.stride().unwrap_or(mem::size_of::<T>());
-                debug_assert!(
-                    stride >= mem::size_of::<T>(),
-                    "Mismatch in stride, expected at least {} stride but found {}",
-                    mem::size_of::<T>(),
-                    stride
-                );
-                let start = accessor.offset();
-                let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
-                let subslice = if let Some(slice) = buffer_view_slice(view, &get_buffer_data) {
-                    &slice[start..end]
-                } else {
-                    return None;
-                };
-                Some(Iter::Standard(ItemIter {
-                    stride,
-                    data: subslice,
-                    _phantom: PhantomData,
-                }))
-            } else {
-                None
+
+                Some(Iter::Sparse(SparseIter::new(
+                    base_iter, index_iter, value_iter,
+                )))
+            }
+            None => {
+                debug_assert_eq!(mem::size_of::<T>(), accessor.size());
+                debug_assert!(mem::size_of::<T>() > 0);
+
+                accessor.view().and_then(|view| {
+                    let stride = view.stride().unwrap_or(mem::size_of::<T>());
+                    debug_assert!(
+                        stride >= mem::size_of::<T>(),
+                        "Mismatch in stride, expected at least {} stride but found {}",
+                        mem::size_of::<T>(),
+                        stride
+                    );
+
+                    let start = accessor.offset();
+                    let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
+                    let subslice = buffer_view_slice(view, &get_buffer_data)
+                        .and_then(|slice| slice.get(start..end))?;
+
+                    Some(Iter::Standard(ItemIter {
+                        stride,
+                        data: subslice,
+                        _phantom: PhantomData,
+                    }))
+                })
             }
         }
     }

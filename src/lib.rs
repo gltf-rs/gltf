@@ -232,7 +232,7 @@ pub enum Error {
     #[cfg_attr(docsrs, doc(cfg(feature = "import")))]
     UnsupportedImageEncoding,
 
-    /// Unsupported image encoding.
+    /// Unsupported image format.
     #[cfg(feature = "import")]
     #[cfg_attr(docsrs, doc(cfg(feature = "import")))]
     UnsupportedImageFormat(image_crate::DynamicImage),
@@ -573,7 +573,7 @@ impl std::fmt::Display for Error {
             Error::UnsupportedImageEncoding => write!(f, "unsupported image encoding"),
             #[cfg(feature = "import")]
             Error::UnsupportedImageFormat(image) => {
-                write!(f, "unsupported image encoding: {:?}", image)
+                write!(f, "unsupported image format: {:?}", image.color())
             }
             #[cfg(feature = "import")]
             Error::UnsupportedScheme => write!(f, "unsupported URI scheme"),
