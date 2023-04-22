@@ -49,6 +49,7 @@ KHR_materials_ior = ["gltf-json/KHR_materials_ior"]
 KHR_materials_variants = ["gltf-json/KHR_materials_variants"]
 KHR_materials_volume = ["gltf-json/KHR_materials_volume"]
 KHR_materials_specular = ["gltf-json/KHR_materials_specular"]
+EXT_texture_webp = ["gltf-json/EXT_texture_webp", "image/webp"]
 image_jpeg_rayon = ["image/jpeg_rayon"]
 guess_mime_type = []
 
