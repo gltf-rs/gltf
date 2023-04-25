@@ -10,7 +10,8 @@ readme = "README.md"
 keywords = ["glTF", "3D", "asset", "model", "scene"]
 license = "MIT OR Apache-2.0"
 include = ["**/*.rs", "Cargo.toml", "LICENSE-*"]
-edition = "2018"
+edition = "2021"
+rust-version = "1.61"
 
 [badges]
 travis-ci = { repository = "gltf-rs/gltf" }
