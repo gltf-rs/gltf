@@ -300,7 +300,7 @@ impl Gltf {
         R: io::Read + io::Seek,
     {
         let gltf = Self::from_reader_without_validation(reader)?;
-        let _ = gltf.document.validate()?;
+        gltf.document.validate()?;
         Ok(gltf)
     }
 
@@ -323,7 +323,7 @@ impl Gltf {
     /// Loads glTF from a slice of bytes.
     pub fn from_slice(slice: &[u8]) -> Result<Self> {
         let gltf = Self::from_slice_without_validation(slice)?;
-        let _ = gltf.document.validate()?;
+        gltf.document.validate()?;
         Ok(gltf)
     }
 }
@@ -345,7 +345,7 @@ impl Document {
     /// Loads glTF from pre-deserialized JSON.
     pub fn from_json(json: json::Root) -> Result<Self> {
         let document = Self::from_json_without_validation(json);
-        let _ = document.validate()?;
+        document.validate()?;
         Ok(document)
     }
 
@@ -579,7 +579,7 @@ impl std::fmt::Display for Error {
             Error::UnsupportedScheme => write!(f, "unsupported URI scheme"),
             Error::Validation(ref xs) => {
                 write!(f, "invalid glTF:")?;
-                for &(ref path, ref error) in xs {
+                for (ref path, ref error) in xs {
                     write!(f, " {}: {};", path, error)?;
                 }
                 Ok(())

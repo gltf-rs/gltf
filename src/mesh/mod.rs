@@ -256,7 +256,7 @@ impl<'a> Primitive<'a> {
         } else {
             iter::MorphTargets {
                 document: self.mesh.document,
-                iter: (&[]).iter(),
+                iter: ([]).iter(),
             }
         }
     }

@@ -138,7 +138,7 @@ impl<'a> Texture<'a> {
             .map(|index| {
                 self.document
                     .samplers()
-                    .nth(index.value() as usize)
+                    .nth(index.value())
                     .unwrap()
             })
             .unwrap_or_else(|| Sampler::default(self.document))
@@ -148,7 +148,7 @@ impl<'a> Texture<'a> {
     pub fn source(&self) -> image::Image<'a> {
         self.document
             .images()
-            .nth(self.json.source.value() as usize)
+            .nth(self.json.source.value())
             .unwrap()
     }
 
