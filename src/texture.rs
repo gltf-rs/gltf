@@ -135,12 +135,7 @@ impl<'a> Texture<'a> {
         self.json
             .sampler
             .as_ref()
-            .map(|index| {
-                self.document
-                    .samplers()
-                    .nth(index.value())
-                    .unwrap()
-            })
+            .map(|index| self.document.samplers().nth(index.value()).unwrap())
             .unwrap_or_else(|| Sampler::default(self.document))
     }
 
