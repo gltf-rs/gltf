@@ -16,6 +16,10 @@ pub mod camera;
 /// Contains `Image` and other related data structures.
 pub mod image;
 
+/// Contains `BRep` and other related data structures.
+#[cfg(feature = "KITTYCAD_boundary_representation")]
+pub mod kittycad_boundary_representation;
+
 /// Contains `Material` and other related data structures.
 pub mod material;
 
@@ -50,6 +54,8 @@ pub const ENABLED_EXTENSIONS: &[&str] = &[
     "KHR_materials_transmission",
     #[cfg(feature = "KHR_materials_ior")]
     "KHR_materials_ior",
+    #[cfg(feature = "KITTYCAD_boundary_representation")]
+    "KITTYCAD_boundary_representation",
 ];
 
 /// Names of glTF 2.0 extensions supported by the library.

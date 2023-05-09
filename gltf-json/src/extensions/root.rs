@@ -19,6 +19,14 @@ pub struct Root {
         skip_serializing_if = "Option::is_none"
     )]
     pub khr_materials_variants: Option<KhrMaterialsVariants>,
+
+    #[cfg(feature = "KITTYCAD_boundary_representation")]
+    #[serde(
+        default,
+        rename = "KITTYCAD_boundary_representation",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub kittycad_boundary_representation: Option<KittyCadBoundaryRepresentation>,
 }
 
 #[cfg(feature = "KHR_lights_punctual")]
@@ -63,6 +71,64 @@ impl crate::root::Get<crate::extensions::scene::khr_materials_variants::Variant>
             .khr_materials_variants
             .as_ref()?
             .variants
+            .get(id.value())
+    }
+}
+
+#[cfg(feature = "KITTYCAD_boundary_representation")]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+pub struct KittyCadBoundaryRepresentation {
+    /// Solid boundary representation instances.
+    pub breps: Vec<crate::extensions::kittycad_boundary_representation::BRep>,
+    /// Abstract curve definitions.
+    pub curves: Vec<crate::extensions::kittycad_boundary_representation::Curve>,
+    /// Abstract surface definitions.
+    pub surfaces: Vec<crate::extensions::kittycad_boundary_representation::Surface>,
+}
+
+#[cfg(feature = "KITTYCAD_boundary_representation")]
+impl crate::root::Get<crate::extensions::kittycad_boundary_representation::BRep> for crate::Root {
+    fn get(
+        &self,
+        id: crate::Index<crate::extensions::kittycad_boundary_representation::BRep>,
+    ) -> Option<&crate::extensions::kittycad_boundary_representation::BRep> {
+        self.extensions
+            .as_ref()?
+            .kittycad_boundary_representation
+            .as_ref()?
+            .breps
+            .get(id.value())
+    }
+}
+
+#[cfg(feature = "KITTYCAD_boundary_representation")]
+impl crate::root::Get<crate::extensions::kittycad_boundary_representation::Curve> for crate::Root {
+    fn get(
+        &self,
+        id: crate::Index<crate::extensions::kittycad_boundary_representation::Curve>,
+    ) -> Option<&crate::extensions::kittycad_boundary_representation::Curve> {
+        self.extensions
+            .as_ref()?
+            .kittycad_boundary_representation
+            .as_ref()?
+            .curves
+            .get(id.value())
+    }
+}
+
+#[cfg(feature = "KITTYCAD_boundary_representation")]
+impl crate::root::Get<crate::extensions::kittycad_boundary_representation::Surface>
+    for crate::Root
+{
+    fn get(
+        &self,
+        id: crate::Index<crate::extensions::kittycad_boundary_representation::Surface>,
+    ) -> Option<&crate::extensions::kittycad_boundary_representation::Surface> {
+        self.extensions
+            .as_ref()?
+            .kittycad_boundary_representation
+            .as_ref()?
+            .surfaces
             .get(id.value())
     }
 }

@@ -49,6 +49,7 @@ KHR_materials_ior = ["gltf-json/KHR_materials_ior"]
 KHR_materials_variants = ["gltf-json/KHR_materials_variants"]
 KHR_materials_volume = ["gltf-json/KHR_materials_volume"]
 KHR_materials_specular = ["gltf-json/KHR_materials_specular"]
+KITTYCAD_boundary_representation = ["gltf-json/KITTYCAD_boundary_representation"]
 image_jpeg_rayon = ["image/jpeg_rayon"]
 guess_mime_type = []
 
