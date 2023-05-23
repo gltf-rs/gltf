@@ -24,7 +24,7 @@
 //! Walking the node hierarchy.
 //!
 //! ```
-//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! # fn run() -> Result<(), Box<dyn std::error::Error>> {
 //! # use gltf::Gltf;
 //! let gltf = Gltf::open("examples/Box.gltf")?;
 //! for scene in gltf.scenes() {
@@ -49,7 +49,7 @@
 //! file system.
 //!
 //! ```
-//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! # fn run() -> Result<(), Box<dyn std::error::Error>> {
 //! let (document, buffers, images) = gltf::import("examples/Box.gltf")?;
 //! assert_eq!(buffers.len(), document.buffers().count());
 //! assert_eq!(images.len(), document.images().count());

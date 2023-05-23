@@ -3,7 +3,7 @@
 //! Visiting the accessors of a glTF asset.
 //!
 //! ```
-//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! # fn run() -> Result<(), Box<dyn std::error::Error>> {
 //! # let gltf = gltf::Gltf::open("examples/Box.gltf")?;
 //! for accessor in gltf.accessors() {
 //!     println!("Accessor #{}", accessor.index());
