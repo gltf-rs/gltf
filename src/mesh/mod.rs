@@ -125,7 +125,9 @@ pub struct Reader<'a, 's, F>
 where
     F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>,
 {
+    #[allow(dead_code)]
     pub(crate) primitive: &'a Primitive<'a>,
+    #[allow(dead_code)]
     pub(crate) get_buffer_data: F,
 }
 
@@ -254,7 +256,7 @@ impl<'a> Primitive<'a> {
         } else {
             iter::MorphTargets {
                 document: self.mesh.document,
-                iter: (&[]).iter(),
+                iter: ([]).iter(),
             }
         }
     }

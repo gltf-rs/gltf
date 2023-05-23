@@ -50,7 +50,7 @@ fn expand(ast: &DeriveInput) -> proc_macro2::TokenStream {
                 _report: &mut R
             ) where
                 P: Fn() -> crate::Path,
-                R: FnMut(&Fn() -> crate::Path, crate::validation::Error),
+                R: FnMut(&dyn Fn() -> crate::Path, crate::validation::Error),
             {
                 #(
                     #validations;

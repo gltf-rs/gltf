@@ -5,7 +5,8 @@ authors = ["David Harvey-Macaulay <alteous@outlook.com>"]
 description = "JSON parsing for the gltf crate"
 repository = "https://github.com/gltf-rs/gltf"
 license = "MIT OR Apache-2.0"
-edition = "2018"
+edition = "2021"
+rust-version = "1.61"
 
 [dependencies]
 gltf-derive = { path = "../gltf-derive", version = "1.1.0" }
