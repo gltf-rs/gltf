@@ -109,7 +109,7 @@ pub mod image;
 /// The reference importer.
 #[cfg(feature = "import")]
 #[cfg_attr(docsrs, doc(cfg(feature = "import")))]
-mod import;
+pub mod import;
 
 /// Iterators for walking the glTF node hierarchy.
 pub mod iter;
