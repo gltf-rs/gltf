@@ -7,7 +7,7 @@ pub mod curve {
     use serde_derive::{Deserialize, Serialize};
     use std::fmt;
 
-    pub const VALID_CURVE_TYPES: &[&str] = &["NURBS"];
+    pub const VALID_CURVE_TYPES: &[&str] = &["nurbs"];
 
     /// Discriminant for `Curve` data.
     #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
@@ -19,7 +19,7 @@ pub mod curve {
     impl Type {
         pub fn as_str(self) -> &'static str {
             match self {
-                Type::Nurbs => "NURBS",
+                Type::Nurbs => "nurbs",
             }
         }
     }
@@ -42,7 +42,7 @@ pub mod curve {
                     E: de::Error,
                 {
                     Ok(match value {
-                        "NURBS" => Checked::Valid(Type::Nurbs),
+                        "nurbs" => Checked::Valid(Type::Nurbs),
                         _ => Checked::Invalid,
                     })
                 }
@@ -93,7 +93,7 @@ pub mod surface {
     use serde_derive::{Deserialize, Serialize};
     use std::fmt;
 
-    pub const VALID_SURFACE_TYPES: &[&str] = &["PLANE", "NURBS"];
+    pub const VALID_SURFACE_TYPES: &[&str] = &["nurbs", "plane"];
 
     /// Discriminant for `Surface` data.
     #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
@@ -107,8 +107,8 @@ pub mod surface {
     impl Type {
         pub fn as_str(self) -> &'static str {
             match self {
-                Type::Nurbs => "NURBS",
-                Type::Plane => "PLANE",
+                Type::Nurbs => "nurbs",
+                Type::Plane => "plane",
             }
         }
     }
@@ -131,8 +131,8 @@ pub mod surface {
                     E: de::Error,
                 {
                     Ok(match value {
-                        "NURBS" => Checked::Valid(Type::Nurbs),
-                        "PLANE" => Checked::Valid(Type::Plane),
+                        "nurbs" => Checked::Valid(Type::Nurbs),
+                        "plane" => Checked::Valid(Type::Plane),
                         _ => Checked::Invalid,
                     })
                 }
@@ -189,15 +189,18 @@ pub mod surface {
 /// Solid boundary representations.
 pub mod brep {
     use crate::{Accessor, Index};
+    use crate::mesh::Semantic;
+    use crate::validation::Checked;
     use gltf_derive::Validate;
     use serde_derive::{Deserialize, Serialize};
+    use std::collections::BTreeMap;
 
     /// Set of vertices on a face plus trim curves.
     #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Loop {
-        /// Required: loop vertices.
-        pub vertices: Index<Accessor>,
+        /// Required: loop vertex attributes.
+        pub attributes: BTreeMap<Checked<Semantic>, Index<Accessor>>,
         /// Optional: set of trim curves to refine the loop.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub trim_curves: Vec<Index<super::Curve>>,

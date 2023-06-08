@@ -20,6 +20,28 @@ pub struct Node {
         skip_serializing_if = "Option::is_none"
     )]
     pub khr_lights_punctual: Option<khr_lights_punctual::KhrLightsPunctual>,
+
+    #[cfg(feature = "KITTYCAD_boundary_representation")]
+    #[serde(
+	default,
+	rename = "KITTYCAD_boundary_representation",
+	skip_serializing_if = "Option::is_none"
+    )]
+    pub kittycad_boundary_representation: Option<kittycad_boundary_representation::KittyCadBoundaryRepresentation>,
+}
+
+#[cfg(feature = "KITTYCAD_boundary_representation")]
+pub mod kittycad_boundary_representation {
+    use crate::Index;
+    use gltf_derive::Validate;
+    use serde_derive::{Deserialize, Serialize};
+
+    /// Reference to boundary representation solid.
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    pub struct KittyCadBoundaryRepresentation {
+	/// Index into top level brep array.
+	pub brep: Index<crate::extensions::kittycad_boundary_representation::BRep>,
+    }
 }
 
 #[cfg(feature = "KHR_lights_punctual")]
