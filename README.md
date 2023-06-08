@@ -36,7 +36,7 @@ By default, `gltf` ignores all `extras` and `names` included with glTF assets. Y
 
 ```toml
 [dependencies.gltf]
-version = "1.0"
+version = "1.2"
 features = ["extras", "names"]
 ```
 
