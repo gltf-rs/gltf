@@ -3,9 +3,6 @@
    gltf
 </h1>
 <p align="center">
-   <a href="https://travis-ci.org/gltf-rs/gltf">
-      <img src="https://travis-ci.org/gltf-rs/gltf.svg?branch=master" alt="travis">
-   </a>
    <a href="https://crates.io/crates/gltf">
       <img src="https://img.shields.io/crates/v/gltf.svg" alt="crates.io">
    </a>
