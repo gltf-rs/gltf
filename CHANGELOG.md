@@ -6,11 +6,21 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [1.2.0] - 2023-06-08
+
+### Added
+
+- New functions `import_buffers` and `import_images` for advanced import use cases.
+
+### Changed
+
+- `Primitive::attributes` now uses `BTreeMap` instead of `HashMap` deterministic serialization.
+
+## [1.1.0] - 2023-02-01
+
+### Fixed
 
 - Fix relative file path imports with url encoded characters.
-- Update dependency on `image` crate from 0.23 to 0.24.
-- Fix serialization determinism related to using HashMap for Primitive::attributes. Now uses BTreeMap instead.
 - Fix bounds calculation in export example.
 
 ## [1.0.0] - 2022-01-29

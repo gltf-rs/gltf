@@ -3,9 +3,6 @@
    gltf
 </h1>
 <p align="center">
-   <a href="https://travis-ci.org/gltf-rs/gltf">
-      <img src="https://travis-ci.org/gltf-rs/gltf.svg?branch=master" alt="travis">
-   </a>
    <a href="https://crates.io/crates/gltf">
       <img src="https://img.shields.io/crates/v/gltf.svg" alt="crates.io">
    </a>
@@ -39,7 +36,7 @@ By default, `gltf` ignores all `extras` and `names` included with glTF assets. Y
 
 ```toml
 [dependencies.gltf]
-version = "1.0"
+version = "1.2"
 features = ["extras", "names"]
 ```
 
