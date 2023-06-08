@@ -69,7 +69,9 @@
 //! scenarios are delegated to the user.
 //!
 //! You can read glTF without loading resources by constructing the [`Gltf`]
-//! (standard glTF) or [`Glb`] (binary glTF) data structures explicitly.
+//! (standard glTF) or [`Glb`] (binary glTF) data structures explicitly. Buffer
+//! and image data can then be imported separately using [`import_buffers`] and
+//! [`import_images`] respectively.
 //!
 //! [glTF 2.0]: https://www.khronos.org/gltf
 //! [`Gltf`]: struct.Gltf.html
@@ -109,7 +111,7 @@ pub mod image;
 /// The reference importer.
 #[cfg(feature = "import")]
 #[cfg_attr(docsrs, doc(cfg(feature = "import")))]
-pub mod import;
+mod import;
 
 /// Iterators for walking the glTF node hierarchy.
 pub mod iter;
@@ -157,6 +159,12 @@ pub use self::image::Image;
 #[cfg(feature = "import")]
 #[doc(inline)]
 pub use self::import::import;
+#[cfg(feature = "import")]
+#[doc(inline)]
+pub use self::import::import_buffers;
+#[cfg(feature = "import")]
+#[doc(inline)]
+pub use self::import::import_images;
 #[cfg(feature = "import")]
 #[doc(inline)]
 pub use self::import::import_slice;

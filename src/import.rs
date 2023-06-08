@@ -109,8 +109,13 @@ impl buffer::Data {
     }
 }
 
-/// Import the buffer data referenced by a glTF document.
-pub fn import_buffer_data(
+/// Import buffer data referenced by a glTF document.
+///
+/// ### Note
+///
+/// This function is intended for advanced users who wish to forego loading image data.
+/// A typical user should call [`import`] instead.
+pub fn import_buffers(
     document: &Document,
     base: Option<&Path>,
     mut blob: Option<Vec<u8>>,
@@ -206,8 +211,13 @@ impl image::Data {
     }
 }
 
-/// Import the image data referenced by a glTF document.
-pub fn import_image_data(
+/// Import image data referenced by a glTF document.
+///
+/// ### Note
+///
+/// This function is intended for advanced users who wish to forego loading buffer data.
+/// A typical user should call [`import`] instead.
+pub fn import_images(
     document: &Document,
     base: Option<&Path>,
     buffer_data: &[buffer::Data],
@@ -220,8 +230,8 @@ pub fn import_image_data(
 }
 
 fn import_impl(Gltf { document, blob }: Gltf, base: Option<&Path>) -> Result<Import> {
-    let buffer_data = import_buffer_data(&document, base, blob)?;
-    let image_data = import_image_data(&document, base, &buffer_data)?;
+    let buffer_data = import_buffers(&document, base, blob)?;
+    let image_data = import_images(&document, base, &buffer_data)?;
     let import = (document, buffer_data, image_data);
     Ok(import)
 }
@@ -233,7 +243,7 @@ fn import_path(path: &Path) -> Result<Import> {
     import_impl(Gltf::from_reader(reader)?, Some(base))
 }
 
-/// Import some glTF 2.0 from the file system.
+/// Import glTF 2.0 from the file system.
 ///
 /// ```
 /// # fn run() -> Result<(), gltf::Error> {
@@ -271,7 +281,15 @@ fn import_slice_impl(slice: &[u8]) -> Result<Import> {
     import_impl(Gltf::from_slice(slice)?, None)
 }
 
-/// Import some glTF 2.0 from a slice
+/// Import glTF 2.0 from a slice.
+///
+/// File paths in the document are assumed to be relative to the current working
+/// directory.
+///
+/// ### Note
+///
+/// This function is intended for advanced users.
+/// A typical user should call [`import`] instead.
 ///
 /// ```
 /// # extern crate gltf;
