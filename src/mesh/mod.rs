@@ -3,7 +3,7 @@
 //! Listing the attributes of each mesh primitive in a glTF asset.
 //!
 //! ```
-//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! # fn run() -> Result<(), Box<dyn std::error::Error>> {
 //! # let gltf = gltf::Gltf::open("examples/Box.gltf")?;
 //! for mesh in gltf.meshes() {
 //!    println!("Mesh #{}", mesh.index());
@@ -27,7 +27,7 @@
 //! a glTF asset.
 //!
 //! ```
-//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! # fn run() -> Result<(), Box<dyn std::error::Error>> {
 //! let (gltf, buffers, _) = gltf::import("examples/Box.gltf")?;
 //! for mesh in gltf.meshes() {
 //!    println!("Mesh #{}", mesh.index());
