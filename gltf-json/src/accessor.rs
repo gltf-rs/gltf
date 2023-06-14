@@ -179,8 +179,11 @@ pub struct Accessor {
     pub buffer_view: Option<Index<buffer::View>>,
 
     /// The offset relative to the start of the parent `BufferView` in bytes.
+    ///
+    /// This field can be omitted in sparse accessors.
     #[serde(default, rename = "byteOffset")]
-    pub byte_offset: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub byte_offset: Option<u32>,
 
     /// The number of components within the buffer view - not to be confused
     /// with the number of bytes in the buffer view.
