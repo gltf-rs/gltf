@@ -6,7 +6,16 @@ use serde_derive::{Deserialize, Serialize};
 /// A node can contain one or more meshes and its transform places the meshes in
 /// the scene.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct Mesh {}
+pub struct Mesh {
+    /// Universally unique identifier.
+    #[cfg(feature = "KITTYCAD_uuid")]
+    #[serde(
+        default,
+        rename = "KITTYCAD_uuid",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub kittycad_uuid: Option<crate::extensions::kittycad_uuid::Uuid>,
+}
 
 /// Geometry to be rendered with the given material.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]

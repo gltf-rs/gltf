@@ -188,9 +188,9 @@ pub mod surface {
 
 /// Solid boundary representations.
 pub mod brep {
-    use crate::{Accessor, Index};
     use crate::mesh::Semantic;
     use crate::validation::Checked;
+    use crate::{Accessor, Index};
     use gltf_derive::Validate;
     use serde_derive::{Deserialize, Serialize};
     use std::collections::BTreeMap;

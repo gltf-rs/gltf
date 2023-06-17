@@ -205,6 +205,16 @@ impl<'a> Node<'a> {
             .map(|index| self.document.skins().nth(index.value()).unwrap())
     }
 
+    /// Returns the node UUID if it exists.
+    #[cfg(feature = "KITTYCAD_uuid")]
+    pub fn uuid(&self) -> Option<&'a str> {
+        self.json
+            .extensions
+            .as_ref()
+            .and_then(|ext| ext.kittycad_uuid.as_ref())
+            .map(|ext| ext.uuid.as_str())
+    }
+
     /// Returns the weights of the instantiated morph target.
     pub fn weights(&self) -> Option<&'a [f32]> {
         self.json.weights.as_deref()

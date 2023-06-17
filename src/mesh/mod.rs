@@ -168,6 +168,16 @@ impl<'a> Mesh<'a> {
     pub fn weights(&self) -> Option<&'a [f32]> {
         self.json.weights.as_deref()
     }
+
+    /// Returns the mesh UUID if it exists.
+    #[cfg(feature = "KITTYCAD_uuid")]
+    pub fn uuid(&self) -> Option<&str> {
+        self.json
+            .extensions
+            .as_ref()
+            .and_then(|ext| ext.kittycad_uuid.as_ref())
+            .map(|ext| ext.uuid.as_str())
+    }
 }
 
 impl<'a> Primitive<'a> {
