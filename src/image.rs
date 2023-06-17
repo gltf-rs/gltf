@@ -163,4 +163,64 @@ impl Data {
             pixels,
         })
     }
+
+    /// Attemps a conversion from to the requested pixel format.
+    pub fn convert_format(self, target_format: Format) -> Result<Self> {
+        use image_crate::{GrayAlphaImage, GrayImage, RgbImage, RgbaImage};
+
+        if target_format == self.format {
+            return Ok(self);
+        }
+
+        // This should never happen
+        let limit_error = Error::Image(image_crate::ImageError::Limits(
+            image_crate::error::LimitError::from_kind(
+                image_crate::error::LimitErrorKind::DimensionError,
+            ),
+        ));
+        // Temporary fix for unsupported formats
+        let unsupported_error = Error::Image(image_crate::ImageError::Parameter(
+            image_crate::error::ParameterError::from_kind(
+                image_crate::error::ParameterErrorKind::Generic(
+                    "This pixel format is not supported yet".to_owned(),
+                ),
+            ),
+        ));
+        let mut image = match self.format {
+            Format::R8 => DynamicImage::ImageLuma8(
+                GrayImage::from_vec(self.width, self.height, self.pixels).ok_or(limit_error)?,
+            ),
+            Format::R8G8 => DynamicImage::ImageLumaA8(
+                GrayAlphaImage::from_vec(self.width, self.height, self.pixels)
+                    .ok_or(limit_error)?,
+            ),
+            Format::R8G8B8 => DynamicImage::ImageRgb8(
+                RgbImage::from_vec(self.width, self.height, self.pixels).ok_or(limit_error)?,
+            ),
+            Format::R8G8B8A8 => DynamicImage::ImageRgba8(
+                RgbaImage::from_vec(self.width, self.height, self.pixels).ok_or(limit_error)?,
+            ),
+            Format::R16 => Err(unsupported_error)?,
+            Format::R16G16 => Err(unsupported_error)?,
+            Format::R16G16B16 => Err(unsupported_error)?,
+            Format::R16G16B16A16 => Err(unsupported_error)?,
+            Format::R32G32B32FLOAT => Err(unsupported_error)?,
+            Format::R32G32B32A32FLOAT => Err(unsupported_error)?,
+        };
+
+        image = match target_format {
+            Format::R8 => DynamicImage::ImageLuma8(image.into_luma8()),
+            Format::R8G8 => DynamicImage::ImageLumaA8(image.into_luma_alpha8()),
+            Format::R8G8B8 => DynamicImage::ImageRgb8(image.into_rgb8()),
+            Format::R8G8B8A8 => DynamicImage::ImageRgba8(image.into_rgba8()),
+            Format::R16 => DynamicImage::ImageLuma16(image.into_luma16()),
+            Format::R16G16 => DynamicImage::ImageLumaA16(image.into_luma_alpha16()),
+            Format::R16G16B16 => DynamicImage::ImageRgb16(image.into_rgb16()),
+            Format::R16G16B16A16 => DynamicImage::ImageRgba16(image.into_rgba16()),
+            Format::R32G32B32FLOAT => DynamicImage::ImageRgb32F(image.into_rgb32f()),
+            Format::R32G32B32A32FLOAT => DynamicImage::ImageRgba32F(image.into_rgba32f()),
+        };
+
+        Self::new(image)
+    }
 }
