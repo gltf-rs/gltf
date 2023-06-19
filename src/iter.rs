@@ -5,6 +5,8 @@ use crate::animation::Animation;
 use crate::buffer::{Buffer, View};
 use crate::camera::Camera;
 use crate::image::Image;
+#[cfg(feature = "KITTYCAD_boundary_representation")]
+use crate::kittycad_boundary_representation::BRep;
 use crate::material::Material;
 use crate::mesh::Mesh;
 use crate::scene::{Node, Scene};
@@ -45,6 +47,18 @@ pub struct Animations<'a> {
 pub struct Buffers<'a> {
     /// Internal buffer iterator.
     pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::buffer::Buffer>>,
+
+    /// The internal root glTF object.
+    pub(crate) document: &'a Document,
+}
+
+/// An `Iterator` that visits every B-rep in a glTF asset.
+#[cfg(feature = "KITTYCAD_boundary_representation")]
+#[derive(Clone, Debug)]
+pub struct BReps<'a> {
+    /// Internal buffer iterator.
+    pub(crate) iter:
+        iter::Enumerate<slice::Iter<'a, json::extensions::kittycad_boundary_representation::BRep>>,
 
     /// The internal root glTF object.
     pub(crate) document: &'a Document,
@@ -164,6 +178,19 @@ pub struct Skins<'a> {
     pub(crate) document: &'a Document,
 }
 
+/// An `Iterator` that visits every surface in a glTF asset.
+#[cfg(feature = "KITTYCAD_boundary_representation")]
+#[derive(Clone, Debug)]
+pub struct Surfaces<'a> {
+    /// Internal skin iterator.
+    pub(crate) iter: iter::Enumerate<
+        slice::Iter<'a, json::extensions::kittycad_boundary_representation::Surface>,
+    >,
+
+    /// The internal root glTF object.
+    pub(crate) document: &'a Document,
+}
+
 /// An `Iterator` that visits every texture in a glTF asset.
 #[derive(Clone, Debug)]
 pub struct Textures<'a> {
@@ -252,6 +279,33 @@ impl<'a> Iterator for Buffers<'a> {
         self.iter
             .nth(n)
             .map(|(index, json)| Buffer::new(self.document, index, json))
+    }
+}
+
+impl<'a> ExactSizeIterator for BReps<'a> {}
+impl<'a> Iterator for BReps<'a> {
+    type Item = BRep<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter
+            .next()
+            .map(|(index, json)| BRep::new(self.document, index, json))
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter
+            .last()
+            .map(|(index, json)| BRep::new(document, index, json))
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter
+            .nth(n)
+            .map(|(index, json)| BRep::new(self.document, index, json))
     }
 }
 
@@ -595,6 +649,34 @@ impl<'a> Iterator for Skins<'a> {
         self.iter
             .nth(n)
             .map(|(index, json)| Skin::new(self.document, index, json))
+    }
+}
+
+#[cfg(feature = "KITTYCAD_boundary_representation")]
+impl<'a> ExactSizeIterator for Surfaces<'a> {}
+impl<'a> Iterator for Surfaces<'a> {
+    type Item = crate::kittycad_boundary_representation::Surface<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next().map(|(index, json)| {
+            crate::kittycad_boundary_representation::Surface::new(self.document, index, json)
+        })
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+    fn count(self) -> usize {
+        self.iter.count()
+    }
+    fn last(self) -> Option<Self::Item> {
+        let document = self.document;
+        self.iter.last().map(|(index, json)| {
+            crate::kittycad_boundary_representation::Surface::new(document, index, json)
+        })
+    }
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n).map(|(index, json)| {
+            crate::kittycad_boundary_representation::Surface::new(self.document, index, json)
+        })
     }
 }
 

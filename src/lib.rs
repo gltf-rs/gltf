@@ -124,6 +124,11 @@ pub mod khr_lights_punctual;
 #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_variants")))]
 pub mod khr_materials_variants;
 
+/// Support for the `KITTYCAD_boundary_representation` extension.
+#[cfg(feature = "KITTYCAD_boundary_representation")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KITTYCAD_boundary_representation")))]
+pub mod kittycad_boundary_representation;
+
 /// Material properties of primitives.
 pub mod material;
 
@@ -160,6 +165,9 @@ pub use self::import::import;
 #[cfg(feature = "import")]
 #[doc(inline)]
 pub use self::import::import_slice;
+#[cfg(feature = "KITTYCAD_boundary_representation")]
+#[doc(inline)]
+pub use self::kittycad_boundary_representation::BRep;
 #[doc(inline)]
 pub use self::material::Material;
 #[doc(inline)]
@@ -399,6 +407,24 @@ impl Document {
         }
     }
 
+    /// Returns an `Iterator` that visits the B-reps of the glTF asset.
+    #[cfg(feature = "KITTYCAD_boundary_representation")]
+    pub fn breps(&self) -> Option<iter::BReps> {
+        let iter = self
+            .0
+            .extensions
+            .as_ref()?
+            .kittycad_boundary_representation
+            .as_ref()?
+            .breps
+            .iter()
+            .enumerate();
+        Some(iter::BReps {
+            iter,
+            document: self,
+        })
+    }
+
     /// Returns an `Iterator` that visits the cameras of the glTF asset.
     pub fn cameras(&self) -> iter::Cameras {
         iter::Cameras {
@@ -521,6 +547,24 @@ impl Document {
             iter: self.0.skins.iter().enumerate(),
             document: self,
         }
+    }
+
+    /// Returns an `Iterator` that visits the surfaces of the glTF asset.
+    #[cfg(feature = "KITTYCAD_boundary_representation")]
+    pub fn surfaces(&self) -> Option<iter::Surfaces> {
+        let iter = self
+            .0
+            .extensions
+            .as_ref()?
+            .kittycad_boundary_representation
+            .as_ref()?
+            .surfaces
+            .iter()
+            .enumerate();
+        Some(iter::Surfaces {
+            iter,
+            document: self,
+        })
     }
 
     /// Returns an `Iterator` that visits the textures of the glTF asset.

@@ -179,6 +179,9 @@ pub mod surface {
         /// Discriminant.
         #[serde(rename = "type")]
         pub type_: Checked<Type>,
+        /// Optional name for this surface.
+        #[cfg(feature = "names")]
+        pub name: Option<String>,
         /// Arguments for a NURBS surface.
         #[serde(skip_serializing_if = "Option::is_none")]
         pub nurbs: Option<Nurbs>,
@@ -225,6 +228,7 @@ pub mod brep {
         /// Array of faces forming a solid.
         pub faces: Vec<Face>,
         /// Optional name for this boundary representation.
+        #[cfg(feature = "names")]
         pub name: Option<String>,
         /// Optional mesh approximation of this solid.
         pub mesh: Option<Index<crate::Mesh>>,
