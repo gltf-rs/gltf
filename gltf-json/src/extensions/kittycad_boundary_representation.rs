@@ -180,8 +180,10 @@ pub mod surface {
         #[serde(rename = "type")]
         pub type_: Checked<Type>,
         /// Arguments for a NURBS surface.
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub nurbs: Option<Nurbs>,
         /// Arguments for a planar surface.
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub plane: Option<Plane>,
     }
 }

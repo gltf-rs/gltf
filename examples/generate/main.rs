@@ -1,4 +1,5 @@
 use byteorder::{LittleEndian, WriteBytesExt};
+use gltf::json::extensions::kittycad_boundary_representation as kcad;
 use gltf::json::validation::Checked::Valid;
 use std::convert::TryInto;
 use std::io::Write;
@@ -6,6 +7,10 @@ use uuid::Uuid;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 type UnitResult = Result<()>;
+
+fn join(a: &str, b: &str) -> String {
+    String::from(a) + b
+}
 
 /// Append padding bytes to the end of the input vector until
 /// the glTF binary alignment requirement is met.
@@ -71,7 +76,21 @@ const QUAD_POSITIONS: &[[f32; 3]] = &[
 // 0-1   0   0-1
 const QUAD_INDICES: &[u32] = &[0, 1, 2, 0, 2, 3];
 
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+enum Output {
+    #[default]
+    Standard,
+    Binary,
+}
+
 fn main() -> UnitResult {
+    let basename = "quad";
+    let arg = std::env::args().nth(1);
+    let output = match arg.as_ref().map(String::as_str) {
+        Some("glb") => Output::Binary,
+        _ => Output::Standard,
+    };
+
     let mut bin = Vec::new();
 
     // Write vertices
@@ -98,20 +117,61 @@ fn main() -> UnitResult {
         index_data_length += std::mem::size_of::<u32>() as u32;
     }
 
+    let kbr = gltf::json::extensions::root::KittyCadBoundaryRepresentation {
+        breps: vec![kcad::BRep {
+            // TODO: add enumeration to say open/solid, etc.
+            faces: vec![kcad::brep::Face {
+                surface: gltf::json::Index::new(0),
+                loops: vec![kcad::brep::Loop {
+                    attributes: std::collections::BTreeMap::from([
+                        // Shared with mesh.
+                        (
+                            Valid(gltf::json::mesh::Semantic::Positions),
+                            gltf::json::Index::new(0),
+                        ),
+                    ]),
+                    trim_curves: Vec::new(),
+                }],
+            }],
+            name: Some("quad".to_string()),
+            // Defined below.
+            mesh: Some(gltf::json::Index::new(0)),
+        }],
+        curves: Vec::new(),
+        surfaces: vec![kcad::Surface {
+            type_: Valid(kcad::surface::Type::Plane),
+            nurbs: None,
+            plane: Some(kcad::surface::Plane {
+                normal: [0.0, -1.0, 0.0],
+                constant: 0.0,
+            }),
+        }],
+    };
+
     let mut root = gltf::json::Root {
         asset: gltf::json::Asset {
             version: "2.0".to_owned(),
             generator: Some("kittycad.io".to_owned()),
             ..Default::default()
         },
+        extensions: Some(gltf::json::extensions::Root {
+            kittycad_boundary_representation: Some(kbr),
+            ..Default::default()
+        }),
         ..Default::default()
     };
+
     root.buffers.push(gltf::json::Buffer {
         byte_length: bin.len() as u32,
         extensions: None,
         extras: Default::default(),
         name: None,
-        uri: None, // binary payload
+        uri: if output == Output::Standard {
+            Some(join(basename, ".bin"))
+        } else {
+            // binary payload
+            None
+        },
     });
     root.buffer_views.push(gltf::json::buffer::View {
         buffer: gltf::json::Index::new(0),
@@ -192,6 +252,9 @@ fn main() -> UnitResult {
         camera: None,
         children: None,
         extensions: Some(gltf::json::extensions::scene::Node {
+	    kittycad_boundary_representation: Some(gltf::json::extensions::scene::kittycad_boundary_representation::KittyCadBoundaryRepresentation {
+		brep: gltf::json::Index::new(0),
+	    }),
             kittycad_uuid: Some(gltf::json::extensions::kittycad_uuid::Uuid {
                 uuid: Uuid::new_v4().to_string(),
             }),
@@ -215,7 +278,17 @@ fn main() -> UnitResult {
     });
     root.scene = Some(gltf::json::Index::new(0));
 
-    let glb = package(root.to_vec().unwrap(), bin)?;
-    std::fs::write("quad.glb", &glb)?;
+    match output {
+        Output::Standard => {
+            let json = root.to_string_pretty()?;
+            std::fs::write(join(basename, ".gltf"), &json)?;
+            std::fs::write(join(basename, ".bin"), &bin)?;
+        }
+        Output::Binary => {
+            let glb = package(root.to_vec()?, bin)?;
+            std::fs::write(join(basename, ".glb"), &glb)?;
+        }
+    }
+
     Ok(())
 }

@@ -71,7 +71,7 @@ path = "examples/export/main.rs"
 [[example]]
 name = "gltf-generate"
 path = "examples/generate/main.rs"
-required-features = ["KITTYCAD_uuid", "uuid"]
+required-features = ["KITTYCAD_boundary_representation", "KITTYCAD_uuid", "uuid"]
 
 [[example]]
 name = "gltf-roundtrip"
