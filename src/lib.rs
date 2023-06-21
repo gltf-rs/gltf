@@ -24,7 +24,7 @@
 //! Walking the node hierarchy.
 //!
 //! ```
-//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! # fn run() -> Result<(), Box<dyn std::error::Error>> {
 //! # use gltf::Gltf;
 //! let gltf = Gltf::open("examples/Box.gltf")?;
 //! for scene in gltf.scenes() {
@@ -49,7 +49,7 @@
 //! file system.
 //!
 //! ```
-//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! # fn run() -> Result<(), Box<dyn std::error::Error>> {
 //! let (document, buffers, images) = gltf::import("examples/Box.gltf")?;
 //! assert_eq!(buffers.len(), document.buffers().count());
 //! assert_eq!(images.len(), document.images().count());
@@ -69,7 +69,9 @@
 //! scenarios are delegated to the user.
 //!
 //! You can read glTF without loading resources by constructing the [`Gltf`]
-//! (standard glTF) or [`Glb`] (binary glTF) data structures explicitly.
+//! (standard glTF) or [`Glb`] (binary glTF) data structures explicitly. Buffer
+//! and image data can then be imported separately using [`import_buffers`] and
+//! [`import_images`] respectively.
 //!
 //! [glTF 2.0]: https://www.khronos.org/gltf
 //! [`Gltf`]: struct.Gltf.html
@@ -162,6 +164,12 @@ pub use self::image::Image;
 #[cfg(feature = "import")]
 #[doc(inline)]
 pub use self::import::import;
+#[cfg(feature = "import")]
+#[doc(inline)]
+pub use self::import::import_buffers;
+#[cfg(feature = "import")]
+#[doc(inline)]
+pub use self::import::import_images;
 #[cfg(feature = "import")]
 #[doc(inline)]
 pub use self::import::import_slice;
@@ -308,7 +316,7 @@ impl Gltf {
         R: io::Read + io::Seek,
     {
         let gltf = Self::from_reader_without_validation(reader)?;
-        let _ = gltf.document.validate()?;
+        gltf.document.validate()?;
         Ok(gltf)
     }
 
@@ -331,7 +339,7 @@ impl Gltf {
     /// Loads glTF from a slice of bytes.
     pub fn from_slice(slice: &[u8]) -> Result<Self> {
         let gltf = Self::from_slice_without_validation(slice)?;
-        let _ = gltf.document.validate()?;
+        gltf.document.validate()?;
         Ok(gltf)
     }
 }
@@ -353,7 +361,7 @@ impl Document {
     /// Loads glTF from pre-deserialized JSON.
     pub fn from_json(json: json::Root) -> Result<Self> {
         let document = Self::from_json_without_validation(json);
-        let _ = document.validate()?;
+        document.validate()?;
         Ok(document)
     }
 
@@ -623,7 +631,7 @@ impl std::fmt::Display for Error {
             Error::UnsupportedScheme => write!(f, "unsupported URI scheme"),
             Error::Validation(ref xs) => {
                 write!(f, "invalid glTF:")?;
-                for &(ref path, ref error) in xs {
+                for (ref path, ref error) in xs {
                     write!(f, " {}: {};", path, error)?;
                 }
                 Ok(())

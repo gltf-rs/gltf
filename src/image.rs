@@ -1,3 +1,4 @@
+#[allow(unused)]
 use crate::{buffer, Document, Error, Result};
 
 #[cfg(feature = "import")]
