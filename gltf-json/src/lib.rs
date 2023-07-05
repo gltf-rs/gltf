@@ -105,3 +105,12 @@ pub mod serialize {
         to_string, to_string_pretty, to_value, to_vec, to_vec_pretty, to_writer, to_writer_pretty,
     };
 }
+
+/// Convenience function for pushing into array
+///
+/// Returns the index of the pushed item.
+pub fn push<T>(vec: &mut Vec<T>, item: T) -> Index<T> {
+    let index = vec.len();
+    vec.push(item);
+    Index::new(index as u32)
+}
