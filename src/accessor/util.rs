@@ -288,10 +288,10 @@ impl<'a, 's, T: Item> Iter<'s, T> {
         match accessor.sparse() {
             Some(sparse) => {
                 // Using `if let` here instead of map to preserve the early return behavior.
-                let base_iter = if let Some((view, start)) = accessor.view().zip(accessor.offset())
-                {
+                let base_iter = if let Some(view) = accessor.view() {
                     let stride = view.stride().unwrap_or(mem::size_of::<T>());
 
+                    let start = accessor.offset();
                     let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
                     let subslice = buffer_view_slice(view, &get_buffer_data)
                         .and_then(|slice| slice.get(start..end))?;
@@ -348,28 +348,26 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                 debug_assert_eq!(mem::size_of::<T>(), accessor.size());
                 debug_assert!(mem::size_of::<T>() > 0);
 
-                accessor
-                    .view()
-                    .zip(accessor.offset())
-                    .and_then(|(view, start)| {
-                        let stride = view.stride().unwrap_or(mem::size_of::<T>());
-                        debug_assert!(
-                            stride >= mem::size_of::<T>(),
-                            "Mismatch in stride, expected at least {} stride but found {}",
-                            mem::size_of::<T>(),
-                            stride
-                        );
+                accessor.view().and_then(|view| {
+                    let stride = view.stride().unwrap_or(mem::size_of::<T>());
+                    debug_assert!(
+                        stride >= mem::size_of::<T>(),
+                        "Mismatch in stride, expected at least {} stride but found {}",
+                        mem::size_of::<T>(),
+                        stride
+                    );
 
-                        let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
-                        let subslice = buffer_view_slice(view, &get_buffer_data)
-                            .and_then(|slice| slice.get(start..end))?;
+                    let start = accessor.offset();
+                    let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
+                    let subslice = buffer_view_slice(view, &get_buffer_data)
+                        .and_then(|slice| slice.get(start..end))?;
 
-                        Some(Iter::Standard(ItemIter {
-                            stride,
-                            data: subslice,
-                            _phantom: PhantomData,
-                        }))
-                    })
+                    Some(Iter::Standard(ItemIter {
+                        stride,
+                        data: subslice,
+                        _phantom: PhantomData,
+                    }))
+                })
             }
         }
     }

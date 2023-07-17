@@ -120,9 +120,11 @@ impl<'a> Accessor<'a> {
 
     /// Returns the offset relative to the start of the parent buffer view in bytes.
     ///
-    /// This may be `None` if the corresponding accessor is sparse.
-    pub fn offset(&self) -> Option<usize> {
-        self.json.byte_offset.map(|offset| offset as usize)
+    /// This will be 0 if the corresponding accessor is sparse.
+    pub fn offset(&self) -> usize {
+        // TODO: Change this function to return Option<usize> in the next
+        // version and return None for sparse accessors.
+        self.json.byte_offset.unwrap_or(0) as usize
     }
 
     /// Returns the number of components within the buffer view - not to be confused
