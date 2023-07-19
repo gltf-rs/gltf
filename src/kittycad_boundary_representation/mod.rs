@@ -40,45 +40,6 @@ pub mod iter {
                 .map(|(index, json)| super::Face::new(self.brep.clone(), index, json))
         }
     }
-
-    /// Iterator that visits the edge loops of a face.
-    #[derive(Clone, Debug)]
-    pub struct Loops<'a> {
-        /// The parent `Face` struct.
-        pub(crate) face: super::Face<'a>,
-
-        /// The internal JSON primitive iterator.
-        pub(crate) iter: std::iter::Enumerate<
-            std::slice::Iter<'a, json::extensions::kittycad_boundary_representation::brep::Loop>,
-        >,
-    }
-
-    impl<'a> ExactSizeIterator for Loops<'a> {}
-    impl<'a> Iterator for Loops<'a> {
-        type Item = super::Loop<'a>;
-        fn next(&mut self) -> Option<Self::Item> {
-            self.iter
-                .next()
-                .map(|(index, json)| super::Loop::new(self.face.clone(), index, json))
-        }
-        fn size_hint(&self) -> (usize, Option<usize>) {
-            self.iter.size_hint()
-        }
-        fn count(self) -> usize {
-            self.iter.count()
-        }
-        fn last(self) -> Option<Self::Item> {
-            self.iter
-                .clone()
-                .last()
-                .map(|(index, json)| super::Loop::new(self.face.clone(), index, json))
-        }
-        fn nth(&mut self, n: usize) -> Option<Self::Item> {
-            self.iter
-                .nth(n)
-                .map(|(index, json)| super::Loop::new(self.face.clone(), index, json))
-        }
-    }
 }
 
 /// Boundary representation of a solid.
@@ -135,37 +96,6 @@ impl<'a> BRep<'a> {
     }
 }
 
-/// Edge loop applied to a face.
-#[derive(Clone, Debug)]
-pub struct Loop<'a> {
-    /// The parent `Face` struct.
-    face: Face<'a>,
-
-    /// The corresponding JSON index.
-    index: usize,
-
-    /// The corresponding JSON struct.
-    json: &'a json::extensions::kittycad_boundary_representation::brep::Loop,
-}
-
-impl<'a> Loop<'a> {
-    /// Constructs a `Loop`.
-    pub(crate) fn new(
-        face: Face<'a>,
-        index: usize,
-        json: &'a json::extensions::kittycad_boundary_representation::brep::Loop,
-    ) -> Self {
-        Self { face, index, json }
-    }
-
-    /// Returns the internal JSON index.
-    pub fn index(&self) -> usize {
-        self.index
-    }
-
-    // TODO: add reader API.
-}
-
 /// Defines a planar surface.
 #[derive(Clone, Debug)]
 pub struct Plane<'a> {
@@ -205,12 +135,9 @@ impl<'a> Face<'a> {
         Self { brep, index, json }
     }
 
-    /// Returns an `Iterator` over the face's edge loops.
-    pub fn loops(&self) -> iter::Loops<'a> {
-        iter::Loops {
-            face: self.clone(),
-            iter: self.json.loops.iter().enumerate(),
-        }
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// The surface this face is defined upon.
@@ -228,6 +155,7 @@ impl<'a> Face<'a> {
 #[derive(Clone, Debug)]
 pub struct Surface<'a> {
     /// The parent `Document` struct.
+    #[allow(unused)]
     document: &'a Document,
 
     /// The corresponding JSON index.

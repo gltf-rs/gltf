@@ -1,24 +1,26 @@
 /// 2D free-form curves.
 pub mod curve {
     use crate::validation::Checked;
-    use crate::{Accessor, Index};
     use gltf_derive::Validate;
     use serde::{de, ser};
     use serde_derive::{Deserialize, Serialize};
     use std::fmt;
 
-    pub const VALID_CURVE_TYPES: &[&str] = &["nurbs"];
+    pub const VALID_CURVE_TYPES: &[&str] = &["linear", "nurbs"];
 
     /// Discriminant for `Curve` data.
     #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
     pub enum Type {
+        /// Linear curve.
+        Linear = 1,
         /// NURBS curve.
-        Nurbs = 1,
+        Nurbs = 2,
     }
 
     impl Type {
         pub fn as_str(self) -> &'static str {
             match self {
+                Type::Linear => "linear",
                 Type::Nurbs => "nurbs",
             }
         }
@@ -42,6 +44,7 @@ pub mod curve {
                     E: de::Error,
                 {
                     Ok(match value {
+                        "linear" => Checked::Valid(Type::Linear),
                         "nurbs" => Checked::Valid(Type::Nurbs),
                         _ => Checked::Invalid,
                     })
@@ -64,10 +67,10 @@ pub mod curve {
     #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Nurbs {
-        /// Must be `VEC4` of floating point type.
-        pub control_points: Index<Accessor>,
-        /// Must be index type.
-        pub knot_vector: Index<Accessor>,
+        /// Array of control vertices.
+        pub control_points: Vec<[f32; 4]>,
+        /// Knot vector.
+        pub knot_vector: Vec<f32>,
         /// Order of basis splines.
         pub order: u32,
     }
@@ -79,16 +82,19 @@ pub mod curve {
         /// Discriminant.
         #[serde(rename = "type")]
         pub type_: Checked<Type>,
-        /// Arguments for a NURBS curve.
+        /// Additional parameters for a NURBS curve.
         pub nurbs: Option<Nurbs>,
+        /// Curve start position.
+        pub start: [f32; 4],
+        /// Curve end position.
+        pub end: [f32; 4],
     }
 }
 
 /// 3D free-form surfaces.
 pub mod surface {
-    use crate::validation::Checked;
-    use crate::{Accessor, Index};
-    use gltf_derive::Validate;
+    use crate::validation::{Checked, Error, Validate};
+    use crate::{Path, Root};
     use serde::{de, ser};
     use serde_derive::{Deserialize, Serialize};
     use std::fmt;
@@ -151,19 +157,34 @@ pub mod surface {
     }
 
     /// NURBS surface definition.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Nurbs {
-        /// Must be "VEC4" of floating point type.
-        pub control_points: Index<Accessor>,
-        /// Must be index type.
-        pub knot_vector: Index<Accessor>,
+        /// Matrix of control point vertices.
+        pub control_points: Vec<[f32; 4]>,
+        /// Dimensions of control point vertex matrix.
+        pub dimensions: [u32; 2],
+        /// Knot vector.
+        pub knot_vector: Vec<f32>,
         /// Order of basis splines.
-        pub order: u32,
+        pub order: [u32; 2],
+    }
+
+    impl Validate for Nurbs {
+        fn validate<P, R>(&self, _root: &Root, path: P, report: &mut R)
+        where
+            P: Fn() -> Path,
+            R: FnMut(&dyn Fn() -> Path, Error),
+        {
+            let expected_control_points = self.dimensions[0] * self.dimensions[1];
+            if expected_control_points as usize != self.control_points.len() {
+                report(&|| path().field("dimensions"), Error::Invalid);
+            }
+        }
     }
 
     /// Simple planar surface definition.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, Serialize, gltf_derive::Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Plane {
         /// Normal vector to the plane.
@@ -173,7 +194,7 @@ pub mod surface {
     }
 
     /// Abstract surface data.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, Serialize, gltf_derive::Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Surface {
         /// Discriminant.
@@ -193,22 +214,16 @@ pub mod surface {
 
 /// Solid boundary representations.
 pub mod brep {
-    use crate::mesh::Semantic;
-    use crate::validation::Checked;
-    use crate::{Accessor, Index};
+    use crate::Index;
     use gltf_derive::Validate;
     use serde_derive::{Deserialize, Serialize};
-    use std::collections::BTreeMap;
 
     /// Set of vertices on a face plus trim curves.
     #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Loop {
-        /// Required: loop vertex attributes.
-        pub attributes: BTreeMap<Checked<Semantic>, Index<Accessor>>,
-        /// Optional: set of trim curves to refine the loop.
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub trim_curves: Vec<Index<super::Curve>>,
+        /// Set of curves that define the loop.
+        pub curves: Vec<Index<super::Curve>>,
     }
 
     /// Set of loops defined on an abstract surface.
@@ -217,8 +232,13 @@ pub mod brep {
     pub struct Face {
         /// Surface the face edges and vertices reside on.
         pub surface: Index<super::Surface>,
-        /// Edge loops defining the face area.
-        pub loops: Vec<Loop>,
+
+        /// Face outer bound.
+        pub outer_loop: Loop,
+
+        /// Face inner bounds.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub inner_loops: Vec<Loop>,
     }
 
     /// Solid boundary representation structure.
