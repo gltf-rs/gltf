@@ -95,7 +95,7 @@ fn export(output: Output) {
     };
     let positions = json::Accessor {
         buffer_view: Some(json::Index::new(0)),
-        byte_offset: 0,
+        byte_offset: Some(0),
         count: triangle_vertices.len() as u32,
         component_type: Valid(json::accessor::GenericComponentType(
             json::accessor::ComponentType::F32,
@@ -111,7 +111,7 @@ fn export(output: Output) {
     };
     let colors = json::Accessor {
         buffer_view: Some(json::Index::new(0)),
-        byte_offset: (3 * mem::size_of::<f32>()) as u32,
+        byte_offset: Some((3 * mem::size_of::<f32>()) as u32),
         count: triangle_vertices.len() as u32,
         component_type: Valid(json::accessor::GenericComponentType(
             json::accessor::ComponentType::F32,

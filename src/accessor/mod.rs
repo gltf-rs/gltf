@@ -7,7 +7,7 @@
 //! # let gltf = gltf::Gltf::open("examples/Box.gltf")?;
 //! for accessor in gltf.accessors() {
 //!     println!("Accessor #{}", accessor.index());
-//!     println!("offset: {}", accessor.offset());
+//!     println!("offset: {:?}", accessor.offset());
 //!     println!("count: {}", accessor.count());
 //!     println!("data_type: {:?}", accessor.data_type());
 //!     println!("dimensions: {:?}", accessor.dimensions());
@@ -119,8 +119,12 @@ impl<'a> Accessor<'a> {
     }
 
     /// Returns the offset relative to the start of the parent buffer view in bytes.
+    ///
+    /// This will be 0 if the corresponding accessor is sparse.
     pub fn offset(&self) -> usize {
-        self.json.byte_offset as usize
+        // TODO: Change this function to return Option<usize> in the next
+        // version and return None for sparse accessors.
+        self.json.byte_offset.unwrap_or(0) as usize
     }
 
     /// Returns the number of components within the buffer view - not to be confused
