@@ -1,4 +1,3 @@
-
 <h1 align="center">
    gltf
 </h1>
@@ -44,14 +43,16 @@ features = ["extras", "names"]
 
 The following glTF extensions are supported by the crate:
 
-* `KHR_lights_punctual`
-* `KHR_materials_pbrSpecularGlossiness`
-* `KHR_materials_unlit`
-* `KHR_texture_transform`
-* `KHR_materials_variants`
-* `KHR_materials_volume`
-* `KHR_materials_specular`
-* `KHR_materials_transmission`
+- `KHR_lights_punctual`
+- `KHR_materials_pbrSpecularGlossiness`
+- `KHR_materials_unlit`
+- `KHR_texture_transform`
+- `KHR_materials_variants`
+- `KHR_materials_volume`
+- `KHR_materials_specular`
+- `KHR_materials_transmission`
+- `KHR_materials_ior`
+- `KHR_materials_emissive_strength `
 
 To use an extension, list its name in the `features` section.
 
