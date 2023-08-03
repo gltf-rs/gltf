@@ -82,6 +82,9 @@ pub mod curve {
         /// Discriminant.
         #[serde(rename = "type")]
         pub type_: Checked<Type>,
+        /// Optional name for this surface.
+        #[cfg(feature = "names")]
+        pub name: Option<String>,
         /// Additional parameters for a NURBS curve.
         pub nurbs: Option<Nurbs>,
         /// Curve start position.
