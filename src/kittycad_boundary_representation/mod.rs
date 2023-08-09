@@ -4,7 +4,15 @@ use crate::{json, Document, Mesh};
 pub mod curve {
     use crate::{json, Document};
 
-    /// Defines  non-uniform rational B-spline (NURBS) curve.
+    /// Defines a linear curve.
+    #[derive(Clone, Debug)]
+    pub struct Linear<'a> {
+        /// The corresponding JSON struct.
+        #[allow(dead_code)]
+        pub(crate) json: &'a json::extensions::kittycad_boundary_representation::curve::Linear,
+    }
+
+    /// Defines a non-uniform rational B-spline (NURBS) curve.
     #[derive(Clone, Debug)]
     pub struct Nurbs<'a> {
         /// The corresponding JSON struct.
@@ -14,9 +22,9 @@ pub mod curve {
 
     /// Curve kind.
     #[derive(Clone, Debug)]
-    pub enum Kind<'a> {
+    pub enum Geometry<'a> {
         /// Linear curve.
-        Linear,
+        Linear(Linear<'a>),
         /// Non-uniform rational B-spline (NURBS) curve.
         Nurbs(Nurbs<'a>),
     }
@@ -60,25 +68,16 @@ pub mod curve {
             self.json.name.as_deref()
         }
 
-        /// Returns the start point.
-        pub fn start(&self) -> [f32; 4] {
-            self.json.start
-        }
-
-        /// Returns the end point.
-        pub fn end(&self) -> [f32; 4] {
-            self.json.end
-        }
-
         /// Returns the specific curve parameters.
-        pub fn kind(&self) -> Kind<'a> {
+        pub fn geometry(&self) -> Geometry<'a> {
             match self.json.type_.unwrap() {
                 json::extensions::kittycad_boundary_representation::curve::Type::Linear => {
-                    Kind::Linear
+                    let json = self.json.linear.as_ref().unwrap();
+                    Geometry::Linear(Linear { json })
                 }
                 json::extensions::kittycad_boundary_representation::curve::Type::Nurbs => {
                     let json = self.json.nurbs.as_ref().unwrap();
-                    Kind::Nurbs(Nurbs { json })
+                    Geometry::Nurbs(Nurbs { json })
                 }
             }
         }
@@ -105,7 +104,7 @@ pub mod surface {
 
         /// Returns the value of `d` in the plane equation `n.r + d = 0`.
         pub fn constant(&self) -> f32 {
-            self.json.constant
+            todo!()
         }
     }
 
@@ -181,107 +180,6 @@ pub mod surface {
     }
 }
 
-/// Iterators.
-pub mod iter {
-    /// An `Iterator` that visits the faces of a `BRep`.
-    #[derive(Clone, Debug)]
-    pub struct Faces<'a> {
-        /// The parent `BRep` struct.
-        pub(crate) brep: super::BRep<'a>,
-
-        /// The internal JSON primitive iterator.
-        pub(crate) iter:
-            std::slice::Iter<'a, json::extensions::kittycad_boundary_representation::brep::Face>,
-    }
-
-    impl<'a> ExactSizeIterator for Faces<'a> {}
-    impl<'a> Iterator for Faces<'a> {
-        type Item = super::Face<'a>;
-        fn next(&mut self) -> Option<Self::Item> {
-            self.iter
-                .next()
-                .map(|json| super::Face::new(self.brep.clone(), json))
-        }
-        fn size_hint(&self) -> (usize, Option<usize>) {
-            self.iter.size_hint()
-        }
-        fn count(self) -> usize {
-            self.iter.count()
-        }
-        fn last(self) -> Option<Self::Item> {
-            self.iter
-                .clone()
-                .last()
-                .map(|json| super::Face::new(self.brep.clone(), json))
-        }
-        fn nth(&mut self, n: usize) -> Option<Self::Item> {
-            self.iter
-                .nth(n)
-                .map(|json| super::Face::new(self.brep.clone(), json))
-        }
-    }
-
-    /// An `Iterator` that visits the curves of a `Loop`.
-    #[derive(Clone, Debug)]
-    pub struct Curves<'a> {
-        /// The parent `Loop` struct.
-        pub(crate) parent: super::Loop<'a>,
-
-        /// The internal JSON primitive iterator.
-        pub(crate) iter: std::slice::Iter<
-            'a,
-            json::Index<json::extensions::kittycad_boundary_representation::Curve>,
-        >,
-    }
-
-    impl<'a> ExactSizeIterator for Curves<'a> {}
-    impl<'a> Iterator for Curves<'a> {
-        type Item = super::Curve<'a>;
-        fn next(&mut self) -> Option<Self::Item> {
-            self.iter.next().map(|index| {
-                self.parent
-                    .face
-                    .brep
-                    .document
-                    .curves()
-                    .unwrap()
-                    .nth(index.value())
-                    .unwrap()
-            })
-        }
-        fn size_hint(&self) -> (usize, Option<usize>) {
-            self.iter.size_hint()
-        }
-        fn count(self) -> usize {
-            self.iter.count()
-        }
-        fn last(self) -> Option<Self::Item> {
-            self.iter.clone().last().map(|index| {
-                self.parent
-                    .face
-                    .brep
-                    .document
-                    .curves()
-                    .unwrap()
-                    .nth(index.value())
-                    .unwrap()
-            })
-        }
-        fn nth(&mut self, n: usize) -> Option<Self::Item> {
-            self.iter.nth(n).map(|index| {
-                self.parent
-                    .face
-                    .brep
-                    .document
-                    .curves()
-                    .unwrap()
-                    .nth(index.value())
-                    .unwrap()
-            })
-        }
-    }
-}
-
 pub use curve::Curve;
 pub use surface::Surface;
 
@@ -324,11 +222,11 @@ impl<'a> BRep<'a> {
     }
 
     /// Returns an `Iterator` that visits the faces of the B-rep.
-    pub fn faces(&self) -> iter::Faces<'a> {
-        iter::Faces {
-            brep: self.clone(),
-            iter: self.json.faces.iter(),
-        }
+    pub fn faces(&self) -> impl Iterator<Item = Face> {
+        self.json
+            .faces
+            .iter()
+            .map(|json| Face::new(self.clone(), json))
     }
 
     /// Returns the mesh approximation of this solid if defined.
@@ -359,11 +257,11 @@ impl<'a> Loop<'a> {
     }
 
     /// Returns the set of curves that define the loop.
-    pub fn curves(&self) -> iter::Curves {
-        iter::Curves {
-            parent: self.clone(),
-            iter: self.json.curves.iter(),
-        }
+    pub fn edges(&self) -> impl Iterator<Item = Edge> {
+        self.json
+            .edges
+            .iter()
+            .map(|json| Edge::new(self.clone(), json))
     }
 }
 
@@ -399,5 +297,25 @@ impl<'a> Face<'a> {
             .unwrap()
             .nth(self.json.surface.value())
             .unwrap()
+    }
+}
+
+/// Face bound.
+#[derive(Clone, Debug)]
+pub struct Edge<'a> {
+    /// The parent `Loop` struct.
+    parent: Loop<'a>,
+
+    /// The corresponding JSON struct.
+    json: &'a json::extensions::kittycad_boundary_representation::brep::Edge,
+}
+
+impl<'a> Edge<'a> {
+    /// Constructs an `Edge`.
+    pub(crate) fn new(
+        parent: Loop<'a>,
+        json: &'a json::extensions::kittycad_boundary_representation::brep::Edge,
+    ) -> Self {
+        Self { parent, json }
     }
 }
