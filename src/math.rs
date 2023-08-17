@@ -124,9 +124,20 @@ impl Vector3 {
         self.z *= s;
     }
 
-    #[cfg(test)]
     pub fn normalize(self) -> Vector3 {
         self * (1.0 / self.magnitude())
+    }
+}
+
+impl ops::Add for Vector3 {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        Self {
+            x: self.x + other.x,
+            y: self.y + other.y,
+            z: self.z + other.z,
+        }
     }
 }
 

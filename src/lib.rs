@@ -175,7 +175,7 @@ pub use self::import::import_images;
 pub use self::import::import_slice;
 #[cfg(feature = "KITTYCAD_boundary_representation")]
 #[doc(inline)]
-pub use self::kittycad_boundary_representation::{BRep, Curve, Surface};
+pub use self::kittycad_boundary_representation::{BRep, Curve, Edge, EdgeVertex, Surface};
 #[doc(inline)]
 pub use self::material::Material;
 #[doc(inline)]
@@ -465,6 +465,38 @@ impl Document {
             .scene
             .as_ref()
             .map(|index| self.scenes().nth(index.value()).unwrap())
+    }
+
+    /// Returns an `Iterator` that visits the B-rep edges of the glTF asset.
+    #[cfg(feature = "KITTYCAD_boundary_representation")]
+    pub fn edges(&self) -> Option<impl Iterator<Item = Edge>> {
+        Some(
+            self.0
+                .extensions
+                .as_ref()?
+                .kittycad_boundary_representation
+                .as_ref()?
+                .edges
+                .iter()
+                .enumerate()
+                .map(|(index, json)| Edge::new(self, index, json)),
+        )
+    }
+
+    /// Returns an `Iterator` that visits the B-rep edge vertices of the glTF asset.
+    #[cfg(feature = "KITTYCAD_boundary_representation")]
+    pub fn edge_vertices(&self) -> Option<impl Iterator<Item = EdgeVertex>> {
+        Some(
+            self.0
+                .extensions
+                .as_ref()?
+                .kittycad_boundary_representation
+                .as_ref()?
+                .edge_vertices
+                .iter()
+                .enumerate()
+                .map(|(index, json)| EdgeVertex::new(self, index, json)),
+        )
     }
 
     /// Returns the extensions referenced in this .document file.

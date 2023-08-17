@@ -84,6 +84,10 @@ pub struct KittyCadBoundaryRepresentation {
     pub curves: Vec<crate::extensions::kittycad_boundary_representation::Curve>,
     /// Abstract surface definitions.
     pub surfaces: Vec<crate::extensions::kittycad_boundary_representation::Surface>,
+    /// Boundary representation edges.
+    pub edges: Vec<crate::extensions::kittycad_boundary_representation::brep::Edge>,
+    /// Vertices in 3D space joining edges.
+    pub edge_vertices: Vec<crate::extensions::kittycad_boundary_representation::brep::EdgeVertex>,
 }
 
 #[cfg(feature = "KITTYCAD_boundary_representation")]
@@ -129,6 +133,40 @@ impl crate::root::Get<crate::extensions::kittycad_boundary_representation::Surfa
             .kittycad_boundary_representation
             .as_ref()?
             .surfaces
+            .get(id.value())
+    }
+}
+
+#[cfg(feature = "KITTYCAD_boundary_representation")]
+impl crate::root::Get<crate::extensions::kittycad_boundary_representation::brep::Edge>
+    for crate::Root
+{
+    fn get(
+        &self,
+        id: crate::Index<crate::extensions::kittycad_boundary_representation::brep::Edge>,
+    ) -> Option<&crate::extensions::kittycad_boundary_representation::brep::Edge> {
+        self.extensions
+            .as_ref()?
+            .kittycad_boundary_representation
+            .as_ref()?
+            .edges
+            .get(id.value())
+    }
+}
+
+#[cfg(feature = "KITTYCAD_boundary_representation")]
+impl crate::root::Get<crate::extensions::kittycad_boundary_representation::brep::EdgeVertex>
+    for crate::Root
+{
+    fn get(
+        &self,
+        id: crate::Index<crate::extensions::kittycad_boundary_representation::brep::EdgeVertex>,
+    ) -> Option<&crate::extensions::kittycad_boundary_representation::brep::EdgeVertex> {
+        self.extensions
+            .as_ref()?
+            .kittycad_boundary_representation
+            .as_ref()?
+            .edge_vertices
             .get(id.value())
     }
 }

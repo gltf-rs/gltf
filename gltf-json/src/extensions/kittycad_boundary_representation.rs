@@ -152,11 +152,32 @@ pub mod curve {
 pub mod surface {
     use crate::validation::{Checked, Error, Validate};
     use crate::{Path, Root};
+    use gltf_derive::Validate;
     use serde::{de, ser};
     use serde_derive::{Deserialize, Serialize};
     use std::fmt;
 
     pub const VALID_SURFACE_TYPES: &[&str] = &["nurbs", "plane"];
+
+    /// Domain of surface parameters.
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[serde(rename_all = "camelCase")]
+    pub struct Domain {
+        /// Minimum domain values.
+        pub min: [f32; 2],
+
+        /// Maximum domain values.
+        pub max: [f32; 2],
+    }
+
+    impl Default for Domain {
+        fn default() -> Self {
+            Self {
+                min: [0.0, 0.0],
+                max: [1.0, 1.0],
+            }
+        }
+    }
 
     /// Discriminant for `Surface` data.
     #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
@@ -253,9 +274,11 @@ pub mod surface {
     pub struct Plane {
         /// Normal vector to the plane.
         pub normal: [f32; 3],
-        /// The value of `d` in the plane equation `n.r + d = 0`.
+        /// The value of `d` in the plane equation `n.r = d`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
         pub constant: Option<f32>,
         /// An arbitrary point that lies on the plane.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
         pub point: Option<[f32; 3]>,
     }
 
@@ -268,6 +291,7 @@ pub mod surface {
         pub type_: Checked<Type>,
         /// Optional name for this surface.
         #[cfg(feature = "names")]
+        #[serde(default, skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
         /// Arguments for a NURBS surface.
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -275,54 +299,110 @@ pub mod surface {
         /// Arguments for a planar surface.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub plane: Option<Plane>,
+        /// Surface parameter domain.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub domain: Option<Domain>,
     }
 }
 
 /// Solid boundary representations.
 pub mod brep {
-    use crate::Index;
+    use crate::validation::{Error, Validate};
+    use crate::{Index, Path, Root};
     use gltf_derive::Validate;
     use serde_derive::{Deserialize, Serialize};
 
-    /// A trim curve.
-    ///
-    /// Trim curves define subsets of faces bound by edge.
+    /// Used to prevent serializing false boolean values.
+    fn is_false(condition: &bool) -> bool {
+        !*condition
+    }
+
+    /// Parameter curve in 2D space.
     #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Trim {
-        /// The trim curve geometry.
+        /* TODO:
+        /// The trim curve geometry in 2D (or homogeneous 3D) space.
         pub curve: Index<super::Curve>,
 
-        /// Specifies whether the orientation of the curve should
-        /// be reversed for this trim curve.
+        /// Trim start vertex.
+        pub start: Index<Vertex>,
+
+        /// Trim end vertex.
+        pub end: Index<Vertex>,
+         */
+        /// Specifies whether the trim curve geometry is in the opposite
+        /// direction with respect to the edge curve geometry.
         pub reverse: bool,
+
+        /// The corresponding edge in 3D space this trim is paired with.
+        pub edge: Index<Edge>,
     }
 
-    /// Pair of vertices on a face plus an optional trim curve.
+    /// Pair of vertices on a face plus an optional trim domain.
     #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Edge {
         /// The edge curve geometry in 3D (or homogeneous 4D) space.
         pub curve: Index<super::Curve>,
 
-        /// Specifies whether the orientation of the edge curve should
-        /// be reversed.
+        /// Edge start vertex.
+        pub start: Index<EdgeVertex>,
+
+        /// Edge end vertex.
+        pub end: Index<EdgeVertex>,
+
+        /// Specifies whether the orientation of the edge is reversed
+        /// with respect to its associated curve.
+        #[serde(default, skip_serializing_if = "is_false")]
         pub reverse: bool,
 
-        /// Optional trimming curve in 2D (or homogeneous 3D) space.
+        /// Optional domain to select a subset of the edge curve geometry.
+        ///
+        /// When `None`, the domain is the same as the edge curve geometry
+        /// domain.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub trim: Option<Trim>,
+        pub subdomain: Option<super::curve::Domain>,
     }
 
-    /// Set of edges on a face, each with an optional trim curve.
+    /// Point in 2D space.
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct TrimVertex(pub [f32; 2]);
+
+    impl Validate for TrimVertex {
+        fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+        where
+            P: Fn() -> Path,
+            R: FnMut(&dyn Fn() -> Path, Error),
+        {
+        }
+    }
+
+    /// Point in 3D space.
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct EdgeVertex(pub [f32; 3]);
+
+    impl Validate for EdgeVertex {
+        fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+        where
+            P: Fn() -> Path,
+            R: FnMut(&dyn Fn() -> Path, Error),
+        {
+        }
+    }
+
+    /// Set of trim curves on a surface.
     #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Loop {
-        /// The edge curves forming the loop.
-        pub edges: Vec<Edge>,
+        /// The trim curves forming the loop.
+        pub trims: Vec<Trim>,
 
         /// Specifies whether the winding order of the loop should be
         /// interpreted in reverse order with respect to the face.
+        #[serde(default, skip_serializing_if = "is_false")]
         pub reverse: bool,
     }
 
@@ -339,6 +419,11 @@ pub mod brep {
         /// Face inner bounds.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub inner_loops: Vec<Loop>,
+
+        /// Specifies whether the orientation of the face is in
+        /// reverse order with respect to its surface.
+        #[serde(default, skip_serializing_if = "is_false")]
+        pub reverse: bool,
     }
 
     /// Solid boundary representation structure.
