@@ -77,6 +77,7 @@ impl crate::root::Get<crate::extensions::scene::khr_materials_variants::Variant>
 
 #[cfg(feature = "KITTYCAD_boundary_representation")]
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[serde(rename_all = "camelCase")]
 pub struct KittyCadBoundaryRepresentation {
     /// Solid boundary representation instances.
     pub breps: Vec<crate::extensions::kittycad_boundary_representation::BRep>,
