@@ -7,17 +7,17 @@ pub mod curve {
     #[doc(inline)]
     pub use json::extensions::kittycad_boundary_representation::curve::Domain;
 
-    /// Defines a linear curve.
+    /// Defines a line curve.
     #[derive(Clone, Debug)]
-    pub struct Linear<'a> {
+    pub struct Line<'a> {
         /// The corresponding JSON struct.
-        pub(crate) json: &'a json::extensions::kittycad_boundary_representation::curve::Linear,
+        pub(crate) json: &'a json::extensions::kittycad_boundary_representation::curve::Line,
 
         /// The curve domain.
         pub(crate) domain: Domain,
     }
 
-    impl<'a> Linear<'a> {
+    impl<'a> Line<'a> {
         /// Returns the line origin.
         pub fn start(&self) -> [f32; 3] {
             self.json.start
@@ -113,7 +113,7 @@ pub mod curve {
     #[derive(Clone, Debug)]
     pub enum Geometry<'a> {
         /// Linear curve.
-        Linear(Linear<'a>),
+        Line(Line<'a>),
         /// Non-uniform rational B-spline (NURBS) curve.
         Nurbs(Nurbs<'a>),
     }
@@ -160,7 +160,7 @@ pub mod curve {
         /// Returns the curve start vertex.
         pub fn start(&self) -> [f32; 3] {
             match self.geometry() {
-                Geometry::Linear(linear) => linear.start(),
+                Geometry::Line(linear) => linear.start(),
                 Geometry::Nurbs(nurbs) => nurbs.start(),
             }
         }
@@ -168,7 +168,7 @@ pub mod curve {
         /// Retruns the curve end vertex.
         pub fn end(&self) -> [f32; 3] {
             match self.geometry() {
-                Geometry::Linear(linear) => linear.end(),
+                Geometry::Line(linear) => linear.end(),
                 Geometry::Nurbs(nurbs) => nurbs.end(),
             }
         }
@@ -176,10 +176,10 @@ pub mod curve {
         /// Returns the specific curve parameters.
         pub fn geometry(&self) -> Geometry<'a> {
             match self.json.type_.unwrap() {
-                json::extensions::kittycad_boundary_representation::curve::Type::Linear => {
-                    let json = self.json.linear.as_ref().unwrap();
+                json::extensions::kittycad_boundary_representation::curve::Type::Line => {
+                    let json = self.json.line.as_ref().unwrap();
                     let domain = self.json.domain.clone().unwrap_or_default();
-                    Geometry::Linear(Linear { json, domain })
+                    Geometry::Line(Line { json, domain })
                 }
                 json::extensions::kittycad_boundary_representation::curve::Type::Nurbs => {
                     let json = self.json.nurbs.as_ref().unwrap();

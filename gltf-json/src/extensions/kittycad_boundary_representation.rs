@@ -12,8 +12,8 @@ pub mod curve {
     /// Discriminant for `Curve` data.
     #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
     pub enum Type {
-        /// Linear curve.
-        Linear = 1,
+        /// Line curve.
+        Line = 1,
         /// NURBS curve.
         Nurbs = 2,
     }
@@ -21,7 +21,7 @@ pub mod curve {
     impl Type {
         pub fn as_str(self) -> &'static str {
             match self {
-                Type::Linear => "linear",
+                Type::Line => "line",
                 Type::Nurbs => "nurbs",
             }
         }
@@ -45,7 +45,7 @@ pub mod curve {
                     E: de::Error,
                 {
                     Ok(match value {
-                        "linear" => Checked::Valid(Type::Linear),
+                        "line" => Checked::Valid(Type::Line),
                         "nurbs" => Checked::Valid(Type::Nurbs),
                         _ => Checked::Invalid,
                     })
@@ -64,12 +64,12 @@ pub mod curve {
         }
     }
 
-    /// Linear curve definition.
+    /// Line curve definition.
     ///
     /// Either end or direction must be set.
     #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct Linear {
+    pub struct Line {
         /// Origin position.
         pub start: [f32; 3],
         /// Unit vector pointing away from the origin position.
@@ -80,7 +80,7 @@ pub mod curve {
         pub end: Option<[f32; 3]>,
     }
 
-    impl Validate for Linear {
+    impl Validate for Line {
         fn validate<P, R>(&self, _root: &Root, path: P, report: &mut R)
         where
             P: Fn() -> Path,
@@ -134,9 +134,9 @@ pub mod curve {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
 
-        /// Additional parameters for a linear curve.
+        /// Additional parameters for a line curve.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub linear: Option<Linear>,
+        pub line: Option<Line>,
 
         /// Additional parameters for a NURBS curve.
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -268,7 +268,7 @@ pub mod surface {
         }
     }
 
-    /// Simple planar surface definition.
+    /// Plane surface definition.
     #[derive(Clone, Debug, Deserialize, Serialize, gltf_derive::Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Plane {
