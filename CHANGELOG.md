@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+## [1.3.0] - 2023-08-21
+
+### Added
+
+- Support for the `KHR_materials_emissive_strength` extension.
+
+### Fixed
+
+- `Accessor::byte_offset` is now optional for sparse accessors.
+
 ## [1.2.0] - 2023-06-08
 
 ### Added
@@ -22,7 +34,6 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Fix relative file path imports with url encoded characters.
 - Fix bounds calculation in export example.
-- Add support for the `KHR_materials_emissive_strength` extension.
 
 ## [1.0.0] - 2022-01-29
 
