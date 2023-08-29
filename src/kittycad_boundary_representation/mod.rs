@@ -39,8 +39,7 @@ pub mod curve {
                     let v = self.json.direction.unwrap();
                     Vector3::new(v[0], v[1], v[2])
                 };
-                // TODO: I don't think this is correct.
-                let end = start + direction * self.domain.max;
+                let end = start + direction * (self.domain.max - self.domain.min);
                 [end.x, end.y, end.z]
             }
         }
