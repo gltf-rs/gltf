@@ -203,11 +203,60 @@ pub mod surface {
     #[doc(inline)]
     pub use json::extensions::kittycad_boundary_representation::surface::Domain;
 
+    /// Parametric cylindrical surface definition.
+    ///
+    /// σ(u, v) := O + R(cos(u)x + sin(u)y) + vz, where:
+    /// * O = `self.origin()`,
+    /// * R = `self.radius()`,
+    /// * x = `self.xbasis()`,
+    /// * y = `self.ybasis()`,
+    /// * z = `self.zbasis()`.
+    ///
+    /// In the field documentation, the 'base circle' is
+    /// defined as the cycle defined at σ(u, 0).
+    ///
+    /// The vectors `xbasis`, `ybasis`, and `zbasis` form
+    /// an orthonormal set.
+    #[derive(Clone, Debug)]
+    pub struct Cylinder<'a> {
+        /// The corresponding JSON struct.
+        pub(crate) json: &'a json::extensions::kittycad_boundary_representation::surface::Cylinder,
+    }
+
+    impl<'a> Cylinder<'a> {
+        /// Origin of the base circle.
+        pub fn origin(&self) -> [f32; 3] {
+            self.json.origin
+        }
+
+        /// Radius of the base circle.
+        pub fn radius(&self) -> f32 {
+            self.json.radius
+        }
+
+        /// Normal vector in the direction from the origin of the
+        /// base circle to the point on the cylinder at σ(0, 0).
+        pub fn xbasis(&self) -> [f32; 3] {
+            self.json.xbasis
+        }
+
+        /// Normal vector in the direction from the origin of the
+        /// base circle to the point on the cylinder at σ(90°, 0).
+        pub fn ybasis(&self) -> [f32; 3] {
+            self.json.ybasis
+        }
+
+        /// Normal vector in the direction of increasing values of
+        /// the parameter v.
+        pub fn zbasis(&self) -> [f32; 3] {
+            self.json.zbasis
+        }
+    }
+
     /// Defines a planar surface.
     #[derive(Clone, Debug)]
     pub struct Plane<'a> {
         /// The corresponding JSON struct.
-        #[allow(dead_code)]
         pub(crate) json: &'a json::extensions::kittycad_boundary_representation::surface::Plane,
     }
 
@@ -270,6 +319,8 @@ pub mod surface {
     /// Specific surface geometry.
     #[derive(Clone, Debug)]
     pub enum Geometry<'a> {
+        /// Cylindrical surface.
+        Cylinder(Cylinder<'a>),
         /// Planar surface.
         Plane(Plane<'a>),
         /// Non-uniform rational B-spline (NURBS) surface.
@@ -318,6 +369,10 @@ pub mod surface {
         /// Returns the specific surface geometry.
         pub fn geometry(&self) -> Geometry<'a> {
             match self.json.type_.unwrap() {
+                json::extensions::kittycad_boundary_representation::surface::Type::Cylinder => {
+                    let json = self.json.cylinder.as_ref().unwrap();
+                    Geometry::Cylinder(Cylinder { json })
+                }
                 json::extensions::kittycad_boundary_representation::surface::Type::Plane => {
                     let json = self.json.plane.as_ref().unwrap();
                     Geometry::Plane(Plane { json })
@@ -513,6 +568,7 @@ impl<'a> Face<'a> {
 #[derive(Clone, Debug)]
 pub struct EdgeVertex<'a> {
     /// The parent `Document` struct.
+    #[allow(dead_code)]
     document: &'a Document,
 
     /// The corresponding JSON index.

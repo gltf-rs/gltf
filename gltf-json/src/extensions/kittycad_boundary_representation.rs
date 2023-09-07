@@ -157,7 +157,7 @@ pub mod surface {
     use serde_derive::{Deserialize, Serialize};
     use std::fmt;
 
-    pub const VALID_SURFACE_TYPES: &[&str] = &["nurbs", "plane"];
+    pub const VALID_SURFACE_TYPES: &[&str] = &["cylinder", "nurbs", "plane"];
 
     /// Domain of surface parameters.
     #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
@@ -182,8 +182,10 @@ pub mod surface {
     /// Discriminant for `Surface` data.
     #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
     pub enum Type {
+        /// Cylindrical surface.
+        Cylinder = 1,
         /// NURBS surface.
-        Nurbs = 1,
+        Nurbs,
         /// Planar surface.
         Plane,
     }
@@ -191,6 +193,7 @@ pub mod surface {
     impl Type {
         pub fn as_str(self) -> &'static str {
             match self {
+                Type::Cylinder => "cylinder",
                 Type::Nurbs => "nurbs",
                 Type::Plane => "plane",
             }
@@ -215,6 +218,7 @@ pub mod surface {
                     E: de::Error,
                 {
                     Ok(match value {
+                        "cylinder" => Checked::Valid(Type::Cylinder),
                         "nurbs" => Checked::Valid(Type::Nurbs),
                         "plane" => Checked::Valid(Type::Plane),
                         _ => Checked::Invalid,
@@ -232,6 +236,38 @@ pub mod surface {
         {
             serializer.serialize_str(self.as_str())
         }
+    }
+
+    /// Parametric cylindrical surface definition.
+    ///
+    /// σ(u, v) := O + R(cos(u)x + sin(u)y) + vz, where:
+    /// * O = `self.origin`,
+    /// * R = `self.radius`,
+    /// * x = `self.xbasis`,
+    /// * y = `self.ybasis`,
+    /// * z = `self.zbasis`.
+    ///
+    /// In the field documentation, the 'base circle' is
+    /// defined as the cycle defined at σ(u, 0).
+    ///
+    /// The vectors `xbasis`, `ybasis`, and `zbasis` form
+    /// an orthonormal set.
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[serde(rename_all = "camelCase")]
+    pub struct Cylinder {
+        /// Origin of the base circle.
+        pub origin: [f32; 3],
+        /// Radius of the base circle.
+        pub radius: f32,
+        /// Normal vector in the direction from the origin of the
+        /// base circle to the point on the cylinder at σ(0, 0).
+        pub xbasis: [f32; 3],
+        /// Normal vector in the direction from the origin of the
+        /// base circle to the point on the cylinder at σ(90°, 0).
+        pub ybasis: [f32; 3],
+        /// Normal vector in the direction of increasing values of
+        /// the parameter v.
+        pub zbasis: [f32; 3],
     }
 
     /// NURBS surface definition.
@@ -293,6 +329,9 @@ pub mod surface {
         #[cfg(feature = "names")]
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
+        /// Arguments for a cylindrical surface.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub cylinder: Option<Cylinder>,
         /// Arguments for a NURBS surface.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub nurbs: Option<Nurbs>,
