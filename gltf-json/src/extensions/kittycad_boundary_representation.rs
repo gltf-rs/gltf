@@ -7,20 +7,23 @@ pub mod curve {
     use serde_derive::{Deserialize, Serialize};
     use std::fmt;
 
-    pub const VALID_CURVE_TYPES: &[&str] = &["linear", "nurbs"];
+    pub const VALID_CURVE_TYPES: &[&str] = &["circle", "linear", "nurbs"];
 
     /// Discriminant for `Curve` data.
     #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
     pub enum Type {
+        /// Circular curve.
+        Circle = 1,
         /// Line curve.
-        Line = 1,
+        Line,
         /// NURBS curve.
-        Nurbs = 2,
+        Nurbs,
     }
 
     impl Type {
         pub fn as_str(self) -> &'static str {
             match self {
+                Type::Circle => "circle",
                 Type::Line => "line",
                 Type::Nurbs => "nurbs",
             }
@@ -45,6 +48,7 @@ pub mod curve {
                     E: de::Error,
                 {
                     Ok(match value {
+                        "circle" => Checked::Valid(Type::Circle),
                         "line" => Checked::Valid(Type::Line),
                         "nurbs" => Checked::Valid(Type::Nurbs),
                         _ => Checked::Invalid,
@@ -62,6 +66,32 @@ pub mod curve {
         {
             serializer.serialize_str(self.as_str())
         }
+    }
+
+    /// Circular curve definition.
+    ///
+    /// λ(u) := O + R(cos(u)x + sin(u)y), where:
+    /// * O = `self.origin`,
+    /// * R = `self.radius`,
+    /// * x = `self.xbasis`,
+    /// * y = `self.ybasis`,
+    /// * u ∈ {0, 2π}.
+    ///
+    /// The vectors `xbasis` and `ybasis` form
+    /// an orthonormal set.
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[serde(rename_all = "camelCase")]
+    pub struct Circle {
+        /// Position at the center of the circle.
+        pub origin: [f32; 3],
+        /// Distance from the center position to all points on the circle.
+        pub radius: f32,
+        /// Normal vector in the direction from the origin to the point on
+        /// the circle at λ(0).
+        pub xbasis: [f32; 3],
+        /// Normal vector in the direction from the origin to the point on
+        /// the circle at λ(90°).
+        pub ybasis: [f32; 3],
     }
 
     /// Line curve definition.
@@ -133,6 +163,10 @@ pub mod curve {
         #[cfg(feature = "names")]
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
+
+        /// Additional parameters for a circular curve.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub circle: Option<Circle>,
 
         /// Additional parameters for a line curve.
         #[serde(default, skip_serializing_if = "Option::is_none")]

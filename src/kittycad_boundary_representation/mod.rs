@@ -2,10 +2,83 @@ use crate::{json, Document, Mesh};
 
 /// Curves.
 pub mod curve {
+    use crate::math::Vector3;
     use crate::{json, Document};
 
     #[doc(inline)]
     pub use json::extensions::kittycad_boundary_representation::curve::Domain;
+
+    /// Circular curve definition.
+    ///
+    /// λ(u) := O + R(cos(u)x + sin(u)y), where:
+    /// * O = `self.origin`,
+    /// * R = `self.radius`,
+    /// * x = `self.xbasis`,
+    /// * y = `self.ybasis`,
+    /// * u ∈ {0, 2π}.
+    ///
+    /// The vectors `xbasis` and `ybasis` form
+    /// an orthonormal set.
+    #[derive(Clone, Debug)]
+    pub struct Circle<'a> {
+        /// The corresponding JSON struct.
+        pub(crate) json: &'a json::extensions::kittycad_boundary_representation::curve::Circle,
+
+        /// The curve domain.
+        pub(crate) domain: Option<Domain>,
+    }
+
+    impl<'a> Circle<'a> {
+        /// Position at the center of the circle.
+        pub fn origin(&self) -> [f32; 3] {
+            self.json.origin
+        }
+
+        /// Distance from the center position to all points on the circle.
+        pub fn radius(&self) -> f32 {
+            self.json.radius
+        }
+
+        /// Normal vector in the direction from the origin to the point on
+        /// the circle at λ(0).
+        pub fn xbasis(&self) -> [f32; 3] {
+            self.json.xbasis
+        }
+
+        /// Normal vector in the direction from the origin to the point on
+        /// the circle at λ(90°).
+        pub fn ybasis(&self) -> [f32; 3] {
+            self.json.ybasis
+        }
+
+        /// Evaluate the curve at parameter value `t`.
+        pub fn at(&self, t: f32) -> [f32; 3] {
+            let radius = self.json.radius;
+            let origin = Vector3::from(self.json.origin);
+            let xbasis = Vector3::from(self.json.xbasis);
+            let ybasis = Vector3::from(self.json.ybasis);
+            let (cosine, sine) = t.sin_cos();
+            (origin + (xbasis * cosine + ybasis * sine) * radius).into()
+        }
+
+        /// Point evaluated at the domain minimum value.
+        pub fn start(&self) -> [f32; 3] {
+            if let Some(Domain { min, .. }) = self.domain {
+                self.at(min)
+            } else {
+                self.at(0.0)
+            }
+        }
+
+        /// Point evaluated at the domain maximum value.
+        pub fn end(&self) -> [f32; 3] {
+            if let Some(Domain { max, .. }) = self.domain {
+                self.at(max)
+            } else {
+                self.start()
+            }
+        }
+    }
 
     /// Defines a line curve.
     #[derive(Clone, Debug)]
@@ -78,12 +151,14 @@ pub mod curve {
     impl<'a> Nurbs<'a> {
         /// Returns the curve start point, i.e., the first control point.
         pub fn start(&self) -> [f32; 3] {
+            // TODO: evaluate for domain.
             let v = self.json.control_points[0];
             [v[0], v[1], v[2]]
         }
 
         /// Returns the curve end point, i.e., the last control point.
         pub fn end(&self) -> [f32; 3] {
+            // TODO: evaluate for domain.
             let v = self.json.control_points[self.json.control_points.len() - 1];
             [v[0], v[1], v[2]]
         }
@@ -111,6 +186,8 @@ pub mod curve {
     /// Curve kind.
     #[derive(Clone, Debug)]
     pub enum Geometry<'a> {
+        /// Circular curve.
+        Circle(Circle<'a>),
         /// Linear curve.
         Line(Line<'a>),
         /// Non-uniform rational B-spline (NURBS) curve.
@@ -156,18 +233,20 @@ pub mod curve {
             self.json.name.as_deref()
         }
 
-        /// Returns the curve start vertex.
+        /// Evaluates the curve start point.
         pub fn start(&self) -> [f32; 3] {
             match self.geometry() {
-                Geometry::Line(linear) => linear.start(),
+                Geometry::Circle(circle) => circle.start(),
+                Geometry::Line(line) => line.start(),
                 Geometry::Nurbs(nurbs) => nurbs.start(),
             }
         }
 
-        /// Retruns the curve end vertex.
+        /// Evaluates the curve end point.
         pub fn end(&self) -> [f32; 3] {
             match self.geometry() {
-                Geometry::Line(linear) => linear.end(),
+                Geometry::Circle(circle) => circle.end(),
+                Geometry::Line(line) => line.end(),
                 Geometry::Nurbs(nurbs) => nurbs.end(),
             }
         }
@@ -175,6 +254,11 @@ pub mod curve {
         /// Returns the specific curve parameters.
         pub fn geometry(&self) -> Geometry<'a> {
             match self.json.type_.unwrap() {
+                json::extensions::kittycad_boundary_representation::curve::Type::Circle => {
+                    let json = self.json.circle.as_ref().unwrap();
+                    let domain = self.json.domain.clone();
+                    Geometry::Circle(Circle { json, domain })
+                }
                 json::extensions::kittycad_boundary_representation::curve::Type::Line => {
                     let json = self.json.line.as_ref().unwrap();
                     let domain = self.json.domain.clone().unwrap_or_default();
