@@ -191,7 +191,7 @@ pub mod surface {
     use serde_derive::{Deserialize, Serialize};
     use std::fmt;
 
-    pub const VALID_SURFACE_TYPES: &[&str] = &["cylinder", "nurbs", "plane"];
+    pub const VALID_SURFACE_TYPES: &[&str] = &["cylinder", "nurbs", "plane", "torus"];
 
     /// Domain of surface parameters.
     #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
@@ -222,6 +222,8 @@ pub mod surface {
         Nurbs,
         /// Planar surface.
         Plane,
+        /// Torus surface.
+        Torus,
     }
 
     impl Type {
@@ -230,6 +232,7 @@ pub mod surface {
                 Type::Cylinder => "cylinder",
                 Type::Nurbs => "nurbs",
                 Type::Plane => "plane",
+                Type::Torus => "torus",
             }
         }
     }
@@ -255,6 +258,7 @@ pub mod surface {
                         "cylinder" => Checked::Valid(Type::Cylinder),
                         "nurbs" => Checked::Valid(Type::Nurbs),
                         "plane" => Checked::Valid(Type::Plane),
+                        "torus" => Checked::Valid(Type::Torus),
                         _ => Checked::Invalid,
                     })
                 }
@@ -352,6 +356,36 @@ pub mod surface {
         pub point: Option<[f32; 3]>,
     }
 
+    /// Toroidal surface definition.
+    ///
+    /// σ(u, v) := O + (R + rcos(v))(cos(u)x + sin(u)y) + rsin(v)z, where:
+    /// * O = `self.origin`,
+    /// * R = `self.major_radius`,
+    /// * r = `self.minor_radius`,
+    /// * x = `self.xbasis`,
+    /// * y = `self.ybasis`,
+    /// * z = `self.zbasis`.
+    #[derive(Clone, Debug, Deserialize, Serialize, gltf_derive::Validate)]
+    #[serde(rename_all = "camelCase")]
+    pub struct Torus {
+        /// The center of the torus.
+        pub origin: [f32; 3],
+        /// Distance from the origin to the origin of the base circle.
+        pub major_radius: f32,
+        /// Radius of the base circle.
+        pub minor_radius: f32,
+        /// Normal vector in the direction from the origin of the
+        /// base circle to the point on the torus at σ(0, 0).
+        pub xbasis: [f32; 3],
+        /// Normal vector in the direction from the origin of the
+        /// base circle to the point on the torus at σ(90°, 0).
+        pub ybasis: [f32; 3],
+        /// Normal vector in the direction of increasing values of
+        /// the parameter v as if evaluated as a cylindrical surface
+        /// starting from the base circle.
+        pub zbasis: [f32; 3],
+    }
+
     /// Abstract surface data.
     #[derive(Clone, Debug, Deserialize, Serialize, gltf_derive::Validate)]
     #[serde(rename_all = "camelCase")]
@@ -372,6 +406,9 @@ pub mod surface {
         /// Arguments for a planar surface.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub plane: Option<Plane>,
+        /// Arguments for a toroidal surface.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub torus: Option<Torus>,
         /// Surface parameter domain.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub domain: Option<Domain>,

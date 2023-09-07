@@ -363,6 +363,57 @@ pub mod surface {
         }
     }
 
+    /// Toroidal surface definition.
+    ///
+    /// σ(u, v) := O + (R + rcos(v))(cos(u)x + sin(u)y) + rsin(v)z, where:
+    /// * O = `self.origin`,
+    /// * R = `self.major_radius`,
+    /// * r = `self.minor_radius`,
+    /// * x = `self.xbasis`,
+    /// * y = `self.ybasis`,
+    /// * z = `self.zbasis`.
+    #[derive(Clone, Debug)]
+    pub struct Torus<'a> {
+        /// The corresponding JSON struct.
+        pub(crate) json: &'a json::extensions::kittycad_boundary_representation::surface::Torus,
+    }
+
+    impl<'a> Torus<'a> {
+        /// The center of the torus.
+        pub fn origin(&self) -> [f32; 3] {
+            self.json.origin
+        }
+
+        /// Distance from the origin to the origin of the base circle.
+        pub fn major_radius(&self) -> f32 {
+            self.json.major_radius
+        }
+
+        /// Radius of the base circle.
+        pub fn minor_radius(&self) -> f32 {
+            self.json.minor_radius
+        }
+
+        /// Normal vector in the direction from the origin of the
+        /// base circle to the point on the torus at σ(0, 0).
+        pub fn xbasis(&self) -> [f32; 3] {
+            self.json.xbasis
+        }
+
+        /// Normal vector in the direction from the origin of the
+        /// base circle to the point on the torus at σ(90°, 0).
+        pub fn ybasis(&self) -> [f32; 3] {
+            self.json.ybasis
+        }
+
+        /// Normal vector in the direction of increasing values of
+        /// the parameter v as if evaluated as a cylindrical surface
+        /// starting from the base circle.
+        pub fn zbasis(&self) -> [f32; 3] {
+            self.json.zbasis
+        }
+    }
+
     /// Defines a non-uniform rational B-spline (NURBS) surface.
     #[derive(Clone, Debug)]
     pub struct Nurbs<'a> {
@@ -405,10 +456,12 @@ pub mod surface {
     pub enum Geometry<'a> {
         /// Cylindrical surface.
         Cylinder(Cylinder<'a>),
-        /// Planar surface.
-        Plane(Plane<'a>),
         /// Non-uniform rational B-spline (NURBS) surface.
         Nurbs(Nurbs<'a>),
+        /// Planar surface.
+        Plane(Plane<'a>),
+        /// Toroidal surface.
+        Torus(Torus<'a>),
     }
 
     /// Abstract surface.
@@ -457,13 +510,17 @@ pub mod surface {
                     let json = self.json.cylinder.as_ref().unwrap();
                     Geometry::Cylinder(Cylinder { json })
                 }
+                json::extensions::kittycad_boundary_representation::surface::Type::Nurbs => {
+                    let json = self.json.nurbs.as_ref().unwrap();
+                    Geometry::Nurbs(Nurbs { json })
+                }
                 json::extensions::kittycad_boundary_representation::surface::Type::Plane => {
                     let json = self.json.plane.as_ref().unwrap();
                     Geometry::Plane(Plane { json })
                 }
-                json::extensions::kittycad_boundary_representation::surface::Type::Nurbs => {
-                    let json = self.json.nurbs.as_ref().unwrap();
-                    Geometry::Nurbs(Nurbs { json })
+                json::extensions::kittycad_boundary_representation::surface::Type::Torus => {
+                    let json = self.json.torus.as_ref().unwrap();
+                    Geometry::Torus(Torus { json })
                 }
             }
         }
