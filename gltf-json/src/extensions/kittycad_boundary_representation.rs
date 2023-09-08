@@ -82,7 +82,8 @@ pub mod curve {
     #[serde(rename_all = "camelCase")]
     pub struct Circle {
         /// Position at the center of the circle.
-        pub origin: [f32; 3],
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub origin: Option<[f32; 3]>,
         /// Distance from the center position to all points on the circle.
         pub radius: f32,
         /// Unit vector normal to the plane containing the circle.
@@ -90,7 +91,7 @@ pub mod curve {
         /// This serves as the Z basis in the parametric co-ordinate space.
         pub normal: [f32; 3],
         /// Unit vector in the direction from the origin to the point on
-        /// the circle at λ(0).
+        /// the circle evaluated at λ(0).
         ///
         /// Due to floating point precision, this vector may not lie exactly
         /// in the plane. If this is the case then the X vector will be treated
@@ -364,30 +365,27 @@ pub mod surface {
     ///
     /// σ(u, v) := O + (R + rcos(v))(cos(u)x + sin(u)y) + rsin(v)z, where:
     /// * O = `self.origin`,
-    /// * R = `self.major_radius`,
-    /// * r = `self.minor_radius`,
-    /// * x = `self.xbasis`,
-    /// * y = `self.ybasis`,
-    /// * z = `self.zbasis`.
+    /// * R = `self.radius`,
+    /// * r = `self.circle_of_revolution.radius`,
+    /// * x = `self.circle_of_revolution.xbasis`,
+    /// * y = `self.circle_of_revolution.normal` × `self.circle_of_revolution.xbasis`,
+    /// * z = `self.circle_of_revolution.normal`.
+    ///
+    /// Tori are defined in reference to a circle that is revolved about
+    /// an origin at a specified distance. This distance is called the
+    /// major radius. The radius of the circle of revolution is called the
+    /// minor radius.
     #[derive(Clone, Debug, Deserialize, Serialize, gltf_derive::Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Torus {
         /// The center of the torus.
+        ///
+        /// The axis of revolution passes through the origin of the torus.
         pub origin: [f32; 3],
-        /// Distance from the origin to the origin of the base circle.
-        pub major_radius: f32,
-        /// Radius of the base circle.
-        pub minor_radius: f32,
-        /// Normal vector in the direction from the origin of the
-        /// base circle to the point on the torus at σ(0, 0).
-        pub xbasis: [f32; 3],
-        /// Normal vector in the direction from the origin of the
-        /// base circle to the point on the torus at σ(90°, 0).
-        pub ybasis: [f32; 3],
-        /// Normal vector in the direction of increasing values of
-        /// the parameter v as if evaluated as a cylindrical surface
-        /// starting from the base circle.
-        pub zbasis: [f32; 3],
+        /// Circle of revolution.
+        pub circle: super::curve::Circle,
+        /// Distance from the torus origin to the origin of the revolved circle.
+        pub radius: f32,
     }
 
     /// Abstract surface data.

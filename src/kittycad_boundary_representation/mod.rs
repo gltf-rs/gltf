@@ -29,8 +29,8 @@ pub mod curve {
 
     impl<'a> Circle<'a> {
         /// Position at the center of the circle.
-        pub fn origin(&self) -> [f32; 3] {
-            self.json.origin
+        pub fn origin(&self) -> Option<[f32; 3]> {
+            self.json.origin.clone()
         }
 
         /// Distance from the center position to all points on the circle.
@@ -58,7 +58,7 @@ pub mod curve {
         /// Evaluate the curve at parameter value `t`.
         pub fn at(&self, t: f32) -> [f32; 3] {
             let radius = self.json.radius;
-            let origin = Vector3::from(self.json.origin);
+            let origin = Vector3::from(self.json.origin.unwrap_or_default());
             let xbasis = Vector3::from(self.json.xbasis);
             let ybasis = Vector3::from(self.json.normal).cross(xbasis);
             let (cosine, sine) = t.sin_cos();
@@ -388,33 +388,17 @@ pub mod surface {
             self.json.origin
         }
 
+        /// The revolved circle.
+        pub fn circle(&self) -> super::curve::Circle<'a> {
+            super::curve::Circle {
+                json: &self.json.circle,
+                domain: None,
+            }
+        }
+
         /// Distance from the origin to the origin of the base circle.
-        pub fn major_radius(&self) -> f32 {
-            self.json.major_radius
-        }
-
-        /// Radius of the base circle.
-        pub fn minor_radius(&self) -> f32 {
-            self.json.minor_radius
-        }
-
-        /// Normal vector in the direction from the origin of the
-        /// base circle to the point on the torus at σ(0, 0).
-        pub fn xbasis(&self) -> [f32; 3] {
-            self.json.xbasis
-        }
-
-        /// Normal vector in the direction from the origin of the
-        /// base circle to the point on the torus at σ(90°, 0).
-        pub fn ybasis(&self) -> [f32; 3] {
-            self.json.ybasis
-        }
-
-        /// Normal vector in the direction of increasing values of
-        /// the parameter v as if evaluated as a cylindrical surface
-        /// starting from the base circle.
-        pub fn zbasis(&self) -> [f32; 3] {
-            self.json.zbasis
+        pub fn radius(&self) -> f32 {
+            self.json.radius
         }
     }
 
