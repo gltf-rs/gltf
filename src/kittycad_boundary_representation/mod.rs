@@ -312,32 +312,17 @@ pub mod surface {
     }
 
     impl<'a> Cylinder<'a> {
-        /// Origin of the base circle.
-        pub fn origin(&self) -> [f32; 3] {
-            self.json.origin
+        /// The extruded circle.
+        pub fn circle(&self) -> super::curve::Circle<'a> {
+            super::curve::Circle {
+                json: &self.json.circle,
+                domain: None,
+            }
         }
 
-        /// Radius of the base circle.
-        pub fn radius(&self) -> f32 {
-            self.json.radius
-        }
-
-        /// Normal vector in the direction from the origin of the
-        /// base circle to the point on the cylinder at σ(0, 0).
-        pub fn xbasis(&self) -> [f32; 3] {
-            self.json.xbasis
-        }
-
-        /// Normal vector in the direction from the origin of the
-        /// base circle to the point on the cylinder at σ(90°, 0).
-        pub fn ybasis(&self) -> [f32; 3] {
-            self.json.ybasis
-        }
-
-        /// Normal vector in the direction of increasing values of
-        /// the parameter v.
-        pub fn zbasis(&self) -> [f32; 3] {
-            self.json.zbasis
+        /// Height of the extruded circle.
+        pub fn height(&self) -> f32 {
+            self.json.height
         }
     }
 

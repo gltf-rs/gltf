@@ -284,33 +284,24 @@ pub mod surface {
     /// Parametric cylindrical surface definition.
     ///
     /// σ(u, v) := O + R(cos(u)x + sin(u)y) + vz, where:
-    /// * O = `self.origin`,
-    /// * R = `self.radius`,
-    /// * x = `self.xbasis`,
-    /// * y = `self.ybasis`,
-    /// * z = `self.zbasis`.
+    /// * O = `self.circle.origin`,
+    /// * R = `self.circle.radius`,
+    /// * x = `self.circle.xbasis`,
+    /// * y = `self.circle.normal` × `self.circle.xbasis`,
+    /// * z = `self.circle.normal`,
+    /// * h = `self.height`,
+    /// * u ∈ {0, 2π},
+    /// * v ∈ {0, h}.
     ///
-    /// In the field documentation, the 'base circle' is
-    /// defined as the cycle defined at σ(u, 0).
-    ///
-    /// The vectors `xbasis`, `ybasis`, and `zbasis` form
-    /// an orthonormal set.
+    /// Cylinders are defined in reference to a circle that is extruded
+    /// along the circle normal vector.
     #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Cylinder {
-        /// Origin of the base circle.
-        pub origin: [f32; 3],
-        /// Radius of the base circle.
-        pub radius: f32,
-        /// Normal vector in the direction from the origin of the
-        /// base circle to the point on the cylinder at σ(0, 0).
-        pub xbasis: [f32; 3],
-        /// Normal vector in the direction from the origin of the
-        /// base circle to the point on the cylinder at σ(90°, 0).
-        pub ybasis: [f32; 3],
-        /// Normal vector in the direction of increasing values of
-        /// the parameter v.
-        pub zbasis: [f32; 3],
+        /// The extruded circle.
+        pub circle: super::curve::Circle,
+        /// Height of the extruded circle.
+        pub height: f32,
     }
 
     /// NURBS surface definition.
@@ -366,10 +357,11 @@ pub mod surface {
     /// σ(u, v) := O + (R + rcos(v))(cos(u)x + sin(u)y) + rsin(v)z, where:
     /// * O = `self.origin`,
     /// * R = `self.radius`,
-    /// * r = `self.circle_of_revolution.radius`,
-    /// * x = `self.circle_of_revolution.xbasis`,
-    /// * y = `self.circle_of_revolution.normal` × `self.circle_of_revolution.xbasis`,
-    /// * z = `self.circle_of_revolution.normal`.
+    /// * r = `self.circle.radius`,
+    /// * x = `self.circle.xbasis`,
+    /// * y = `self.circle.normal` × `self.circle.xbasis`,
+    /// * z = `self.circle.normal`,
+    /// * u, v ∈ {0, 2π}.
     ///
     /// Tori are defined in reference to a circle that is revolved about
     /// an origin at a specified distance. This distance is called the
