@@ -124,7 +124,25 @@ impl From<Vector3> for [f32; 3] {
 
 impl Vector3 {
     pub fn new(x: f32, y: f32, z: f32) -> Self {
-        Vector3 { x, y, z }
+        Self { x, y, z }
+    }
+
+    pub fn cross(&self, other: Self) -> Self {
+        let Self {
+            x: ax,
+            y: ay,
+            z: az,
+        } = *self;
+        let Self {
+            x: bx,
+            y: by,
+            z: bz,
+        } = other;
+        Self {
+            x: ay * bz - az * by,
+            y: az * bx - ax * bz,
+            z: ax * by - ay * bx,
+        }
     }
 
     pub fn magnitude(&self) -> f32 {

@@ -14,11 +14,10 @@ pub mod curve {
     /// * O = `self.origin`,
     /// * R = `self.radius`,
     /// * x = `self.xbasis`,
-    /// * y = `self.ybasis`,
+    /// * y = `self.normal` × `self.xbasis`,
     /// * u ∈ {0, 2π}.
     ///
-    /// The vectors `xbasis` and `ybasis` form
-    /// an orthonormal set.
+    /// The `xbasis` and `normal` vectors form an orthonormal set.
     #[derive(Clone, Debug)]
     pub struct Circle<'a> {
         /// The corresponding JSON struct.
@@ -39,16 +38,21 @@ pub mod curve {
             self.json.radius
         }
 
-        /// Normal vector in the direction from the origin to the point on
-        /// the circle at λ(0).
-        pub fn xbasis(&self) -> [f32; 3] {
-            self.json.xbasis
+        /// Normal vector to the plane containing the circle.
+        ///
+        /// This serves as the Z basis in the parametric co-ordinate space.
+        pub fn normal(&self) -> [f32; 3] {
+            self.json.normal
         }
 
-        /// Normal vector in the direction from the origin to the point on
-        /// the circle at λ(90°).
-        pub fn ybasis(&self) -> [f32; 3] {
-            self.json.ybasis
+        /// Unit vector in the direction from the origin to the point on
+        /// the circle at λ(0).
+        ///
+        /// Due to floating point precision, this vector may not lie exactly
+        /// in the plane. If this is the case then the X vector is treated
+        /// as the projection of this vector onto the plane.
+        pub fn xbasis(&self) -> [f32; 3] {
+            self.json.xbasis
         }
 
         /// Evaluate the curve at parameter value `t`.
@@ -56,7 +60,7 @@ pub mod curve {
             let radius = self.json.radius;
             let origin = Vector3::from(self.json.origin);
             let xbasis = Vector3::from(self.json.xbasis);
-            let ybasis = Vector3::from(self.json.ybasis);
+            let ybasis = Vector3::from(self.json.normal).cross(xbasis);
             let (cosine, sine) = t.sin_cos();
             (origin + (xbasis * cosine + ybasis * sine) * radius).into()
         }

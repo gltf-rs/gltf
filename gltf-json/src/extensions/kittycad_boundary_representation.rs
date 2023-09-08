@@ -74,11 +74,10 @@ pub mod curve {
     /// * O = `self.origin`,
     /// * R = `self.radius`,
     /// * x = `self.xbasis`,
-    /// * y = `self.ybasis`,
+    /// * y = `self.normal` × `self.xbasis`,
     /// * u ∈ {0, 2π}.
     ///
-    /// The vectors `xbasis` and `ybasis` form
-    /// an orthonormal set.
+    /// The `xbasis` and `normal` vectors form an orthonormal set.
     #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Circle {
@@ -86,12 +85,17 @@ pub mod curve {
         pub origin: [f32; 3],
         /// Distance from the center position to all points on the circle.
         pub radius: f32,
-        /// Normal vector in the direction from the origin to the point on
+        /// Unit vector normal to the plane containing the circle.
+        ///
+        /// This serves as the Z basis in the parametric co-ordinate space.
+        pub normal: [f32; 3],
+        /// Unit vector in the direction from the origin to the point on
         /// the circle at λ(0).
+        ///
+        /// Due to floating point precision, this vector may not lie exactly
+        /// in the plane. If this is the case then the X vector will be treated
+        /// as the projection of this vector onto the plane.
         pub xbasis: [f32; 3],
-        /// Normal vector in the direction from the origin to the point on
-        /// the circle at λ(90°).
-        pub ybasis: [f32; 3],
     }
 
     /// Line curve definition.
