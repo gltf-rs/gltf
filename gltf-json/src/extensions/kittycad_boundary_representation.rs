@@ -83,20 +83,20 @@ pub mod curve {
     pub struct Circle {
         /// Position at the center of the circle.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub origin: Option<[f32; 3]>,
+        pub origin: Option<[f64; 3]>,
         /// Distance from the center position to all points on the circle.
-        pub radius: f32,
+        pub radius: f64,
         /// Unit vector normal to the plane containing the circle.
         ///
         /// This serves as the Z basis in the parametric co-ordinate space.
-        pub normal: [f32; 3],
+        pub normal: [f64; 3],
         /// Unit vector in the direction from the origin to the point on
         /// the circle evaluated at λ(0).
         ///
         /// Due to floating point precision, this vector may not lie exactly
         /// in the plane. If this is the case then the X vector will be treated
         /// as the projection of this vector onto the plane.
-        pub xbasis: [f32; 3],
+        pub xbasis: [f64; 3],
     }
 
     /// Line curve definition.
@@ -106,13 +106,13 @@ pub mod curve {
     #[serde(rename_all = "camelCase")]
     pub struct Line {
         /// Origin position.
-        pub start: [f32; 3],
+        pub start: [f64; 3],
         /// Unit vector pointing away from the origin position.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub direction: Option<[f32; 3]>,
+        pub direction: Option<[f64; 3]>,
         /// End position.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub end: Option<[f32; 3]>,
+        pub end: Option<[f64; 3]>,
     }
 
     impl Validate for Line {
@@ -132,9 +132,9 @@ pub mod curve {
     #[serde(rename_all = "camelCase")]
     pub struct Nurbs {
         /// Array of control vertices.
-        pub control_points: Vec<[f32; 4]>,
+        pub control_points: Vec<[f64; 4]>,
         /// Knot vector.
-        pub knot_vector: Vec<f32>,
+        pub knot_vector: Vec<f64>,
         /// Order of basis splines.
         pub order: u32,
     }
@@ -144,10 +144,10 @@ pub mod curve {
     #[serde(rename_all = "camelCase")]
     pub struct Domain {
         /// Minimum domain value.
-        pub min: f32,
+        pub min: f64,
 
         /// Maximum domain value.
-        pub max: f32,
+        pub max: f64,
     }
 
     impl Default for Domain {
@@ -203,10 +203,10 @@ pub mod surface {
     #[serde(rename_all = "camelCase")]
     pub struct Domain {
         /// Minimum domain values.
-        pub min: [f32; 2],
+        pub min: [f64; 2],
 
         /// Maximum domain values.
-        pub max: [f32; 2],
+        pub max: [f64; 2],
     }
 
     impl Default for Domain {
@@ -301,7 +301,7 @@ pub mod surface {
         /// The extruded circle.
         pub circle: super::curve::Circle,
         /// Height of the extruded circle.
-        pub height: f32,
+        pub height: f64,
     }
 
     /// NURBS surface definition.
@@ -309,13 +309,13 @@ pub mod surface {
     #[serde(rename_all = "camelCase")]
     pub struct Nurbs {
         /// Matrix of control point vertices.
-        pub control_points: Vec<[f32; 4]>,
+        pub control_points: Vec<[f64; 4]>,
         /// Dimensions of control point vertex matrix.
         pub num_control_points: [u32; 2],
         /// Number of knots in U and V.
         pub num_knots: [u32; 2],
         /// Knot vector.
-        pub knot_vector: Vec<f32>,
+        pub knot_vector: Vec<f64>,
         /// Order of basis splines.
         pub order: [u32; 2],
     }
@@ -343,13 +343,13 @@ pub mod surface {
     #[serde(rename_all = "camelCase")]
     pub struct Plane {
         /// Normal vector to the plane.
-        pub normal: [f32; 3],
+        pub normal: [f64; 3],
         /// The value of `d` in the plane equation `n.r = d`.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub constant: Option<f32>,
+        pub constant: Option<f64>,
         /// An arbitrary point that lies on the plane.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub point: Option<[f32; 3]>,
+        pub point: Option<[f64; 3]>,
     }
 
     /// Toroidal surface definition.
@@ -373,11 +373,11 @@ pub mod surface {
         /// The center of the torus.
         ///
         /// The axis of revolution passes through the origin of the torus.
-        pub origin: [f32; 3],
+        pub origin: [f64; 3],
         /// Circle of revolution.
         pub circle: super::curve::Circle,
         /// Distance from the torus origin to the origin of the revolved circle.
-        pub radius: f32,
+        pub radius: f64,
     }
 
     /// Abstract surface data.
@@ -472,7 +472,7 @@ pub mod brep {
     /// Point in 2D space.
     #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct TrimVertex(pub [f32; 2]);
+    pub struct TrimVertex(pub [f64; 2]);
 
     impl Validate for TrimVertex {
         fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
@@ -486,7 +486,7 @@ pub mod brep {
     /// Point in 3D space.
     #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct EdgeVertex(pub [f32; 3]);
+    pub struct EdgeVertex(pub [f64; 3]);
 
     impl Validate for EdgeVertex {
         fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)

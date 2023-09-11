@@ -2,8 +2,8 @@ use crate::{json, Document, Mesh};
 
 /// Curves.
 pub mod curve {
-    use crate::math::Vector3;
     use crate::{json, Document};
+    use euler::DVec3;
 
     #[doc(inline)]
     pub use json::extensions::kittycad_boundary_representation::curve::Domain;
@@ -29,19 +29,19 @@ pub mod curve {
 
     impl<'a> Circle<'a> {
         /// Position at the center of the circle.
-        pub fn origin(&self) -> Option<[f32; 3]> {
-            self.json.origin.clone()
+        pub fn origin(&self) -> Option<[f64; 3]> {
+            self.json.origin
         }
 
         /// Distance from the center position to all points on the circle.
-        pub fn radius(&self) -> f32 {
+        pub fn radius(&self) -> f64 {
             self.json.radius
         }
 
         /// Normal vector to the plane containing the circle.
         ///
         /// This serves as the Z basis in the parametric co-ordinate space.
-        pub fn normal(&self) -> [f32; 3] {
+        pub fn normal(&self) -> [f64; 3] {
             self.json.normal
         }
 
@@ -51,22 +51,22 @@ pub mod curve {
         /// Due to floating point precision, this vector may not lie exactly
         /// in the plane. If this is the case then the X vector is treated
         /// as the projection of this vector onto the plane.
-        pub fn xbasis(&self) -> [f32; 3] {
+        pub fn xbasis(&self) -> [f64; 3] {
             self.json.xbasis
         }
 
         /// Evaluate the curve at parameter value `t`.
-        pub fn at(&self, t: f32) -> [f32; 3] {
+        pub fn at(&self, t: f64) -> [f64; 3] {
             let radius = self.json.radius;
-            let origin = Vector3::from(self.json.origin.unwrap_or_default());
-            let xbasis = Vector3::from(self.json.xbasis);
-            let ybasis = Vector3::from(self.json.normal).cross(xbasis);
+            let origin = DVec3::from(self.json.origin.unwrap_or_default());
+            let xbasis = DVec3::from(self.json.xbasis);
+            let ybasis = DVec3::from(self.json.normal).cross(xbasis);
             let (cosine, sine) = t.sin_cos();
             (origin + (xbasis * cosine + ybasis * sine) * radius).into()
         }
 
         /// Point evaluated at the domain minimum value.
-        pub fn start(&self) -> [f32; 3] {
+        pub fn start(&self) -> [f64; 3] {
             if let Some(Domain { min, .. }) = self.domain {
                 self.at(min)
             } else {
@@ -75,7 +75,7 @@ pub mod curve {
         }
 
         /// Point evaluated at the domain maximum value.
-        pub fn end(&self) -> [f32; 3] {
+        pub fn end(&self) -> [f64; 3] {
             if let Some(Domain { max, .. }) = self.domain {
                 self.at(max)
             } else {
@@ -96,50 +96,36 @@ pub mod curve {
 
     impl<'a> Line<'a> {
         /// Returns the line origin.
-        pub fn start(&self) -> [f32; 3] {
+        pub fn start(&self) -> [f64; 3] {
             self.json.start
         }
 
         /// Returns the line end point.
         ///
         /// If `direction` was set, this will be computed from the trim domain.
-        pub fn end(&self) -> [f32; 3] {
-            use crate::math::*;
+        pub fn end(&self) -> [f64; 3] {
             if let Some(end) = self.json.end {
                 end
             } else {
-                let start = {
-                    let v = self.start();
-                    Vector3::new(v[0], v[1], v[2])
-                };
-                let direction = {
-                    let v = self.json.direction.unwrap();
-                    Vector3::new(v[0], v[1], v[2])
-                };
+                let start = DVec3::from(self.start());
+                let direction = DVec3::from(self.json.direction.unwrap());
                 let end = start + direction * (self.domain.max - self.domain.min);
-                [end.x, end.y, end.z]
+                end.into()
             }
         }
 
         /// Returns the line direction.
         ///
         /// If `end` was set, this will be computed.
-        pub fn direction(&self) -> [f32; 3] {
-            use crate::math::*;
+        pub fn direction(&self) -> [f64; 3] {
             if let Some(direction) = self.json.direction {
                 direction
             } else {
-                let start = {
-                    let v = self.start();
-                    Vector3::new(v[0], v[1], v[2])
-                };
-                let end = {
-                    let v = self.json.end.unwrap();
-                    Vector3::new(v[0], v[1], v[2])
-                };
+                let start = DVec3::from(self.start());
+                let end = DVec3::from(self.json.end.unwrap());
                 let difference = end + start * -1.0;
                 let direction = difference.normalize();
-                [direction.x, direction.y, direction.z]
+                direction.into()
             }
         }
     }
@@ -154,26 +140,26 @@ pub mod curve {
 
     impl<'a> Nurbs<'a> {
         /// Returns the curve start point, i.e., the first control point.
-        pub fn start(&self) -> [f32; 3] {
+        pub fn start(&self) -> [f64; 3] {
             // TODO: evaluate for domain.
             let v = self.json.control_points[0];
             [v[0], v[1], v[2]]
         }
 
         /// Returns the curve end point, i.e., the last control point.
-        pub fn end(&self) -> [f32; 3] {
+        pub fn end(&self) -> [f64; 3] {
             // TODO: evaluate for domain.
             let v = self.json.control_points[self.json.control_points.len() - 1];
             [v[0], v[1], v[2]]
         }
 
         /// Returns the NURBS control points.
-        pub fn control_points(&self) -> &[[f32; 4]] {
+        pub fn control_points(&self) -> &[[f64; 4]] {
             &self.json.control_points
         }
 
         /// Returns the NURBS knot vector.
-        pub fn knot_vector(&self) -> &[f32] {
+        pub fn knot_vector(&self) -> &[f64] {
             &self.json.knot_vector
         }
 
@@ -238,7 +224,7 @@ pub mod curve {
         }
 
         /// Evaluates the curve start point.
-        pub fn start(&self) -> [f32; 3] {
+        pub fn start(&self) -> [f64; 3] {
             match self.geometry() {
                 Geometry::Circle(circle) => circle.start(),
                 Geometry::Line(line) => line.start(),
@@ -247,7 +233,7 @@ pub mod curve {
         }
 
         /// Evaluates the curve end point.
-        pub fn end(&self) -> [f32; 3] {
+        pub fn end(&self) -> [f64; 3] {
             match self.geometry() {
                 Geometry::Circle(circle) => circle.end(),
                 Geometry::Line(line) => line.end(),
@@ -321,7 +307,7 @@ pub mod surface {
         }
 
         /// Height of the extruded circle.
-        pub fn height(&self) -> f32 {
+        pub fn height(&self) -> f64 {
             self.json.height
         }
     }
@@ -335,18 +321,18 @@ pub mod surface {
 
     impl<'a> Plane<'a> {
         /// Returns the normal vector to the plane.
-        pub fn normal(&self) -> [f32; 3] {
+        pub fn normal(&self) -> [f64; 3] {
             self.json.normal
         }
 
         /// Returns the value of `d` in the plane equation `n.r = d`.
-        pub fn constant(&self) -> f32 {
+        pub fn constant(&self) -> f64 {
             // TODO: compute constant where not provided.
             self.json.constant.unwrap()
         }
 
         /// Returns an arbitrary point that lies on the plane.
-        pub fn point(&self) -> [f32; 3] {
+        pub fn point(&self) -> [f64; 3] {
             // TODO: compute point where not provided.
             self.json.point.unwrap()
         }
@@ -369,7 +355,7 @@ pub mod surface {
 
     impl<'a> Torus<'a> {
         /// The center of the torus.
-        pub fn origin(&self) -> [f32; 3] {
+        pub fn origin(&self) -> [f64; 3] {
             self.json.origin
         }
 
@@ -382,7 +368,7 @@ pub mod surface {
         }
 
         /// Distance from the origin to the origin of the base circle.
-        pub fn radius(&self) -> f32 {
+        pub fn radius(&self) -> f64 {
             self.json.radius
         }
     }
@@ -397,7 +383,7 @@ pub mod surface {
 
     impl<'a> Nurbs<'a> {
         /// Returns the matrix of control points.
-        pub fn control_points(&self) -> &[[f32; 4]] {
+        pub fn control_points(&self) -> &[[f64; 4]] {
             &self.json.control_points
         }
 
@@ -412,7 +398,7 @@ pub mod surface {
         }
 
         /// Returns the knot vectors for the U and V curves respectively.
-        pub fn knot_vectors(&self) -> (&[f32], &[f32]) {
+        pub fn knot_vectors(&self) -> (&[f64], &[f64]) {
             self.json
                 .knot_vector
                 .split_at(self.json.num_knots[0] as usize)
@@ -712,7 +698,7 @@ impl<'a> EdgeVertex<'a> {
     }
 
     /// Returns the vertex position in 3D space.
-    pub fn position(&self) -> [f32; 3] {
+    pub fn position(&self) -> [f64; 3] {
         self.json.0
     }
 }
