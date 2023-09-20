@@ -2,10 +2,6 @@ use crate::{texture, Document};
 
 pub use json::material::AlphaMode;
 
-lazy_static! {
-    static ref DEFAULT_MATERIAL: json::material::Material = Default::default();
-}
-
 /// The material appearance of a primitive.
 #[derive(Clone, Debug)]
 pub struct Material<'a> {
@@ -38,7 +34,7 @@ impl<'a> Material<'a> {
         Self {
             document,
             index: None,
-            json: &DEFAULT_MATERIAL,
+            json: &json::material::Material::DEFAULT_MATERIAL,
         }
     }
 

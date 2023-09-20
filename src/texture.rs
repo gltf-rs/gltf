@@ -2,10 +2,6 @@ use crate::{image, Document};
 
 pub use json::texture::{MagFilter, MinFilter, WrappingMode};
 
-lazy_static! {
-    static ref DEFAULT_SAMPLER: json::texture::Sampler = Default::default();
-}
-
 /// A reference to a `Texture`.
 #[derive(Clone, Debug)]
 pub struct Info<'a> {
@@ -62,7 +58,7 @@ impl<'a> Sampler<'a> {
         Self {
             document,
             index: None,
-            json: &DEFAULT_SAMPLER,
+            json: &json::texture::Sampler::DEFAULT_SAMPLER,
         }
     }
 
