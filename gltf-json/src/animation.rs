@@ -158,7 +158,7 @@ impl Validate for Animation {
         self.samplers
             .validate(root, || path().field("samplers"), report);
         for (index, channel) in self.channels.iter().enumerate() {
-            if channel.sampler.value() as usize >= self.samplers.len() {
+            if channel.sampler.value() >= self.samplers.len() {
                 let path = || path().field("channels").index(index).field("sampler");
                 report(&path, Error::IndexOutOfBounds);
             }

@@ -20,7 +20,7 @@ pub trait Get<T> {
 }
 
 /// Represents an offset into an array of type `T` owned by the root glTF object.
-pub struct Index<T>(u32, marker::PhantomData<*const T>);
+pub struct Index<T>(u32, marker::PhantomData<fn() -> T>);
 
 /// The root object of a glTF 2.0 asset.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
@@ -241,8 +241,29 @@ impl<T> Clone for Index<T> {
 
 impl<T> Copy for Index<T> {}
 
-unsafe impl<T> Send for Index<T> {}
-unsafe impl<T> Sync for Index<T> {}
+impl<T> Ord for Index<T> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.0.cmp(&other.0)
+    }
+}
+impl<T> PartialOrd for Index<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<T> Eq for Index<T> {}
+impl<T> PartialEq for Index<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl<T> std::hash::Hash for Index<T> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+    }
+}
 
 impl<T> fmt::Debug for Index<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -294,3 +315,34 @@ impl_get!(texture::Sampler, samplers);
 impl_get!(Scene, scenes);
 impl_get!(Skin, skins);
 impl_get!(Texture, textures);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashSet;
+
+    #[test]
+    fn index_is_partialeq() {
+        assert_eq!(Index::<Node>::new(1), Index::new(1));
+        assert_ne!(Index::<Node>::new(1), Index::new(2));
+    }
+
+    #[test]
+    fn index_is_hash() {
+        let set = HashSet::from([Index::<Node>::new(1), Index::new(1234)]);
+        assert!(set.contains(&Index::new(1234)));
+        assert!(!set.contains(&Index::new(999)));
+        assert_eq!(set.len(), 2);
+    }
+
+    #[test]
+    fn index_is_ord() {
+        assert!(Index::<Node>::new(1) < Index::new(1234));
+    }
+
+    fn _index_is_send_sync()
+    where
+        Index<Material>: Send + Sync,
+    {
+    }
+}
