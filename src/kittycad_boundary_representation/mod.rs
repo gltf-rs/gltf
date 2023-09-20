@@ -2,7 +2,7 @@ use crate::{json, Document, Mesh};
 
 /// Curves.
 pub mod curve {
-    use crate::{json, Document};
+    use crate::json;
     use euler::DVec3;
 
     #[doc(inline)]
@@ -56,11 +56,12 @@ pub mod curve {
         }
 
         /// Evaluate the curve at parameter value `t`.
-        pub fn at(&self, t: f64) -> [f64; 3] {
+        pub fn evaluate(&self, t: f64) -> [f64; 3] {
             let radius = self.json.radius;
             let origin = DVec3::from(self.json.origin.unwrap_or_default());
             let xbasis = DVec3::from(self.json.xbasis);
-            let ybasis = DVec3::from(self.json.normal).cross(xbasis);
+            let normal = DVec3::from(self.json.normal);
+            let ybasis = normal.cross(xbasis);
             let (cosine, sine) = t.sin_cos();
             (origin + (xbasis * cosine + ybasis * sine) * radius).into()
         }
@@ -68,16 +69,16 @@ pub mod curve {
         /// Point evaluated at the domain minimum value.
         pub fn start(&self) -> [f64; 3] {
             if let Some(Domain { min, .. }) = self.domain {
-                self.at(min)
+                self.evaluate(min)
             } else {
-                self.at(0.0)
+                self.evaluate(0.0)
             }
         }
 
         /// Point evaluated at the domain maximum value.
         pub fn end(&self) -> [f64; 3] {
             if let Some(Domain { max, .. }) = self.domain {
-                self.at(max)
+                self.evaluate(max)
             } else {
                 self.start()
             }
@@ -98,6 +99,13 @@ pub mod curve {
         /// Returns the line origin.
         pub fn start(&self) -> [f64; 3] {
             self.json.start
+        }
+
+        /// Evaluate the curve at parameter value `t`.
+        pub fn evaluate(&self, t: f64) -> [f64; 3] {
+            let start = DVec3::from(self.start());
+            let end = DVec3::from(self.end());
+            (start + t * (end - start)).into()
         }
 
         /// Returns the line end point.
@@ -187,10 +195,6 @@ pub mod curve {
     /// Abstract curve..
     #[derive(Clone, Debug)]
     pub struct Curve<'a> {
-        /// The parent `Document` struct.
-        #[allow(unused)]
-        document: &'a Document,
-
         /// The corresponding JSON index.
         index: usize,
 
@@ -200,16 +204,11 @@ pub mod curve {
 
     impl<'a> Curve<'a> {
         /// Constructs a `Curve`.
-        pub(crate) fn new(
-            document: &'a Document,
+        pub fn new(
             index: usize,
             json: &'a json::extensions::kittycad_boundary_representation::Curve,
         ) -> Self {
-            Self {
-                document,
-                index,
-                json,
-            }
+            Self { index, json }
         }
 
         /// Returns the internal JSON index.
@@ -716,6 +715,19 @@ pub struct Edge<'a> {
     json: &'a json::extensions::kittycad_boundary_representation::brep::Edge,
 }
 
+/// Edge geometry.
+pub enum EdgeGeometry<'a> {
+    /// This edge forms a loop.
+    Closed,
+    /// This edge has a distinct start and end vertex.
+    Open {
+        /// Edge start vertex.
+        start: EdgeVertex<'a>,
+        /// Edge end vertex.
+        end: EdgeVertex<'a>,
+    },
+}
+
 impl<'a> Edge<'a> {
     /// Constructs an `Edge`.
     pub(crate) fn new(
@@ -741,16 +753,21 @@ impl<'a> Edge<'a> {
         self.document.curves().unwrap().nth(index).unwrap()
     }
 
-    /// Returns the edge start vertex.
-    pub fn start(&self) -> EdgeVertex<'a> {
-        let index = self.json.start.value();
-        self.document.edge_vertices().unwrap().nth(index).unwrap()
-    }
-
-    /// Returns the edge end vertex.
-    pub fn end(&self) -> EdgeVertex<'a> {
-        let index = self.json.end.value();
-        self.document.edge_vertices().unwrap().nth(index).unwrap()
+    /// Edge endpoints.
+    pub fn geometry(&self) -> EdgeGeometry<'a> {
+        if self.json.closed {
+            EdgeGeometry::Closed
+        } else {
+            let start = {
+                let index = self.json.start.unwrap().value();
+                self.document.edge_vertices().unwrap().nth(index).unwrap()
+            };
+            let end = {
+                let index = self.json.end.unwrap().value();
+                self.document.edge_vertices().unwrap().nth(index).unwrap()
+            };
+            EdgeGeometry::Open { start, end }
+        }
     }
 
     /// Specifies whether the orientation of the edge curve should

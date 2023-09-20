@@ -445,10 +445,7 @@ impl Document {
             .curves
             .iter()
             .enumerate();
-        Some(iter::Curves {
-            iter,
-            document: self,
-        })
+        Some(iter::Curves { iter })
     }
 
     /// Returns an `Iterator` that visits the cameras of the glTF asset.

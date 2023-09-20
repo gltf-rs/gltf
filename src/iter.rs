@@ -91,9 +91,6 @@ pub struct Curves<'a> {
     /// Internal buffer iterator.
     pub(crate) iter:
         iter::Enumerate<slice::Iter<'a, json::extensions::kittycad_boundary_representation::Curve>>,
-
-    /// The internal root glTF object.
-    pub(crate) document: &'a Document,
 }
 
 /// An `Iterator` that visits every pre-loaded image in a glTF asset.
@@ -327,7 +324,7 @@ impl<'a> Iterator for Curves<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
-            .map(|(index, json)| Curve::new(self.document, index, json))
+            .map(|(index, json)| Curve::new(index, json))
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
@@ -336,15 +333,14 @@ impl<'a> Iterator for Curves<'a> {
         self.iter.count()
     }
     fn last(self) -> Option<Self::Item> {
-        let document = self.document;
         self.iter
             .last()
-            .map(|(index, json)| Curve::new(document, index, json))
+            .map(|(index, json)| Curve::new(index, json))
     }
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
         self.iter
             .nth(n)
-            .map(|(index, json)| Curve::new(self.document, index, json))
+            .map(|(index, json)| Curve::new(index, json))
     }
 }
 

@@ -451,10 +451,13 @@ pub mod brep {
         pub curve: Index<super::Curve>,
 
         /// Edge start vertex.
-        pub start: Index<EdgeVertex>,
+        pub start: Option<Index<EdgeVertex>>,
 
         /// Edge end vertex.
-        pub end: Index<EdgeVertex>,
+        pub end: Option<Index<EdgeVertex>>,
+
+        /// Marker for a closed edge.
+        pub closed: bool,
 
         /// Specifies whether the orientation of the edge is reversed
         /// with respect to its associated curve.
