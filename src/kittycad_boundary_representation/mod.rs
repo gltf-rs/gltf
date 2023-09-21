@@ -146,7 +146,95 @@ pub mod curve {
         pub(crate) json: &'a json::extensions::kittycad_boundary_representation::curve::Nurbs,
     }
 
+    struct BasisFunction<'a> {
+        /// Knot vector.
+        pub k: &'a [f64],
+        /// Knot index
+        pub i: usize,
+        /// Polynomial degree.
+        pub j: usize,
+    }
+
+    impl<'a> BasisFunction<'a> {
+        /// Evaluate the basis polynomial at parameter value `t`.
+        pub fn evaluate(&self, t: f64) -> f64 {
+            let Self { k, i, j } = *self;
+
+            // Refer to https://mathworld.wolfram.com/B-Spline.html for definition.
+            if j == 0 {
+                let (tmin, tmax) = (k[i], k[i + 1]);
+                if t >= tmin && t < tmax {
+                    1.0
+                } else {
+                    0.0
+                }
+            } else {
+                let lower = {
+                    let (tmin, tmax) = (k[i], k[i + j]);
+                    if tmin < tmax {
+                        let contribution = (t - tmin) / (tmax - tmin);
+                        contribution * Self { k, i, j: j - 1 }.evaluate(t)
+                    } else {
+                        0.0
+                    }
+                };
+                let upper = {
+                    let (tmin, tmax) = (k[i + 1], k[i + j + 1]);
+                    if tmin < tmax {
+                        let contribution = (tmax - t) / (tmax - tmin);
+                        contribution
+                            * Self {
+                                k,
+                                i: i + 1,
+                                j: j - 1,
+                            }
+                            .evaluate(t)
+                    } else {
+                        0.0
+                    }
+                };
+                lower + upper
+            }
+        }
+    }
+
     impl<'a> Nurbs<'a> {
+        /// Evaluate the curve at parameter value `t`.
+        pub fn evaluate(&self, t: f64) -> [f64; 3] {
+            let p = self
+                .control_points()
+                .iter()
+                .cloned()
+                .map(|[x, y, z, _]| DVec3::new(x, y, z))
+                .collect::<Vec<_>>();
+            let n = p.len();
+            let k = self.knot_vector();
+            let w = self
+                .control_points()
+                .iter()
+                .cloned()
+                .map(|[_, _, _, w]| w)
+                .collect::<Vec<_>>();
+            let j = (self.json.order - 1) as usize;
+
+            if t == *k.last().unwrap() {
+                // Evaluating the endpoints of curve is problematic because it leads to (t - t) == 0.
+                p.last().cloned().unwrap().into()
+            } else if t == *k.first().unwrap() {
+                // Optimisation.
+                p.first().cloned().unwrap().into()
+            } else {
+                // Refer to https://mathworld.wolfram.com/NURBSCurve.html for definition.
+                let numerator: DVec3 = (0..n)
+                    .map(|i| BasisFunction { k, i, j }.evaluate(t) * w[i] * p[i])
+                    .sum();
+                let denominator: f64 = (0..n)
+                    .map(|i| BasisFunction { k, i, j }.evaluate(t) * w[i])
+                    .sum();
+                (numerator / denominator).into()
+            }
+        }
+
         /// Returns the curve start point, i.e., the first control point.
         pub fn start(&self) -> [f64; 3] {
             // TODO: evaluate for domain.
@@ -175,7 +263,7 @@ pub mod curve {
         ///
         /// # Notes
         ///
-        /// The degree of the basis splines is one greater than the order.
+        /// The degree of the basis splines is one less than the order.
         pub fn order(&self) -> u32 {
             self.json.order
         }
