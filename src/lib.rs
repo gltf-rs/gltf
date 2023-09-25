@@ -287,7 +287,7 @@ impl Gltf {
     {
         let mut magic = [0u8; 4];
         reader.read_exact(&mut magic)?;
-        reader.seek(io::SeekFrom::Start(0))?;
+        reader.seek(io::SeekFrom::Current(-4))?;
         let (json, blob): (json::Root, Option<Vec<u8>>);
         if magic.starts_with(b"glTF") {
             let mut glb = binary::Glb::from_reader(reader)?;
