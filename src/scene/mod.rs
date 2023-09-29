@@ -1,5 +1,5 @@
 #[cfg(feature = "KITTYCAD_boundary_representation")]
-use crate::kittycad_boundary_representation::BRep;
+use crate::kittycad_boundary_representation::Solid;
 use crate::math::*;
 use crate::{Camera, Document, Mesh, Skin};
 
@@ -128,18 +128,18 @@ impl<'a> Node<'a> {
         self.index
     }
 
-    /// Returns the B-rep referenced by this node.
+    /// Returns the solid object referenced by this node.
     #[cfg(feature = "KITTYCAD_boundary_representation")]
-    pub fn brep(&self) -> Option<BRep<'a>> {
+    pub fn solid(&self) -> Option<Solid<'a>> {
         self.json
             .extensions
             .as_ref()
             .and_then(|ext| ext.kittycad_boundary_representation.as_ref())
             .map(|ext| {
                 self.document
-                    .breps()
+                    .solids()
                     .unwrap()
-                    .nth(ext.brep.value())
+                    .nth(ext.solid.value())
                     .unwrap()
             })
     }

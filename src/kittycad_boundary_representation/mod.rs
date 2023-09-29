@@ -583,9 +583,9 @@ pub mod surface {
 pub use curve::Curve;
 pub use surface::Surface;
 
-/// Boundary representation of a solid.
+/// Solid boundary representation structure.
 #[derive(Clone, Debug)]
-pub struct BRep<'a> {
+pub struct Solid<'a> {
     /// The parent `Document` struct.
     pub(crate) document: &'a Document,
 
@@ -593,15 +593,15 @@ pub struct BRep<'a> {
     index: usize,
 
     /// The corresponding JSON struct.
-    json: &'a json::extensions::kittycad_boundary_representation::BRep,
+    json: &'a json::extensions::kittycad_boundary_representation::Solid,
 }
 
-impl<'a> BRep<'a> {
+impl<'a> Solid<'a> {
     /// Constructs a `BRep`.
     pub(crate) fn new(
         document: &'a Document,
         index: usize,
-        json: &'a json::extensions::kittycad_boundary_representation::BRep,
+        json: &'a json::extensions::kittycad_boundary_representation::Solid,
     ) -> Self {
         Self {
             document,
@@ -621,12 +621,19 @@ impl<'a> BRep<'a> {
         self.json.name.as_deref()
     }
 
-    /// Returns an `Iterator` that visits the faces of the B-rep.
-    pub fn faces(&self) -> impl Iterator<Item = Face> {
+    /// The outer boundary of the solid surface.
+    pub fn outer_shell(&self) -> Shell<'a> {
+        Shell::new(self.document, &self.json.outer_shell)
+    }
+
+    /// Returns an `Iterator` that visits the optional set of inner shells.
+    ///
+    /// Inner shells define hollow regions of otherwise wholly solid objects.
+    pub fn inner_shells(&self) -> impl Iterator<Item = Shell> {
         self.json
-            .faces
+            .inner_shells
             .iter()
-            .map(|json| Face::new(self.document, json))
+            .map(|json| Shell::new(self.document, json))
     }
 
     /// Returns the mesh approximation of this solid if defined.
@@ -634,6 +641,40 @@ impl<'a> BRep<'a> {
         self.json
             .mesh
             .map(|index| self.document.meshes().nth(index.value()).unwrap())
+    }
+}
+
+/// Closed boundary representation volume.
+#[derive(Clone, Debug)]
+pub struct Shell<'a> {
+    /// The parent `Document` struct.
+    pub(crate) document: &'a Document,
+
+    /// The corresponding JSON struct.
+    json: &'a json::extensions::kittycad_boundary_representation::Shell,
+}
+
+impl<'a> Shell<'a> {
+    /// Constructs a `Shell`.
+    pub(crate) fn new(
+        document: &'a Document,
+        json: &'a json::extensions::kittycad_boundary_representation::Shell,
+    ) -> Self {
+        Self { document, json }
+    }
+
+    /// Optional user-defined name for this object.
+    #[cfg(feature = "names")]
+    pub fn name(&self) -> Option<&'a str> {
+        self.json.name.as_deref()
+    }
+
+    /// Returns an `Iterator` that visits the faces of the shell.
+    pub fn faces(&self) -> impl Iterator<Item = Face> {
+        self.json
+            .faces
+            .iter()
+            .map(|json| Face::new(self.document, json))
     }
 }
 

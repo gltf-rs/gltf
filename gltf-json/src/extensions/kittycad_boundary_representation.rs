@@ -533,14 +533,32 @@ pub mod brep {
         pub reverse: bool,
     }
 
+    /// Boundary representation volume.
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[serde(rename_all = "camelCase")]
+    pub struct Shell {
+        /// Set of connected faces forming a closed 'watertight' volume.
+        pub faces: Vec<Face>,
+
+        /// Optional name for this shell.
+        #[cfg(feature = "names")]
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub name: Option<String>,
+    }
+
     /// Solid boundary representation structure.
     #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
-    pub struct BRep {
-        /// Array of faces forming a solid.
-        pub faces: Vec<Face>,
+    pub struct Solid {
+        /// The outer boundary of the solid surface.
+        pub outer_shell: Shell,
 
-        /// Optional name for this boundary representation.
+        /// Optional set of inner shells, defining hollow regions of
+        /// otherwise wholly solid objects.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub inner_shells: Vec<Shell>,
+
+        /// Optional name for this solid.
         #[cfg(feature = "names")]
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
@@ -551,6 +569,6 @@ pub mod brep {
     }
 }
 
-pub use brep::BRep;
+pub use brep::{Shell, Solid};
 pub use curve::Curve;
 pub use surface::Surface;
