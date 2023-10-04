@@ -196,7 +196,7 @@ pub mod surface {
     use serde_derive::{Deserialize, Serialize};
     use std::fmt;
 
-    pub const VALID_SURFACE_TYPES: &[&str] = &["cylinder", "nurbs", "plane", "torus"];
+    pub const VALID_SURFACE_TYPES: &[&str] = &["cylinder", "nurbs", "plane", "sphere", "torus"];
 
     /// Domain of surface parameters.
     #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
@@ -227,6 +227,8 @@ pub mod surface {
         Nurbs,
         /// Planar surface.
         Plane,
+        /// Spherical surface.
+        Sphere,
         /// Torus surface.
         Torus,
     }
@@ -237,6 +239,7 @@ pub mod surface {
                 Type::Cylinder => "cylinder",
                 Type::Nurbs => "nurbs",
                 Type::Plane => "plane",
+                Type::Sphere => "sphere",
                 Type::Torus => "torus",
             }
         }
@@ -263,6 +266,7 @@ pub mod surface {
                         "cylinder" => Checked::Valid(Type::Cylinder),
                         "nurbs" => Checked::Valid(Type::Nurbs),
                         "plane" => Checked::Valid(Type::Plane),
+                        "sphere" => Checked::Valid(Type::Sphere),
                         "torus" => Checked::Valid(Type::Torus),
                         _ => Checked::Invalid,
                     })
@@ -352,6 +356,25 @@ pub mod surface {
         pub point: Option<[f64; 3]>,
     }
 
+    /// Parametric spherical surface definition.
+    ///
+    /// σ(u, v) := O + Rcos(v)(cos(u)x + sin(u)y) + Rsin(v)z, where:
+    /// * O = `self.horizon.origin`,
+    /// * R = `self.horizon.radius`,
+    /// * x = `self.horizon.xbasis`,
+    /// * y = `self.horizon.normal` × `self.horizon.xbasis`,
+    /// * z = `self.horizon.normal`,
+    /// * u ∈ {0, 2π},
+    /// * v ∈ {0, 2π}.
+    ///
+    /// Spheres are defined in reference to a circle at zero inclination.
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[serde(rename_all = "camelCase")]
+    pub struct Sphere {
+        /// The circle at zero inclination.
+        pub horizon: super::curve::Circle,
+    }
+
     /// Toroidal surface definition.
     ///
     /// σ(u, v) := O + (R + rcos(v))(cos(u)x + sin(u)y) + rsin(v)z, where:
@@ -400,6 +423,9 @@ pub mod surface {
         /// Arguments for a planar surface.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub plane: Option<Plane>,
+        /// Arguments for a spherical surface.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub sphere: Option<Sphere>,
         /// Arguments for a toroidal surface.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub torus: Option<Torus>,

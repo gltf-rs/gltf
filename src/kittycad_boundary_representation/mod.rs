@@ -367,11 +367,11 @@ pub mod surface {
     /// Parametric cylindrical surface definition.
     ///
     /// σ(u, v) := O + R(cos(u)x + sin(u)y) + vz, where:
-    /// * O = `self.origin()`,
-    /// * R = `self.radius()`,
-    /// * x = `self.xbasis()`,
-    /// * y = `self.ybasis()`,
-    /// * z = `self.zbasis()`.
+    /// * O = `self.circle().origin()`,
+    /// * R = `self.circle().radius()`,
+    /// * x = `self.circle().xbasis()`,
+    /// * y = `self.circle().ybasis()`,
+    /// * z = `self.circle().zbasis()`.
     ///
     /// In the field documentation, the 'base circle' is
     /// defined as the cycle defined at σ(u, 0).
@@ -425,15 +425,43 @@ pub mod surface {
         }
     }
 
+    /// Parametric spherical surface definition.
+    ///
+    /// σ(u, v) := O + Rcos(v)(cos(u)x + sin(u)y) + Rsin(v)z, where:
+    /// * O = `self.horizon().origin()`,
+    /// * R = `self.horizon().radius()`,
+    /// * x = `self.horizon().xbasis()`,
+    /// * y = `self.horizon().normal()` × `self.horizon().xbasis()`,
+    /// * z = `self.horizon().normal()`,
+    /// * u ∈ {0, 2π},
+    /// * v ∈ {0, 2π}.
+    ///
+    /// Spheres are defined in reference to a circle at zero inclination.
+    #[derive(Clone, Debug)]
+    pub struct Sphere<'a> {
+        /// The corresponding JSON struct.
+        pub(crate) json: &'a json::extensions::kittycad_boundary_representation::surface::Sphere,
+    }
+
+    impl<'a> Sphere<'a> {
+        /// The circle at zero inclination.
+        pub fn horizon(&self) -> super::curve::Circle<'a> {
+            super::curve::Circle {
+                json: &self.json.horizon,
+                domain: None,
+            }
+        }
+    }
+
     /// Toroidal surface definition.
     ///
     /// σ(u, v) := O + (R + rcos(v))(cos(u)x + sin(u)y) + rsin(v)z, where:
-    /// * O = `self.origin`,
-    /// * R = `self.major_radius`,
-    /// * r = `self.minor_radius`,
-    /// * x = `self.xbasis`,
-    /// * y = `self.ybasis`,
-    /// * z = `self.zbasis`.
+    /// * O = `self.origin()`,
+    /// * R = `self.circle().major_radius()`,
+    /// * r = `self.circle().minor_radius()`,
+    /// * x = `self.circle().xbasis()`,
+    /// * y = `self.circle().ybasis()`,
+    /// * z = `self.circle().zbasis()`.
     #[derive(Clone, Debug)]
     pub struct Torus<'a> {
         /// The corresponding JSON struct.
@@ -506,6 +534,8 @@ pub mod surface {
         Nurbs(Nurbs<'a>),
         /// Planar surface.
         Plane(Plane<'a>),
+        /// Spherical surface.
+        Sphere(Sphere<'a>),
         /// Toroidal surface.
         Torus(Torus<'a>),
     }
@@ -563,6 +593,10 @@ pub mod surface {
                 json::extensions::kittycad_boundary_representation::surface::Type::Plane => {
                     let json = self.json.plane.as_ref().unwrap();
                     Geometry::Plane(Plane { json })
+                }
+                json::extensions::kittycad_boundary_representation::surface::Type::Sphere => {
+                    let json = self.json.sphere.as_ref().unwrap();
+                    Geometry::Sphere(Sphere { json })
                 }
                 json::extensions::kittycad_boundary_representation::surface::Type::Torus => {
                     let json = self.json.torus.as_ref().unwrap();
