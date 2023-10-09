@@ -10,6 +10,7 @@ rust-version = "1.61"
 
 [dependencies]
 gltf-derive = { path = "../gltf-derive", version = "1.2.0" }
+schemars = "0.8.15"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = { features = ["raw_value"], version = "1.0" }

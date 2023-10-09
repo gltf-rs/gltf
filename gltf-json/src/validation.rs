@@ -1,3 +1,4 @@
+use schemars::{gen::SchemaGenerator, schema::Schema, JsonSchema};
 use serde::{ser, Serialize, Serializer};
 use std::collections::BTreeMap;
 use std::hash::Hash;
@@ -58,6 +59,16 @@ impl<T> Checked<T> {
             Checked::Valid(item) => item,
             Checked::Invalid => panic!("attempted to unwrap an invalid item"),
         }
+    }
+}
+
+impl<T: JsonSchema> JsonSchema for Checked<T> {
+    fn schema_name() -> String {
+        T::schema_name()
+    }
+
+    fn json_schema(generator: &mut SchemaGenerator) -> Schema {
+        T::json_schema(generator)
     }
 }
 

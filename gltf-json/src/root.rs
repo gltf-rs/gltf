@@ -3,6 +3,7 @@ use crate::extensions;
 use crate::texture;
 use crate::validation;
 use gltf_derive::Validate;
+use schemars::{gen::SchemaGenerator, schema::Schema, JsonSchema};
 use serde_derive::{Deserialize, Serialize};
 use std::{self, fmt, io, marker};
 
@@ -21,6 +22,16 @@ pub trait Get<T> {
 
 /// Represents an offset into an array of type `T` owned by the root glTF object.
 pub struct Index<T>(u32, marker::PhantomData<fn() -> T>);
+
+impl<T> JsonSchema for Index<T> {
+    fn schema_name() -> String {
+        "index".to_owned()
+    }
+
+    fn json_schema(generator: &mut SchemaGenerator) -> Schema {
+        u32::json_schema(generator)
+    }
+}
 
 /// The root object of a glTF 2.0 asset.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]

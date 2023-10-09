@@ -3,6 +3,9 @@
 use crate::validation::{Error, Validate};
 use crate::{Index, Path, Root};
 use gltf_derive::Validate;
+use schemars::gen::SchemaGenerator;
+use schemars::schema::Schema;
+use schemars::JsonSchema;
 use serde::{de, ser};
 use serde_derive::{Deserialize, Serialize};
 
@@ -11,6 +14,7 @@ pub mod curve {
     use crate::validation::{Checked, Error, Validate};
     use crate::{Path, Root};
     use gltf_derive::Validate;
+    use schemars::JsonSchema;
     use serde::{de, ser};
     use serde_derive::{Deserialize, Serialize};
     use std::fmt;
@@ -18,7 +22,7 @@ pub mod curve {
     pub const VALID_CURVE_TYPES: &[&str] = &["circle", "linear", "nurbs"];
 
     /// Discriminant for `Curve` data.
-    #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+    #[derive(Clone, Copy, Debug, Deserialize, JsonSchema, Eq, PartialEq)]
     pub enum Type {
         /// Circular curve.
         Circle = 1,
@@ -86,7 +90,7 @@ pub mod curve {
     /// * u ∈ {0, 2π}.
     ///
     /// The `xbasis` and `normal` vectors form an orthonormal set.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Circle {
         /// Position at the center of the circle.
@@ -110,7 +114,7 @@ pub mod curve {
     /// Line curve definition.
     ///
     /// Either end or direction must be set.
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Line {
         /// Origin position.
@@ -136,7 +140,7 @@ pub mod curve {
     }
 
     /// NURBS curve definition.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Nurbs {
         /// Array of control vertices.
@@ -148,7 +152,7 @@ pub mod curve {
     }
 
     /// Curve parameter domain.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Domain {
         /// Minimum domain value.
@@ -165,7 +169,7 @@ pub mod curve {
     }
 
     /// Abstract curve data.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Curve {
         /// Discriminant.
@@ -200,6 +204,7 @@ pub mod surface {
     use crate::validation::{Checked, Error, Validate};
     use crate::{Path, Root};
     use gltf_derive::Validate;
+    use schemars::JsonSchema;
     use serde::{de, ser};
     use serde_derive::{Deserialize, Serialize};
     use std::fmt;
@@ -207,7 +212,7 @@ pub mod surface {
     pub const VALID_SURFACE_TYPES: &[&str] = &["cylinder", "nurbs", "plane", "sphere", "torus"];
 
     /// Domain of surface parameters.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Domain {
         /// Minimum domain values.
@@ -227,7 +232,7 @@ pub mod surface {
     }
 
     /// Discriminant for `Surface` data.
-    #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+    #[derive(Clone, Copy, Debug, Deserialize, JsonSchema, Eq, PartialEq)]
     pub enum Type {
         /// Cylindrical surface.
         Cylinder = 1,
@@ -307,7 +312,7 @@ pub mod surface {
     ///
     /// Cylinders are defined in reference to a circle that is extruded
     /// along the circle normal vector.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Cylinder {
         /// The extruded circle.
@@ -317,7 +322,7 @@ pub mod surface {
     }
 
     /// NURBS surface definition.
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Nurbs {
         /// Matrix of control point vertices.
@@ -351,7 +356,7 @@ pub mod surface {
     }
 
     /// Plane surface definition.
-    #[derive(Clone, Debug, Deserialize, Serialize, gltf_derive::Validate)]
+    #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, gltf_derive::Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Plane {
         /// Normal vector to the plane.
@@ -376,7 +381,7 @@ pub mod surface {
     /// * v ∈ {0, 2π}.
     ///
     /// Spheres are defined in reference to a circle at zero inclination.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Sphere {
         /// The circle at zero inclination.
@@ -398,7 +403,7 @@ pub mod surface {
     /// an origin at a specified distance. This distance is called the
     /// major radius. The radius of the circle of revolution is called the
     /// minor radius.
-    #[derive(Clone, Debug, Deserialize, Serialize, gltf_derive::Validate)]
+    #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, gltf_derive::Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Torus {
         /// The center of the torus.
@@ -412,7 +417,7 @@ pub mod surface {
     }
 
     /// Abstract surface data.
-    #[derive(Clone, Debug, Deserialize, Serialize, gltf_derive::Validate)]
+    #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, gltf_derive::Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Surface {
         /// Discriminant.
@@ -444,7 +449,7 @@ pub mod surface {
 }
 
 /// Pair of vertices on a face plus an optional trim domain.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct Edge {
     /// The edge curve geometry in 3D (or homogeneous 4D) space.
@@ -468,7 +473,7 @@ pub struct Edge {
 }
 
 /// Junctions of edges in 3D space.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Vertex(pub [f64; 3]);
 
@@ -516,6 +521,16 @@ pub struct IndexWithOrientation<T: Validate> {
 
     /// Selected orientation of the indexed item.
     pub orientation: Orientation,
+}
+
+impl<T: Validate> JsonSchema for IndexWithOrientation<T> {
+    fn schema_name() -> String {
+        "IndexWithOrientation".to_owned()
+    }
+
+    fn json_schema(generator: &mut SchemaGenerator) -> Schema {
+        f64::json_schema(generator)
+    }
 }
 
 impl<T: Validate> IndexWithOrientation<T> {
@@ -588,7 +603,7 @@ where
 }
 
 /// Edge loop.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct Loop {
     /// Oriented edges forming the loop.
@@ -600,7 +615,7 @@ pub struct Loop {
 }
 
 /// Set of loops defined on an abstract surface.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct Face {
     /// Surface the face edges and vertices reside on.
@@ -615,7 +630,7 @@ pub struct Face {
 }
 
 /// Boundary representation volume.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct Shell {
     /// Set of connected faces forming a closed 'watertight' volume.
@@ -628,7 +643,7 @@ pub struct Shell {
 }
 
 /// Solid boundary representation structure.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct Solid {
     /// The outer boundary of the solid surface.
