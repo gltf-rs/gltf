@@ -175,7 +175,9 @@ pub use self::import::import_images;
 pub use self::import::import_slice;
 #[cfg(feature = "KITTYCAD_boundary_representation")]
 #[doc(inline)]
-pub use self::kittycad_boundary_representation::{Curve, Edge, EdgeVertex, Shell, Solid, Surface};
+pub use self::kittycad_boundary_representation::{
+    Curve, Edge, Face, Loop, Shell, Solid, Surface, Vertex,
+};
 #[doc(inline)]
 pub use self::material::Material;
 #[doc(inline)]
@@ -275,6 +277,30 @@ pub struct Gltf {
 /// glTF JSON wrapper.
 #[derive(Clone, Debug)]
 pub struct Document(json::Root);
+
+macro_rules! impl_fn_for_kcad {
+    ($ty:ty, $field:ident) => {
+        #[cfg(feature = "KITTYCAD_boundary_representation")]
+        #[doc = std::concat!(
+                    "Returns an iterator that visits the ",
+                    std::stringify!($field),
+                    " of the glTF asset.",
+                )]
+        pub fn $field(&self) -> Option<impl ExactSizeIterator<Item = $ty>> {
+            Some(
+                self.0
+                    .extensions
+                    .as_ref()?
+                    .kittycad_boundary_representation
+                    .as_ref()?
+                    .$field
+                    .iter()
+                    .enumerate()
+                    .map(|(index, json)| <$ty>::new(self, index, json)),
+            )
+        }
+    };
+}
 
 impl Gltf {
     /// Convenience function that loads glTF from the file system.
@@ -415,36 +441,6 @@ impl Document {
         }
     }
 
-    /// Returns an `Iterator` that visits the solid boundary representations of the glTF asset.
-    #[cfg(feature = "KITTYCAD_boundary_representation")]
-    pub fn solids(&self) -> Option<impl Iterator<Item = Solid>> {
-        let iter = self
-            .0
-            .extensions
-            .as_ref()?
-            .kittycad_boundary_representation
-            .as_ref()?
-            .solids
-            .iter()
-            .enumerate();
-        Some(iter.map(|(index, json)| Solid::new(self, index, json)))
-    }
-
-    /// Returns an `Iterator` that visits the B-rep curves of the glTF asset.
-    #[cfg(feature = "KITTYCAD_boundary_representation")]
-    pub fn curves(&self) -> Option<iter::Curves> {
-        let iter = self
-            .0
-            .extensions
-            .as_ref()?
-            .kittycad_boundary_representation
-            .as_ref()?
-            .curves
-            .iter()
-            .enumerate();
-        Some(iter::Curves { iter })
-    }
-
     /// Returns an `Iterator` that visits the cameras of the glTF asset.
     pub fn cameras(&self) -> iter::Cameras {
         iter::Cameras {
@@ -459,38 +455,6 @@ impl Document {
             .scene
             .as_ref()
             .map(|index| self.scenes().nth(index.value()).unwrap())
-    }
-
-    /// Returns an `Iterator` that visits the B-rep edges of the glTF asset.
-    #[cfg(feature = "KITTYCAD_boundary_representation")]
-    pub fn edges(&self) -> Option<impl Iterator<Item = Edge>> {
-        Some(
-            self.0
-                .extensions
-                .as_ref()?
-                .kittycad_boundary_representation
-                .as_ref()?
-                .edges
-                .iter()
-                .enumerate()
-                .map(|(index, json)| Edge::new(self, index, json)),
-        )
-    }
-
-    /// Returns an `Iterator` that visits the B-rep edge vertices of the glTF asset.
-    #[cfg(feature = "KITTYCAD_boundary_representation")]
-    pub fn edge_vertices(&self) -> Option<impl Iterator<Item = EdgeVertex>> {
-        Some(
-            self.0
-                .extensions
-                .as_ref()?
-                .kittycad_boundary_representation
-                .as_ref()?
-                .edge_vertices
-                .iter()
-                .enumerate()
-                .map(|(index, json)| EdgeVertex::new(self, index, json)),
-        )
     }
 
     /// Returns the extensions referenced in this .document file.
@@ -601,24 +565,6 @@ impl Document {
         }
     }
 
-    /// Returns an `Iterator` that visits the surfaces of the glTF asset.
-    #[cfg(feature = "KITTYCAD_boundary_representation")]
-    pub fn surfaces(&self) -> Option<iter::Surfaces> {
-        let iter = self
-            .0
-            .extensions
-            .as_ref()?
-            .kittycad_boundary_representation
-            .as_ref()?
-            .surfaces
-            .iter()
-            .enumerate();
-        Some(iter::Surfaces {
-            iter,
-            document: self,
-        })
-    }
-
     /// Returns an `Iterator` that visits the textures of the glTF asset.
     pub fn textures(&self) -> iter::Textures {
         iter::Textures {
@@ -635,6 +581,15 @@ impl Document {
             document: self,
         }
     }
+
+    impl_fn_for_kcad!(Solid, solids);
+    impl_fn_for_kcad!(Shell, shells);
+    impl_fn_for_kcad!(Face, faces);
+    impl_fn_for_kcad!(Loop, loops);
+    impl_fn_for_kcad!(Edge, edges);
+    impl_fn_for_kcad!(Vertex, vertices);
+    impl_fn_for_kcad!(Surface, surfaces);
+    impl_fn_for_kcad!(Curve, curves);
 }
 
 impl std::fmt::Display for Error {

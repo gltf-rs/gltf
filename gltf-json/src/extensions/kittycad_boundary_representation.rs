@@ -1,3 +1,11 @@
+//! Boundary representations of solid objects
+
+use crate::validation::{Error, Validate};
+use crate::{Index, Path, Root};
+use gltf_derive::Validate;
+use serde::{de, ser};
+use serde_derive::{Deserialize, Serialize};
+
 /// 2D and 3D curve definitions.
 pub mod curve {
     use crate::validation::{Checked, Error, Validate};
@@ -435,166 +443,211 @@ pub mod surface {
     }
 }
 
-/// Solid boundary representations.
-pub mod brep {
-    use crate::validation::{Error, Validate};
-    use crate::{Index, Path, Root};
-    use gltf_derive::Validate;
-    use serde_derive::{Deserialize, Serialize};
+/// Pair of vertices on a face plus an optional trim domain.
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct Edge {
+    /// The edge curve geometry in 3D (or homogeneous 4D) space.
+    pub curve: IndexWithOrientation<Curve>,
 
-    /// Used to prevent serializing false boolean values.
-    fn is_false(condition: &bool) -> bool {
-        !*condition
-    }
+    /// Edge start vertex.
+    pub start: Option<Index<Vertex>>,
 
-    /// Parameter curve in 2D space.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
-    #[serde(rename_all = "camelCase")]
-    pub struct Trim {
-        /* TODO:
-        /// The trim curve geometry in 2D (or homogeneous 3D) space.
-        pub curve: Index<super::Curve>,
+    /// Edge end vertex.
+    pub end: Option<Index<Vertex>>,
 
-        /// Trim start vertex.
-        pub start: Index<Vertex>,
+    /// Marker for a closed edge.
+    pub closed: bool,
 
-        /// Trim end vertex.
-        pub end: Index<Vertex>,
-         */
-        /// Specifies whether the trim curve geometry is in the opposite
-        /// direction with respect to the edge curve geometry.
-        pub reverse: bool,
+    /// Optional domain to select a subset of the edge curve geometry.
+    ///
+    /// When `None`, the domain is the same as the edge curve geometry
+    /// domain.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subdomain: Option<curve::Domain>,
+}
 
-        /// The corresponding edge in 3D space this trim is paired with.
-        pub edge: Index<Edge>,
-    }
+/// Junctions of edges in 3D space.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Vertex(pub [f64; 3]);
 
-    /// Pair of vertices on a face plus an optional trim domain.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
-    #[serde(rename_all = "camelCase")]
-    pub struct Edge {
-        /// The edge curve geometry in 3D (or homogeneous 4D) space.
-        pub curve: Index<super::Curve>,
-
-        /// Edge start vertex.
-        pub start: Option<Index<EdgeVertex>>,
-
-        /// Edge end vertex.
-        pub end: Option<Index<EdgeVertex>>,
-
-        /// Marker for a closed edge.
-        pub closed: bool,
-
-        /// Specifies whether the orientation of the edge is reversed
-        /// with respect to its associated curve.
-        #[serde(default, skip_serializing_if = "is_false")]
-        pub reverse: bool,
-
-        /// Optional domain to select a subset of the edge curve geometry.
-        ///
-        /// When `None`, the domain is the same as the edge curve geometry
-        /// domain.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub subdomain: Option<super::curve::Domain>,
-    }
-
-    /// Point in 2D space.
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct TrimVertex(pub [f64; 2]);
-
-    impl Validate for TrimVertex {
-        fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where
-            P: Fn() -> Path,
-            R: FnMut(&dyn Fn() -> Path, Error),
-        {
-        }
-    }
-
-    /// Point in 3D space.
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct EdgeVertex(pub [f64; 3]);
-
-    impl Validate for EdgeVertex {
-        fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
-        where
-            P: Fn() -> Path,
-            R: FnMut(&dyn Fn() -> Path, Error),
-        {
-        }
-    }
-
-    /// Set of trim curves on a surface.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
-    #[serde(rename_all = "camelCase")]
-    pub struct Loop {
-        /// The trim curves forming the loop.
-        pub trims: Vec<Trim>,
-
-        /// Specifies whether the winding order of the loop should be
-        /// interpreted in reverse order with respect to the face.
-        #[serde(default, skip_serializing_if = "is_false")]
-        pub reverse: bool,
-    }
-
-    /// Set of loops defined on an abstract surface.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
-    #[serde(rename_all = "camelCase")]
-    pub struct Face {
-        /// Surface the face edges and vertices reside on.
-        pub surface: Index<super::Surface>,
-
-        /// Face outer bound.
-        pub outer_loop: Loop,
-
-        /// Face inner bounds.
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub inner_loops: Vec<Loop>,
-
-        /// Specifies whether the orientation of the face is in
-        /// reverse order with respect to its surface.
-        #[serde(default, skip_serializing_if = "is_false")]
-        pub reverse: bool,
-    }
-
-    /// Boundary representation volume.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
-    #[serde(rename_all = "camelCase")]
-    pub struct Shell {
-        /// Set of connected faces forming a closed 'watertight' volume.
-        pub faces: Vec<Face>,
-
-        /// Optional name for this shell.
-        #[cfg(feature = "names")]
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub name: Option<String>,
-    }
-
-    /// Solid boundary representation structure.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
-    #[serde(rename_all = "camelCase")]
-    pub struct Solid {
-        /// The outer boundary of the solid surface.
-        pub outer_shell: Shell,
-
-        /// Optional set of inner shells, defining hollow regions of
-        /// otherwise wholly solid objects.
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub inner_shells: Vec<Shell>,
-
-        /// Optional name for this solid.
-        #[cfg(feature = "names")]
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub name: Option<String>,
-
-        /// Optional mesh approximation of this solid.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub mesh: Option<Index<crate::Mesh>>,
+impl Validate for Vertex {
+    fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
+    {
     }
 }
 
-pub use brep::{Shell, Solid};
+/// Selected orientation of an orientable item.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Orientation {
+    /// Same-sense orientation.
+    Same = 1,
+
+    /// Reverse-sense orientation.
+    Reverse = -1,
+}
+
+impl Orientation {
+    /// Query whether the orientation is in the same-sense state.
+    pub fn is_same(self) -> bool {
+        matches!(self, Orientation::Same)
+    }
+
+    /// Query whether the orientation is in the reverse-sense state.
+    pub fn is_reverse(self) -> bool {
+        matches!(self, Orientation::Reverse)
+    }
+}
+
+/// Index for orientable items.
+///
+/// This extension takes advantage of the sign bit in all floating point numbers,
+/// including positive and negative zero, to represent objects in their reverse
+/// orientation. Positive indicates 'same-sense' orientation and negative indicates
+/// 'reverse-sense' orientation.
+#[derive(Clone, Copy, Debug)]
+pub struct IndexWithOrientation<T: Validate> {
+    /// Index absolute value.
+    pub index: Index<T>,
+
+    /// Selected orientation of the indexed item.
+    pub orientation: Orientation,
+}
+
+impl<T: Validate> IndexWithOrientation<T> {
+    /// Explicit constructor.
+    pub fn new(index: Index<T>, orientation: Orientation) -> Self {
+        Self { index, orientation }
+    }
+
+    /// Create an index with same-sense orientation.
+    pub fn same(index: Index<T>) -> Self {
+        Self::new(index, Orientation::Same)
+    }
+
+    /// Create an index with reverse-sense orientation.
+    pub fn reverse(index: Index<T>) -> Self {
+        Self::new(index, Orientation::Reverse)
+    }
+
+    /// Query whether the index has same-sense orientation.
+    pub fn is_same(&self) -> bool {
+        self.orientation.is_same()
+    }
+
+    /// Query whether the index has reverse-sense orientation.
+    pub fn is_reverse(&self) -> bool {
+        self.orientation.is_reverse()
+    }
+}
+
+impl<'de, T: Validate> de::Deserialize<'de> for IndexWithOrientation<T> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: de::Deserializer<'de>,
+    {
+        let value = f64::deserialize(deserializer)?;
+        Ok(Self {
+            index: Index::new(value.abs() as u32),
+            orientation: if value.is_sign_negative() {
+                Orientation::Reverse
+            } else {
+                Orientation::Same
+            },
+        })
+    }
+}
+
+impl<T: Validate> ser::Serialize for IndexWithOrientation<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: ser::Serializer,
+    {
+        match self.orientation {
+            Orientation::Reverse => (-(self.index.value() as f64)).serialize(serializer),
+            Orientation::Same => (self.index.value() as f64).serialize(serializer),
+        }
+    }
+}
+
+impl<T: Validate> Validate for IndexWithOrientation<T>
+where
+    crate::Root: crate::root::Get<T>,
+{
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
+    {
+        self.index.validate(root, path, report);
+    }
+}
+
+/// Edge loop.
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct Loop {
+    /// Oriented edges forming the loop.
+    pub edges: Vec<IndexWithOrientation<Edge>>,
+
+    /// Optional 1:1 pairing of UV curves to edges.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub uv_curves: Vec<IndexWithOrientation<Curve>>,
+}
+
+/// Set of loops defined on an abstract surface.
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct Face {
+    /// Surface the face edges and vertices reside on.
+    pub surface: IndexWithOrientation<Surface>,
+
+    /// Face outer bound.
+    pub outer_loop: IndexWithOrientation<Loop>,
+
+    /// Face inner bounds.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub inner_loops: Vec<IndexWithOrientation<Loop>>,
+}
+
+/// Boundary representation volume.
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct Shell {
+    /// Set of connected faces forming a closed 'watertight' volume.
+    pub faces: Vec<IndexWithOrientation<Face>>,
+
+    /// Optional name for this shell.
+    #[cfg(feature = "names")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
+
+/// Solid boundary representation structure.
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct Solid {
+    /// The outer boundary of the solid surface.
+    pub outer_shell: IndexWithOrientation<Shell>,
+
+    /// Optional set of inner shells, defining hollow regions of
+    /// otherwise wholly solid objects.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub inner_shells: Vec<IndexWithOrientation<Shell>>,
+
+    /// Optional name for this solid.
+    #[cfg(feature = "names")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+
+    /// Optional mesh approximation of this solid.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mesh: Option<Index<crate::Mesh>>,
+}
+
 pub use curve::Curve;
 pub use surface::Surface;

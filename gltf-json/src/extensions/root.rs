@@ -1,6 +1,8 @@
 use gltf_derive::Validate;
 use serde_derive::{Deserialize, Serialize};
 
+use crate::extensions::kittycad_boundary_representation as kcad;
+
 /// The root object of a glTF 2.0 asset.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct Root {
@@ -80,94 +82,58 @@ impl crate::root::Get<crate::extensions::scene::khr_materials_variants::Variant>
 #[serde(rename_all = "camelCase")]
 pub struct KittyCadBoundaryRepresentation {
     /// Solid boundary representation instances.
-    pub solids: Vec<crate::extensions::kittycad_boundary_representation::Solid>,
-    /// Abstract curve definitions.
-    pub curves: Vec<crate::extensions::kittycad_boundary_representation::Curve>,
-    /// Abstract surface definitions.
-    pub surfaces: Vec<crate::extensions::kittycad_boundary_representation::Surface>,
-    /// Boundary representation edges.
-    pub edges: Vec<crate::extensions::kittycad_boundary_representation::brep::Edge>,
+    pub solids: Vec<kcad::Solid>,
+
+    /// Shell definitions.
+    pub shells: Vec<kcad::Shell>,
+
+    /// Face definitions.
+    pub faces: Vec<kcad::Face>,
+
+    /// Loop definitions.
+    pub loops: Vec<kcad::Loop>,
+
+    /// Edge definitions.
+    pub edges: Vec<kcad::Edge>,
+
     /// Vertices in 3D space joining edges.
-    pub edge_vertices: Vec<crate::extensions::kittycad_boundary_representation::brep::EdgeVertex>,
+    pub vertices: Vec<kcad::Vertex>,
+
+    /// Surface definitions.
+    pub surfaces: Vec<kcad::Surface>,
+
+    /// Curve definitions.
+    pub curves: Vec<kcad::Curve>,
 }
 
-#[cfg(feature = "KITTYCAD_boundary_representation")]
-impl crate::root::Get<crate::extensions::kittycad_boundary_representation::Solid> for crate::Root {
-    fn get(
-        &self,
-        id: crate::Index<crate::extensions::kittycad_boundary_representation::Solid>,
-    ) -> Option<&crate::extensions::kittycad_boundary_representation::Solid> {
-        self.extensions
-            .as_ref()?
-            .kittycad_boundary_representation
-            .as_ref()?
-            .solids
-            .get(id.value())
-    }
+macro_rules! impl_get_for_kcad {
+    ($ty:ty, $field:ident) => {
+        #[cfg(feature = "KITTYCAD_boundary_representation")]
+        impl crate::root::Get<$ty> for crate::Root {
+            fn get(&self, index: crate::Index<$ty>) -> Option<&$ty> {
+                self.extensions
+                    .as_ref()?
+                    .kittycad_boundary_representation
+                    .as_ref()?
+                    .$field
+                    .get(index.value())
+            }
+        }
+
+        #[cfg(feature = "KITTYCAD_boundary_representation")]
+        impl crate::root::Get<$ty> for KittyCadBoundaryRepresentation {
+            fn get(&self, index: crate::Index<$ty>) -> Option<&$ty> {
+                self.$field.get(index.value())
+            }
+        }
+    };
 }
 
-#[cfg(feature = "KITTYCAD_boundary_representation")]
-impl crate::root::Get<crate::extensions::kittycad_boundary_representation::Curve> for crate::Root {
-    fn get(
-        &self,
-        id: crate::Index<crate::extensions::kittycad_boundary_representation::Curve>,
-    ) -> Option<&crate::extensions::kittycad_boundary_representation::Curve> {
-        self.extensions
-            .as_ref()?
-            .kittycad_boundary_representation
-            .as_ref()?
-            .curves
-            .get(id.value())
-    }
-}
-
-#[cfg(feature = "KITTYCAD_boundary_representation")]
-impl crate::root::Get<crate::extensions::kittycad_boundary_representation::Surface>
-    for crate::Root
-{
-    fn get(
-        &self,
-        id: crate::Index<crate::extensions::kittycad_boundary_representation::Surface>,
-    ) -> Option<&crate::extensions::kittycad_boundary_representation::Surface> {
-        self.extensions
-            .as_ref()?
-            .kittycad_boundary_representation
-            .as_ref()?
-            .surfaces
-            .get(id.value())
-    }
-}
-
-#[cfg(feature = "KITTYCAD_boundary_representation")]
-impl crate::root::Get<crate::extensions::kittycad_boundary_representation::brep::Edge>
-    for crate::Root
-{
-    fn get(
-        &self,
-        id: crate::Index<crate::extensions::kittycad_boundary_representation::brep::Edge>,
-    ) -> Option<&crate::extensions::kittycad_boundary_representation::brep::Edge> {
-        self.extensions
-            .as_ref()?
-            .kittycad_boundary_representation
-            .as_ref()?
-            .edges
-            .get(id.value())
-    }
-}
-
-#[cfg(feature = "KITTYCAD_boundary_representation")]
-impl crate::root::Get<crate::extensions::kittycad_boundary_representation::brep::EdgeVertex>
-    for crate::Root
-{
-    fn get(
-        &self,
-        id: crate::Index<crate::extensions::kittycad_boundary_representation::brep::EdgeVertex>,
-    ) -> Option<&crate::extensions::kittycad_boundary_representation::brep::EdgeVertex> {
-        self.extensions
-            .as_ref()?
-            .kittycad_boundary_representation
-            .as_ref()?
-            .edge_vertices
-            .get(id.value())
-    }
-}
+impl_get_for_kcad!(kcad::Solid, solids);
+impl_get_for_kcad!(kcad::Shell, shells);
+impl_get_for_kcad!(kcad::Face, faces);
+impl_get_for_kcad!(kcad::Loop, loops);
+impl_get_for_kcad!(kcad::Edge, edges);
+impl_get_for_kcad!(kcad::Vertex, vertices);
+impl_get_for_kcad!(kcad::Surface, surfaces);
+impl_get_for_kcad!(kcad::Curve, curves);

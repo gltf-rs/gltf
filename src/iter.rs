@@ -5,8 +5,6 @@ use crate::animation::Animation;
 use crate::buffer::{Buffer, View};
 use crate::camera::Camera;
 use crate::image::Image;
-#[cfg(feature = "KITTYCAD_boundary_representation")]
-use crate::kittycad_boundary_representation::Curve;
 use crate::material::Material;
 use crate::mesh::Mesh;
 use crate::scene::{Node, Scene};
@@ -70,15 +68,6 @@ pub struct Cameras<'a> {
 
     /// The internal root glTF object.
     pub(crate) document: &'a Document,
-}
-
-/// An `Iterator` that visits every curve in a glTF asset.
-#[cfg(feature = "KITTYCAD_boundary_representation")]
-#[derive(Clone, Debug)]
-pub struct Curves<'a> {
-    /// Internal buffer iterator.
-    pub(crate) iter:
-        iter::Enumerate<slice::Iter<'a, json::extensions::kittycad_boundary_representation::Curve>>,
 }
 
 /// An `Iterator` that visits every pre-loaded image in a glTF asset.
@@ -276,32 +265,6 @@ impl<'a> Iterator for Buffers<'a> {
         self.iter
             .nth(n)
             .map(|(index, json)| Buffer::new(self.document, index, json))
-    }
-}
-
-impl<'a> ExactSizeIterator for Curves<'a> {}
-impl<'a> Iterator for Curves<'a> {
-    type Item = Curve<'a>;
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter
-            .next()
-            .map(|(index, json)| Curve::new(index, json))
-    }
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.iter.size_hint()
-    }
-    fn count(self) -> usize {
-        self.iter.count()
-    }
-    fn last(self) -> Option<Self::Item> {
-        self.iter
-            .last()
-            .map(|(index, json)| Curve::new(index, json))
-    }
-    fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        self.iter
-            .nth(n)
-            .map(|(index, json)| Curve::new(index, json))
     }
 }
 

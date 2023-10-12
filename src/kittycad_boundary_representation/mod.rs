@@ -1,12 +1,23 @@
-use crate::{json, Document, Mesh};
+use crate::{Document, Mesh};
+use json::extensions::kittycad_boundary_representation as kcad;
+
+#[doc(inline)]
+pub use kcad::Orientation;
+
+#[doc(inline)]
+pub use curve::Curve;
+
+#[doc(inline)]
+pub use surface::Surface;
 
 /// Curves.
 pub mod curve {
-    use crate::json;
+    use crate::Document;
     use euler::DVec3;
+    use json::extensions::kittycad_boundary_representation as kcad;
 
     #[doc(inline)]
-    pub use json::extensions::kittycad_boundary_representation::curve::Domain;
+    pub use kcad::curve::Domain;
 
     /// Circular curve definition.
     ///
@@ -21,7 +32,7 @@ pub mod curve {
     #[derive(Clone, Debug)]
     pub struct Circle<'a> {
         /// The corresponding JSON struct.
-        pub(crate) json: &'a json::extensions::kittycad_boundary_representation::curve::Circle,
+        pub(crate) json: &'a kcad::curve::Circle,
 
         /// The curve domain.
         pub(crate) domain: Option<Domain>,
@@ -89,7 +100,7 @@ pub mod curve {
     #[derive(Clone, Debug)]
     pub struct Line<'a> {
         /// The corresponding JSON struct.
-        pub(crate) json: &'a json::extensions::kittycad_boundary_representation::curve::Line,
+        pub(crate) json: &'a kcad::curve::Line,
 
         /// The curve domain.
         pub(crate) domain: Domain,
@@ -143,7 +154,7 @@ pub mod curve {
     pub struct Nurbs<'a> {
         /// The corresponding JSON struct.
         #[allow(dead_code)]
-        pub(crate) json: &'a json::extensions::kittycad_boundary_representation::curve::Nurbs,
+        pub(crate) json: &'a kcad::curve::Nurbs,
     }
 
     struct BasisFunction<'a> {
@@ -280,23 +291,28 @@ pub mod curve {
         Nurbs(Nurbs<'a>),
     }
 
-    /// Abstract curve..
+    /// Abstract curve.
     #[derive(Clone, Debug)]
     pub struct Curve<'a> {
+        /// The parent `Document` struct.
+        #[allow(dead_code)]
+        document: &'a Document,
+
         /// The corresponding JSON index.
         index: usize,
 
         /// The corresponding JSON struct.
-        json: &'a json::extensions::kittycad_boundary_representation::Curve,
+        json: &'a kcad::Curve,
     }
 
     impl<'a> Curve<'a> {
         /// Constructs a `Curve`.
-        pub fn new(
-            index: usize,
-            json: &'a json::extensions::kittycad_boundary_representation::Curve,
-        ) -> Self {
-            Self { index, json }
+        pub fn new(document: &'a Document, index: usize, json: &'a kcad::Curve) -> Self {
+            Self {
+                document,
+                index,
+                json,
+            }
         }
 
         /// Returns the internal JSON index.
@@ -328,20 +344,29 @@ pub mod curve {
             }
         }
 
+        /// Evaluate the curve at parameter value `t`.
+        pub fn evaluate(&self, t: f64) -> [f64; 3] {
+            match self.geometry() {
+                Geometry::Circle(circle) => circle.evaluate(t),
+                Geometry::Line(line) => line.evaluate(t),
+                Geometry::Nurbs(nurbs) => nurbs.evaluate(t),
+            }
+        }
+
         /// Returns the specific curve parameters.
         pub fn geometry(&self) -> Geometry<'a> {
             match self.json.type_.unwrap() {
-                json::extensions::kittycad_boundary_representation::curve::Type::Circle => {
+                kcad::curve::Type::Circle => {
                     let json = self.json.circle.as_ref().unwrap();
                     let domain = self.json.domain.clone();
                     Geometry::Circle(Circle { json, domain })
                 }
-                json::extensions::kittycad_boundary_representation::curve::Type::Line => {
+                kcad::curve::Type::Line => {
                     let json = self.json.line.as_ref().unwrap();
                     let domain = self.json.domain.clone().unwrap_or_default();
                     Geometry::Line(Line { json, domain })
                 }
-                json::extensions::kittycad_boundary_representation::curve::Type::Nurbs => {
+                kcad::curve::Type::Nurbs => {
                     let json = self.json.nurbs.as_ref().unwrap();
                     Geometry::Nurbs(Nurbs { json })
                 }
@@ -359,10 +384,11 @@ pub mod curve {
 
 /// Surfaces.
 pub mod surface {
-    use crate::{json, Document};
+    use crate::Document;
+    use json::extensions::kittycad_boundary_representation as kcad;
 
     #[doc(inline)]
-    pub use json::extensions::kittycad_boundary_representation::surface::Domain;
+    pub use kcad::surface::Domain;
 
     /// Parametric cylindrical surface definition.
     ///
@@ -381,7 +407,7 @@ pub mod surface {
     #[derive(Clone, Debug)]
     pub struct Cylinder<'a> {
         /// The corresponding JSON struct.
-        pub(crate) json: &'a json::extensions::kittycad_boundary_representation::surface::Cylinder,
+        pub(crate) json: &'a kcad::surface::Cylinder,
     }
 
     impl<'a> Cylinder<'a> {
@@ -403,7 +429,7 @@ pub mod surface {
     #[derive(Clone, Debug)]
     pub struct Plane<'a> {
         /// The corresponding JSON struct.
-        pub(crate) json: &'a json::extensions::kittycad_boundary_representation::surface::Plane,
+        pub(crate) json: &'a kcad::surface::Plane,
     }
 
     impl<'a> Plane<'a> {
@@ -440,7 +466,7 @@ pub mod surface {
     #[derive(Clone, Debug)]
     pub struct Sphere<'a> {
         /// The corresponding JSON struct.
-        pub(crate) json: &'a json::extensions::kittycad_boundary_representation::surface::Sphere,
+        pub(crate) json: &'a kcad::surface::Sphere,
     }
 
     impl<'a> Sphere<'a> {
@@ -465,7 +491,7 @@ pub mod surface {
     #[derive(Clone, Debug)]
     pub struct Torus<'a> {
         /// The corresponding JSON struct.
-        pub(crate) json: &'a json::extensions::kittycad_boundary_representation::surface::Torus,
+        pub(crate) json: &'a kcad::surface::Torus,
     }
 
     impl<'a> Torus<'a> {
@@ -493,7 +519,7 @@ pub mod surface {
     pub struct Nurbs<'a> {
         /// The corresponding JSON struct.
         #[allow(dead_code)]
-        pub(crate) json: &'a json::extensions::kittycad_boundary_representation::surface::Nurbs,
+        pub(crate) json: &'a kcad::surface::Nurbs,
     }
 
     impl<'a> Nurbs<'a> {
@@ -551,16 +577,12 @@ pub mod surface {
         index: usize,
 
         /// The corresponding JSON struct.
-        json: &'a json::extensions::kittycad_boundary_representation::Surface,
+        json: &'a kcad::Surface,
     }
 
     impl<'a> Surface<'a> {
         /// Constructs a `Surface`.
-        pub(crate) fn new(
-            document: &'a Document,
-            index: usize,
-            json: &'a json::extensions::kittycad_boundary_representation::Surface,
-        ) -> Self {
+        pub(crate) fn new(document: &'a Document, index: usize, json: &'a kcad::Surface) -> Self {
             Self {
                 document,
                 index,
@@ -582,23 +604,23 @@ pub mod surface {
         /// Returns the specific surface geometry.
         pub fn geometry(&self) -> Geometry<'a> {
             match self.json.type_.unwrap() {
-                json::extensions::kittycad_boundary_representation::surface::Type::Cylinder => {
+                kcad::surface::Type::Cylinder => {
                     let json = self.json.cylinder.as_ref().unwrap();
                     Geometry::Cylinder(Cylinder { json })
                 }
-                json::extensions::kittycad_boundary_representation::surface::Type::Nurbs => {
+                kcad::surface::Type::Nurbs => {
                     let json = self.json.nurbs.as_ref().unwrap();
                     Geometry::Nurbs(Nurbs { json })
                 }
-                json::extensions::kittycad_boundary_representation::surface::Type::Plane => {
+                kcad::surface::Type::Plane => {
                     let json = self.json.plane.as_ref().unwrap();
                     Geometry::Plane(Plane { json })
                 }
-                json::extensions::kittycad_boundary_representation::surface::Type::Sphere => {
+                kcad::surface::Type::Sphere => {
                     let json = self.json.sphere.as_ref().unwrap();
                     Geometry::Sphere(Sphere { json })
                 }
-                json::extensions::kittycad_boundary_representation::surface::Type::Torus => {
+                kcad::surface::Type::Torus => {
                     let json = self.json.torus.as_ref().unwrap();
                     Geometry::Torus(Torus { json })
                 }
@@ -614,9 +636,6 @@ pub mod surface {
     }
 }
 
-pub use curve::Curve;
-pub use surface::Surface;
-
 /// Solid boundary representation structure.
 #[derive(Clone, Debug)]
 pub struct Solid<'a> {
@@ -627,16 +646,12 @@ pub struct Solid<'a> {
     index: usize,
 
     /// The corresponding JSON struct.
-    json: &'a json::extensions::kittycad_boundary_representation::Solid,
+    json: &'a kcad::Solid,
 }
 
 impl<'a> Solid<'a> {
     /// Constructs a `BRep`.
-    pub(crate) fn new(
-        document: &'a Document,
-        index: usize,
-        json: &'a json::extensions::kittycad_boundary_representation::Solid,
-    ) -> Self {
+    pub(crate) fn new(document: &'a Document, index: usize, json: &'a kcad::Solid) -> Self {
         Self {
             document,
             index,
@@ -656,18 +671,27 @@ impl<'a> Solid<'a> {
     }
 
     /// The outer boundary of the solid surface.
-    pub fn outer_shell(&self) -> Shell<'a> {
-        Shell::new(self.document, &self.json.outer_shell)
+    pub fn outer_shell(&self) -> (Shell<'a>, Orientation) {
+        let shell = self
+            .document
+            .shells()
+            .unwrap()
+            .nth(self.json.outer_shell.index.value())
+            .unwrap();
+        (shell, self.json.outer_shell.orientation)
     }
 
     /// Returns an `Iterator` that visits the optional set of inner shells.
     ///
     /// Inner shells define hollow regions of otherwise wholly solid objects.
-    pub fn inner_shells(&self) -> impl Iterator<Item = Shell> {
+    pub fn inner_shells(&self) -> impl ExactSizeIterator<Item = (Shell<'a>, Orientation)> {
         self.json
             .inner_shells
             .iter()
-            .map(|json| Shell::new(self.document, json))
+            .map(|kcad::IndexWithOrientation { index, orientation }| {
+                let shell = self.document.shells().unwrap().nth(index.value()).unwrap();
+                (shell, *orientation)
+            })
     }
 
     /// Returns the mesh approximation of this solid if defined.
@@ -684,17 +708,26 @@ pub struct Shell<'a> {
     /// The parent `Document` struct.
     pub(crate) document: &'a Document,
 
+    /// The corresponding JSON index.
+    index: usize,
+
     /// The corresponding JSON struct.
-    json: &'a json::extensions::kittycad_boundary_representation::Shell,
+    json: &'a kcad::Shell,
 }
 
 impl<'a> Shell<'a> {
     /// Constructs a `Shell`.
-    pub(crate) fn new(
-        document: &'a Document,
-        json: &'a json::extensions::kittycad_boundary_representation::Shell,
-    ) -> Self {
-        Self { document, json }
+    pub(crate) fn new(document: &'a Document, index: usize, json: &'a kcad::Shell) -> Self {
+        Self {
+            document,
+            index,
+            json,
+        }
+    }
+
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// Optional user-defined name for this object.
@@ -704,43 +737,14 @@ impl<'a> Shell<'a> {
     }
 
     /// Returns an `Iterator` that visits the faces of the shell.
-    pub fn faces(&self) -> impl Iterator<Item = Face> {
+    pub fn faces(&self) -> impl ExactSizeIterator<Item = (Face<'a>, Orientation)> {
         self.json
             .faces
             .iter()
-            .map(|json| Face::new(self.document, json))
-    }
-}
-
-/// Trim curve across a surface in 2D space.
-#[derive(Clone, Debug)]
-pub struct Trim<'a> {
-    /// The parent `Document` struct.
-    document: &'a Document,
-
-    /// The corresponding JSON struct.
-    json: &'a json::extensions::kittycad_boundary_representation::brep::Trim,
-}
-
-impl<'a> Trim<'a> {
-    /// Constructs a `Trim`.
-    pub(crate) fn new(
-        document: &'a Document,
-        json: &'a json::extensions::kittycad_boundary_representation::brep::Trim,
-    ) -> Self {
-        Self { document, json }
-    }
-
-    /// Returns the edge this trim influences.
-    pub fn edge(&self) -> Edge<'a> {
-        let index = self.json.edge.value();
-        self.document.edges().unwrap().nth(index).unwrap()
-    }
-
-    /// Specifies whether the trim curve orientation is in the reverse direction
-    /// to its corresponding edge curve.
-    pub fn reverse(&self) -> bool {
-        self.json.reverse
+            .map(|kcad::IndexWithOrientation { index, orientation }| {
+                let face = self.document.faces().unwrap().nth(index.value()).unwrap();
+                (face, *orientation)
+            })
     }
 }
 
@@ -750,31 +754,48 @@ pub struct Loop<'a> {
     /// The parent `Document` struct.
     document: &'a Document,
 
+    /// The corresponding JSON index.
+    index: usize,
+
     /// The corresponding JSON struct.
-    json: &'a json::extensions::kittycad_boundary_representation::brep::Loop,
+    json: &'a kcad::Loop,
 }
 
 impl<'a> Loop<'a> {
     /// Constructs a `Loop`.
-    pub(crate) fn new(
-        document: &'a Document,
-        json: &'a json::extensions::kittycad_boundary_representation::brep::Loop,
-    ) -> Self {
-        Self { document, json }
+    pub(crate) fn new(document: &'a Document, index: usize, json: &'a kcad::Loop) -> Self {
+        Self {
+            document,
+            index,
+            json,
+        }
     }
 
-    /// Returns the trim curves of the loop.
-    pub fn trims(&self) -> impl Iterator<Item = Trim> {
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
+    }
+
+    /// Returns an iterator that visits the edges of the loop.
+    pub fn edges(&self) -> impl ExactSizeIterator<Item = (Edge<'a>, Orientation)> {
         self.json
-            .trims
+            .edges
             .iter()
-            .map(|json| Trim::new(self.document, json))
+            .map(|kcad::IndexWithOrientation { index, orientation }| {
+                let edge = self.document.edges().unwrap().nth(index.value()).unwrap();
+                (edge, *orientation)
+            })
     }
 
-    /// Specifies whether the winding order of the loop should be
-    /// interpreted in reverse order with respect to the face.
-    pub fn reverse(&self) -> bool {
-        self.json.reverse
+    /// Returns an iterator that visits the UV curves of the loop.
+    pub fn uv_curves(&self) -> impl ExactSizeIterator<Item = (Curve<'a>, Orientation)> {
+        self.json
+            .uv_curves
+            .iter()
+            .map(|kcad::IndexWithOrientation { index, orientation }| {
+                let curve = self.document.curves().unwrap().nth(index.value()).unwrap();
+                (curve, *orientation)
+            })
     }
 }
 
@@ -784,51 +805,61 @@ pub struct Face<'a> {
     /// The parent `Document` struct.
     document: &'a Document,
 
+    /// The corresponding JSON index.
+    index: usize,
+
     /// The corresponding JSON struct.
-    json: &'a json::extensions::kittycad_boundary_representation::brep::Face,
+    json: &'a kcad::Face,
 }
 
 impl<'a> Face<'a> {
     /// Constructs a `Face`.
-    pub(crate) fn new(
-        document: &'a Document,
-        json: &'a json::extensions::kittycad_boundary_representation::brep::Face,
-    ) -> Self {
-        Self { document, json }
+    pub(crate) fn new(document: &'a Document, index: usize, json: &'a kcad::Face) -> Self {
+        Self {
+            document,
+            index,
+            json,
+        }
+    }
+
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// Returns the face outer loop.
-    pub fn outer_loop(&self) -> Loop<'a> {
-        Loop::new(self.document, &self.json.outer_loop)
+    pub fn outer_loop(&self) -> (Loop<'a>, Orientation) {
+        let kcad::IndexWithOrientation { index, orientation } = self.json.outer_loop;
+        let loop_ = self.document.loops().unwrap().nth(index.value()).unwrap();
+        (loop_, orientation)
     }
 
     /// Returns the inner loops of the face.
-    pub fn inner_loops(&self) -> impl Iterator<Item = Loop> {
+    pub fn inner_loops(&self) -> impl ExactSizeIterator<Item = (Loop<'a>, Orientation)> {
         self.json
             .inner_loops
             .iter()
-            .map(|json| Loop::new(self.document, json))
+            .map(|kcad::IndexWithOrientation { index, orientation }| {
+                let loop_ = self.document.loops().unwrap().nth(index.value()).unwrap();
+                (loop_, *orientation)
+            })
     }
 
     /// The surface this face is defined upon.
-    pub fn surface(&self) -> Surface<'a> {
-        self.document
+    pub fn surface(&self) -> (Surface<'a>, Orientation) {
+        let surface = self
+            .document
             .surfaces()
             .unwrap()
-            .nth(self.json.surface.value())
-            .unwrap()
-    }
-
-    /// Specifies whether the orientation of the face should
-    /// be reversed.
-    pub fn reverse(&self) -> bool {
-        self.json.reverse
+            .nth(self.json.surface.index.value())
+            .unwrap();
+        (surface, self.json.surface.orientation)
     }
 }
 
-/// Edge vertex.
+/// Vertex in 3D space, joining edges.
 #[derive(Clone, Debug)]
-pub struct EdgeVertex<'a> {
+pub struct Vertex<'a> {
     /// The parent `Document` struct.
     #[allow(dead_code)]
     document: &'a Document,
@@ -837,16 +868,12 @@ pub struct EdgeVertex<'a> {
     index: usize,
 
     /// The corresponding JSON struct.
-    json: &'a json::extensions::kittycad_boundary_representation::brep::EdgeVertex,
+    json: &'a kcad::Vertex,
 }
 
-impl<'a> EdgeVertex<'a> {
-    /// Constructs an `EdgeVertex`.
-    pub(crate) fn new(
-        document: &'a Document,
-        index: usize,
-        json: &'a json::extensions::kittycad_boundary_representation::brep::EdgeVertex,
-    ) -> Self {
+impl<'a> Vertex<'a> {
+    /// Constructs a `Vertex`.
+    pub(crate) fn new(document: &'a Document, index: usize, json: &'a kcad::Vertex) -> Self {
         Self {
             document,
             index,
@@ -875,29 +902,25 @@ pub struct Edge<'a> {
     index: usize,
 
     /// The corresponding JSON struct.
-    json: &'a json::extensions::kittycad_boundary_representation::brep::Edge,
+    json: &'a kcad::Edge,
 }
 
 /// Edge geometry.
-pub enum EdgeGeometry<'a> {
+pub enum Endpoints<'a> {
     /// This edge forms a loop.
     Closed,
     /// This edge has a distinct start and end vertex.
     Open {
         /// Edge start vertex.
-        start: EdgeVertex<'a>,
+        start: Vertex<'a>,
         /// Edge end vertex.
-        end: EdgeVertex<'a>,
+        end: Vertex<'a>,
     },
 }
 
 impl<'a> Edge<'a> {
     /// Constructs an `Edge`.
-    pub(crate) fn new(
-        document: &'a Document,
-        index: usize,
-        json: &'a json::extensions::kittycad_boundary_representation::brep::Edge,
-    ) -> Self {
+    pub(crate) fn new(document: &'a Document, index: usize, json: &'a kcad::Edge) -> Self {
         Self {
             document,
             index,
@@ -911,32 +934,29 @@ impl<'a> Edge<'a> {
     }
 
     /// Returns the edge curve geometry in 3D (or homogeneous 4D) space.
-    pub fn curve(&self) -> Curve<'a> {
-        let index = self.json.curve.value();
-        self.document.curves().unwrap().nth(index).unwrap()
+    pub fn curve(&self) -> (Curve<'a>, Orientation) {
+        let kcad::IndexWithOrientation { index, orientation } = self.json.curve;
+        let curve = self.document.curves().unwrap().nth(index.value()).unwrap();
+        (curve, orientation)
     }
 
     /// Edge endpoints.
-    pub fn geometry(&self) -> EdgeGeometry<'a> {
+    ///
+    /// Returns `None` if the edge is closed.
+    pub fn endpoints(&self) -> Endpoints<'a> {
         if self.json.closed {
-            EdgeGeometry::Closed
+            Endpoints::Closed
         } else {
             let start = {
                 let index = self.json.start.unwrap().value();
-                self.document.edge_vertices().unwrap().nth(index).unwrap()
+                self.document.vertices().unwrap().nth(index).unwrap()
             };
             let end = {
                 let index = self.json.end.unwrap().value();
-                self.document.edge_vertices().unwrap().nth(index).unwrap()
+                self.document.vertices().unwrap().nth(index).unwrap()
             };
-            EdgeGeometry::Open { start, end }
+            Endpoints::Open { start, end }
         }
-    }
-
-    /// Specifies whether the orientation of the edge curve should
-    /// be reversed.
-    pub fn reverse(&self) -> bool {
-        self.json.reverse
     }
 
     /// Returns the optional subdomain that selects a subset of the curve.
