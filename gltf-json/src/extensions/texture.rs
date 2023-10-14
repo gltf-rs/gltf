@@ -1,5 +1,7 @@
 #[cfg(feature = "KHR_texture_transform")]
 use crate::{extras::Extras, validation::Validate};
+#[cfg(feature = "KHR_texture_basisu")]
+use crate::{image, Index};
 use gltf_derive::Validate;
 use serde_derive::{Deserialize, Serialize};
 
@@ -9,7 +11,11 @@ pub struct Sampler {}
 
 /// A texture and its sampler.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct Texture {}
+pub struct Texture {
+    #[cfg(feature = "KHR_texture_basisu")]
+    #[serde(default, rename = "KHR_texture_basisu", skip_serializing_if = "Option::is_none")]
+    pub texture_basisu: Option<TextureBasisu>,
+}
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 /// Reference to a `Texture`.
@@ -21,6 +27,14 @@ pub struct Info {
         skip_serializing_if = "Option::is_none"
     )]
     pub texture_transform: Option<TextureTransform>,
+}
+
+#[cfg(feature = "KHR_texture_basisu")]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[serde(default, rename_all = "camelCase")]
+pub struct TextureBasisu {
+    /// The index of the image used by this texture.
+    pub source: Option<Index<image::Image>>,
 }
 
 /// Many techniques can be used to optimize resource usage for a 3d scene.

@@ -139,12 +139,27 @@ impl<'a> Texture<'a> {
             .unwrap_or_else(|| Sampler::default(self.document))
     }
 
-    /// Returns the image used by this texture.
+    /// Returns the image used by this texture. In the first place, checks the extensions. In case
+    /// there is no extension with an image, returns the fallback image.
     pub fn source(&self) -> image::Image<'a> {
-        self.document
-            .images()
-            .nth(self.json.source.value())
-            .unwrap()
+        self.source_basisu().unwrap_or(self.source_fallback().unwrap())
+    }
+
+    /// Returns the fallback image used by this texture.
+    pub fn source_fallback(&self) -> Option<image::Image<'a>> {
+        self.json.source.as_ref().and_then(|index| self.document.images().nth(index.value()))
+    }
+
+    /// Returns the basisu image used by this texture.
+    #[cfg(feature = "KHR_texture_basisu")]
+    pub fn source_basisu(&self) -> Option<image::Image<'a>> {
+        self
+            .json
+            .extensions
+            .as_ref()
+            .and_then(|extensions| extensions.texture_basisu.as_ref())
+            .and_then(|texture| texture.source.as_ref())
+            .and_then(|index| self.document.images().nth(index.value()))
     }
 
     /// Optional application specific data.
