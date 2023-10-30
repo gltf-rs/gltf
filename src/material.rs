@@ -2,6 +2,9 @@ use crate::{texture, Document};
 
 pub use json::material::AlphaMode;
 
+#[cfg(feature = "KHR_texture_transform")]
+use crate::texture::TextureTransform;
+
 lazy_static! {
     static ref DEFAULT_MATERIAL: json::material::Material = Default::default();
 }
@@ -580,6 +583,18 @@ impl<'a> NormalTexture<'a> {
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
+
+    /// Returns texture transform information
+    #[cfg(feature = "KHR_texture_transform")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_texture_transform")))]
+    pub fn texture_transform(&self) -> Option<TextureTransform<'a>> {
+        self.json
+            .extensions
+            .as_ref()?
+            .texture_transform
+            .as_ref()
+            .map(TextureTransform::new)
+    }
 }
 
 /// Defines the occlusion texture of a material.
@@ -618,6 +633,18 @@ impl<'a> OcclusionTexture<'a> {
     /// Optional application specific data.
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
+    }
+
+    /// Returns texture transform information
+    #[cfg(feature = "KHR_texture_transform")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_texture_transform")))]
+    pub fn texture_transform(&self) -> Option<TextureTransform<'a>> {
+        self.json
+            .extensions
+            .as_ref()?
+            .texture_transform
+            .as_ref()
+            .map(TextureTransform::new)
     }
 }
 
