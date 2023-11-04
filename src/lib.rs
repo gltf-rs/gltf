@@ -449,7 +449,7 @@ impl Document {
     /// Returns the extension values map
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn root_extensions(&self) -> Option<&Map<String, Value>> {
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
         let root = self.0.extensions.as_ref()?;
         Some(&root.others)
     }
