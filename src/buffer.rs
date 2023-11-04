@@ -185,6 +185,22 @@ impl<'a> View<'a> {
         self.json.target.map(|target| target.unwrap())
     }
 
+    /// Returns the extension values map
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Return a value for a given extension name
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn get_extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
+    }
+
     /// Optional application specific data.
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras

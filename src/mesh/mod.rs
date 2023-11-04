@@ -63,6 +63,8 @@ use crate::accessor;
 
 pub use json::mesh::{Mode, Semantic};
 use json::validation::Checked;
+#[cfg(feature = "extensions")]
+use serde_json::{Map, Value};
 
 /// Vertex attribute data.
 pub type Attribute<'a> = (Semantic, Accessor<'a>);
@@ -146,6 +148,22 @@ impl<'a> Mesh<'a> {
         self.index
     }
 
+    /// Returns the extension values map
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Return a value for a given extension name
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn get_extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
+    }
+
     /// Optional application specific data.
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
@@ -195,6 +213,22 @@ impl<'a> Primitive<'a> {
         let min: [f32; 3] = json::deserialize::from_value(pos_accessor.min().unwrap()).unwrap();
         let max: [f32; 3] = json::deserialize::from_value(pos_accessor.max().unwrap()).unwrap();
         Bounds { min, max }
+    }
+
+    /// Returns the extension values map
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Return a value for a given extension name
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn get_extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
     }
 
     /// Optional application specific data.
