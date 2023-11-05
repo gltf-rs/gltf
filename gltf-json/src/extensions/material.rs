@@ -14,7 +14,7 @@ pub struct Material {
         rename = "KHR_materials_pbrSpecularGlossiness",
         skip_serializing_if = "Option::is_none"
     )]
-    pub pbr_specular_glossiness: Option<String>,
+    pub pbr_specular_glossiness: Option<PbrSpecularGlossiness>,
 
     #[cfg(feature = "KHR_materials_unlit")]
     #[serde(
