@@ -385,6 +385,7 @@ pub mod curve {
 /// Surfaces.
 pub mod surface {
     use crate::Document;
+    use euler::DVec3;
     use json::extensions::kittycad_boundary_representation as kcad;
 
     #[doc(inline)]
@@ -476,6 +477,38 @@ pub mod surface {
                 json: &self.json.horizon,
                 domain: None,
             }
+        }
+
+        /// Evaluate the sphere at (u, v).
+        pub fn evaluate(&self, [u, v]: [f64; 2]) -> [f64; 3] {
+            let horizon = self.horizon();
+            let r = horizon.radius();
+            let a = DVec3::from(horizon.origin().unwrap_or_default());
+            let x = DVec3::from(horizon.xbasis());
+            let z = DVec3::from(horizon.normal());
+            let y = z.cross(x);
+            let (sin_u, cos_u) = u.sin_cos();
+            let (sin_v, cos_v) = v.sin_cos();
+            let b = a + r * cos_v * (cos_u * x + sin_u * y) + r * sin_v * z;
+            b.into()
+        }
+
+        /// Find (u, v) for a point (x, y, z) on the sphere.
+        ///
+        /// The result is unspecified if (x, y, z) does not lie on the sphere
+        /// within a reasonable tolerance.
+        pub fn evaluate_inverse(&self, [x, y, z]: [f64; 3]) -> [f64; 2] {
+            let horizon = self.horizon();
+            let r = horizon.radius();
+            let a = DVec3::from(horizon.origin().unwrap_or_default());
+            let b = DVec3::new(x, y, z);
+            let x = DVec3::from(horizon.xbasis());
+            let z = DVec3::from(horizon.normal());
+            let y = z.cross(x);
+            let ab = b - a;
+            let u = ab.dot(y).atan2(ab.dot(x));
+            let v = (ab.dot(z) / r).asin();
+            [u, v]
         }
     }
 
@@ -632,6 +665,99 @@ pub mod surface {
         /// When the domain is `None`, assume 0 <= u <= 1 and 0 <= v <= 1.
         pub fn domain(&self) -> Option<Domain> {
             self.json.domain.clone()
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use gltf_json::extensions::kittycad_boundary_representation as kcad_json;
+        use std::f64::consts::PI;
+
+        macro_rules! all_relative_eq {
+            ($expected:expr, $actual:expr) => {{
+                $expected
+                    .iter()
+                    .copied()
+                    .zip($actual.iter().copied())
+                    .all(|(a, b)| approx::relative_eq!(a, b, epsilon = 0.001))
+            }};
+        }
+
+        #[test]
+        fn evaluate_sphere_basic() {
+            let sphere = super::Sphere {
+                json: &kcad_json::surface::Sphere {
+                    horizon: kcad_json::curve::Circle {
+                        origin: Some([0.0, 0.0, 0.0]),
+                        radius: 2.0,
+                        normal: [0.0, 0.0, 1.0],
+                        xbasis: [1.0, 0.0, 0.0],
+                    },
+                },
+            };
+
+            let test_points = [
+                ([0.0, 0.0], [2.0, 0.0, 0.0]),
+                ([0.5 * PI, 0.0], [0.0, 2.0, 0.0]),
+                ([PI, 0.0], [-2.0, 0.0, 0.0]),
+                ([-0.5 * PI, 0.0], [0.0, -2.0, 0.0]),
+                ([0.0, 0.5 * PI], [0.0, 0.0, 2.0]),
+                ([0.0, -0.5 * PI], [0.0, 0.0, -2.0]),
+            ];
+
+            for (i, (a, b)) in test_points.iter().copied().enumerate() {
+                if !all_relative_eq!(sphere.evaluate(a), b) {
+                    panic!(
+                        "test_points[{i}]: sphere.evaluate({a:?}) = {:?} != {b:?}",
+                        sphere.evaluate(a)
+                    );
+                }
+                if !all_relative_eq!(sphere.evaluate_inverse(b), a) {
+                    panic!(
+                        "test_points[{i}]: sphere.evaluate_inverse({b:?}) = {:?} != {a:?}",
+                        sphere.evaluate_inverse(b)
+                    );
+                }
+            }
+        }
+
+        #[test]
+        fn evaluate_sphere_offset() {
+            let offset = [1.2, 3.4, 5.6];
+            let sphere = super::Sphere {
+                json: &kcad_json::surface::Sphere {
+                    horizon: kcad_json::curve::Circle {
+                        origin: Some(offset),
+                        radius: 2.0,
+                        normal: [0.0, 0.0, 1.0],
+                        xbasis: [1.0, 0.0, 0.0],
+                    },
+                },
+            };
+
+            let test_points = [
+                ([0.0, 0.0], [3.2, 3.4, 5.6]),
+                ([0.5 * PI, 0.0], [1.2, 5.4, 5.6]),
+                ([PI, 0.0], [-0.8, 3.4, 5.6]),
+                ([-0.5 * PI, 0.0], [1.2, 1.4, 5.6]),
+                ([0.0, 0.5 * PI], [1.2, 3.4, 7.6]),
+                ([0.0, -0.5 * PI], [1.2, 3.4, 3.6]),
+            ];
+
+            for (i, (a, b)) in test_points.iter().copied().enumerate() {
+                if !all_relative_eq!(sphere.evaluate(a), b) {
+                    panic!(
+                        "test_points[{i}]: sphere.evaluate({a:?}) = {:?} != {b:?}",
+                        sphere.evaluate(a)
+                    );
+                }
+                if !all_relative_eq!(sphere.evaluate_inverse(b), a) {
+                    panic!(
+                        "test_points[{i}]: sphere.evaluate_inverse({b:?}) = {:?} != {a:?}",
+                        sphere.evaluate_inverse(b)
+                    );
+                }
+            }
         }
     }
 }
