@@ -457,7 +457,7 @@ impl Document {
     /// Return a value for a given extension name
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn get_extension_value(&self, ext_name: &str) -> Option<&Value> {
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
         let root = self.0.extensions.as_ref()?;
         root.others.get(ext_name)
     }

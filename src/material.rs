@@ -107,7 +107,7 @@ impl<'a> Material<'a> {
     /// Get the value of an extension based on the name of the extension
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn get_extension_value(&self, key: &str) -> Option<&Value> {
+    pub fn extension_value(&self, key: &str) -> Option<&Value> {
         let ext = self.json.extensions.as_ref()?;
         ext.others.get(key)
     }
@@ -331,7 +331,7 @@ impl<'a> PbrMetallicRoughness<'a> {
     /// Get the value of an extension based on the name of the extension
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn get_extension_value(&self, key: &str) -> Option<&Value> {
+    pub fn extension_value(&self, key: &str) -> Option<&Value> {
         let ext = self.json.extensions.as_ref()?;
         ext.others.get(key)
     }
@@ -621,7 +621,7 @@ impl<'a> NormalTexture<'a> {
     /// Get the value of an extension based on the name of the extension
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn get_extension_value(&self, key: &str) -> Option<&Value> {
+    pub fn extension_value(&self, key: &str) -> Option<&Value> {
         let ext = self.json.extensions.as_ref()?;
         ext.others.get(key)
     }
@@ -676,7 +676,7 @@ impl<'a> OcclusionTexture<'a> {
     /// Get the value of an extension based on the name of the extension
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn get_extension_value(&self, key: &str) -> Option<&Value> {
+    pub fn extension_value(&self, key: &str) -> Option<&Value> {
         let ext = self.json.extensions.as_ref()?;
         ext.others.get(key)
     }
