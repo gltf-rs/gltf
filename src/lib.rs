@@ -144,6 +144,11 @@ pub mod skin;
 /// Textures and their samplers.
 pub mod texture;
 
+#[cfg(feature = "extensions")]
+use json::Value;
+#[cfg(feature = "extensions")]
+use serde_json::Map;
+
 #[doc(inline)]
 pub use self::accessor::Accessor;
 #[doc(inline)]
@@ -439,6 +444,22 @@ impl Document {
             iter: self.0.images.iter().enumerate(),
             document: self,
         }
+    }
+
+    /// Returns the extension values map
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let root = self.0.extensions.as_ref()?;
+        Some(&root.others)
+    }
+
+    /// Return a value for a given extension name
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let root = self.0.extensions.as_ref()?;
+        root.others.get(ext_name)
     }
 
     /// Returns an `Iterator` that visits the lights of the glTF asset as defined by the

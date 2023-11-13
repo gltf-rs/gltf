@@ -116,6 +116,19 @@ impl<K: ToString + Validate, V: Validate> Validate for BTreeMap<K, V> {
     }
 }
 
+impl Validate for serde_json::Map<String, serde_json::Value> {
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
+    {
+        for (key, value) in self.iter() {
+            key.validate(root, || path().key(&key.to_string()), report);
+            value.validate(root, || path().key(&key.to_string()), report);
+        }
+    }
+}
+
 impl<T: Validate> Validate for Option<T> {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
     where

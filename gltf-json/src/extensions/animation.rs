@@ -1,9 +1,15 @@
 use gltf_derive::Validate;
 use serde_derive::{Deserialize, Serialize};
+#[cfg(feature = "extensions")]
+use serde_json::{Map, Value};
 
 /// A keyframe animation.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct Animation {}
+pub struct Animation {
+    #[cfg(feature = "extensions")]
+    #[serde(default, flatten)]
+    pub others: Map<String, Value>,
+}
 
 /// Targets an animation's sampler at a node's property.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]

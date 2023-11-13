@@ -1,5 +1,7 @@
 use gltf_derive::Validate;
 use serde_derive::{Deserialize, Serialize};
+#[cfg(feature = "extensions")]
+use serde_json::{Map, Value};
 
 /// A node in the node hierarchy.  When the node contains `skin`, all
 /// `mesh.primitives` must contain `JOINTS_0` and `WEIGHTS_0` attributes.
@@ -20,6 +22,10 @@ pub struct Node {
         skip_serializing_if = "Option::is_none"
     )]
     pub khr_lights_punctual: Option<khr_lights_punctual::KhrLightsPunctual>,
+
+    #[cfg(feature = "extensions")]
+    #[serde(default, flatten)]
+    pub others: Map<String, Value>,
 }
 
 #[cfg(feature = "KHR_lights_punctual")]
@@ -224,4 +230,8 @@ pub mod khr_materials_variants {
 
 /// The root `Node`s of a scene.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct Scene {}
+pub struct Scene {
+    #[cfg(feature = "extensions")]
+    #[serde(default, flatten)]
+    pub others: Map<String, Value>,
+}
