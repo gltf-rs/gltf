@@ -4,6 +4,7 @@ use std::ops;
 use crate::Document;
 
 pub use json::buffer::Target;
+use serde_json::{Map, Value};
 
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Clone, Debug)]
@@ -101,6 +102,22 @@ impl<'a> Buffer<'a> {
         self.json.name.as_deref()
     }
 
+    /// Returns the extension values map
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Return a value for a given extension name
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
+    }
+
     /// Optional application specific data.
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
@@ -166,6 +183,22 @@ impl<'a> View<'a> {
     /// Optional target the buffer should be bound to.
     pub fn target(&self) -> Option<Target> {
         self.json.target.map(|target| target.unwrap())
+    }
+
+    /// Returns the extension values map
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Return a value for a given extension name
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
     }
 
     /// Optional application specific data.

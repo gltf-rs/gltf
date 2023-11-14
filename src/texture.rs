@@ -1,6 +1,8 @@
 use crate::{image, Document};
 
 pub use json::texture::{MagFilter, MinFilter, WrappingMode};
+#[cfg(feature = "extensions")]
+use serde_json::{Map, Value};
 
 lazy_static! {
     static ref DEFAULT_SAMPLER: json::texture::Sampler = Default::default();
@@ -99,6 +101,22 @@ impl<'a> Sampler<'a> {
         self.json.wrap_t.unwrap()
     }
 
+    /// Returns the extension values map
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Return a value for a given extension name
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
+    }
+
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -162,6 +180,22 @@ impl<'a> Texture<'a> {
             .and_then(|index| self.document.images().nth(index.value()))
     }
 
+    /// Returns the extension values map
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Return a value for a given extension name
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
+    }
+
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -194,6 +228,22 @@ impl<'a> Info<'a> {
             .texture_transform
             .as_ref()
             .map(TextureTransform::new)
+    }
+
+    /// Returns the extension values map
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Return a value for a given extension name
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
     }
 
     /// Optional application specific data.

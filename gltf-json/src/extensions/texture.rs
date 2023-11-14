@@ -4,17 +4,27 @@ use crate::{extras::Extras, validation::Validate};
 use crate::{image, Index};
 use gltf_derive::Validate;
 use serde_derive::{Deserialize, Serialize};
+#[cfg(feature = "extensions")]
+use serde_json::{Map, Value};
 
 /// Texture sampler properties for filtering and wrapping modes.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct Sampler {}
+pub struct Sampler {
+    #[cfg(feature = "extensions")]
+    #[serde(default, flatten)]
+    pub others: Map<String, Value>,
+}
 
 /// A texture and its sampler.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct Texture {
     #[cfg(feature = "KHR_texture_basisu")]
     #[serde(default, rename = "KHR_texture_basisu", skip_serializing_if = "Option::is_none")]
-    pub texture_basisu: Option<TextureBasisu>,
+    pub texture_basisu: Option<TextureBasisu>
+
+    #[cfg(feature = "extensions")]
+    #[serde(default, flatten)]
+    pub others: Map<String, Value>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
@@ -27,6 +37,9 @@ pub struct Info {
         skip_serializing_if = "Option::is_none"
     )]
     pub texture_transform: Option<TextureTransform>,
+    #[cfg(feature = "extensions")]
+    #[serde(default, flatten)]
+    pub others: Map<String, Value>,
 }
 
 #[cfg(feature = "KHR_texture_basisu")]

@@ -59,6 +59,8 @@ use crate::{buffer, Document};
 
 pub use json::accessor::ComponentType as DataType;
 pub use json::accessor::Type as Dimensions;
+#[cfg(feature = "extensions")]
+use serde_json::{Map, Value};
 
 /// Utility functions.
 #[cfg(feature = "utils")]
@@ -136,6 +138,22 @@ impl<'a> Accessor<'a> {
     /// Returns the data type of components in the attribute.
     pub fn data_type(&self) -> DataType {
         self.json.component_type.unwrap().0
+    }
+
+    /// Returns the extension values map
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Return a value for a given extension name
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
     }
 
     /// Optional application specific data.

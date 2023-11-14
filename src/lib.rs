@@ -144,6 +144,11 @@ pub mod skin;
 /// Textures and their samplers.
 pub mod texture;
 
+#[cfg(feature = "extensions")]
+use json::Value;
+#[cfg(feature = "extensions")]
+use serde_json::Map;
+
 #[doc(inline)]
 pub use self::accessor::Accessor;
 #[doc(inline)]
@@ -287,7 +292,7 @@ impl Gltf {
     {
         let mut magic = [0u8; 4];
         reader.read_exact(&mut magic)?;
-        reader.seek(io::SeekFrom::Start(0))?;
+        reader.seek(io::SeekFrom::Current(-4))?;
         let (json, blob): (json::Root, Option<Vec<u8>>);
         if magic.starts_with(b"glTF") {
             let mut glb = binary::Glb::from_reader(reader)?;
@@ -439,6 +444,22 @@ impl Document {
             iter: self.0.images.iter().enumerate(),
             document: self,
         }
+    }
+
+    /// Returns the extension values map
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let root = self.0.extensions.as_ref()?;
+        Some(&root.others)
+    }
+
+    /// Return a value for a given extension name
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let root = self.0.extensions.as_ref()?;
+        root.others.get(ext_name)
     }
 
     /// Returns an `Iterator` that visits the lights of the glTF asset as defined by the
