@@ -20,7 +20,7 @@ pub struct Sampler {
 pub struct Texture {
     #[cfg(feature = "KHR_texture_basisu")]
     #[serde(default, rename = "KHR_texture_basisu", skip_serializing_if = "Option::is_none")]
-    pub texture_basisu: Option<TextureBasisu>
+    pub texture_basisu: Option<TextureBasisu>,
 
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]

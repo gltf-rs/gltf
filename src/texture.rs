@@ -160,7 +160,10 @@ impl<'a> Texture<'a> {
     /// Returns the image used by this texture. In the first place, checks the extensions. In case
     /// there is no extension with an image, returns the fallback image.
     pub fn source(&self) -> image::Image<'a> {
-        self.source_basisu().unwrap_or(self.source_fallback().unwrap())
+        #[cfg(feature = "KHR_texture_basisu")]
+        return self.source_basisu().unwrap_or(self.source_fallback().unwrap());
+        #[cfg(not(feature = "KHR_texture_basisu"))]
+        return self.source_fallback().unwrap();
     }
 
     /// Returns the fallback image used by this texture.
