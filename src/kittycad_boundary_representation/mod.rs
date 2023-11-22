@@ -73,7 +73,7 @@ pub mod curve {
             let xbasis = DVec3::from(self.json.xbasis);
             let normal = DVec3::from(self.json.normal);
             let ybasis = normal.cross(xbasis);
-            let (cosine, sine) = t.sin_cos();
+            let (sine, cosine) = t.sin_cos();
             (origin + (xbasis * cosine + ybasis * sine) * radius).into()
         }
 
@@ -378,6 +378,80 @@ pub mod curve {
         /// When the domain is `None`, assume 0 <= t <= 1.
         pub fn domain(&self) -> Option<Domain> {
             self.json.domain.clone()
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use gltf_json::extensions::kittycad_boundary_representation as kcad_json;
+        use std::f64::consts::PI;
+
+        macro_rules! all_relative_eq {
+            ($expected:expr, $actual:expr) => {{
+                $expected
+                    .iter()
+                    .copied()
+                    .zip($actual.iter().copied())
+                    .all(|(a, b)| approx::relative_eq!(a, b, epsilon = 0.001))
+            }};
+        }
+
+        #[test]
+        fn evaluate_circle_basic() {
+            let circle = super::Circle {
+                json: &kcad_json::curve::Circle {
+                    origin: Some([0.0, 0.0, 0.0]),
+                    radius: 2.0,
+                    normal: [0.0, 0.0, 1.0],
+                    xbasis: [1.0, 0.0, 0.0],
+                },
+                domain: None,
+            };
+
+            let test_points = [
+                (0.0, [2.0, 0.0, 0.0]),
+                (0.5 * PI, [0.0, 2.0, 0.0]),
+                (PI, [-2.0, 0.0, 0.0]),
+                (-0.5 * PI, [0.0, -2.0, 0.0]),
+            ];
+
+            for (i, (a, b)) in test_points.iter().copied().enumerate() {
+                if !all_relative_eq!(circle.evaluate(a), b) {
+                    panic!(
+                        "test_points[{i}]: circle.evaluate({a:?}) = {:?} != {b:?}",
+                        circle.evaluate(a)
+                    );
+                }
+            }
+        }
+
+        #[test]
+        fn evaluate_circle_offset() {
+            let circle = super::Circle {
+                json: &kcad_json::curve::Circle {
+                    origin: Some([1.2, 3.4, 5.6]),
+                    radius: 2.0,
+                    normal: [0.0, 0.0, 1.0],
+                    xbasis: [1.0, 0.0, 0.0],
+                },
+                domain: None,
+            };
+
+            let test_points = [
+                (0.0, [3.2, 3.4, 5.6]),
+                (0.5 * PI, [1.2, 5.4, 5.6]),
+                (PI, [-0.8, 3.4, 5.6]),
+                (-0.5 * PI, [1.2, 1.4, 5.6]),
+            ];
+
+            for (i, (a, b)) in test_points.iter().copied().enumerate() {
+                if !all_relative_eq!(circle.evaluate(a), b) {
+                    panic!(
+                        "test_points[{i}]: circle.evaluate({a:?}) = {:?} != {b:?}",
+                        circle.evaluate(a)
+                    );
+                }
+            }
         }
     }
 }

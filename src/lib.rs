@@ -282,10 +282,10 @@ macro_rules! impl_fn_for_kcad {
     ($ty:ty, $field:ident) => {
         #[cfg(feature = "KITTYCAD_boundary_representation")]
         #[doc = std::concat!(
-                                    "Returns an iterator that visits the ",
-                                    std::stringify!($field),
-                                    " of the glTF asset.",
-                                )]
+                                            "Returns an iterator that visits the ",
+                                            std::stringify!($field),
+                                            " of the glTF asset.",
+                                        )]
         pub fn $field(&self) -> Option<impl ExactSizeIterator<Item = $ty>> {
             Some(
                 self.0
