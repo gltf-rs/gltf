@@ -213,10 +213,10 @@ pub enum Error {
         buffer: usize,
 
         /// The expected buffer length in bytes.
-        expected: usize,
+        expected: u64,
 
         /// The number of bytes actually available.
-        actual: usize,
+        actual: u64,
     },
 
     /// JSON deserialization error.
@@ -257,6 +257,9 @@ pub enum Error {
 
     /// glTF validation error.
     Validation(Vec<(json::Path, json::validation::Error)>),
+
+    /// buffer size does not fit in target platform usize type
+    OverlargeBuffer(u64),
 }
 
 /// glTF JSON wrapper plus binary payload.
@@ -613,6 +616,10 @@ impl std::fmt::Display for Error {
                 }
                 Ok(())
             }
+            Error::OverlargeBuffer(n) => write!(
+                f,
+                "buffer with size over {n} exceeds platform address space"
+            ),
         }
     }
 }

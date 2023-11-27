@@ -92,8 +92,8 @@ impl<'a> Buffer<'a> {
     }
 
     /// The length of the buffer in bytes.
-    pub fn length(&self) -> usize {
-        self.json.byte_length as usize
+    pub fn length(&self) -> u64 {
+        self.json.byte_length
     }
 
     /// Optional user-defined name for this object.
@@ -151,13 +151,13 @@ impl<'a> View<'a> {
     }
 
     /// Returns the length of the buffer view in bytes.
-    pub fn length(&self) -> usize {
-        self.json.byte_length as usize
+    pub fn length(&self) -> u64 {
+        self.json.byte_length
     }
 
     /// Returns the offset into the parent buffer in bytes.
-    pub fn offset(&self) -> usize {
-        self.json.byte_offset.unwrap_or(0) as usize
+    pub fn offset(&self) -> u64 {
+        self.json.byte_offset.unwrap_or(0)
     }
 
     /// Returns the stride in bytes between vertex attributes or other interleavable

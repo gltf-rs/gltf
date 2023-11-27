@@ -8,8 +8,8 @@ fn buffer_view_slice<'a, 's>(
     view: buffer::View<'a>,
     get_buffer_data: &dyn Fn(buffer::Buffer<'a>) -> Option<&'s [u8]>,
 ) -> Option<&'s [u8]> {
-    let start = view.offset();
-    let end = start + view.length();
+    let start = usize::try_from(view.offset()).ok()?;
+    let end = usize::try_from(start as u64 + view.length()).ok()?;
     get_buffer_data(view.buffer()).and_then(|slice| slice.get(start..end))
 }
 

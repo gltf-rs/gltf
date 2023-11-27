@@ -71,7 +71,7 @@ fn export(output: Output) {
 
     let (min, max) = bounding_coords(&triangle_vertices);
 
-    let buffer_length = (triangle_vertices.len() * mem::size_of::<Vertex>()) as u32;
+    let buffer_length = (triangle_vertices.len() * mem::size_of::<Vertex>()) as u64;
     let buffer = json::Buffer {
         byte_length: buffer_length,
         extensions: Default::default(),
@@ -87,7 +87,7 @@ fn export(output: Output) {
         buffer: json::Index::new(0),
         byte_length: buffer.byte_length,
         byte_offset: None,
-        byte_stride: Some(mem::size_of::<Vertex>() as u32),
+        byte_stride: Some(mem::size_of::<Vertex>() as u64),
         extensions: Default::default(),
         extras: Default::default(),
         name: None,
@@ -198,7 +198,7 @@ fn export(output: Output) {
                 header: gltf::binary::Header {
                     magic: *b"glTF",
                     version: 2,
-                    length: json_offset + buffer_length,
+                    length: json_offset + buffer_length as u32, // This may truncate long buffers
                 },
                 bin: Some(Cow::Owned(to_padded_byte_vector(triangle_vertices))),
                 json: Cow::Owned(json_string.into_bytes()),

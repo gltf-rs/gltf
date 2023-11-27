@@ -47,7 +47,7 @@ impl ser::Serialize for Target {
 pub struct Buffer {
     /// The length of the buffer in bytes.
     #[serde(default, rename = "byteLength")]
-    pub byte_length: u32,
+    pub byte_length: u64,
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
@@ -81,7 +81,7 @@ pub struct View {
 
     /// The length of the `BufferView` in bytes.
     #[serde(rename = "byteLength")]
-    pub byte_length: u32,
+    pub byte_length: u64,
 
     /// Offset into the parent buffer in bytes.
     #[serde(
@@ -89,14 +89,14 @@ pub struct View {
         rename = "byteOffset",
         skip_serializing_if = "Option::is_none"
     )]
-    pub byte_offset: Option<u32>,
+    pub byte_offset: Option<u64>,
 
     /// The stride in bytes between vertex attributes or other interleavable data.
     ///
     /// When zero, data is assumed to be tightly packed.
     #[serde(rename = "byteStride")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub byte_stride: Option<u32>,
+    pub byte_stride: Option<u64>,
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
