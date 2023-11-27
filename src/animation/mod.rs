@@ -4,6 +4,7 @@ use crate::{accessor, scene, Document};
 use crate::Buffer;
 
 pub use json::animation::{Interpolation, Property};
+#[cfg(feature = "extensions")]
 use serde_json::{Map, Value};
 
 /// Iterators.

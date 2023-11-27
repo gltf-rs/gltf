@@ -4,6 +4,7 @@ use std::ops;
 use crate::Document;
 
 pub use json::buffer::Target;
+#[cfg(feature = "extensions")]
 use serde_json::{Map, Value};
 
 /// A buffer points to binary data representing geometry, animations, or skins.
