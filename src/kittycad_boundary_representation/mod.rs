@@ -13,7 +13,7 @@ pub use surface::Surface;
 /// Curves.
 pub mod curve {
     use crate::Document;
-    use euler::DVec3;
+    use euler::{DVec3, DVec4};
     use json::extensions::kittycad_boundary_representation as kcad;
 
     #[doc(inline)]
@@ -157,92 +157,63 @@ pub mod curve {
         pub(crate) json: &'a kcad::curve::Nurbs,
     }
 
-    struct BasisFunction<'a> {
-        /// Knot vector.
-        pub k: &'a [f64],
-        /// Knot index
-        pub i: usize,
-        /// Polynomial degree.
-        pub j: usize,
-    }
-
-    impl<'a> BasisFunction<'a> {
-        /// Evaluate the basis polynomial at parameter value `t`.
-        pub fn evaluate(&self, t: f64) -> f64 {
-            let Self { k, i, j } = *self;
-
-            // Refer to https://mathworld.wolfram.com/B-Spline.html for definition.
-            if j == 0 {
-                let (tmin, tmax) = (k[i], k[i + 1]);
-                if t >= tmin && t < tmax {
-                    1.0
-                } else {
-                    0.0
-                }
-            } else {
-                let lower = {
-                    let (tmin, tmax) = (k[i], k[i + j]);
-                    if tmin < tmax {
-                        let contribution = (t - tmin) / (tmax - tmin);
-                        contribution * Self { k, i, j: j - 1 }.evaluate(t)
-                    } else {
-                        0.0
-                    }
-                };
-                let upper = {
-                    let (tmin, tmax) = (k[i + 1], k[i + j + 1]);
-                    if tmin < tmax {
-                        let contribution = (tmax - t) / (tmax - tmin);
-                        contribution
-                            * Self {
-                                k,
-                                i: i + 1,
-                                j: j - 1,
-                            }
-                            .evaluate(t)
-                    } else {
-                        0.0
-                    }
-                };
-                lower + upper
-            }
-        }
-    }
-
     impl<'a> Nurbs<'a> {
         /// Evaluate the curve at parameter value `t`.
         pub fn evaluate(&self, t: f64) -> [f64; 3] {
-            let p = self
-                .control_points()
-                .iter()
-                .cloned()
-                .map(|[x, y, z, _]| DVec3::new(x, y, z))
-                .collect::<Vec<_>>();
-            let n = p.len();
-            let k = self.knot_vector();
-            let w = self
-                .control_points()
-                .iter()
-                .cloned()
-                .map(|[_, _, _, w]| w)
-                .collect::<Vec<_>>();
-            let j = (self.json.order - 1) as usize;
+            // Min/max knot value
+            let (umin, umax) = {
+                let u = self.knot_vector();
+                (*u.first().unwrap(), *u.last().unwrap())
+            };
 
-            if t == *k.last().unwrap() {
-                // Evaluating the endpoints of curve is problematic because it leads to (t - t) == 0.
-                p.last().cloned().unwrap().into()
-            } else if t == *k.first().unwrap() {
-                // Optimisation.
-                p.first().cloned().unwrap().into()
+            if t == umin {
+                self.start()
+            } else if t == umax {
+                self.end()
             } else {
-                // Refer to https://mathworld.wolfram.com/NURBSCurve.html for definition.
-                let numerator: DVec3 = (0..n)
-                    .map(|i| BasisFunction { k, i, j }.evaluate(t) * w[i] * p[i])
-                    .sum();
-                let denominator: f64 = (0..n)
-                    .map(|i| BasisFunction { k, i, j }.evaluate(t) * w[i])
-                    .sum();
-                (numerator / denominator).into()
+                // Degree
+                let d = (self.json.order - 1) as usize;
+
+                // Padded knot vector
+                let mut u = self.knot_vector().to_vec();
+                for _ in 0..d {
+                    u.insert(0, umin);
+                    u.push(umax);
+                }
+
+                // Index of knot interval
+                let k = u
+                    .windows(2)
+                    .position(|ui| t >= ui[0] && t < ui[1])
+                    .expect("t does not lie between any knot");
+
+                // Multiplicity
+                let m = u
+                    .windows(2)
+                    .rev()
+                    .position(|ui| t >= ui[0] && t < ui[1])
+                    .map(|ui| k - ui)
+                    .expect("t does not lie between any knot");
+
+                // New control points
+                let mut p = self
+                    .control_points()
+                    .iter()
+                    .cloned()
+                    .map(|[x, y, z, w]| DVec4::new(x * w, y * w, z * w, w))
+                    .collect::<Vec<_>>();
+
+                let h = d - m;
+                for r in 1..=h {
+                    for i in (r..=h).rev() {
+                        let upper = t - u[k + i - d];
+                        let lower = u[k + i + 1 - r] - u[k + i - d];
+                        let a = if lower == 0.0 { 0.0 } else { upper / lower };
+                        p[i] = (1.0 - a) * p[i - 1] + a * p[i];
+                    }
+                }
+
+                (p[d].xyz() / p[d].w).into()
             }
         }
 
@@ -384,7 +355,7 @@ pub mod curve {
     #[cfg(test)]
     mod tests {
         use gltf_json::extensions::kittycad_boundary_representation as kcad_json;
-        use std::f64::consts::PI;
+        use std::f64::consts::{FRAC_1_SQRT_2, PI};
 
         macro_rules! all_relative_eq {
             ($expected:expr, $actual:expr) => {{
@@ -394,11 +365,82 @@ pub mod curve {
                     .zip($actual.iter().copied())
                     .all(|(a, b)| approx::relative_eq!(a, b, epsilon = 0.001))
             }};
+
+            ($expected:expr, $actual:expr, epsilon = $epsilon:expr) => {{
+                $expected
+                    .iter()
+                    .copied()
+                    .zip($actual.iter().copied())
+                    .all(|(a, b)| approx::relative_eq!(a, b, epsilon = $epsilon))
+            }};
+        }
+
+        #[test]
+        fn evaluate_nurbs_arc_quadratic() {
+            let inner = kcad_json::curve::Nurbs {
+                control_points: vec![
+                    [1.0, 0.0, 0.0, 1.0],
+                    [1.0, 1.0, 0.0, FRAC_1_SQRT_2],
+                    [0.0, 1.0, 0.0, 1.0],
+                ],
+                knot_vector: vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
+                order: 3,
+            };
+            let curve = super::Nurbs { json: &inner };
+
+            let test_points = [
+                (0.0, [1.0, 0.0, 0.0]),
+                (0.25, [(PI * 0.125).cos(), (PI * 0.125).sin(), 0.0]),
+                (0.5, [(PI * 0.25).cos(), (PI * 0.25).sin(), 0.0]),
+                (0.75, [(PI * 0.375).cos(), (PI * 0.375).sin(), 0.0]),
+                (1.0, [0.0, 1.0, 0.0]),
+            ];
+
+            for (i, (a, b)) in test_points.iter().copied().enumerate() {
+                if !all_relative_eq!(curve.evaluate(a), b, epsilon = 0.1) {
+                    panic!(
+                        "test_points[{i}]: curve.evaluate({a:?}) = {:?} != {b:?}",
+                        curve.evaluate(a)
+                    );
+                }
+            }
+        }
+
+        #[test]
+        fn evaluate_nurbs_half_circle_cubic() {
+            let inner = kcad_json::curve::Nurbs {
+                control_points: vec![
+                    [1.0, 0.0, 0.0, 1.0],
+                    [1.0, 2.0, 0.0, 1.0 / 3.0],
+                    [-1.0, 2.0, 0.0, 1.0 / 3.0],
+                    [-1.0, 0.0, 0.0, 1.0],
+                ],
+                knot_vector: vec![0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0],
+                order: 4,
+            };
+            let curve = super::Nurbs { json: &inner };
+
+            let test_points = [
+                (0.0, [1.0, 0.0, 0.0]),
+                (0.25, [0.8, 0.6, 0.0]),
+                (0.5, [0.0, 1.0, 0.0]),
+                (0.75, [-0.8, 0.6, 0.0]),
+                (1.0, [-1.0, 0.0, 0.0]),
+            ];
+
+            for (i, (a, b)) in test_points.iter().copied().enumerate() {
+                if !all_relative_eq!(curve.evaluate(a), b, epsilon = 0.1) {
+                    panic!(
+                        "test_points[{i}]: curve.evaluate({a:?}) = {:.2?} != {b:.2?}",
+                        curve.evaluate(a)
+                    );
+                }
+            }
         }
 
         #[test]
         fn evaluate_circle_basic() {
-            let circle = super::Circle {
+            let curve = super::Circle {
                 json: &kcad_json::curve::Circle {
                     origin: Some([0.0, 0.0, 0.0]),
                     radius: 2.0,
@@ -416,10 +458,10 @@ pub mod curve {
             ];
 
             for (i, (a, b)) in test_points.iter().copied().enumerate() {
-                if !all_relative_eq!(circle.evaluate(a), b) {
+                if !all_relative_eq!(curve.evaluate(a), b) {
                     panic!(
-                        "test_points[{i}]: circle.evaluate({a:?}) = {:?} != {b:?}",
-                        circle.evaluate(a)
+                        "test_points[{i}]: curve.evaluate({a:?}) = {:?} != {b:?}",
+                        curve.evaluate(a)
                     );
                 }
             }
@@ -427,7 +469,7 @@ pub mod curve {
 
         #[test]
         fn evaluate_circle_offset() {
-            let circle = super::Circle {
+            let curve = super::Circle {
                 json: &kcad_json::curve::Circle {
                     origin: Some([1.2, 3.4, 5.6]),
                     radius: 2.0,
@@ -445,10 +487,10 @@ pub mod curve {
             ];
 
             for (i, (a, b)) in test_points.iter().copied().enumerate() {
-                if !all_relative_eq!(circle.evaluate(a), b) {
+                if !all_relative_eq!(curve.evaluate(a), b) {
                     panic!(
-                        "test_points[{i}]: circle.evaluate({a:?}) = {:?} != {b:?}",
-                        circle.evaluate(a)
+                        "test_points[{i}]: curve.evaluate({a:?}) = {:?} != {b:?}",
+                        curve.evaluate(a)
                     );
                 }
             }
