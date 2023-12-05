@@ -912,25 +912,12 @@ impl<'a> Solid<'a> {
         self.json.name.as_deref()
     }
 
-    /// The outer boundary of the solid surface.
-    pub fn outer_shell(&self) -> (Shell<'a>, Orientation) {
-        let shell = self
-            .document
-            .shells()
-            .unwrap()
-            .nth(self.json.outer_shell.index.value())
-            .unwrap();
-        (shell, self.json.outer_shell.orientation)
-    }
-
-    /// Returns an `Iterator` that visits the optional set of inner shells.
-    ///
-    /// Inner shells define hollow regions of otherwise wholly solid objects.
-    pub fn inner_shells(&self) -> impl ExactSizeIterator<Item = (Shell<'a>, Orientation)> {
+    /// Returns an `Iterator` that visits the solid's shells.
+    pub fn shells(&self) -> impl ExactSizeIterator<Item = (Shell<'a>, Orientation)> {
         self.json
-            .inner_shells
+            .shells
             .iter()
-            .map(|kcad::IndexWithOrientation { index, orientation }| {
+            .map(|kcad::IndexWithOrientation(index, orientation)| {
                 let shell = self.document.shells().unwrap().nth(index.value()).unwrap();
                 (shell, *orientation)
             })
@@ -983,7 +970,7 @@ impl<'a> Shell<'a> {
         self.json
             .faces
             .iter()
-            .map(|kcad::IndexWithOrientation { index, orientation }| {
+            .map(|kcad::IndexWithOrientation(index, orientation)| {
                 let face = self.document.faces().unwrap().nth(index.value()).unwrap();
                 (face, *orientation)
             })
@@ -1023,7 +1010,7 @@ impl<'a> Loop<'a> {
         self.json
             .edges
             .iter()
-            .map(|kcad::IndexWithOrientation { index, orientation }| {
+            .map(|kcad::IndexWithOrientation(index, orientation)| {
                 let edge = self.document.edges().unwrap().nth(index.value()).unwrap();
                 (edge, *orientation)
             })
@@ -1034,7 +1021,7 @@ impl<'a> Loop<'a> {
         self.json
             .uv_curves
             .iter()
-            .map(|kcad::IndexWithOrientation { index, orientation }| {
+            .map(|kcad::IndexWithOrientation(index, orientation)| {
                 let curve = self.document.curves().unwrap().nth(index.value()).unwrap();
                 (curve, *orientation)
             })
@@ -1069,19 +1056,12 @@ impl<'a> Face<'a> {
         self.index
     }
 
-    /// Returns the face outer loop.
-    pub fn outer_loop(&self) -> (Loop<'a>, Orientation) {
-        let kcad::IndexWithOrientation { index, orientation } = self.json.outer_loop;
-        let loop_ = self.document.loops().unwrap().nth(index.value()).unwrap();
-        (loop_, orientation)
-    }
-
-    /// Returns the inner loops of the face.
-    pub fn inner_loops(&self) -> impl ExactSizeIterator<Item = (Loop<'a>, Orientation)> {
+    /// Returns the face bounds.
+    pub fn loops(&self) -> impl ExactSizeIterator<Item = (Loop<'a>, Orientation)> {
         self.json
-            .inner_loops
+            .loops
             .iter()
-            .map(|kcad::IndexWithOrientation { index, orientation }| {
+            .map(|kcad::IndexWithOrientation(index, orientation)| {
                 let loop_ = self.document.loops().unwrap().nth(index.value()).unwrap();
                 (loop_, *orientation)
             })
@@ -1093,9 +1073,9 @@ impl<'a> Face<'a> {
             .document
             .surfaces()
             .unwrap()
-            .nth(self.json.surface.index.value())
+            .nth(self.json.surface.index().value())
             .unwrap();
-        (surface, self.json.surface.orientation)
+        (surface, self.json.surface.orientation())
     }
 }
 
@@ -1177,7 +1157,7 @@ impl<'a> Edge<'a> {
 
     /// Returns the edge curve geometry in 3D (or homogeneous 4D) space.
     pub fn curve(&self) -> (Curve<'a>, Orientation) {
-        let kcad::IndexWithOrientation { index, orientation } = self.json.curve;
+        let kcad::IndexWithOrientation(index, orientation) = self.json.curve;
         let curve = self.document.curves().unwrap().nth(index.value()).unwrap();
         (curve, orientation)
     }

@@ -14,6 +14,7 @@ schemars = "0.8.15"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = { features = ["raw_value"], version = "1.0" }
+serde_repr = "0.1"
 
 [features]
 default = []

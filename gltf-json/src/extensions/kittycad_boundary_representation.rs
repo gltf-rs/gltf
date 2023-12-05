@@ -3,11 +3,9 @@
 use crate::validation::{Error, Validate};
 use crate::{Index, Path, Root};
 use gltf_derive::Validate;
-use schemars::gen::SchemaGenerator;
-use schemars::schema::Schema;
 use schemars::JsonSchema;
-use serde::{de, ser};
 use serde_derive::{Deserialize, Serialize};
+use serde_repr::{Deserialize_repr, Serialize_repr};
 
 /// 2D and 3D curve definitions.
 pub mod curve {
@@ -487,9 +485,13 @@ impl Validate for Vertex {
 }
 
 /// Selected orientation of an orientable item.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(
+    Clone, Copy, Debug, Default, Deserialize_repr, Eq, JsonSchema, PartialEq, Serialize_repr,
+)]
+#[repr(i8)]
 pub enum Orientation {
     /// Same-sense orientation.
+    #[default]
     Same = 1,
 
     /// Reverse-sense orientation.
@@ -510,38 +512,19 @@ impl Orientation {
 
 /// Index for orientable items.
 ///
-/// This extension takes advantage of the sign bit in all floating point numbers,
-/// including positive and negative zero, to represent objects in their reverse
-/// orientation. Positive indicates 'same-sense' orientation and negative indicates
-/// 'reverse-sense' orientation.
-#[derive(Clone, Copy, Debug)]
-pub struct IndexWithOrientation<T: Validate> {
-    /// Index absolute value.
-    pub index: Index<T>,
-
-    /// Selected orientation of the indexed item.
-    pub orientation: Orientation,
-}
-
-impl<T: Validate> JsonSchema for IndexWithOrientation<T> {
-    fn schema_name() -> String {
-        "IndexWithOrientation".to_owned()
-    }
-
-    fn json_schema(generator: &mut SchemaGenerator) -> Schema {
-        f64::json_schema(generator)
-    }
-}
+/// The JSON representation is an array of two numbers: the index followed by its orientation.
+#[derive(Clone, Copy, Debug, Deserialize, JsonSchema, Serialize)]
+pub struct IndexWithOrientation<T: Validate>(pub Index<T>, #[serde(default)] pub Orientation);
 
 impl<T: Validate> IndexWithOrientation<T> {
     /// Explicit constructor.
     pub fn new(index: Index<T>, orientation: Orientation) -> Self {
-        Self { index, orientation }
+        Self(index, orientation)
     }
 
     /// Create an index with same-sense orientation.
     pub fn same(index: Index<T>) -> Self {
-        Self::new(index, Orientation::Same)
+        Self(index, Orientation::Same)
     }
 
     /// Create an index with reverse-sense orientation.
@@ -549,43 +532,36 @@ impl<T: Validate> IndexWithOrientation<T> {
         Self::new(index, Orientation::Reverse)
     }
 
+    /// Returns the index.
+    pub fn index(&self) -> Index<T> {
+        self.0
+    }
+
+    /// Returns the orientation.
+    pub fn orientation(&self) -> Orientation {
+        self.1
+    }
+
     /// Query whether the index has same-sense orientation.
     pub fn is_same(&self) -> bool {
-        self.orientation.is_same()
+        self.1.is_same()
     }
 
     /// Query whether the index has reverse-sense orientation.
     pub fn is_reverse(&self) -> bool {
-        self.orientation.is_reverse()
+        self.1.is_reverse()
     }
 }
 
-impl<'de, T: Validate> de::Deserialize<'de> for IndexWithOrientation<T> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: de::Deserializer<'de>,
-    {
-        let value = f64::deserialize(deserializer)?;
-        Ok(Self {
-            index: Index::new(value.abs() as u32),
-            orientation: if value.is_sign_negative() {
-                Orientation::Reverse
-            } else {
-                Orientation::Same
-            },
-        })
+impl<T: Validate> From<(Index<T>, Orientation)> for IndexWithOrientation<T> {
+    fn from((index, orientation): (Index<T>, Orientation)) -> Self {
+        IndexWithOrientation(index, orientation)
     }
 }
 
-impl<T: Validate> ser::Serialize for IndexWithOrientation<T> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: ser::Serializer,
-    {
-        match self.orientation {
-            Orientation::Reverse => (-(self.index.value() as f64)).serialize(serializer),
-            Orientation::Same => (self.index.value() as f64).serialize(serializer),
-        }
+impl<T: Validate> From<IndexWithOrientation<T>> for (Index<T>, Orientation) {
+    fn from(item: IndexWithOrientation<T>) -> Self {
+        (item.index(), item.orientation())
     }
 }
 
@@ -598,7 +574,7 @@ where
         P: Fn() -> Path,
         R: FnMut(&dyn Fn() -> Path, Error),
     {
-        self.index.validate(root, path, report);
+        self.0.validate(root, path, report);
     }
 }
 
@@ -621,12 +597,9 @@ pub struct Face {
     /// Surface the face edges and vertices reside on.
     pub surface: IndexWithOrientation<Surface>,
 
-    /// Face outer bound.
-    pub outer_loop: IndexWithOrientation<Loop>,
-
-    /// Face inner bounds.
+    /// Face bounds.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub inner_loops: Vec<IndexWithOrientation<Loop>>,
+    pub loops: Vec<IndexWithOrientation<Loop>>,
 }
 
 /// Boundary representation volume.
@@ -646,13 +619,8 @@ pub struct Shell {
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct Solid {
-    /// The outer boundary of the solid surface.
-    pub outer_shell: IndexWithOrientation<Shell>,
-
-    /// Optional set of inner shells, defining hollow regions of
-    /// otherwise wholly solid objects.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub inner_shells: Vec<IndexWithOrientation<Shell>>,
+    /// The boundaries of the solid volume.
+    pub shells: Vec<IndexWithOrientation<Shell>>,
 
     /// Optional name for this solid.
     #[cfg(feature = "names")]
