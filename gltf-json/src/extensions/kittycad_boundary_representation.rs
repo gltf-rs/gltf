@@ -173,6 +173,33 @@ pub mod curve {
         }
     }
 
+    /// Specific curve data.
+    #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    #[schemars(rename = "curve.geometry")]
+    pub enum Geometry {
+        /// Circle curve.
+        Circle(Circle),
+        /// Line curve.
+        Line(Line),
+        /// NURBS curve.
+        Nurbs(Nurbs),
+    }
+
+    impl Validate for Geometry {
+        fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+        where
+            P: Fn() -> Path,
+            R: FnMut(&dyn Fn() -> Path, Error),
+        {
+            match self {
+                Self::Circle(circle) => circle.validate(root, || path().field("circle"), report),
+                Self::Line(line) => line.validate(root, || path().field("line"), report),
+                Self::Nurbs(nurbs) => nurbs.validate(root, || path().field("nurbs"), report),
+            }
+        }
+    }
+
     /// Abstract curve data.
     #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
@@ -187,17 +214,9 @@ pub mod curve {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
 
-        /// Additional parameters for a circular curve.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub circle: Option<Circle>,
-
-        /// Additional parameters for a line curve.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub line: Option<Line>,
-
-        /// Additional parameters for a NURBS curve.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub nurbs: Option<Nurbs>,
+        /// Specific curve data.
+        #[serde(flatten)]
+        pub geometry: Geometry,
 
         /// Parameter domain.
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -429,6 +448,41 @@ pub mod surface {
         pub radius: f64,
     }
 
+    /// Specific surface data.
+    #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    #[schemars(rename = "surface.geometry")]
+    pub enum Geometry {
+        /// Cylindrical surface.
+        Cylinder(Cylinder),
+        /// NURBS surface.
+        Nurbs(Nurbs),
+        /// Planar surface.
+        Plane(Plane),
+        /// Spherical surface.
+        Sphere(Sphere),
+        /// Toroidal surface.
+        Torus(Torus),
+    }
+
+    impl Validate for Geometry {
+        fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+        where
+            P: Fn() -> Path,
+            R: FnMut(&dyn Fn() -> Path, Error),
+        {
+            match self {
+                Self::Cylinder(cylinder) => {
+                    cylinder.validate(root, || path().field("cylinder"), report)
+                }
+                Self::Nurbs(nurbs) => nurbs.validate(root, || path().field("nurbs"), report),
+                Self::Plane(plane) => plane.validate(root, || path().field("plane"), report),
+                Self::Sphere(sphere) => sphere.validate(root, || path().field("sphere"), report),
+                Self::Torus(torus) => torus.validate(root, || path().field("torus"), report),
+            }
+        }
+    }
+
     /// Abstract surface data.
     #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, gltf_derive::Validate)]
     #[serde(rename_all = "camelCase")]
@@ -441,21 +495,9 @@ pub mod surface {
         #[cfg(feature = "names")]
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
-        /// Arguments for a cylindrical surface.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub cylinder: Option<Cylinder>,
-        /// Arguments for a NURBS surface.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub nurbs: Option<Nurbs>,
-        /// Arguments for a planar surface.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub plane: Option<Plane>,
-        /// Arguments for a spherical surface.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub sphere: Option<Sphere>,
-        /// Arguments for a toroidal surface.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub torus: Option<Torus>,
+        /// Specific surface data.
+        #[serde(flatten)]
+        pub geometry: Geometry,
         /// Surface parameter domain.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub domain: Option<Domain>,
@@ -586,7 +628,7 @@ impl<T: Validate> From<IndexWithOrientation<T>> for (Index<T>, Orientation) {
 
 impl<T: Validate> JsonSchema for IndexWithOrientation<T> {
     fn schema_name() -> String {
-        "IndexWithOrientation".to_owned()
+        "indexWithOrientation".to_owned()
     }
 
     fn json_schema(generator: &mut SchemaGenerator) -> Schema {

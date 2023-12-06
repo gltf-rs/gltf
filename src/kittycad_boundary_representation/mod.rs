@@ -326,21 +326,16 @@ pub mod curve {
 
         /// Returns the specific curve parameters.
         pub fn geometry(&self) -> Geometry<'a> {
-            match self.json.type_.unwrap() {
-                kcad::curve::Type::Circle => {
-                    let json = self.json.circle.as_ref().unwrap();
-                    let domain = self.json.domain.clone();
-                    Geometry::Circle(Circle { json, domain })
-                }
-                kcad::curve::Type::Line => {
-                    let json = self.json.line.as_ref().unwrap();
-                    let domain = self.json.domain.clone().unwrap_or_default();
-                    Geometry::Line(Line { json, domain })
-                }
-                kcad::curve::Type::Nurbs => {
-                    let json = self.json.nurbs.as_ref().unwrap();
-                    Geometry::Nurbs(Nurbs { json })
-                }
+            match self.json.geometry {
+                kcad::curve::Geometry::Circle(ref json) => Geometry::Circle(Circle {
+                    json,
+                    domain: self.domain(),
+                }),
+                kcad::curve::Geometry::Line(ref json) => Geometry::Line(Line {
+                    json,
+                    domain: self.domain().unwrap_or(Domain { min: 0.0, max: 1.0 }),
+                }),
+                kcad::curve::Geometry::Nurbs(ref json) => Geometry::Nurbs(Nurbs { json }),
             }
         }
 
@@ -752,27 +747,14 @@ pub mod surface {
 
         /// Returns the specific surface geometry.
         pub fn geometry(&self) -> Geometry<'a> {
-            match self.json.type_.unwrap() {
-                kcad::surface::Type::Cylinder => {
-                    let json = self.json.cylinder.as_ref().unwrap();
+            match self.json.geometry {
+                kcad::surface::Geometry::Cylinder(ref json) => {
                     Geometry::Cylinder(Cylinder { json })
                 }
-                kcad::surface::Type::Nurbs => {
-                    let json = self.json.nurbs.as_ref().unwrap();
-                    Geometry::Nurbs(Nurbs { json })
-                }
-                kcad::surface::Type::Plane => {
-                    let json = self.json.plane.as_ref().unwrap();
-                    Geometry::Plane(Plane { json })
-                }
-                kcad::surface::Type::Sphere => {
-                    let json = self.json.sphere.as_ref().unwrap();
-                    Geometry::Sphere(Sphere { json })
-                }
-                kcad::surface::Type::Torus => {
-                    let json = self.json.torus.as_ref().unwrap();
-                    Geometry::Torus(Torus { json })
-                }
+                kcad::surface::Geometry::Nurbs(ref json) => Geometry::Nurbs(Nurbs { json }),
+                kcad::surface::Geometry::Plane(ref json) => Geometry::Plane(Plane { json }),
+                kcad::surface::Geometry::Sphere(ref json) => Geometry::Sphere(Sphere { json }),
+                kcad::surface::Geometry::Torus(ref json) => Geometry::Torus(Torus { json }),
             }
         }
 
