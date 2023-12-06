@@ -3,6 +3,8 @@
 use crate::validation::{Error, Validate};
 use crate::{Index, Path, Root};
 use gltf_derive::Validate;
+use schemars::gen::SchemaGenerator;
+use schemars::schema::Schema;
 use schemars::JsonSchema;
 use serde_derive::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
@@ -21,6 +23,7 @@ pub mod curve {
 
     /// Discriminant for `Curve` data.
     #[derive(Clone, Copy, Debug, Deserialize, JsonSchema, Eq, PartialEq)]
+    #[schemars(rename = "curve.type")]
     pub enum Type {
         /// Circular curve.
         Circle = 1,
@@ -90,6 +93,7 @@ pub mod curve {
     /// The `xbasis` and `normal` vectors form an orthonormal set.
     #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
+    #[schemars(rename = "curve.circle")]
     pub struct Circle {
         /// Position at the center of the circle.
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -114,6 +118,7 @@ pub mod curve {
     /// Either end or direction must be set.
     #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
     #[serde(rename_all = "camelCase")]
+    #[schemars(rename = "curve.line")]
     pub struct Line {
         /// Origin position.
         pub start: [f64; 3],
@@ -140,6 +145,7 @@ pub mod curve {
     /// NURBS curve definition.
     #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
+    #[schemars(rename = "curve.nurbs")]
     pub struct Nurbs {
         /// Array of control vertices.
         pub control_points: Vec<[f64; 4]>,
@@ -152,6 +158,7 @@ pub mod curve {
     /// Curve parameter domain.
     #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
+    #[schemars(rename = "curve.domain")]
     pub struct Domain {
         /// Minimum domain value.
         pub min: f64,
@@ -169,6 +176,7 @@ pub mod curve {
     /// Abstract curve data.
     #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
+    #[schemars(rename = "curve")]
     pub struct Curve {
         /// Discriminant.
         #[serde(rename = "type")]
@@ -212,6 +220,7 @@ pub mod surface {
     /// Domain of surface parameters.
     #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
+    #[schemars(rename = "surface.domain")]
     pub struct Domain {
         /// Minimum domain values.
         pub min: [f64; 2],
@@ -231,6 +240,7 @@ pub mod surface {
 
     /// Discriminant for `Surface` data.
     #[derive(Clone, Copy, Debug, Deserialize, JsonSchema, Eq, PartialEq)]
+    #[schemars(rename = "surface.type")]
     pub enum Type {
         /// Cylindrical surface.
         Cylinder = 1,
@@ -312,6 +322,7 @@ pub mod surface {
     /// along the circle normal vector.
     #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
+    #[schemars(rename = "surface.cylinder")]
     pub struct Cylinder {
         /// The extruded circle.
         pub circle: super::curve::Circle,
@@ -322,6 +333,7 @@ pub mod surface {
     /// NURBS surface definition.
     #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
     #[serde(rename_all = "camelCase")]
+    #[schemars(rename = "surface.nurbs")]
     pub struct Nurbs {
         /// Matrix of control point vertices.
         pub control_points: Vec<[f64; 4]>,
@@ -356,6 +368,7 @@ pub mod surface {
     /// Plane surface definition.
     #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, gltf_derive::Validate)]
     #[serde(rename_all = "camelCase")]
+    #[schemars(rename = "surface.plane")]
     pub struct Plane {
         /// Normal vector to the plane.
         pub normal: [f64; 3],
@@ -381,6 +394,7 @@ pub mod surface {
     /// Spheres are defined in reference to a circle at zero inclination.
     #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
+    #[schemars(rename = "surface.sphere")]
     pub struct Sphere {
         /// The circle at zero inclination.
         pub horizon: super::curve::Circle,
@@ -403,6 +417,7 @@ pub mod surface {
     /// minor radius.
     #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, gltf_derive::Validate)]
     #[serde(rename_all = "camelCase")]
+    #[schemars(rename = "surface.torus")]
     pub struct Torus {
         /// The center of the torus.
         ///
@@ -417,6 +432,7 @@ pub mod surface {
     /// Abstract surface data.
     #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, gltf_derive::Validate)]
     #[serde(rename_all = "camelCase")]
+    #[schemars(rename = "surface")]
     pub struct Surface {
         /// Discriminant.
         #[serde(rename = "type")]
@@ -449,6 +465,7 @@ pub mod surface {
 /// Pair of vertices on a face plus an optional trim domain.
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
 #[serde(rename_all = "camelCase")]
+#[schemars(rename = "edge")]
 pub struct Edge {
     /// The edge curve geometry in 3D (or homogeneous 4D) space.
     pub curve: IndexWithOrientation<Curve>,
@@ -473,6 +490,7 @@ pub struct Edge {
 /// Junctions of edges in 3D space.
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 #[serde(rename_all = "camelCase")]
+#[schemars(rename = "vertex")]
 pub struct Vertex(pub [f64; 3]);
 
 impl Validate for Vertex {
@@ -489,6 +507,7 @@ impl Validate for Vertex {
     Clone, Copy, Debug, Default, Deserialize_repr, Eq, JsonSchema, PartialEq, Serialize_repr,
 )]
 #[repr(i8)]
+#[schemars(rename = "orientation")]
 pub enum Orientation {
     /// Same-sense orientation.
     #[default]
@@ -513,7 +532,7 @@ impl Orientation {
 /// Index for orientable items.
 ///
 /// The JSON representation is an array of two numbers: the index followed by its orientation.
-#[derive(Clone, Copy, Debug, Deserialize, JsonSchema, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct IndexWithOrientation<T: Validate>(pub Index<T>, #[serde(default)] pub Orientation);
 
 impl<T: Validate> IndexWithOrientation<T> {
@@ -565,6 +584,19 @@ impl<T: Validate> From<IndexWithOrientation<T>> for (Index<T>, Orientation) {
     }
 }
 
+impl<T: Validate> JsonSchema for IndexWithOrientation<T> {
+    fn schema_name() -> String {
+        "IndexWithOrientation".to_owned()
+    }
+
+    fn json_schema(generator: &mut SchemaGenerator) -> Schema {
+        #[derive(Deserialize, JsonSchema, Serialize)]
+        #[schemars(rename = "indexWithOrientation")]
+        struct NonGenericIndexWithOrientation(pub u32, #[serde(default)] pub Orientation);
+        NonGenericIndexWithOrientation::json_schema(generator)
+    }
+}
+
 impl<T: Validate> Validate for IndexWithOrientation<T>
 where
     crate::Root: crate::root::Get<T>,
@@ -581,6 +613,7 @@ where
 /// Edge loop.
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
 #[serde(rename_all = "camelCase")]
+#[schemars(rename = "loop")]
 pub struct Loop {
     /// Oriented edges forming the loop.
     pub edges: Vec<IndexWithOrientation<Edge>>,
@@ -593,6 +626,7 @@ pub struct Loop {
 /// Set of loops defined on an abstract surface.
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
 #[serde(rename_all = "camelCase")]
+#[schemars(rename = "face")]
 pub struct Face {
     /// Surface the face edges and vertices reside on.
     pub surface: IndexWithOrientation<Surface>,
@@ -605,6 +639,7 @@ pub struct Face {
 /// Boundary representation volume.
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
 #[serde(rename_all = "camelCase")]
+#[schemars(rename = "shell")]
 pub struct Shell {
     /// Set of connected faces forming a closed 'watertight' volume.
     pub faces: Vec<IndexWithOrientation<Face>>,
@@ -618,6 +653,7 @@ pub struct Shell {
 /// Solid boundary representation structure.
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
 #[serde(rename_all = "camelCase")]
+#[schemars(rename = "solid")]
 pub struct Solid {
     /// The boundaries of the solid volume.
     pub shells: Vec<IndexWithOrientation<Shell>>,
