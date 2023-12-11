@@ -12,7 +12,6 @@ pub use surface::Surface;
 
 /// Curves.
 pub mod curve {
-    use crate::Document;
     use euler::{DVec3, DVec4};
     use json::extensions::kittycad_boundary_representation as kcad;
 
@@ -109,7 +108,7 @@ pub mod curve {
     impl<'a> Line<'a> {
         /// Returns the line origin.
         pub fn start(&self) -> [f64; 3] {
-            self.json.start
+            self.json.origin.unwrap_or_default()
         }
 
         /// Evaluate the curve at parameter value `t`.
@@ -120,32 +119,18 @@ pub mod curve {
         }
 
         /// Returns the line end point.
-        ///
-        /// If `direction` was set, this will be computed from the trim domain.
         pub fn end(&self) -> [f64; 3] {
-            if let Some(end) = self.json.end {
-                end
-            } else {
-                let start = DVec3::from(self.start());
-                let direction = DVec3::from(self.json.direction.unwrap());
-                let end = start + direction * (self.domain.max - self.domain.min);
-                end.into()
-            }
+            let start = DVec3::from(self.start());
+            let direction = DVec3::from(self.json.direction);
+            let end = start + direction * (self.domain.max - self.domain.min);
+            end.into()
         }
 
         /// Returns the line direction.
         ///
         /// If `end` was set, this will be computed.
         pub fn direction(&self) -> [f64; 3] {
-            if let Some(direction) = self.json.direction {
-                direction
-            } else {
-                let start = DVec3::from(self.start());
-                let end = DVec3::from(self.json.end.unwrap());
-                let difference = end + start * -1.0;
-                let direction = difference.normalize();
-                direction.into()
-            }
+            self.json.direction
         }
     }
 
@@ -153,7 +138,6 @@ pub mod curve {
     #[derive(Clone, Debug)]
     pub struct Nurbs<'a> {
         /// The corresponding JSON struct.
-        #[allow(dead_code)]
         pub(crate) json: &'a kcad::curve::Nurbs,
     }
 
@@ -265,10 +249,6 @@ pub mod curve {
     /// Abstract curve.
     #[derive(Clone, Debug)]
     pub struct Curve<'a> {
-        /// The parent `Document` struct.
-        #[allow(dead_code)]
-        document: &'a Document,
-
         /// The corresponding JSON index.
         index: usize,
 
@@ -278,12 +258,8 @@ pub mod curve {
 
     impl<'a> Curve<'a> {
         /// Constructs a `Curve`.
-        pub fn new(document: &'a Document, index: usize, json: &'a kcad::Curve) -> Self {
-            Self {
-                document,
-                index,
-                json,
-            }
+        pub fn new(index: usize, json: &'a kcad::Curve) -> Self {
+            Self { index, json }
         }
 
         /// Returns the internal JSON index.
@@ -495,7 +471,6 @@ pub mod curve {
 
 /// Surfaces.
 pub mod surface {
-    use crate::Document;
     use euler::DVec3;
     use json::extensions::kittycad_boundary_representation as kcad;
 
@@ -550,16 +525,9 @@ pub mod surface {
             self.json.normal
         }
 
-        /// Returns the value of `d` in the plane equation `n.r = d`.
-        pub fn constant(&self) -> f64 {
-            // TODO: compute constant where not provided.
-            self.json.constant.unwrap()
-        }
-
         /// Returns an arbitrary point that lies on the plane.
         pub fn point(&self) -> [f64; 3] {
-            // TODO: compute point where not provided.
-            self.json.point.unwrap()
+            self.json.point
         }
     }
 
@@ -713,10 +681,6 @@ pub mod surface {
     /// Abstract surface.
     #[derive(Clone, Debug)]
     pub struct Surface<'a> {
-        /// The parent `Document` struct.
-        #[allow(unused)]
-        document: &'a Document,
-
         /// The corresponding JSON index.
         index: usize,
 
@@ -726,12 +690,8 @@ pub mod surface {
 
     impl<'a> Surface<'a> {
         /// Constructs a `Surface`.
-        pub(crate) fn new(document: &'a Document, index: usize, json: &'a kcad::Surface) -> Self {
-            Self {
-                document,
-                index,
-                json,
-            }
+        pub(crate) fn new(index: usize, json: &'a kcad::Surface) -> Self {
+            Self { index, json }
         }
 
         /// Returns the internal JSON index.

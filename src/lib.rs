@@ -279,7 +279,7 @@ pub struct Gltf {
 pub struct Document(json::Root);
 
 macro_rules! impl_fn_for_kcad {
-    ($ty:ty, $field:ident) => {
+    (self, $ty:ty, $field:ident) => {
         #[cfg(feature = "KITTYCAD_boundary_representation")]
         #[doc = std::concat!(
                                                             "Returns an iterator that visits the ",
@@ -297,6 +297,28 @@ macro_rules! impl_fn_for_kcad {
                     .iter()
                     .enumerate()
                     .map(|(index, json)| <$ty>::new(self, index, json)),
+            )
+        }
+    };
+
+    ($ty:ty, $field:ident) => {
+        #[cfg(feature = "KITTYCAD_boundary_representation")]
+        #[doc = std::concat!(
+                                                            "Returns an iterator that visits the ",
+                                                            std::stringify!($field),
+                                                            " of the glTF asset.",
+                                                        )]
+        pub fn $field(&self) -> Option<impl ExactSizeIterator<Item = $ty>> {
+            Some(
+                self.0
+                    .extensions
+                    .as_ref()?
+                    .kittycad_boundary_representation
+                    .as_ref()?
+                    .$field
+                    .iter()
+                    .enumerate()
+                    .map(|(index, json)| <$ty>::new(index, json)),
             )
         }
     };
@@ -582,12 +604,12 @@ impl Document {
         }
     }
 
-    impl_fn_for_kcad!(Solid, solids);
-    impl_fn_for_kcad!(Shell, shells);
-    impl_fn_for_kcad!(Face, faces);
-    impl_fn_for_kcad!(Loop, loops);
-    impl_fn_for_kcad!(Edge, edges);
-    impl_fn_for_kcad!(Vertex, vertices);
+    impl_fn_for_kcad!(self, Solid, solids);
+    impl_fn_for_kcad!(self, Shell, shells);
+    impl_fn_for_kcad!(self, Face, faces);
+    impl_fn_for_kcad!(self, Loop, loops);
+    impl_fn_for_kcad!(self, Edge, edges);
+    impl_fn_for_kcad!(self, Vertex, vertices);
     impl_fn_for_kcad!(Surface, surfaces);
     impl_fn_for_kcad!(Curve, curves);
 }

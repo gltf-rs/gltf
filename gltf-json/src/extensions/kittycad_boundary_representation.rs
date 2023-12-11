@@ -116,30 +116,15 @@ pub mod curve {
     /// Line curve definition.
     ///
     /// Either end or direction must be set.
-    #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
+    #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Validate)]
     #[serde(rename_all = "camelCase")]
     #[schemars(rename = "curve.line")]
     pub struct Line {
         /// Origin position.
-        pub start: [f64; 3],
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub origin: Option<[f64; 3]>,
         /// Unit vector pointing away from the origin position.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub direction: Option<[f64; 3]>,
-        /// End position.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub end: Option<[f64; 3]>,
-    }
-
-    impl Validate for Line {
-        fn validate<P, R>(&self, _root: &Root, path: P, report: &mut R)
-        where
-            P: Fn() -> Path,
-            R: FnMut(&dyn Fn() -> Path, Error),
-        {
-            if self.direction.is_none() && self.end.is_none() {
-                report(&|| path().field("end"), Error::Missing);
-            }
-        }
+        pub direction: [f64; 3],
     }
 
     /// NURBS curve definition.
@@ -391,12 +376,8 @@ pub mod surface {
     pub struct Plane {
         /// Normal vector to the plane.
         pub normal: [f64; 3],
-        /// The value of `d` in the plane equation `n.r = d`.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub constant: Option<f64>,
         /// An arbitrary point that lies on the plane.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub point: Option<[f64; 3]>,
+        pub point: [f64; 3],
     }
 
     /// Parametric spherical surface definition.
