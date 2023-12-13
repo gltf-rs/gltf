@@ -30,7 +30,7 @@ fn run() -> Result<(), Box<dyn StdError>> {
                 // Import standard glTF.
                 let mut gltf_path = entry_path.join("glTF").join(file_name);
                 gltf_path.set_extension("gltf");
-                {
+                if gltf_path.exists() {
                     print!("{:?}: ", gltf_path);
                     let result = gltf::import(&gltf_path)?;
                     sanity_check(&result.0, &result.1, &result.2);
