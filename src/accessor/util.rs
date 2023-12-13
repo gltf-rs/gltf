@@ -8,8 +8,8 @@ fn buffer_view_slice<'a, 's>(
     view: buffer::View<'a>,
     get_buffer_data: &dyn Fn(buffer::Buffer<'a>) -> Option<&'s [u8]>,
 ) -> Option<&'s [u8]> {
-    let start = usize::try_from(view.offset()).ok()?;
-    let end = usize::try_from(start as u64 + view.length()).ok()?;
+    let start = view.offset();
+    let end = start + view.length();
     get_buffer_data(view.buffer()).and_then(|slice| slice.get(start..end))
 }
 
@@ -303,14 +303,14 @@ impl<'a, 's, T: Item> Iter<'s, T> {
 
                 let indices = sparse.indices();
                 let values = sparse.values();
-                let sparse_count = sparse.count() as usize;
+                let sparse_count = sparse.count();
 
                 let index_iter = {
                     let view = indices.view();
                     let index_size = indices.index_type().size();
                     let stride = view.stride().unwrap_or(index_size);
 
-                    let start = indices.offset() as usize;
+                    let start = indices.offset();
                     let end = start + stride * (sparse_count - 1) + index_size;
                     let subslice = buffer_view_slice(view, &get_buffer_data)
                         .and_then(|slice| slice.get(start..end))?;
@@ -332,7 +332,7 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                     let view = values.view();
                     let stride = view.stride().unwrap_or(mem::size_of::<T>());
 
-                    let start = values.offset() as usize;
+                    let start = values.offset();
                     let end = start + stride * (sparse_count - 1) + mem::size_of::<T>();
                     let subslice = buffer_view_slice(view, &get_buffer_data)
                         .and_then(|slice| slice.get(start..end))?;
