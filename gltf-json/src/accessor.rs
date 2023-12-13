@@ -1,4 +1,4 @@
-use crate::validation::{Checked, Error, Validate};
+use crate::validation::{Checked, Error, USize64, Validate};
 use crate::{buffer, extensions, Extras, Index, Path, Root};
 use gltf_derive::Validate;
 use serde::{de, ser};
@@ -94,7 +94,7 @@ pub mod sparse {
 
         /// The offset relative to the start of the parent `BufferView` in bytes.
         #[serde(default, rename = "byteOffset")]
-        pub byte_offset: u32,
+        pub byte_offset: USize64,
 
         /// The data type of each index.
         #[serde(rename = "componentType")]
@@ -115,7 +115,7 @@ pub mod sparse {
     #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
     pub struct Sparse {
         /// The number of attributes encoded in this sparse accessor.
-        pub count: u32,
+        pub count: USize64,
 
         /// Index array of size `count` that points to those accessor attributes
         /// that deviate from their initialization value.
@@ -154,7 +154,7 @@ pub mod sparse {
 
         /// The offset relative to the start of the parent buffer view in bytes.
         #[serde(default, rename = "byteOffset")]
-        pub byte_offset: u32,
+        pub byte_offset: USize64,
 
         /// Extension specific data.
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -183,11 +183,11 @@ pub struct Accessor {
     /// This field can be omitted in sparse accessors.
     #[serde(default, rename = "byteOffset")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub byte_offset: Option<u32>,
+    pub byte_offset: Option<USize64>,
 
     /// The number of components within the buffer view - not to be confused
     /// with the number of bytes in the buffer view.
-    pub count: u32,
+    pub count: USize64,
 
     /// The data type of components in the attribute.
     #[serde(rename = "componentType")]

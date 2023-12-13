@@ -126,13 +126,13 @@ impl<'a> Accessor<'a> {
     pub fn offset(&self) -> usize {
         // TODO: Change this function to return Option<usize> in the next
         // version and return None for sparse accessors.
-        self.json.byte_offset.unwrap_or(0) as usize
+        self.json.byte_offset.unwrap_or_default().0 as usize
     }
 
     /// Returns the number of components within the buffer view - not to be confused
     /// with the number of bytes in the buffer view.
     pub fn count(&self) -> usize {
-        self.json.count as usize
+        self.json.count.0 as usize
     }
 
     /// Returns the data type of components in the attribute.
