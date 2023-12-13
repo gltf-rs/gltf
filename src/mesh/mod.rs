@@ -305,7 +305,7 @@ impl<'a> Primitive<'a> {
             .as_ref()
             .and_then(|extensions| extensions.khr_materials_variants.as_ref())
             .map(|variants| variants.mappings.iter())
-            .unwrap_or_else(|| (&[]).iter());
+            .unwrap_or_else(|| ([]).iter());
 
         iter::Mappings {
             document: self.mesh.document,

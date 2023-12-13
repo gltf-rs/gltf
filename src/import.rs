@@ -123,11 +123,11 @@ pub fn import_buffers(
     let mut buffers = Vec::new();
     for buffer in document.buffers() {
         let data = buffer::Data::from_source_and_blob(buffer.source(), base, &mut blob)?;
-        if (data.len() as u64) < buffer.length() {
+        if data.len() < buffer.length() {
             return Err(Error::BufferLength {
                 buffer: buffer.index(),
                 expected: buffer.length(),
-                actual: data.len() as u64,
+                actual: data.len(),
             });
         }
         buffers.push(data);
@@ -191,10 +191,8 @@ impl image::Data {
             },
             image::Source::View { view, mime_type } => {
                 let parent_buffer_data = &buffer_data[view.buffer().index()].0;
-                let begin = usize::try_from(view.offset())
-                    .map_err(|_| Error::OverlargeBuffer(view.offset()))?;
-                let end = usize::try_from(begin as u64 + view.length())
-                    .map_err(|_| Error::OverlargeBuffer(begin as u64 + view.offset()))?;
+                let begin = view.offset();
+                let end = begin + view.length();
                 let encoded_image = &parent_buffer_data[begin..end];
                 let encoded_format = match mime_type {
                     "image/png" => Png,
