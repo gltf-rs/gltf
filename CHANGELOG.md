@@ -8,6 +8,24 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [1.4.0] - 2023-12-17
+
+### Added
+
+- New API for reading arbitary extension data.
+- Interval improvements to prevent panics on 32 bit systems when loading large glTF files.
+
+### Changed
+
+- Offsets and sizes in the `gltf-json` crate have been widened to 64 bits.
+- Loading glTF on a 32 bit system containing offsets or sizes larger than `u32` will
+  result in a validation error.
+
+### Fixed
+
+- `Gltf::from_reader` no longer winds the reader back to offset zero.
+- Broken link in `Material::unlit` documentation.
+
 ## [1.3.0] - 2023-08-21
 
 ### Added
