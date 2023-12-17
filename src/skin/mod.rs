@@ -46,7 +46,7 @@ impl<'a> Skin<'a> {
         self.index
     }
 
-    /// Returns the extension values map
+    /// Returns extension data unknown to this crate version.
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
     pub fn extensions(&self) -> Option<&Map<String, Value>> {
@@ -54,7 +54,7 @@ impl<'a> Skin<'a> {
         Some(&ext.others)
     }
 
-    /// Return a value for a given extension name
+    /// Queries extension data unknown to this crate version.
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
     pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
