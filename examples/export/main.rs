@@ -151,18 +151,8 @@ fn export(output: Output) {
     };
 
     let node = json::Node {
-        camera: None,
-        children: None,
-        extensions: Default::default(),
-        extras: Default::default(),
-        matrix: None,
         mesh: Some(json::Index::new(0)),
-        name: None,
-        rotation: None,
-        scale: None,
-        translation: None,
-        skin: None,
-        weights: None,
+        ..Default::default()
     };
 
     let root = json::Root {
