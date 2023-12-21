@@ -373,6 +373,11 @@ impl Document {
         self.0
     }
 
+    /// Unwraps the glTF document, without consuming it.
+    pub fn as_json(&self) -> &json::Root {
+        &self.0
+    }
+
     /// Perform validation checks on loaded glTF.
     pub(crate) fn validate(&self) -> Result<()> {
         use json::validation::Validate;
