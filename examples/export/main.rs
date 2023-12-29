@@ -72,8 +72,10 @@ fn export(output: Output) {
 
     let (min, max) = bounding_coords(&triangle_vertices);
 
+    let mut root = gltf_json::Root::default();
+
     let buffer_length = triangle_vertices.len() * mem::size_of::<Vertex>();
-    let buffer = json::Buffer {
+    let buffer = root.push(json::Buffer {
         byte_length: USize64::from(buffer_length),
         extensions: Default::default(),
         extras: Default::default(),
@@ -83,19 +85,19 @@ fn export(output: Output) {
         } else {
             None
         },
-    };
-    let buffer_view = json::buffer::View {
-        buffer: json::Index::new(0),
-        byte_length: buffer.byte_length,
+    });
+    let buffer_view = root.push(json::buffer::View {
+        buffer,
+        byte_length: USize64::from(buffer_length),
         byte_offset: None,
         byte_stride: Some(json::buffer::Stride(mem::size_of::<Vertex>())),
         extensions: Default::default(),
         extras: Default::default(),
         name: None,
         target: Some(Valid(json::buffer::Target::ArrayBuffer)),
-    };
-    let positions = json::Accessor {
-        buffer_view: Some(json::Index::new(0)),
+    });
+    let positions = root.push(json::Accessor {
+        buffer_view: Some(buffer_view),
         byte_offset: Some(USize64(0)),
         count: USize64::from(triangle_vertices.len()),
         component_type: Valid(json::accessor::GenericComponentType(
@@ -109,9 +111,9 @@ fn export(output: Output) {
         name: None,
         normalized: false,
         sparse: None,
-    };
-    let colors = json::Accessor {
-        buffer_view: Some(json::Index::new(0)),
+    });
+    let colors = root.push(json::Accessor {
+        buffer_view: Some(buffer_view),
         byte_offset: Some(USize64::from(3 * mem::size_of::<f32>())),
         count: USize64::from(triangle_vertices.len()),
         component_type: Valid(json::accessor::GenericComponentType(
@@ -125,13 +127,13 @@ fn export(output: Output) {
         name: None,
         normalized: false,
         sparse: None,
-    };
+    });
 
     let primitive = json::mesh::Primitive {
         attributes: {
             let mut map = std::collections::BTreeMap::new();
-            map.insert(Valid(json::mesh::Semantic::Positions), json::Index::new(0));
-            map.insert(Valid(json::mesh::Semantic::Colors(0)), json::Index::new(1));
+            map.insert(Valid(json::mesh::Semantic::Positions), positions);
+            map.insert(Valid(json::mesh::Semantic::Colors(0)), colors);
             map
         },
         extensions: Default::default(),
@@ -142,33 +144,25 @@ fn export(output: Output) {
         targets: None,
     };
 
-    let mesh = json::Mesh {
+    let mesh = root.push(json::Mesh {
         extensions: Default::default(),
         extras: Default::default(),
         name: None,
         primitives: vec![primitive],
         weights: None,
-    };
+    });
 
-    let node = json::Node {
-        mesh: Some(json::Index::new(0)),
+    let node = root.push(json::Node {
+        mesh: Some(mesh),
         ..Default::default()
-    };
+    });
 
-    let root = json::Root {
-        accessors: vec![positions, colors],
-        buffers: vec![buffer],
-        buffer_views: vec![buffer_view],
-        meshes: vec![mesh],
+    root.push(json::Scene {
+        extensions: Default::default(),
+        extras: Default::default(),
+        name: None,
         nodes: vec![node],
-        scenes: vec![json::Scene {
-            extensions: Default::default(),
-            extras: Default::default(),
-            name: None,
-            nodes: vec![json::Index::new(0)],
-        }],
-        ..Default::default()
-    };
+    });
 
     match output {
         Output::Standard => {

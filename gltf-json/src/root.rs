@@ -13,14 +13,47 @@ use crate::{
 };
 use validation::Validate;
 
+// TODO: As a breaking change, simplify by replacing uses of `Get<T>` with `AsRef<[T]>`.
+
 /// Helper trait for retrieving top-level objects by a universal identifier.
 pub trait Get<T> {
     /// Retrieves a single value at the given index.
     fn get(&self, id: Index<T>) -> Option<&T>;
 }
 
-/// Represents an offset into an array of type `T` owned by the root glTF object.
+/// Represents an offset into a vector of type `T` owned by the root glTF object.
+///
+/// This type may be used with the following functions:
+///
+/// * [`Root::get()`] to retrieve objects from [`Root`].
+/// * [`Root::push()`] to add new objects to [`Root`].
 pub struct Index<T>(u32, marker::PhantomData<fn() -> T>);
+
+impl<T> Index<T> {
+    /// Given a vector of glTF objects, call [`Vec::push()`] to insert it into the vector,
+    /// then return an [`Index`] for it.
+    ///
+    /// This allows you to easily obtain [`Index`] values with the correct index and type when
+    /// creating a glTF asset. Note that for [`Root`], you can call [`Root::push()`] without
+    /// needing to retrieve the correct vector first.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the vector has [`u32::MAX`] or more elements, in which case an `Index` cannot be
+    /// created.
+    pub fn push(vec: &mut Vec<T>, value: T) -> Index<T> {
+        let len = vec.len();
+        let Ok(index): Result<u32, _> = len.try_into() else {
+            panic!(
+                "glTF vector of {ty} has {len} elements, which exceeds the Index limit",
+                ty = std::any::type_name::<T>(),
+            );
+        };
+
+        vec.push(value);
+        Index::new(index)
+    }
+}
 
 /// The root object of a glTF 2.0 asset.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
@@ -125,6 +158,26 @@ impl Root {
         Self: Get<T>,
     {
         (self as &dyn Get<T>).get(index)
+    }
+
+    /// Insert the given value into this (as via [`Vec::push()`]), then return the [`Index`] to it.
+    ///
+    /// This allows you to easily obtain [`Index`] values with the correct index and type when
+    /// creating a glTF asset.
+    ///
+    /// If you have a mutable borrow conflict when using this method, consider using the more
+    /// explicit [`Index::push()`] method, passing it only the necessary vector.
+    ///
+    /// # Panics
+    ///
+    /// Panics if there are already [`u32::MAX`] or more elements of this type,
+    /// in which case an `Index` cannot be created.
+    #[track_caller]
+    pub fn push<T>(&mut self, value: T) -> Index<T>
+    where
+        Self: AsMut<Vec<T>>,
+    {
+        Index::push(self.as_mut(), value)
     }
 
     /// Deserialize from a JSON string slice.
@@ -299,6 +352,16 @@ macro_rules! impl_get {
                 self.$field.get(index.value())
             }
         }
+        impl AsRef<[$ty]> for Root {
+            fn as_ref(&self) -> &[$ty] {
+                &self.$field
+            }
+        }
+        impl AsMut<Vec<$ty>> for Root {
+            fn as_mut(&mut self) -> &mut Vec<$ty> {
+                &mut self.$field
+            }
+        }
     };
 }
 
@@ -344,5 +407,30 @@ mod tests {
     where
         Index<Material>: Send + Sync,
     {
+    }
+
+    #[test]
+    fn index_push() {
+        let some_object = "hello";
+
+        let mut vec = Vec::new();
+        assert_eq!(Index::push(&mut vec, some_object), Index::new(0));
+        assert_eq!(Index::push(&mut vec, some_object), Index::new(1));
+    }
+
+    #[test]
+    fn root_push() {
+        let some_object = Buffer {
+            byte_length: validation::USize64(1),
+            #[cfg(feature = "names")]
+            name: None,
+            uri: None,
+            extensions: None,
+            extras: Default::default(),
+        };
+
+        let mut root = Root::default();
+        assert_eq!(root.push(some_object.clone()), Index::new(0));
+        assert_eq!(root.push(some_object), Index::new(1));
     }
 }

@@ -52,6 +52,28 @@ impl crate::root::Get<crate::extensions::scene::khr_lights_punctual::Light> for 
     }
 }
 
+#[cfg(feature = "KHR_lights_punctual")]
+impl AsRef<[crate::extensions::scene::khr_lights_punctual::Light]> for crate::Root {
+    fn as_ref(&self) -> &[crate::extensions::scene::khr_lights_punctual::Light] {
+        self.extensions
+            .as_ref()
+            .and_then(|extensions| extensions.khr_lights_punctual.as_ref())
+            .map(|khr_lights_punctual| khr_lights_punctual.lights.as_slice())
+            .unwrap_or(&[])
+    }
+}
+#[cfg(feature = "KHR_lights_punctual")]
+impl AsMut<Vec<crate::extensions::scene::khr_lights_punctual::Light>> for crate::Root {
+    fn as_mut(&mut self) -> &mut Vec<crate::extensions::scene::khr_lights_punctual::Light> {
+        &mut self
+            .extensions
+            .get_or_insert_with(Default::default)
+            .khr_lights_punctual
+            .get_or_insert_with(Default::default)
+            .lights
+    }
+}
+
 #[cfg(feature = "KHR_materials_variants")]
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct KhrMaterialsVariants {
@@ -70,5 +92,27 @@ impl crate::root::Get<crate::extensions::scene::khr_materials_variants::Variant>
             .as_ref()?
             .variants
             .get(id.value())
+    }
+}
+
+#[cfg(feature = "KHR_materials_variants")]
+impl AsRef<[crate::extensions::scene::khr_materials_variants::Variant]> for crate::Root {
+    fn as_ref(&self) -> &[crate::extensions::scene::khr_materials_variants::Variant] {
+        self.extensions
+            .as_ref()
+            .and_then(|extensions| extensions.khr_materials_variants.as_ref())
+            .map(|khr_materials_variants| khr_materials_variants.variants.as_slice())
+            .unwrap_or(&[])
+    }
+}
+#[cfg(feature = "KHR_materials_variants")]
+impl AsMut<Vec<crate::extensions::scene::khr_materials_variants::Variant>> for crate::Root {
+    fn as_mut(&mut self) -> &mut Vec<crate::extensions::scene::khr_materials_variants::Variant> {
+        &mut self
+            .extensions
+            .get_or_insert_with(Default::default)
+            .khr_materials_variants
+            .get_or_insert_with(Default::default)
+            .variants
     }
 }
