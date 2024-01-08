@@ -106,3 +106,23 @@ fn test_sparse_accessor_without_base_buffer_view_yield_exact_size_hints() {
         outputs_iter.next();
     }
 }
+
+#[test]
+fn test_sparse_accessor_without_base_buffer_view_yield_all_values() {
+    let (document, buffers, _) = gltf::import(BOX_SPARSE_GLTF).unwrap();
+
+    let animation = document.animations().next().unwrap();
+    let sampler = animation.samplers().next().unwrap();
+    let output_accessor = sampler.output();
+    let output_iter = gltf::accessor::Iter::<f32>::new(output_accessor, |buffer: gltf::Buffer| {
+        buffers.get(buffer.index()).map(|data| &data.0[..])
+    })
+    .unwrap();
+    let outputs = output_iter.collect::<Vec<_>>();
+
+    const EXPECTED_OUTPUTS: [f32; 2] = [0.0, 1.0];
+    assert_eq!(outputs.len(), EXPECTED_OUTPUTS.len());
+    for (i, o) in outputs.iter().enumerate() {
+        assert_eq!(o - EXPECTED_OUTPUTS[i], 0.0);
+    }
+}
