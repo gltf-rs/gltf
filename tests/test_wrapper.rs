@@ -79,3 +79,30 @@ fn test_sparse_accessor_with_base_buffer_view_yield_all_values() {
         }
     }
 }
+
+/// "box_sparse.gltf" contains an animation with a sampler with output of two values.
+/// The values are specified with a sparse accessor that is missing a base `bufferView` field.
+/// Which means that each value in it will be 0.0, except the values contained in the sparse
+/// buffer view itself. In this case the second value is read from the sparse accessor (1.0),
+/// while the first is left at the default zero.
+const BOX_SPARSE_GLTF: &str = "tests/box_sparse.gltf";
+
+#[test]
+fn test_sparse_accessor_without_base_buffer_view_yield_exact_size_hints() {
+    let (document, buffers, _) = gltf::import(BOX_SPARSE_GLTF).unwrap();
+
+    let animation = document.animations().next().unwrap();
+    let sampler = animation.samplers().next().unwrap();
+    let output_accessor = sampler.output();
+    let mut outputs_iter =
+        gltf::accessor::Iter::<f32>::new(output_accessor, |buffer: gltf::Buffer| {
+            buffers.get(buffer.index()).map(|data| &data.0[..])
+        })
+        .unwrap();
+
+    const EXPECTED_OUTPUT_COUNT: usize = 2;
+    for i in (0..=EXPECTED_OUTPUT_COUNT).rev() {
+        assert_eq!(outputs_iter.size_hint(), (i, Some(i)));
+        outputs_iter.next();
+    }
+}
