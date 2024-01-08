@@ -145,8 +145,11 @@ impl<'a, T: Item> Iterator for SparseIter<'a, T> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let hint = self.values.len() - self.counter as usize;
-        (hint, Some(hint))
+        if let Some(base) = self.base.as_ref() {
+            base.size_hint()
+        } else {
+            self.values.size_hint()
+        }
     }
 }
 
