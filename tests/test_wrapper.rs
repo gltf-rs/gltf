@@ -45,3 +45,37 @@ fn test_sparse_accessor_with_base_buffer_view_yield_exact_size_hints() {
         positions.next();
     }
 }
+
+#[test]
+fn test_sparse_accessor_with_base_buffer_view_yield_all_values() {
+    let (document, buffers, _) = gltf::import(SIMPLE_SPARSE_ACCESSOR_GLTF).unwrap();
+
+    let mesh = document.meshes().next().unwrap();
+    let primitive = mesh.primitives().next().unwrap();
+    let reader = primitive
+        .reader(|buffer: gltf::Buffer| buffers.get(buffer.index()).map(|data| &data.0[..]));
+    let positions: Vec<[f32; 3]> = reader.read_positions().unwrap().collect::<Vec<_>>();
+
+    const EXPECTED_POSITIONS: [[f32; 3]; 14] = [
+        [0.0, 0.0, 0.0],
+        [1.0, 0.0, 0.0],
+        [2.0, 0.0, 0.0],
+        [3.0, 0.0, 0.0],
+        [4.0, 0.0, 0.0],
+        [5.0, 0.0, 0.0],
+        [6.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [1.0, 2.0, 0.0], // Sparse value #1
+        [2.0, 1.0, 0.0],
+        [3.0, 3.0, 0.0], // Sparse value #2
+        [4.0, 1.0, 0.0],
+        [5.0, 4.0, 0.0], // Sparse value #3
+        [6.0, 1.0, 0.0],
+    ];
+    assert_eq!(positions.len(), EXPECTED_POSITIONS.len());
+    for (i, p) in positions.iter().enumerate() {
+        for (j, q) in p.iter().enumerate() {
+            assert_eq!(q - EXPECTED_POSITIONS[i][j], 0.0);
+        }
+    }
+}
