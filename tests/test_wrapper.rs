@@ -22,3 +22,26 @@ fn test_accessor_bounds() {
         }
     );
 }
+
+/// "SimpleSparseAccessor.gltf" contains positions specified with a sparse accessor.
+/// The accessor use a base `bufferView` that contains 14 `Vec3`s and the sparse
+/// section overwrites 3 of these with other values when read.
+const SIMPLE_SPARSE_ACCESSOR_GLTF: &str =
+    "glTF-Sample-Models/2.0/SimpleSparseAccessor/glTF-Embedded/SimpleSparseAccessor.gltf";
+
+#[test]
+fn test_sparse_accessor_with_base_buffer_view_yield_exact_size_hints() {
+    let (document, buffers, _) = gltf::import(SIMPLE_SPARSE_ACCESSOR_GLTF).unwrap();
+
+    let mesh = document.meshes().next().unwrap();
+    let primitive = mesh.primitives().next().unwrap();
+    let reader = primitive
+        .reader(|buffer: gltf::Buffer| buffers.get(buffer.index()).map(|data| &data.0[..]));
+    let mut positions = reader.read_positions().unwrap();
+
+    const EXPECTED_POSITION_COUNT: usize = 14;
+    for i in (0..=EXPECTED_POSITION_COUNT).rev() {
+        assert_eq!(positions.size_hint(), (i, Some(i)));
+        positions.next();
+    }
+}
