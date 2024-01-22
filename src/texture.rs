@@ -260,7 +260,7 @@ pub struct TextureTransform<'a> {
 #[cfg(feature = "KHR_texture_transform")]
 impl<'a> TextureTransform<'a> {
     /// Constructs `TextureTransform`
-    pub fn new(json: &'a json::extensions::texture::TextureTransform) -> Self {
+    pub(crate) fn new(json: &'a json::extensions::texture::TextureTransform) -> Self {
         Self { json }
     }
 
