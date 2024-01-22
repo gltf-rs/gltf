@@ -27,18 +27,6 @@ This crate is intended to load [glTF 2.0](https://www.khronos.org/gltf), a file 
 
 See the [crate documentation](https://docs.rs/gltf) for example usage.
 
-### Features
-
-#### Extras and names
-
-By default, `gltf` ignores all `extras` and `names` included with glTF assets. You can negate this by enabling the `extras` and `names` features, respectively.
-
-```toml
-[dependencies.gltf]
-version = "1.4"
-features = ["extras", "names"]
-```
-
 #### glTF extensions
 
 The following glTF extensions are supported by the crate:
@@ -53,13 +41,6 @@ The following glTF extensions are supported by the crate:
 - `KHR_materials_transmission`
 - `KHR_materials_ior`
 - `KHR_materials_emissive_strength `
-
-To use an extension, list its name in the `features` section.
-
-```toml
-[dependencies.gltf]
-features = ["KHR_materials_unlit"]
-```
 
 ### Examples
 

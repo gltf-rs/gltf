@@ -1,208 +1,165 @@
-use crate::Document;
+use crate::validation::{Error, Validate};
+use crate::{Extras, Path, Root, UnrecognizedExtensions};
 
-#[cfg(feature = "extensions")]
-use serde_json::{Map, Value};
-
-/// A camera's projection.
-#[derive(Clone, Debug)]
-pub enum Projection<'a> {
-    /// Describes an orthographic projection.
-    Orthographic(Orthographic<'a>),
-
-    /// Describes a perspective projection.
-    Perspective(Perspective<'a>),
+/// Projection matrix parameters.
+#[derive(Clone, Debug, serde_derive::Deserialize, serde_derive::Serialize, gltf_derive::Wrap)]
+#[serde(tag = "type", rename_all = "camelCase")]
+pub enum Projection {
+    /// Perspective projection.
+    Perspective {
+        /// Perspective projection parameters.
+        perspective: Perspective,
+    },
+    /// Orthographic projection.
+    Orthographic {
+        /// Orthographic projection parameters.
+        orthographic: Orthographic,
+    },
 }
 
-/// A camera's projection.  A node can reference a camera to apply a transform to
-/// place the camera in the scene.
-#[derive(Clone, Debug)]
-pub struct Camera<'a> {
-    /// The parent `Document` struct.
-    document: &'a Document,
-
-    /// The corresponding JSON index.
-    index: usize,
-
-    /// The corresponding JSON struct.
-    json: &'a json::camera::Camera,
-}
-
-///  Values for an orthographic camera projection.
-#[derive(Clone, Debug)]
-pub struct Orthographic<'a> {
-    /// The parent `Document` struct.
-    #[allow(dead_code)]
-    document: &'a Document,
-
-    /// The corresponding JSON struct.
-    json: &'a json::camera::Orthographic,
-}
-
-/// Values for a perspective camera projection.
-#[derive(Clone, Debug)]
-pub struct Perspective<'a> {
-    /// The parent `Document` struct.
-    #[allow(dead_code)]
-    document: &'a Document,
-
-    /// The corresponding JSON struct.
-    json: &'a json::camera::Perspective,
-}
-
-impl<'a> Camera<'a> {
-    /// Constructs a `Camera`.
-    pub(crate) fn new(
-        document: &'a Document,
-        index: usize,
-        json: &'a json::camera::Camera,
-    ) -> Self {
-        Self {
-            document,
-            index,
-            json,
-        }
-    }
-
-    /// Returns the internal JSON index.
-    pub fn index(&self) -> usize {
-        self.index
-    }
-
+/// A viewpoint in the scene.
+///
+/// A node can reference a camera to apply a transform to place the camera in the
+/// scene.
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Validate,
+    gltf_derive::Wrap,
+)]
+#[gltf(indexed)]
+pub struct Camera {
     /// Optional user-defined name for this object.
-    #[cfg(feature = "names")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "names")))]
-    pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_deref()
-    }
+    pub name: Option<String>,
 
-    /// Returns the camera's projection.
-    pub fn projection(&self) -> Projection {
-        match self.json.type_.unwrap() {
-            json::camera::Type::Orthographic => {
-                let json = self.json.orthographic.as_ref().unwrap();
-                Projection::Orthographic(Orthographic::new(self.document, json))
-            }
-            json::camera::Type::Perspective => {
-                let json = self.json.perspective.as_ref().unwrap();
-                Projection::Perspective(Perspective::new(self.document, json))
-            }
-        }
-    }
+    /// Projection matrix parameters.
+    #[serde(flatten)]
+    pub projection: Projection,
 
-    /// Returns extension data unknown to this crate version.
-    #[cfg(feature = "extensions")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn extensions(&self) -> Option<&Map<String, Value>> {
-        let ext = self.json.extensions.as_ref()?;
-        Some(&ext.others)
-    }
-
-    /// Queries extension data unknown to this crate version.
-    #[cfg(feature = "extensions")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
-        let ext = self.json.extensions.as_ref()?;
-        ext.others.get(ext_name)
-    }
+    /// Unrecognized extension data.
+    pub unrecognized_extensions: UnrecognizedExtensions,
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &'a json::Extras {
-        &self.json.extras
+    pub extras: Option<Extras>,
+}
+
+/// Values for an orthographic camera.
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Validate,
+    gltf_derive::Wrap,
+)]
+pub struct Orthographic {
+    /// The horizontal magnification of the view.
+    pub xmag: f32,
+
+    /// The vertical magnification of the view.
+    pub ymag: f32,
+
+    /// The distance to the far clipping plane.
+    pub zfar: f32,
+
+    /// The distance to the near clipping plane.
+    pub znear: f32,
+
+    /// Unrecognized extension data.
+    pub unrecognized_extensions: UnrecognizedExtensions,
+
+    /// Optional application specific data.
+    pub extras: Option<Extras>,
+}
+
+/// Values for a perspective camera.
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Validate,
+    gltf_derive::Wrap,
+)]
+pub struct Perspective {
+    /// Aspect ratio of the field of view.
+    pub aspect_ratio: Option<f32>,
+
+    /// The vertical field of view in radians.
+    pub yfov: f32,
+
+    /// The distance to the far clipping plane.
+    pub zfar: Option<f32>,
+
+    /// The distance to the near clipping plane.
+    pub znear: f32,
+
+    /// Unrecognized extension data.
+    pub unrecognized_extensions: UnrecognizedExtensions,
+
+    /// Optional application specific data.
+    pub extras: Option<Extras>,
+}
+
+impl Validate for Projection {
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
+    {
+        match self {
+            Self::Perspective { perspective } => {
+                perspective.validate(root, || path().field("perspective"), report);
+            }
+            Self::Orthographic { orthographic } => {
+                orthographic.validate(root, || path().field("orthographic"), report);
+            }
+        }
     }
 }
 
-impl<'a> Orthographic<'a> {
-    /// Constructs a `Orthographic` camera projection.
-    pub(crate) fn new(document: &'a Document, json: &'a json::camera::Orthographic) -> Self {
-        Self { document, json }
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn serialize() {
+        let camera = super::Camera {
+            name: None,
+            extras: None,
+            projection: super::Projection::Perspective {
+                perspective: super::Perspective {
+                    aspect_ratio: None,
+                    yfov: 0.785,
+                    zfar: Some(10.0),
+                    znear: 0.01,
+                    extras: None,
+                    unrecognized_extensions: Default::default(),
+                },
+            },
+            unrecognized_extensions: Default::default(),
+        };
+        let json = serde_json::to_string(&camera).unwrap();
+        assert_eq!(
+            r#"{"type":"perspective","perspective":{"yfov":0.785,"zfar":10.0,"znear":0.01}}"#,
+            json
+        );
     }
 
-    ///  The horizontal magnification of the view.
-    pub fn xmag(&self) -> f32 {
-        self.json.xmag
-    }
-
-    ///  The vertical magnification of the view.
-    pub fn ymag(&self) -> f32 {
-        self.json.ymag
-    }
-
-    ///  The distance to the far clipping plane.
-    pub fn zfar(&self) -> f32 {
-        self.json.zfar
-    }
-
-    ///  The distance to the near clipping plane.
-    pub fn znear(&self) -> f32 {
-        self.json.znear
-    }
-
-    /// Returns extension data unknown to this crate version.
-    #[cfg(feature = "extensions")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn extensions(&self) -> Option<&Map<String, Value>> {
-        let ext = self.json.extensions.as_ref()?;
-        Some(&ext.others)
-    }
-
-    /// Queries extension data unknown to this crate version.
-    #[cfg(feature = "extensions")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
-        let ext = self.json.extensions.as_ref()?;
-        ext.others.get(ext_name)
-    }
-
-    ///  Optional application specific data.
-    pub fn extras(&self) -> &'a json::Extras {
-        &self.json.extras
-    }
-}
-
-impl<'a> Perspective<'a> {
-    /// Constructs a `Perspective` camera projection.
-    pub(crate) fn new(document: &'a Document, json: &'a json::camera::Perspective) -> Self {
-        Self { document, json }
-    }
-
-    ///  Aspect ratio of the field of view.
-    pub fn aspect_ratio(&self) -> Option<f32> {
-        self.json.aspect_ratio
-    }
-
-    ///  The vertical field of view in radians.
-    pub fn yfov(&self) -> f32 {
-        self.json.yfov
-    }
-
-    ///  The distance to the far clipping plane.
-    pub fn zfar(&self) -> Option<f32> {
-        self.json.zfar
-    }
-
-    ///  The distance to the near clipping plane.
-    pub fn znear(&self) -> f32 {
-        self.json.znear
-    }
-
-    /// Returns extension data unknown to this crate version.
-    #[cfg(feature = "extensions")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn extensions(&self) -> Option<&Map<String, Value>> {
-        let ext = self.json.extensions.as_ref()?;
-        Some(&ext.others)
-    }
-
-    /// Queries extension data unknown to this crate version.
-    #[cfg(feature = "extensions")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
-        let ext = self.json.extensions.as_ref()?;
-        ext.others.get(ext_name)
-    }
-
-    ///  Optional application specific data.
-    pub fn extras(&self) -> &'a json::Extras {
-        &self.json.extras
+    #[test]
+    fn deserialize() {
+        let json = r#"{"type":"orthographic","orthographic":{"xmag":1.0,"ymag":1.0,"zfar":10.0,"znear":0.01}}"#;
+        let camera = serde_json::from_str::<super::Camera>(json).unwrap();
+        match camera.projection {
+            super::Projection::Perspective { perspective: _ } => {
+                panic!("expected orthographic projection")
+            }
+            super::Projection::Orthographic { orthographic } => {
+                assert_eq!(orthographic.xmag, 1.0);
+                assert_eq!(orthographic.ymag, 1.0);
+                assert_eq!(orthographic.zfar, 10.0);
+                assert_eq!(orthographic.znear, 0.01);
+            }
+        }
     }
 }

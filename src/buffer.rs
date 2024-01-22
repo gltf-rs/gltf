@@ -1,209 +1,157 @@
-#[cfg(feature = "import")]
-use std::ops;
+use crate::validation::{Error, USize64, Validate};
+use crate::{Extras, Index, Path, Root, UnrecognizedExtensions};
 
-use crate::Document;
+/// The minimum byte stride.
+pub const MIN_BYTE_STRIDE: usize = 4;
 
-pub use json::buffer::Target;
-#[cfg(feature = "extensions")]
-use serde_json::{Map, Value};
+/// The maximum byte stride.
+pub const MAX_BYTE_STRIDE: usize = 252;
+
+/// Specifies the target a GPU buffer should be bound to.
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, serde_repr::Deserialize_repr, serde_repr::Serialize_repr,
+)]
+#[repr(u32)]
+pub enum Target {
+    /// Corresponds to `GL_ARRAY_BUFFER`.
+    ArrayBuffer = 34_962,
+
+    /// Corresponds to `GL_ELEMENT_ARRAY_BUFFER`.
+    ElementArrayBuffer = 34_963,
+}
+impl Validate for Target {}
+
+/// Distance between individual items in a buffer view, measured in bytes.
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Default,
+    Eq,
+    Hash,
+    PartialEq,
+    serde_derive::Deserialize,
+    serde_derive::Serialize,
+)]
+pub struct Stride(pub usize);
+
+impl Validate for Stride {
+    fn validate<P, R>(&self, _root: &Root, path: P, report: &mut R)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
+    {
+        if self.0 < MIN_BYTE_STRIDE || self.0 > MAX_BYTE_STRIDE {
+            report(&path, Error::Invalid);
+        }
+    }
+}
 
 /// A buffer points to binary data representing geometry, animations, or skins.
-#[derive(Clone, Debug)]
-pub struct Buffer<'a> {
-    /// The parent `Document` struct.
-    #[allow(dead_code)]
-    document: &'a Document,
+#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+pub struct Buffer {
+    /// The length of the buffer in bytes.
+    #[serde(rename = "byteLength")]
+    pub length: USize64,
 
-    /// The corresponding JSON index.
-    index: usize,
+    /// Optional user-defined name for this object.
+    pub name: Option<String>,
 
-    /// The corresponding JSON struct.
-    json: &'a json::buffer::Buffer,
+    /// The uri of the buffer.  Relative paths are relative to the .gltf file.
+    /// Instead of referencing an external file, the uri can also be a data-uri.
+    pub uri: Option<String>,
+
+    /// Unrecognized extension data.
+    pub unrecognized_extensions: UnrecognizedExtensions,
+
+    /// Optional application specific data.
+    pub extras: Option<Extras>,
 }
 
 /// A view into a buffer generally representing a subset of the buffer.
-#[derive(Clone, Debug)]
-pub struct View<'a> {
-    /// The parent `Document` struct.
-    document: &'a Document,
-
-    /// The corresponding JSON index.
-    index: usize,
-
-    /// The corresponding JSON struct.
-    json: &'a json::buffer::View,
-
+///
+/// <https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#reference-bufferview>
+///
+#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+pub struct View {
     /// The parent `Buffer`.
-    #[allow(dead_code)]
-    parent: Buffer<'a>,
-}
+    pub buffer: Index<Buffer>,
 
-/// Describes a buffer data source.
-#[derive(Clone, Debug)]
-pub enum Source<'a> {
-    /// Buffer data is contained in the `BIN` section of binary glTF.
-    Bin,
+    /// The length of the `BufferView` in bytes.
+    #[serde(rename = "byteLength")]
+    pub length: USize64,
 
-    /// Buffer data is contained in an external data source.
-    Uri(&'a str),
-}
+    /// Offset into the parent buffer in bytes.
+    #[serde(default, rename = "byteOffset")]
+    pub offset: USize64,
 
-/// Buffer data belonging to an imported glTF asset.
-#[cfg(feature = "import")]
-#[cfg_attr(docsrs, doc(cfg(feature = "import")))]
-#[derive(Clone, Debug)]
-pub struct Data(pub Vec<u8>);
-
-#[cfg(feature = "import")]
-#[cfg_attr(docsrs, doc(cfg(feature = "import")))]
-impl ops::Deref for Data {
-    type Target = [u8];
-    fn deref(&self) -> &Self::Target {
-        self.0.as_slice()
-    }
-}
-
-impl<'a> Buffer<'a> {
-    /// Constructs a `Buffer`.
-    pub(crate) fn new(
-        document: &'a Document,
-        index: usize,
-        json: &'a json::buffer::Buffer,
-    ) -> Self {
-        Self {
-            document,
-            index,
-            json,
-        }
-    }
-
-    /// Returns the internal JSON index.
-    pub fn index(&self) -> usize {
-        self.index
-    }
-
-    /// Returns the buffer data source.
-    pub fn source(&self) -> Source<'a> {
-        if let Some(uri) = self.json.uri.as_deref() {
-            Source::Uri(uri)
-        } else {
-            Source::Bin
-        }
-    }
-
-    /// The length of the buffer in bytes.
-    pub fn length(&self) -> usize {
-        self.json.byte_length.0 as usize
-    }
+    /// The stride in bytes between vertex attributes or other interleavable data.
+    ///
+    /// When zero, data is assumed to be tightly packed.
+    #[serde(rename = "byteStride")]
+    pub stride: Option<Stride>,
 
     /// Optional user-defined name for this object.
-    #[cfg(feature = "names")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "names")))]
-    pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_deref()
-    }
-
-    /// Returns extension data unknown to this crate version.
-    #[cfg(feature = "extensions")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn extensions(&self) -> Option<&Map<String, Value>> {
-        let ext = self.json.extensions.as_ref()?;
-        Some(&ext.others)
-    }
-
-    /// Queries extension data unknown to this crate version.
-    #[cfg(feature = "extensions")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
-        let ext = self.json.extensions.as_ref()?;
-        ext.others.get(ext_name)
-    }
-
-    /// Optional application specific data.
-    pub fn extras(&self) -> &'a json::Extras {
-        &self.json.extras
-    }
-}
-
-impl<'a> View<'a> {
-    /// Constructs a `View`.
-    pub(crate) fn new(document: &'a Document, index: usize, json: &'a json::buffer::View) -> Self {
-        let parent = document.buffers().nth(json.buffer.value()).unwrap();
-        Self {
-            document,
-            index,
-            json,
-            parent,
-        }
-    }
-
-    /// Returns the internal JSON index.
-    pub fn index(&self) -> usize {
-        self.index
-    }
-
-    /// Returns the parent `Buffer`.
-    pub fn buffer(&self) -> Buffer<'a> {
-        self.document
-            .buffers()
-            .nth(self.json.buffer.value())
-            .unwrap()
-    }
-
-    /// Returns the length of the buffer view in bytes.
-    pub fn length(&self) -> usize {
-        self.json.byte_length.0 as usize
-    }
-
-    /// Returns the offset into the parent buffer in bytes.
-    pub fn offset(&self) -> usize {
-        self.json.byte_offset.unwrap_or_default().0 as usize
-    }
-
-    /// Returns the stride in bytes between vertex attributes or other interleavable
-    /// data. When `None`, data is assumed to be tightly packed.
-    pub fn stride(&self) -> Option<usize> {
-        self.json.byte_stride.and_then(|x| {
-            // Treat byte_stride == 0 same as not specifying stride.
-            // This is technically a validation error, but best way we can handle it here
-            if x.0 == 0 {
-                None
-            } else {
-                Some(x.0)
-            }
-        })
-    }
-
-    /// Optional user-defined name for this object.
-    #[cfg(feature = "names")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "names")))]
-    pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_deref()
-    }
+    pub name: Option<String>,
 
     /// Optional target the buffer should be bound to.
-    pub fn target(&self) -> Option<Target> {
-        self.json.target.map(|target| target.unwrap())
-    }
+    pub target: Option<Target>,
 
-    /// Returns extension data unknown to this crate version.
-    #[cfg(feature = "extensions")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn extensions(&self) -> Option<&Map<String, Value>> {
-        let ext = self.json.extensions.as_ref()?;
-        Some(&ext.others)
-    }
-
-    /// Queries extension data unknown to this crate version.
-    #[cfg(feature = "extensions")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
-        let ext = self.json.extensions.as_ref()?;
-        ext.others.get(ext_name)
-    }
+    /// Unrecognized extension data.
+    pub unrecognized_extensions: UnrecognizedExtensions,
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &'a json::Extras {
-        &self.json.extras
+    pub extras: Option<Extras>,
+}
+
+mod tests {
+    #[test]
+    fn serialize_target() {
+        assert_eq!(
+            "34962",
+            serde_json::to_string(&super::Target::ArrayBuffer).unwrap(),
+        );
+    }
+
+    #[test]
+    fn deserialize_target() {
+        assert_eq!(
+            super::Target::ElementArrayBuffer,
+            serde_json::from_str("34963").unwrap(),
+        );
+
+        assert!(serde_json::from_str::<super::Target>("123").is_err());
+    }
+
+    #[test]
+    fn serialize_buffer() {
+        let user_data = serde_json::json!({ "bar": 42 });
+        let example = super::Buffer {
+            length: 12usize.into(),
+            name: Some("foo".to_owned()),
+            uri: None,
+            extras: Some(serde_json::value::to_raw_value(&user_data).unwrap()),
+            unrecognized_extensions: Default::default(),
+        };
+        assert_eq!(
+            r#"{"byteLength":12,"name":"foo","extras":{"bar":42}}"#,
+            serde_json::to_string(&example).unwrap(),
+        );
+    }
+
+    #[test]
+    fn deserialize_buffer() {
+        let json = r#"{"byteLength":12,"name":"foo","extras":{"bar":42}}"#;
+        let buffer = serde_json::from_str::<super::Buffer>(json).unwrap();
+        assert_eq!(buffer.length, super::USize64(12));
+        assert_eq!(buffer.name.as_deref(), Some("foo"));
+        assert_eq!(buffer.uri, None);
+        assert_eq!(
+            buffer
+                .extras
+                .as_deref()
+                .map(serde_json::value::RawValue::get),
+            Some(r#"{"bar":42}"#)
+        );
     }
 }

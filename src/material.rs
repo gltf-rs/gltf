@@ -1,700 +1,497 @@
-use crate::{texture, Document};
+use crate::validation::Validate;
+use crate::{texture, Extras, Index, UnrecognizedExtensions};
 
-pub use json::material::AlphaMode;
-#[cfg(feature = "extensions")]
-use serde_json::{Map, Value};
+/// Support for the `KHR_materials_pbrSpecularGlossiness` extension.
+pub mod khr_materials_pbr_specular_glossiness {
+    /// A set of parameter values that are used to define the specular-glossiness
+    /// material model from Physically-Based Rendering (PBR) methodology.
+    ///
+    /// This model supports more materials than metallic-roughness, at the cost of
+    /// increased memory use. When both are available, specular-glossiness should be
+    /// preferred.
+    #[derive(
+        Clone,
+        Debug,
+        gltf_derive::Default,
+        gltf_derive::Deserialize,
+        gltf_derive::Serialize,
+        gltf_derive::Validate,
+    )]
+    pub struct PbrSpecularGlossiness {
+        /// The material's diffuse factor.
+        ///
+        /// The RGBA components of the reflected diffuse color of the
+        /// material. Metals have a diffuse value of `[0.0, 0.0, 0.0]`. The fourth
+        /// component (A) is the alpha coverage of the material. The `alphaMode`
+        /// property specifies how alpha is interpreted. The values are linear.
+        #[gltf(default = [1.0; 4])]
+        pub diffuse_factor: [f32; 4],
 
-lazy_static! {
-    static ref DEFAULT_MATERIAL: json::material::Material = Default::default();
+        /// The diffuse texture.
+        ///
+        /// This texture contains RGB(A) components of the reflected diffuse color
+        /// of the material in sRGB color space. If the fourth component (A) is
+        /// present, it represents the alpha coverage of the material. Otherwise, an
+        /// alpha of 1.0 is assumed. The `alphaMode` property specifies how alpha is
+        /// interpreted. The stored texels must not be premultiplied.
+        pub diffuse_texture: Option<crate::texture::Info>,
+
+        /// The material's specular factor.
+        #[gltf(default = [1.0; 3])]
+        pub specular_factor: [f32; 3],
+
+        /// The glossiness or smoothness of the material.
+        ///
+        /// A value of 1.0 means the material has full glossiness or is perfectly
+        /// smooth. A value of 0.0 means the material has no glossiness or is
+        /// completely rough. This value is linear.
+        #[gltf(default = 1.0)]
+        pub glossiness_factor: f32,
+
+        /// The specular-glossiness texture.
+        ///
+        /// A RGBA texture, containing the specular color of the material (RGB
+        /// components) and its glossiness (A component). The values are in sRGB
+        /// space.
+        pub specular_glossiness_texture: Option<crate::texture::Info>,
+
+        /// Unrecognized extension data.
+        pub unrecognized_extensions: crate::UnrecognizedExtensions,
+
+        /// Optional application specific data.
+        pub extras: Option<crate::Extras>,
+    }
 }
+
+/// Support for the `KHR_materials_unlit` extension.
+pub mod khr_materials_unlit {
+    /// Empty struct that should be present for primitives which should not be shaded with the PBR shading model.
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        gltf_derive::Deserialize,
+        gltf_derive::Serialize,
+        gltf_derive::Validate,
+    )]
+    pub struct Unlit {
+        /// Unrecognized extension data.
+        pub unrecognized_extensions: crate::UnrecognizedExtensions,
+
+        /// Optional application specific data.
+        pub extras: Option<crate::Extras>,
+    }
+}
+
+/// Support for the `KHR_materials_transmission` extension.
+pub mod khr_materials_transmission {
+    /// Describes the optical transmission of a material.
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        gltf_derive::Deserialize,
+        gltf_derive::Serialize,
+        gltf_derive::Validate,
+    )]
+    pub struct Transmission {
+        /// The base percentage of light that is transmitted through the surface.
+        ///
+        /// The amount of light that is transmitted by the surface rather than diffusely re-emitted.
+        /// This is a percentage of all the light that penetrates a surface (i.e. isn’t specularly reflected)
+        /// rather than a percentage of the total light that hits a surface.
+        /// A value of 1.0 means that 100% of the light that penetrates the surface is transmitted through.
+        #[gltf(default)]
+        pub transmission_factor: f32,
+
+        /// The transmission texture.
+        ///
+        /// The R channel of this texture defines the amount of light that is transmitted by the surface
+        /// rather than diffusely re-emitted. A value of 1.0 in the red channel means that 100% of the light
+        /// that penetrates the surface (i.e. isn’t specularly reflected) is transmitted through.
+        /// The value is linear and is multiplied by the transmissionFactor to determine the total transmission value.
+        pub transmission_texture: Option<crate::texture::Info>,
+
+        /// Unrecognized extension data.
+        pub unrecognized_extensions: crate::UnrecognizedExtensions,
+
+        /// Optional application specific data.
+        pub extras: Option<crate::Extras>,
+    }
+}
+
+/// Support for the `KHR_materials_ior` extension.
+pub mod khr_materials_ior {
+    /// Defines the index of refraction for a material.
+    #[derive(
+        Clone,
+        Debug,
+        gltf_derive::Default,
+        gltf_derive::Deserialize,
+        gltf_derive::Serialize,
+        gltf_derive::Validate,
+    )]
+    pub struct Ior {
+        /// The index of refraction.
+        ///
+        /// Typical values for the index of refraction range from 1 to 2.
+        /// In rare cases, values greater than 2 are possible.
+        /// For example, the ior of water is 1.33, and diamond is 2.42.
+        #[gltf(default = 1.5)]
+        pub ior: f32,
+
+        /// Unrecognized extension data.
+        pub unrecognized_extensions: crate::UnrecognizedExtensions,
+
+        /// Optional application specific data.
+        pub extras: Option<crate::Extras>,
+    }
+}
+
+/// Support for the `KHR_materials_emissive_strength` extension.
+pub mod khr_materials_emissive_strength {
+    /// Allows the strength of an emissive material to be adjusted.
+    #[derive(
+        Clone,
+        Debug,
+        gltf_derive::Default,
+        gltf_derive::Deserialize,
+        gltf_derive::Serialize,
+        gltf_derive::Validate,
+    )]
+    pub struct EmissiveStrength {
+        /// The factor by which to scale the emissive factor or emissive texture.
+        #[gltf(default = 1.0)]
+        pub emissive_strength: f32,
+
+        /// Unrecognized extension data.
+        pub unrecognized_extensions: crate::UnrecognizedExtensions,
+
+        /// Optional application specific data.
+        pub extras: Option<crate::Extras>,
+    }
+}
+
+/// Support for the `KHR_materials_volume` extension.
+pub mod khr_materials_volume {
+    /// Volumetric material properties.
+    #[derive(
+        Clone,
+        Debug,
+        gltf_derive::Default,
+        gltf_derive::Deserialize,
+        gltf_derive::Serialize,
+        gltf_derive::Validate,
+    )]
+    pub struct Volume {
+        /// The thickness of the volume beneath the surface. The value is
+        /// given in the coordinate space of the mesh. If the value is 0
+        /// the material is thin-walled. Otherwise the material is a
+        /// volume boundary. The `doubleSided` property has no effect on
+        /// volume boundaries. Range is [0, +inf).
+        #[gltf(default)]
+        pub thickness_factor: f32,
+
+        /// A texture that defines the thickness, stored in the G channel.
+        /// This will be multiplied by `thickness_factor`. Range is [0, 1].
+        pub thickness_texture: Option<crate::texture::Info>,
+
+        /// Density of the medium given as the average distance that light
+        /// travels in the medium before interacting with a particle. The
+        /// value is given in world space. Range is (0, +inf).
+        #[gltf(default = f32::INFINITY)]
+        pub attenuation_distance: f32,
+
+        /// The color that white light turns into due to absorption when
+        /// reaching the attenuation distance.
+        #[gltf(default = [1.0; 3])]
+        pub attenuation_color: [f32; 3],
+
+        /// Unrecognized extension data.
+        pub unrecognized_extensions: crate::UnrecognizedExtensions,
+
+        /// Optional application specific data.
+        pub extras: Option<crate::Extras>,
+    }
+}
+
+/// Support for the `KHR_materials_volume` extension.
+pub mod khr_materials_specular {
+    /// Allows the strength of specular reflections to be adjusted.
+    #[derive(
+        Clone,
+        Debug,
+        gltf_derive::Default,
+        gltf_derive::Deserialize,
+        gltf_derive::Serialize,
+        gltf_derive::Validate,
+    )]
+    pub struct Specular {
+        /// The strength of the specular reflection.
+        #[gltf(default = 1.0)]
+        pub specular_factor: f32,
+
+        /// A texture that defines the strength of the specular reflection,
+        /// stored in the alpha (`A`) channel. This will be multiplied by
+        /// `specular_factor`.
+        pub specular_texture: Option<crate::texture::Info>,
+
+        /// The F0 (linear RGB) color of the specular reflection.
+        #[gltf(default = [1.0; 3])]
+        pub specular_color_factor: [f32; 3],
+
+        /// A texture that defines the F0 color of the specular reflection,
+        /// stored in the `RGB` channels and encoded in sRGB. This texture
+        /// will be multiplied by `specular_color_factor`.
+        pub specular_color_texture: Option<crate::texture::Info>,
+
+        /// Unrecognized extension data.
+        pub unrecognized_extensions: crate::UnrecognizedExtensions,
+
+        /// Optional application specific data.
+        pub extras: Option<crate::Extras>,
+    }
+}
+
+/// The alpha rendering mode of a material.
+#[derive(
+    Clone, Copy, Debug, Default, serde_derive::Deserialize, Eq, PartialEq, serde_derive::Serialize,
+)]
+pub enum AlphaMode {
+    /// The alpha value is ignored and the rendered output is fully opaque.
+    #[default]
+    #[serde(rename = "OPAQUE")]
+    Opaque = 1,
+
+    /// The rendered output is either fully opaque or fully transparent depending on
+    /// the alpha value and the specified alpha cutoff value.
+    #[serde(rename = "MASK")]
+    Mask,
+
+    /// The alpha value is used, to determine the transparency of the rendered output.
+    /// The alpha cutoff value is ignored.
+    #[serde(rename = "BLEND")]
+    Blend,
+}
+
+impl Validate for AlphaMode {}
 
 /// The material appearance of a primitive.
-#[derive(Clone, Debug)]
-pub struct Material<'a> {
-    /// The parent `Document` struct.
-    document: &'a Document,
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Default,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Validate,
+)]
+pub struct Material {
+    /// The alpha cutoff value of the material.
+    #[gltf(default = 0.5)]
+    pub alpha_cutoff: f32,
 
-    /// The corresponding JSON index - `None` when the default material.
-    index: Option<usize>,
-
-    /// The corresponding JSON struct.
-    json: &'a json::material::Material,
-}
-
-impl<'a> Material<'a> {
-    /// Constructs a `Material`.
-    pub(crate) fn new(
-        document: &'a Document,
-        index: usize,
-        json: &'a json::material::Material,
-    ) -> Self {
-        Self {
-            document,
-            index: Some(index),
-            json,
-        }
-    }
-
-    /// Constructs the default `Material`.
-    pub(crate) fn default(document: &'a Document) -> Self {
-        Self {
-            document,
-            index: None,
-            json: &DEFAULT_MATERIAL,
-        }
-    }
-
-    /// Returns the internal JSON index if this `Material` was explicity defined.
+    /// The alpha rendering mode of the material.
     ///
-    /// This function returns `None` if the `Material` is the default material.
-    pub fn index(&self) -> Option<usize> {
-        self.index
-    }
-
-    ///  The optional alpha cutoff value of the material.
-    pub fn alpha_cutoff(&self) -> Option<f32> {
-        self.json.alpha_cutoff.map(|value| value.0)
-    }
-
-    /// The alpha rendering mode of the material.  The material's alpha rendering
-    /// mode enumeration specifying the interpretation of the alpha value of the main
-    /// factor and texture.
+    /// The material's alpha rendering mode enumeration specifying the
+    /// interpretation of the alpha value of the main factor and texture.
     ///
-    /// * In `Opaque` mode (default) the alpha value is ignored
-    ///   and the rendered output is fully opaque.
-    /// * In `Mask` mode, the rendered
-    ///   output is either fully opaque or fully transparent depending on the alpha
-    ///   value and the specified alpha cutoff value.
+    /// * In `Opaque` mode (default) the alpha value is ignored and the rendered
+    ///   output is fully opaque.
+    ///
+    /// * In `Mask` mode, the rendered output is either fully opaque or fully
+    ///   transparent depending on the alpha value and the specified alpha cutoff
+    ///   value.
+    ///
     /// * In `Blend` mode, the alpha value is used to composite the source and
-    ///   destination areas and the rendered output is combined with the background
-    ///   using the normal painting operation (i.e. the Porter and Duff over
-    ///   operator).
-    pub fn alpha_mode(&self) -> AlphaMode {
-        self.json.alpha_mode.unwrap()
-    }
+    ///   destination areas and the rendered output is combined with the
+    ///   background using the normal painting operation (i.e. the Porter and
+    ///   Duff over operator).
+    #[gltf(default)]
+    pub alpha_mode: AlphaMode,
 
     /// Specifies whether the material is double-sided.
     ///
     /// * When this value is false, back-face culling is enabled.
+    ///
     /// * When this value is true, back-face culling is disabled and double sided
-    ///   lighting is enabled.  The back-face must have its normals reversed before
-    ///   the lighting equation is evaluated.
-    pub fn double_sided(&self) -> bool {
-        self.json.double_sided
-    }
+    ///   lighting is enabled.
+    ///
+    /// The back-face must have its normals reversed before the lighting
+    /// equation is evaluated.
+    pub double_sided: bool,
 
     /// Optional user-defined name for this object.
-    #[cfg(feature = "names")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "names")))]
-    pub fn name(&self) -> Option<&'a str> {
-        self.json.name.as_deref()
-    }
+    pub name: Option<String>,
 
-    /// Parameter values that define the metallic-roughness material model from
-    /// Physically-Based Rendering (PBR) methodology.
-    pub fn pbr_metallic_roughness(&self) -> PbrMetallicRoughness<'a> {
-        PbrMetallicRoughness::new(self.document, &self.json.pbr_metallic_roughness)
-    }
+    /// A set of parameter values that are used to define the metallic-roughness
+    /// material model from Physically-Based Rendering (PBR) methodology. When not
+    /// specified, all the default values of `pbrMetallicRoughness` apply.
+    pub pbr_metallic_roughness: Option<PbrMetallicRoughness>,
 
-    /// Returns extension data unknown to this crate version.
-    #[cfg(feature = "extensions")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn extensions(&self) -> Option<&Map<String, Value>> {
-        let ext = self.json.extensions.as_ref()?;
-        Some(&ext.others)
-    }
+    /// A tangent space normal map. The texture contains RGB components in linear
+    /// space. Each texel represents the XYZ components of a normal vector in
+    /// tangent space. Red [0 to 255] maps to X [-1 to 1]. Green [0 to 255] maps to
+    /// Y [-1 to 1]. Blue [128 to 255] maps to Z [1/255 to 1]. The normal vectors
+    /// use OpenGL conventions where +X is right and +Y is up. +Z points toward the
+    /// viewer.
+    pub normal_texture: Option<NormalTexture>,
 
-    /// Get the value of an extension based on the name of the extension
-    #[cfg(feature = "extensions")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn extension_value(&self, key: &str) -> Option<&Value> {
-        let ext = self.json.extensions.as_ref()?;
-        ext.others.get(key)
-    }
-
-    /// Parameter values that define the specular-glossiness material model from
-    /// Physically-Based Rendering (PBR) methodology.
-    #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_pbrSpecularGlossiness")))]
-    pub fn pbr_specular_glossiness(&self) -> Option<PbrSpecularGlossiness<'a>> {
-        self.json
-            .extensions
-            .as_ref()?
-            .pbr_specular_glossiness
-            .as_ref()
-            .map(|x| PbrSpecularGlossiness::new(self.document, x))
-    }
-
-    /// Parameter values that define the transmission of light through the material
-    #[cfg(feature = "KHR_materials_transmission")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_transmission")))]
-    pub fn transmission(&self) -> Option<Transmission<'a>> {
-        self.json
-            .extensions
-            .as_ref()?
-            .transmission
-            .as_ref()
-            .map(|x| Transmission::new(self.document, x))
-    }
-
-    /// Parameter values that define the index of refraction of the material
-    #[cfg(feature = "KHR_materials_ior")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_ior")))]
-    pub fn ior(&self) -> Option<f32> {
-        self.json.extensions.as_ref()?.ior.as_ref().map(|x| x.ior.0)
-    }
-
-    /// Parameter value that adjusts the strength of emissive material properties
-    #[cfg(feature = "KHR_materials_emissive_strength")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_emissive_strength")))]
-    pub fn emissive_strength(&self) -> Option<f32> {
-        self.json
-            .extensions
-            .as_ref()?
-            .emissive_strength
-            .as_ref()
-            .map(|x| x.emissive_strength.0)
-    }
-
-    /// Parameter values that define a volume for the transmission of light through the material
-    #[cfg(feature = "KHR_materials_volume")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_volume")))]
-    pub fn volume(&self) -> Option<Volume<'a>> {
-        self.json
-            .extensions
-            .as_ref()?
-            .volume
-            .as_ref()
-            .map(|x| Volume::new(self.document, x))
-    }
-
-    /// Parameter values that define the strength and colour of the specular reflection of the material
-    #[cfg(feature = "KHR_materials_specular")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_specular")))]
-    pub fn specular(&self) -> Option<Specular<'a>> {
-        self.json
-            .extensions
-            .as_ref()?
-            .specular
-            .as_ref()
-            .map(|x| Specular::new(self.document, x))
-    }
-
-    /// A tangent space normal map.
-    ///
-    /// The texture contains RGB components in linear space. Each texel represents
-    /// the XYZ components of a normal vector in tangent space.
-    ///
-    /// * Red [0 to 255] maps to X [-1 to 1].
-    /// * Green [0 to 255] maps to Y [-1 to 1].
-    /// * Blue [128 to 255] maps to Z [1/255 to 1].
-    ///
-    /// The normal vectors use OpenGL conventions where +X is right, +Y is up, and
-    /// +Z points toward the viewer.
-    pub fn normal_texture(&self) -> Option<NormalTexture<'a>> {
-        self.json.normal_texture.as_ref().map(|json| {
-            let texture = self.document.textures().nth(json.index.value()).unwrap();
-            NormalTexture::new(texture, json)
-        })
-    }
-
-    /// The occlusion map texture.
-    ///
-    /// The occlusion values are sampled from the R channel. Higher values indicate
-    /// areas that should receive full indirect lighting and lower values indicate
-    /// no indirect lighting. These values are linear.
-    ///
-    /// If other channels are present (GBA), they are ignored for occlusion
+    /// The occlusion map texture. The occlusion values are sampled from the R
+    /// channel. Higher values indicate areas that should receive full indirect
+    /// lighting and lower values indicate no indirect lighting. These values are
+    /// linear. If other channels are present (GBA), they are ignored for occlusion
     /// calculations.
-    pub fn occlusion_texture(&self) -> Option<OcclusionTexture<'a>> {
-        self.json.occlusion_texture.as_ref().map(|json| {
-            let texture = self.document.textures().nth(json.index.value()).unwrap();
-            OcclusionTexture::new(texture, json)
-        })
-    }
+    pub occlusion_texture: Option<OcclusionTexture>,
 
-    /// The emissive map texture.
-    ///
-    /// The emissive map controls the color and intensity of the light being
-    /// emitted by the material.
-    ///
-    /// This texture contains RGB components in sRGB color space. If a fourth
-    /// component (A) is present, it is ignored.
-    pub fn emissive_texture(&self) -> Option<texture::Info<'a>> {
-        self.json.emissive_texture.as_ref().map(|json| {
-            let texture = self.document.textures().nth(json.index.value()).unwrap();
-            texture::Info::new(texture, json)
-        })
-    }
+    /// The emissive map controls the color and intensity of the light being emitted
+    /// by the material. This texture contains RGB components in sRGB color space.
+    /// If a fourth component (A) is present, it is ignored.
+    pub emissive_texture: Option<texture::Info>,
 
     /// The emissive color of the material.
-    ///
-    /// The default value is `[0.0, 0.0, 0.0]`.
-    pub fn emissive_factor(&self) -> [f32; 3] {
-        self.json.emissive_factor.0
-    }
+    #[gltf(default)]
+    pub emissive_factor: [f32; 3],
 
-    /// Specifies whether the material is unlit.
-    ///
-    /// Returns `true` if the [`KHR_materials_unlit`] property was specified, in which
-    /// case the renderer should prefer to ignore all PBR values except `baseColor`.
-    ///
-    /// [`KHR_materials_unlit`]: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit#overview
-    #[cfg(feature = "KHR_materials_unlit")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_unlit")))]
-    pub fn unlit(&self) -> bool {
-        self.json
-            .extensions
-            .as_ref()
-            .map_or(false, |extensions| extensions.unlit.is_some())
-    }
+    /// Support for the `KHR_materials_pbrSpecularGlossiness` extension.
+    #[gltf(extension = "KHR_materials_pbrSpecularGlossiness")]
+    pub pbr_specular_glossiness:
+        Option<khr_materials_pbr_specular_glossiness::PbrSpecularGlossiness>,
+
+    /// Support for the `KHR_materials_unlit` extension.
+    #[gltf(extension = "KHR_materials_unlit")]
+    pub unlit: Option<khr_materials_unlit::Unlit>,
+
+    /// Support for the `KHR_materials_transmission` extension.
+    #[gltf(extension = "KHR_materials_transmission")]
+    pub transmission: Option<khr_materials_transmission::Transmission>,
+
+    /// Support for the `KHR_materials_volume` extension.
+    #[gltf(extension = "KHR_materials_volume")]
+    pub volume: Option<khr_materials_volume::Volume>,
+
+    /// Support for the `KHR_materials_specular` extension.
+    #[gltf(extension = "KHR_materials_specular")]
+    pub specular: Option<khr_materials_specular::Specular>,
+
+    /// Support for the `KHR_materials_ior` extension.
+    #[gltf(extension = "KHR_materials_ior")]
+    pub ior: Option<khr_materials_ior::Ior>,
+
+    /// Support for the `KHR_materials_emissive_strength` extension.
+    #[gltf(extension = "KHR_materials_emissive_strength")]
+    pub emissive_strength: Option<khr_materials_emissive_strength::EmissiveStrength>,
+
+    /// Unrecognized extension data.
+    pub unrecognized_extensions: UnrecognizedExtensions,
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &'a json::Extras {
-        &self.json.extras
-    }
+    pub extras: Option<Extras>,
 }
 
 /// A set of parameter values that are used to define the metallic-roughness
 /// material model from Physically-Based Rendering (PBR) methodology.
-pub struct PbrMetallicRoughness<'a> {
-    /// The parent `Document` struct.
-    document: &'a Document,
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Default,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Validate,
+)]
+pub struct PbrMetallicRoughness {
+    /// The material's base color factor.
+    #[gltf(default = [1.0, 1.0, 1.0, 1.0])]
+    pub base_color_factor: [f32; 4],
 
-    /// The corresponding JSON struct.
-    json: &'a json::material::PbrMetallicRoughness,
-}
+    /// The base color texture.
+    pub base_color_texture: Option<texture::Info>,
 
-impl<'a> PbrMetallicRoughness<'a> {
-    /// Constructs `PbrMetallicRoughness`.
-    pub(crate) fn new(
-        document: &'a Document,
-        json: &'a json::material::PbrMetallicRoughness,
-    ) -> Self {
-        Self { document, json }
-    }
+    /// The metalness of the material.
+    #[gltf(default = 1.0)]
+    pub metallic_factor: f32,
 
-    /// Returns the material's base color factor.
-    ///
-    /// The default value is `[1.0, 1.0, 1.0, 1.0]`.
-    pub fn base_color_factor(&self) -> [f32; 4] {
-        self.json.base_color_factor.0
-    }
-
-    /// Returns the base color texture. The texture contains RGB(A) components
-    /// in sRGB color space.
-    pub fn base_color_texture(&self) -> Option<texture::Info<'a>> {
-        self.json.base_color_texture.as_ref().map(|json| {
-            let texture = self.document.textures().nth(json.index.value()).unwrap();
-            texture::Info::new(texture, json)
-        })
-    }
-
-    /// Returns the metalness factor of the material.
-    ///
-    /// The default value is `1.0`.
-    pub fn metallic_factor(&self) -> f32 {
-        self.json.metallic_factor.0
-    }
-
-    /// Returns the roughness factor of the material.
+    /// The roughness of the material.
     ///
     /// * A value of 1.0 means the material is completely rough.
     /// * A value of 0.0 means the material is completely smooth.
-    ///
-    /// The default value is `1.0`.
-    pub fn roughness_factor(&self) -> f32 {
-        self.json.roughness_factor.0
-    }
+    #[gltf(default = 1.0)]
+    pub roughness_factor: f32,
 
     /// The metallic-roughness texture.
+    ///
+    /// This texture has two components:
     ///
     /// The metalness values are sampled from the B channel.
     /// The roughness values are sampled from the G channel.
     /// These values are linear. If other channels are present (R or A),
     /// they are ignored for metallic-roughness calculations.
-    pub fn metallic_roughness_texture(&self) -> Option<texture::Info<'a>> {
-        self.json.metallic_roughness_texture.as_ref().map(|json| {
-            let texture = self.document.textures().nth(json.index.value()).unwrap();
-            texture::Info::new(texture, json)
-        })
-    }
+    pub metallic_roughness_texture: Option<texture::Info>,
 
-    /// Returns extension data unknown to this crate version.
-    #[cfg(feature = "extensions")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn extensions(&self) -> Option<&Map<String, Value>> {
-        let ext = self.json.extensions.as_ref()?;
-        Some(&ext.others)
-    }
-
-    /// Get the value of an extension based on the name of the extension
-    #[cfg(feature = "extensions")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn extension_value(&self, key: &str) -> Option<&Value> {
-        let ext = self.json.extensions.as_ref()?;
-        ext.others.get(key)
-    }
+    /// Unrecognized extension data.
+    pub unrecognized_extensions: UnrecognizedExtensions,
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &'a json::Extras {
-        &self.json.extras
-    }
-}
-
-/// A set of parameter values that are used to define the transmissions
-/// factor of the material
-#[cfg(feature = "KHR_materials_transmission")]
-#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_transmission")))]
-pub struct Transmission<'a> {
-    /// The parent `Document` struct.
-    document: &'a Document,
-
-    /// The corresponding JSON struct.
-    json: &'a json::extensions::material::Transmission,
-}
-
-#[cfg(feature = "KHR_materials_transmission")]
-#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_transmission")))]
-impl<'a> Transmission<'a> {
-    /// Constructs `Ior`.
-    pub(crate) fn new(
-        document: &'a Document,
-        json: &'a json::extensions::material::Transmission,
-    ) -> Self {
-        Self { document, json }
-    }
-
-    /// Returns the material's transmission factor.
-    ///
-    /// The default value is `0.0`.
-    pub fn transmission_factor(&self) -> f32 {
-        self.json.transmission_factor.0
-    }
-
-    /// Returns the transmission texture.
-    pub fn transmission_texture(&self) -> Option<texture::Info<'a>> {
-        self.json.transmission_texture.as_ref().map(|json| {
-            let texture = self.document.textures().nth(json.index.value()).unwrap();
-            texture::Info::new(texture, json)
-        })
-    }
-
-    /// Optional application specific data.
-    pub fn extras(&self) -> &'a json::Extras {
-        &self.json.extras
-    }
-}
-
-/// Parameter values that define a volume for the transmission of light through the material
-#[cfg(feature = "KHR_materials_volume")]
-#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_volume")))]
-pub struct Volume<'a> {
-    /// The parent `Document` struct.
-    document: &'a Document,
-
-    /// The corresponding JSON struct.
-    json: &'a json::extensions::material::Volume,
-}
-
-#[cfg(feature = "KHR_materials_volume")]
-#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_volume")))]
-impl<'a> Volume<'a> {
-    /// Constructs `Volume`.
-    pub(crate) fn new(
-        document: &'a Document,
-        json: &'a json::extensions::material::Volume,
-    ) -> Self {
-        Self { document, json }
-    }
-
-    /// The thickness of the volume beneath the surface. The value is
-    /// given in the coordinate space of the mesh. If the value is 0
-    /// the material is thin-walled. Otherwise the material is a
-    /// volume boundary. The `doubleSided` property has no effect on
-    /// volume boundaries. Range is [0, +inf).
-    pub fn thickness_factor(&self) -> f32 {
-        self.json.thickness_factor.0
-    }
-
-    /// A texture that defines the thickness, stored in the G channel.
-    /// This will be multiplied by `thickness_factor`. Range is [0, 1].
-    pub fn thickness_texture(&self) -> Option<texture::Info<'a>> {
-        self.json.thickness_texture.as_ref().map(|json| {
-            let texture = self.document.textures().nth(json.index.value()).unwrap();
-            texture::Info::new(texture, json)
-        })
-    }
-
-    /// Density of the medium given as the average distance that light
-    /// travels in the medium before interacting with a particle. The
-    /// value is given in world space. Range is (0, +inf).
-    pub fn attenuation_distance(&self) -> f32 {
-        self.json.attenuation_distance.0
-    }
-
-    /// The color that white light turns into due to absorption when
-    /// reaching the attenuation distance.
-    pub fn attenuation_color(&self) -> [f32; 3] {
-        self.json.attenuation_color.0
-    }
-
-    /// Optional application specific data.
-    pub fn extras(&self) -> &'a json::Extras {
-        &self.json.extras
-    }
-}
-
-/// Parameter values that define the strength and colour of the specular reflection of the material
-#[cfg(feature = "KHR_materials_specular")]
-#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_specular")))]
-pub struct Specular<'a> {
-    /// The parent `Document` struct.
-    document: &'a Document,
-
-    /// The corresponding JSON struct.
-    json: &'a json::extensions::material::Specular,
-}
-
-#[cfg(feature = "KHR_materials_specular")]
-#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_specular")))]
-impl<'a> Specular<'a> {
-    /// Constructs `Volume`.
-    pub(crate) fn new(
-        document: &'a Document,
-        json: &'a json::extensions::material::Specular,
-    ) -> Self {
-        Self { document, json }
-    }
-
-    /// The strength of the specular reflection.
-    pub fn specular_factor(&self) -> f32 {
-        self.json.specular_factor.0
-    }
-
-    /// A texture that defines the strength of the specular reflection,
-    /// stored in the alpha (`A`) channel. This will be multiplied by
-    /// `specular_factor`.
-    pub fn specular_texture(&self) -> Option<texture::Info<'a>> {
-        self.json.specular_texture.as_ref().map(|json| {
-            let texture = self.document.textures().nth(json.index.value()).unwrap();
-            texture::Info::new(texture, json)
-        })
-    }
-
-    /// The F0 color of the specular reflection (linear RGB).
-    pub fn specular_color_factor(&self) -> [f32; 3] {
-        self.json.specular_color_factor.0
-    }
-
-    /// A texture that defines the F0 color of the specular reflection,
-    /// stored in the `RGB` channels and encoded in sRGB. This texture
-    /// will be multiplied by `specular_color_factor`.
-    pub fn specular_color_texture(&self) -> Option<texture::Info<'a>> {
-        self.json.specular_color_texture.as_ref().map(|json| {
-            let texture = self.document.textures().nth(json.index.value()).unwrap();
-            texture::Info::new(texture, json)
-        })
-    }
-
-    /// Optional application specific data.
-    pub fn extras(&self) -> &'a json::Extras {
-        &self.json.extras
-    }
-}
-
-/// A set of parameter values that are used to define the specular-glossiness
-/// material model from Physically-Based Rendering (PBR) methodology.
-#[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
-#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_pbrSpecularGlossiness")))]
-pub struct PbrSpecularGlossiness<'a> {
-    /// The parent `Document` struct.
-    document: &'a Document,
-
-    /// The corresponding JSON struct.
-    json: &'a json::extensions::material::PbrSpecularGlossiness,
-}
-
-#[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
-#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_pbrSpecularGlossiness")))]
-impl<'a> PbrSpecularGlossiness<'a> {
-    /// Constructs `PbrSpecularGlossiness`.
-    pub(crate) fn new(
-        document: &'a Document,
-        json: &'a json::extensions::material::PbrSpecularGlossiness,
-    ) -> Self {
-        Self { document, json }
-    }
-
-    /// Returns the material's base color factor.
-    ///
-    /// The default value is `[1.0, 1.0, 1.0, 1.0]`.
-    pub fn diffuse_factor(&self) -> [f32; 4] {
-        self.json.diffuse_factor.0
-    }
-
-    /// Returns the base color texture.
-    pub fn diffuse_texture(&self) -> Option<texture::Info<'a>> {
-        self.json.diffuse_texture.as_ref().map(|json| {
-            let texture = self.document.textures().nth(json.index.value()).unwrap();
-            texture::Info::new(texture, json)
-        })
-    }
-
-    /// Returns the specular factor of the material.
-    ///
-    /// The default value is `[1.0, 1.0, 1.0]`.
-    pub fn specular_factor(&self) -> [f32; 3] {
-        self.json.specular_factor.0
-    }
-
-    /// Returns the glossiness factor of the material.
-    ///
-    /// A value of 1.0 means the material has full glossiness or is perfectly
-    /// smooth. A value of 0.0 means the material has no glossiness or is
-    /// completely rough. This value is linear.
-    ///
-    /// The default value is `1.0`.
-    pub fn glossiness_factor(&self) -> f32 {
-        self.json.glossiness_factor.0
-    }
-
-    /// The specular-glossiness texture.
-    ///
-    /// A RGBA texture, containing the specular color of the material (RGB
-    /// components) and its glossiness (A component). The color values are in
-    /// sRGB space.
-    pub fn specular_glossiness_texture(&self) -> Option<texture::Info<'a>> {
-        self.json.specular_glossiness_texture.as_ref().map(|json| {
-            let texture = self.document.textures().nth(json.index.value()).unwrap();
-            texture::Info::new(texture, json)
-        })
-    }
-
-    /// Optional application specific data.
-    pub fn extras(&self) -> &'a json::Extras {
-        &self.json.extras
-    }
+    pub extras: Option<Extras>,
 }
 
 /// Defines the normal texture of a material.
-pub struct NormalTexture<'a> {
-    /// The parent `Texture` struct.
-    texture: texture::Texture<'a>,
+#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+pub struct NormalTexture {
+    /// The index of the texture.
+    pub index: Index<texture::Texture>,
 
-    /// The corresponding JSON struct.
-    json: &'a json::material::NormalTexture,
-}
-
-impl<'a> NormalTexture<'a> {
-    /// Constructs a `NormalTexture`.
-    pub(crate) fn new(
-        texture: texture::Texture<'a>,
-        json: &'a json::material::NormalTexture,
-    ) -> Self {
-        Self { texture, json }
-    }
-
-    /// Returns the scalar multiplier applied to each normal vector of the texture.
-    pub fn scale(&self) -> f32 {
-        self.json.scale
-    }
+    /// The scalar multiplier applied to each normal vector of the texture.
+    ///
+    /// This value is ignored if normalTexture is not specified.
+    #[gltf(default = 1.0)]
+    pub scale: f32,
 
     /// The set index of the texture's `TEXCOORD` attribute.
-    pub fn tex_coord(&self) -> u32 {
-        self.json.tex_coord
-    }
+    #[gltf(default)]
+    pub tex_coord: u32,
 
-    /// Returns the referenced texture.
-    pub fn texture(&self) -> texture::Texture<'a> {
-        self.texture.clone()
-    }
-
-    /// Returns extension data unknown to this crate version.
-    #[cfg(feature = "extensions")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn extensions(&self) -> Option<&Map<String, Value>> {
-        let ext = self.json.extensions.as_ref()?;
-        Some(&ext.others)
-    }
-
-    /// Get the value of an extension based on the name of the extension
-    #[cfg(feature = "extensions")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn extension_value(&self, key: &str) -> Option<&Value> {
-        let ext = self.json.extensions.as_ref()?;
-        ext.others.get(key)
-    }
+    /// Unrecognized extension data.
+    pub unrecognized_extensions: UnrecognizedExtensions,
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &'a json::Extras {
-        &self.json.extras
-    }
+    pub extras: Option<Extras>,
 }
 
 /// Defines the occlusion texture of a material.
-pub struct OcclusionTexture<'a> {
-    /// The parent `Texture` struct.
-    texture: texture::Texture<'a>,
+#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+pub struct OcclusionTexture {
+    /// The index of the texture.
+    pub index: Index<texture::Texture>,
 
-    /// The corresponding JSON struct.
-    json: &'a json::material::OcclusionTexture,
-}
+    /// The scalar multiplier controlling the amount of occlusion applied.
+    #[gltf(default = 1.0)]
+    pub strength: f32,
 
-impl<'a> OcclusionTexture<'a> {
-    /// Constructs a `OcclusionTexture`.
-    pub(crate) fn new(
-        texture: texture::Texture<'a>,
-        json: &'a json::material::OcclusionTexture,
-    ) -> Self {
-        Self { texture, json }
-    }
+    /// The set index of the texture's `TEXCOORD` attribute.
+    #[gltf(default)]
+    pub tex_coord: u32,
 
-    /// Returns the scalar multiplier controlling the amount of occlusion applied.
-    pub fn strength(&self) -> f32 {
-        self.json.strength.0
-    }
-
-    /// Returns the set index of the texture's `TEXCOORD` attribute.
-    pub fn tex_coord(&self) -> u32 {
-        self.json.tex_coord
-    }
-
-    /// Returns the referenced texture.
-    pub fn texture(&self) -> texture::Texture<'a> {
-        self.texture.clone()
-    }
-
-    /// Returns extension data unknown to this crate version.
-    #[cfg(feature = "extensions")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn extensions(&self) -> Option<&Map<String, Value>> {
-        let ext = self.json.extensions.as_ref()?;
-        Some(&ext.others)
-    }
-
-    /// Get the value of an extension based on the name of the extension
-    #[cfg(feature = "extensions")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
-    pub fn extension_value(&self, key: &str) -> Option<&Value> {
-        let ext = self.json.extensions.as_ref()?;
-        ext.others.get(key)
-    }
+    /// Unrecognized extension data.
+    pub unrecognized_extensions: UnrecognizedExtensions,
 
     /// Optional application specific data.
-    pub fn extras(&self) -> &'a json::Extras {
-        &self.json.extras
-    }
+    pub extras: Option<Extras>,
 }
 
-impl<'a> AsRef<texture::Texture<'a>> for NormalTexture<'a> {
-    fn as_ref(&self) -> &texture::Texture<'a> {
-        &self.texture
-    }
-}
-
-impl<'a> AsRef<texture::Texture<'a>> for OcclusionTexture<'a> {
-    fn as_ref(&self) -> &texture::Texture<'a> {
-        &self.texture
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn material_default() {
+        let m: super::Material = Default::default();
+        assert_eq!(m.alpha_cutoff, 0.5);
+        assert_eq!(m.alpha_mode, super::AlphaMode::Opaque);
+        assert!(!m.double_sided);
+        assert!(m.name.is_none());
+        assert!(m.pbr_metallic_roughness.is_none());
+        assert!(m.normal_texture.is_none());
+        assert!(m.occlusion_texture.is_none());
+        assert!(m.emissive_texture.is_none());
+        assert_eq!(m.emissive_factor, [0.0, 0.0, 0.0]);
+        assert!(m.extras.is_none());
     }
 }
