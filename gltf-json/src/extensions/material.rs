@@ -140,6 +140,13 @@ pub struct NormalTexture {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]
     pub others: Map<String, Value>,
+    #[cfg(feature = "KHR_texture_transform")]
+    #[serde(
+        default,
+        rename = "KHR_texture_transform",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub texture_transform: Option<crate::extensions::texture::TextureTransform>,
 }
 
 /// Defines the occlusion texture of a material.
@@ -148,6 +155,13 @@ pub struct OcclusionTexture {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]
     pub others: Map<String, Value>,
+    #[cfg(feature = "KHR_texture_transform")]
+    #[serde(
+        default,
+        rename = "KHR_texture_transform",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub texture_transform: Option<crate::extensions::texture::TextureTransform>,
 }
 
 /// The diffuse factor of a material.

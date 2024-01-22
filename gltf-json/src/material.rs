@@ -202,6 +202,19 @@ pub struct NormalTexture {
     pub extras: Extras,
 }
 
+impl NormalTexture {
+    /// Returns texture transform information
+    #[cfg(feature = "KHR_texture_transform")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_texture_transform")))]
+    pub fn texture_transform(&self) -> Option<extensions::texture::TextureTransform> {
+        self.extensions
+            .as_ref()?
+            .texture_transform
+            .as_ref()
+            .map(crate::extensions::texture::TextureTransform::new)
+    }
+}
+
 fn material_normal_texture_scale_default() -> f32 {
     1.0
 }
@@ -229,6 +242,19 @@ pub struct OcclusionTexture {
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
+}
+
+impl OcclusionTexture {
+    /// Returns texture transform information
+    #[cfg(feature = "KHR_texture_transform")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_texture_transform")))]
+    pub fn texture_transform(&self) -> Option<extensions::texture::TextureTransform> {
+        self.extensions
+            .as_ref()?
+            .texture_transform
+            .as_ref()
+            .map(crate::extensions::texture::TextureTransform::new)
+    }
 }
 
 /// The alpha cutoff value of a material.
