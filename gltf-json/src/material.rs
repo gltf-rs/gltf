@@ -206,7 +206,7 @@ impl NormalTexture {
     /// Returns texture transform information
     #[cfg(feature = "KHR_texture_transform")]
     #[cfg_attr(docsrs, doc(cfg(feature = "KHR_texture_transform")))]
-    pub fn texture_transform(&self) -> Option<extensions::texture::TextureTransform> {
+    pub fn texture_transform(&self) -> Option<crate::extensions::texture::TextureTransform> {
         self.extensions
             .as_ref()?
             .texture_transform
@@ -248,7 +248,7 @@ impl OcclusionTexture {
     /// Returns texture transform information
     #[cfg(feature = "KHR_texture_transform")]
     #[cfg_attr(docsrs, doc(cfg(feature = "KHR_texture_transform")))]
-    pub fn texture_transform(&self) -> Option<extensions::texture::TextureTransform> {
+    pub fn texture_transform(&self) -> Option<crate::extensions::texture::TextureTransform> {
         self.extensions
             .as_ref()?
             .texture_transform
