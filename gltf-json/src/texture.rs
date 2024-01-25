@@ -179,7 +179,8 @@ pub struct Texture {
     pub sampler: Option<Index<Sampler>>,
 
     /// The index of the image used by this texture.
-    pub source: Index<image::Image>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source: Option<Index<image::Image>>,
 
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]

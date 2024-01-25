@@ -44,6 +44,8 @@ pub const ENABLED_EXTENSIONS: &[&str] = &[
     "KHR_materials_pbrSpecularGlossiness",
     #[cfg(feature = "KHR_materials_unlit")]
     "KHR_materials_unlit",
+    #[cfg(feature = "KHR_materials_basisu")]
+    "KHR_texture_basisu",
     #[cfg(feature = "KHR_texture_transform")]
     "KHR_texture_transform",
     #[cfg(feature = "KHR_materials_transmission")]
@@ -59,6 +61,7 @@ pub const SUPPORTED_EXTENSIONS: &[&str] = &[
     "KHR_lights_punctual",
     "KHR_materials_pbrSpecularGlossiness",
     "KHR_materials_unlit",
+    "KHR_texture_basisu",
     "KHR_texture_transform",
     "KHR_materials_transmission",
     "KHR_materials_ior",
