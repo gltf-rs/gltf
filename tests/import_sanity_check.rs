@@ -60,7 +60,8 @@ fn run() -> Result<(), Box<dyn StdError>> {
         }
     }
 
-    sparse_accessor_without_buffer_view_test()
+    sparse_accessor_without_buffer_view_test()?;
+    blank_texture_test()
 }
 
 /// Test a file with a sparse accessor with no buffer view
@@ -72,6 +73,16 @@ fn sparse_accessor_without_buffer_view_test() -> Result<(), Box<dyn StdError>> {
     println!("ok");
 
     let gltf_path = path::Path::new("tests/box_sparse.gltf");
+    print!("{:?}: ", gltf_path);
+    let result = gltf::import(gltf_path)?;
+    sanity_check(&result.0, &result.1, &result.2);
+    println!("ok");
+    Ok(())
+}
+
+/// Test a file with a texture with neither sampler nor source
+fn blank_texture_test() -> Result<(), Box<dyn StdError>> {
+    let gltf_path = path::Path::new("tests/blank_texture.gltf");
     print!("{:?}: ", gltf_path);
     let result = gltf::import(gltf_path)?;
     sanity_check(&result.0, &result.1, &result.2);

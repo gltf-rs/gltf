@@ -157,12 +157,12 @@ impl<'a> Texture<'a> {
             .unwrap_or_else(|| Sampler::default(self.document))
     }
 
-    /// Returns the image used by this texture.
-    pub fn source(&self) -> image::Image<'a> {
-        self.document
-            .images()
-            .nth(self.json.source.value())
-            .unwrap()
+    /// Returns the image used by this texture, if any.
+    pub fn source(&self) -> Option<image::Image<'a>> {
+        self.json
+            .source
+            .as_ref()
+            .map(|index| self.document.images().nth(index.value()).unwrap())
     }
 
     /// Returns extension data unknown to this crate version.
