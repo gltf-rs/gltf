@@ -1,6 +1,8 @@
 use crate::{image, Document};
 
 pub use json::texture::{MagFilter, MinFilter, WrappingMode};
+#[cfg(feature = "extensions")]
+use serde_json::{Map, Value};
 
 /// A reference to a `Texture`.
 #[derive(Clone, Debug)]
@@ -95,6 +97,22 @@ impl<'a> Sampler<'a> {
         self.json.wrap_t.unwrap()
     }
 
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Queries extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
+    }
+
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -143,6 +161,22 @@ impl<'a> Texture<'a> {
             .unwrap()
     }
 
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Queries extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
+    }
+
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -175,6 +209,22 @@ impl<'a> Info<'a> {
             .texture_transform
             .as_ref()
             .map(TextureTransform::new)
+    }
+
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Queries extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
     }
 
     /// Optional application specific data.

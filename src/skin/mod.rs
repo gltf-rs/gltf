@@ -1,3 +1,6 @@
+#[cfg(feature = "extensions")]
+use serde_json::{Map, Value};
+
 use crate::{Accessor, Document, Node};
 
 #[cfg(feature = "utils")]
@@ -41,6 +44,22 @@ impl<'a> Skin<'a> {
     /// Returns the internal JSON index.
     pub fn index(&self) -> usize {
         self.index
+    }
+
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Queries extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
     }
 
     /// Optional application specific data.

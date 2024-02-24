@@ -2,6 +2,8 @@
 use crate::{material::StrengthFactor, texture, validation::Validate, Extras};
 use gltf_derive::Validate;
 use serde_derive::{Deserialize, Serialize};
+#[cfg(feature = "extensions")]
+use serde_json::{Map, Value};
 
 /// The material appearance of a primitive.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
@@ -61,12 +63,20 @@ pub struct Material {
         skip_serializing_if = "Option::is_none"
     )]
     pub emissive_strength: Option<EmissiveStrength>,
+
+    #[cfg(feature = "extensions")]
+    #[serde(default, flatten)]
+    pub others: Map<String, Value>,
 }
 
 /// A set of parameter values that are used to define the metallic-roughness
 /// material model from Physically-Based Rendering (PBR) methodology.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct PbrMetallicRoughness {}
+pub struct PbrMetallicRoughness {
+    #[cfg(feature = "extensions")]
+    #[serde(default, flatten)]
+    pub others: Map<String, Value>,
+}
 
 /// A set of parameter values that are used to define the specular-glossiness
 /// material model from Physically-Based Rendering (PBR) methodology.
@@ -114,6 +124,10 @@ pub struct PbrSpecularGlossiness {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub specular_glossiness_texture: Option<texture::Info>,
 
+    #[cfg(feature = "extensions")]
+    #[serde(default, flatten)]
+    pub others: Map<String, Value>,
+
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
@@ -122,11 +136,19 @@ pub struct PbrSpecularGlossiness {
 
 /// Defines the normal texture of a material.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct NormalTexture {}
+pub struct NormalTexture {
+    #[cfg(feature = "extensions")]
+    #[serde(default, flatten)]
+    pub others: Map<String, Value>,
+}
 
 /// Defines the occlusion texture of a material.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct OcclusionTexture {}
+pub struct OcclusionTexture {
+    #[cfg(feature = "extensions")]
+    #[serde(default, flatten)]
+    pub others: Map<String, Value>,
+}
 
 /// The diffuse factor of a material.
 #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]

@@ -1,6 +1,8 @@
 use crate::{texture, Document};
 
 pub use json::material::AlphaMode;
+#[cfg(feature = "extensions")]
+use serde_json::{Map, Value};
 
 /// The material appearance of a primitive.
 #[derive(Clone, Debug)]
@@ -88,6 +90,22 @@ impl<'a> Material<'a> {
     /// Physically-Based Rendering (PBR) methodology.
     pub fn pbr_metallic_roughness(&self) -> PbrMetallicRoughness<'a> {
         PbrMetallicRoughness::new(self.document, &self.json.pbr_metallic_roughness)
+    }
+
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Get the value of an extension based on the name of the extension
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, key: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(key)
     }
 
     /// Parameter values that define the specular-glossiness material model from
@@ -217,7 +235,7 @@ impl<'a> Material<'a> {
     /// Returns `true` if the [`KHR_materials_unlit`] property was specified, in which
     /// case the renderer should prefer to ignore all PBR values except `baseColor`.
     ///
-    /// [`KHR_materials_unlit`](https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit#overview)
+    /// [`KHR_materials_unlit`]: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit#overview
     #[cfg(feature = "KHR_materials_unlit")]
     #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_unlit")))]
     pub fn unlit(&self) -> bool {
@@ -296,6 +314,22 @@ impl<'a> PbrMetallicRoughness<'a> {
             let texture = self.document.textures().nth(json.index.value()).unwrap();
             texture::Info::new(texture, json)
         })
+    }
+
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Get the value of an extension based on the name of the extension
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, key: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(key)
     }
 
     /// Optional application specific data.
@@ -572,6 +606,22 @@ impl<'a> NormalTexture<'a> {
         self.texture.clone()
     }
 
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Get the value of an extension based on the name of the extension
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, key: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(key)
+    }
+
     /// Optional application specific data.
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
@@ -609,6 +659,22 @@ impl<'a> OcclusionTexture<'a> {
     /// Returns the referenced texture.
     pub fn texture(&self) -> texture::Texture<'a> {
         self.texture.clone()
+    }
+
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Get the value of an extension based on the name of the extension
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, key: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(key)
     }
 
     /// Optional application specific data.

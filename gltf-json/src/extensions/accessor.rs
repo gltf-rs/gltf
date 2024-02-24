@@ -1,5 +1,7 @@
 use gltf_derive::Validate;
 use serde_derive::{Deserialize, Serialize};
+#[cfg(feature = "extensions")]
+use serde_json::{Map, Value};
 
 /// Contains data structures for sparse storage.
 pub mod sparse {
@@ -21,4 +23,8 @@ pub mod sparse {
 
 /// A typed view into a buffer view.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-pub struct Accessor {}
+pub struct Accessor {
+    #[cfg(feature = "extensions")]
+    #[serde(default, flatten)]
+    pub others: Map<String, Value>,
+}
