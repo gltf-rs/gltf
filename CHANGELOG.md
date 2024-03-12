@@ -13,6 +13,12 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fix incorrect values returned from `size_hint()` in sparse accessor
 - Add support to read items from sparse accessor without base buffer view
 
+### Changed
+- Update `image` to `0.25.0`. 
+
+### Removed
+- Feature `image_jpeg_rayon` no longer needed, as `image 0.25.0` now uses `zune-jpeg` for jpeg decoding.
+
 ## [1.4.0] - 2023-12-17
 
 ### Added
