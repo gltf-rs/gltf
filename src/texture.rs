@@ -161,7 +161,7 @@ impl<'a> Texture<'a> {
     pub fn source(&self) -> image::Image<'a> {
         self.document
             .images()
-            .nth(self.json.source.value())
+            .nth(self.json.source.unwrap().value())
             .unwrap()
     }
 

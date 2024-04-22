@@ -1,5 +1,5 @@
-use crate::validation::Checked;
-use crate::{extensions, image, Extras, Index};
+use crate::validation::{Checked, Error, Validate};
+use crate::{extensions, image, Extras, Index, Path, Root};
 use gltf_derive::Validate;
 use serde::{de, ser};
 use serde_derive::{Deserialize, Serialize};
@@ -167,7 +167,7 @@ pub struct Sampler {
 }
 
 /// A texture and its sampler.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Texture {
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
@@ -179,7 +179,8 @@ pub struct Texture {
     pub sampler: Option<Index<Sampler>>,
 
     /// The index of the image used by this texture.
-    pub source: Index<image::Image>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source: Option<Index<image::Image>>,
 
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -190,6 +191,26 @@ pub struct Texture {
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
+}
+
+impl Validate for Texture {
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
+    {
+        self.sampler
+            .validate(root, || path().field("sampler"), report);
+
+        {
+            let source_path = || path().field("source");
+            if let Some(index) = self.source.as_ref() {
+                index.validate(root, source_path, report);
+            } else {
+                report(&source_path, Error::Missing);
+            }
+        }
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
