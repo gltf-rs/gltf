@@ -55,26 +55,6 @@ impl<T> Index<T> {
     }
 }
 
-fn root_validate_hook<P, R>(root: &Root, _also_root: &Root, path: P, report: &mut R)
-where
-    P: Fn() -> Path,
-    R: FnMut(&dyn Fn() -> Path, crate::validation::Error),
-{
-    for (i, ext) in root.extensions_required.iter().enumerate() {
-        if !crate::extensions::ENABLED_EXTENSIONS.contains(&ext.as_str()) {
-            report(
-                &|| {
-                    path()
-                        .field("extensionsRequired")
-                        .index(i)
-                        .value_str(ext.as_str())
-                },
-                crate::validation::Error::Unsupported,
-            );
-        }
-    }
-}
-
 /// The root object of a glTF 2.0 asset.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 #[gltf(validate_hook = "root_validate_hook")]
@@ -170,6 +150,26 @@ pub struct Root {
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub textures: Vec<Texture>,
+}
+
+fn root_validate_hook<P, R>(root: &Root, _also_root: &Root, path: P, report: &mut R)
+where
+    P: Fn() -> Path,
+    R: FnMut(&dyn Fn() -> Path, crate::validation::Error),
+{
+    for (i, ext) in root.extensions_required.iter().enumerate() {
+        if !crate::extensions::ENABLED_EXTENSIONS.contains(&ext.as_str()) {
+            report(
+                &|| {
+                    path()
+                        .field("extensionsRequired")
+                        .index(i)
+                        .value_str(ext.as_str())
+                },
+                crate::validation::Error::Unsupported,
+            );
+        }
+    }
 }
 
 impl Root {

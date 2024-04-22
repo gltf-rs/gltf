@@ -167,7 +167,8 @@ pub struct Sampler {
 }
 
 /// A texture and its sampler.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[gltf(validate_hook = "texture_validate_hook")]
 pub struct Texture {
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
@@ -193,23 +194,16 @@ pub struct Texture {
     pub extras: Extras,
 }
 
-impl Validate for Texture {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-    where
-        P: Fn() -> Path,
-        R: FnMut(&dyn Fn() -> Path, Error),
-    {
-        self.sampler
-            .validate(root, || path().field("sampler"), report);
-
-        {
-            let source_path = || path().field("source");
-            if let Some(index) = self.source.as_ref() {
-                index.validate(root, source_path, report);
-            } else {
-                report(&source_path, Error::Missing);
-            }
-        }
+fn texture_validate_hook<P, R>(texture: &Texture, root: &Root, path: P, report: &mut R)
+where
+    P: Fn() -> Path,
+    R: FnMut(&dyn Fn() -> Path, Error),
+{
+    let source_path = || path().field("source");
+    if let Some(index) = texture.source.as_ref() {
+        index.validate(root, source_path, report);
+    } else {
+        report(&source_path, Error::Missing);
     }
 }
 
