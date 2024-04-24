@@ -1,5 +1,5 @@
 use crate::validation::{Checked, Validate};
-use crate::{extensions, texture, Extras, Index, extras::Void};
+use crate::{extensions, extras::Void, texture, Extras, Index};
 use gltf_derive::Validate;
 use serde::{de, ser};
 use serde_derive::{Deserialize, Serialize};
@@ -129,7 +129,7 @@ pub struct Material {
 }
 
 impl Material {
-    // A const version of the material returned when calling [`Material::default`] 
+    // A const version of the material returned when calling [`Material::default`]
     pub const DEFAULT_MATERIAL: Material = Material {
         alpha_cutoff: None,
         alpha_mode: Checked::Valid(AlphaMode::Opaque),
@@ -146,8 +146,8 @@ impl Material {
             extras: None,
             #[cfg(not(feature = "extras"))]
             extras: Void {
-                _allow_unknown_fields: ()
-            }
+                _allow_unknown_fields: (),
+            },
         },
         normal_texture: None,
         occlusion_texture: None,
@@ -158,8 +158,8 @@ impl Material {
         extras: None,
         #[cfg(not(feature = "extras"))]
         extras: Void {
-            _allow_unknown_fields: ()
-        }
+            _allow_unknown_fields: (),
+        },
     };
 }
 
