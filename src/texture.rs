@@ -1,6 +1,6 @@
 use crate::{image, Document};
 
-pub use json::texture::{MagFilter, MinFilter, WrappingMode};
+pub use json::texture::{MagFilter, MinFilter, Source, WrappingMode};
 #[cfg(feature = "extensions")]
 use serde_json::{Map, Value};
 
@@ -158,10 +158,20 @@ impl<'a> Texture<'a> {
     }
 
     /// Returns the image used by this texture.
+    #[cfg(feature = "allow-empty-texture")]
+    pub fn source(&self) -> Option<image::Image<'a>> {
+        self.json
+            .source
+            .as_ref()
+            .map(|index| self.document.images().nth(index.value()).unwrap())
+    }
+
+    /// Returns the image used by this texture.
+    #[cfg(not(feature = "allow-empty-texture"))]
     pub fn source(&self) -> image::Image<'a> {
         self.document
             .images()
-            .nth(self.json.source.unwrap().value())
+            .nth(self.json.source.value())
             .unwrap()
     }
 
