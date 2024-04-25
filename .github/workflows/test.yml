@@ -20,7 +20,9 @@ jobs:
           repository: KhronosGroup/glTF-Sample-Assets
           path: glTF-Sample-Assets
 
-      - name: Tests
+      - name: Tests (default features)
+        run: cargo test --all --release
+      - name: Tests (all features)
         run: cargo test --all --all-features --release
       - name: Formatting
         run: cargo fmt --all -- --check

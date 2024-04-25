@@ -1,4 +1,4 @@
-use crate::validation::Checked;
+use crate::validation::{Checked, Validate};
 use crate::{extensions, image, Extras, Index};
 use gltf_derive::Validate;
 use serde::{de, ser};
@@ -166,14 +166,32 @@ pub struct Sampler {
     pub extras: Extras,
 }
 
-#[cfg(feature = "allow-empty-texture")]
-pub type Source = Option<Index<image::Image>>;
+fn source_default() -> Index<image::Image> {
+    Index::new(u32::MAX)
+}
 
-#[cfg(not(feature = "allow-empty-texture"))]
-pub type Source = Index<image::Image>;
+fn source_is_empty(source: &Index<image::Image>) -> bool {
+    source.value() == u32::MAX as usize
+}
+
+fn source_validate<P, R>(source: &Index<image::Image>, root: &crate::Root, path: P, report: &mut R)
+where
+    P: Fn() -> crate::Path,
+    R: FnMut(&dyn Fn() -> crate::Path, crate::validation::Error),
+{
+    if cfg!(feature = "allow-empty-texture") {
+        if !source_is_empty(source) {
+            source.validate(root, path, report);
+        }
+    } else if source_is_empty(source) {
+        report(&path, crate::validation::Error::Missing);
+    } else {
+        source.validate(root, &path, report);
+    }
+}
 
 /// A texture and its sampler.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Texture {
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
@@ -185,11 +203,8 @@ pub struct Texture {
     pub sampler: Option<Index<Sampler>>,
 
     /// The index of the image used by this texture.
-    #[cfg_attr(
-        feature = "allow-empty-texture",
-        serde(skip_serializing_if = "Option::is_none")
-    )]
-    pub source: Source,
+    #[serde(default = "source_default", skip_serializing_if = "source_is_empty")]
+    pub source: Index<image::Image>,
 
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -200,6 +215,20 @@ pub struct Texture {
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
+}
+
+impl Validate for Texture {
+    fn validate<P, R>(&self, root: &crate::Root, path: P, report: &mut R)
+    where
+        P: Fn() -> crate::Path,
+        R: FnMut(&dyn Fn() -> crate::Path, crate::validation::Error),
+    {
+        self.sampler
+            .validate(root, || path().field("sampler"), report);
+        self.extensions
+            .validate(root, || path().field("extensions"), report);
+        source_validate(&self.source, root, || path().field("source"), report);
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
@@ -348,5 +377,103 @@ impl ser::Serialize for WrappingMode {
         S: ser::Serializer,
     {
         serializer.serialize_u32(self.as_gl_enum())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn deserialize_source() {
+        let json = r#"{"asset":{"version":"2.0"},"textures":[{"source": 0}]}"#;
+        let root = serde_json::from_str::<crate::Root>(json).unwrap();
+        assert_eq!(0, root.textures[0].source.value());
+    }
+
+    #[test]
+    fn deserialize_empty_source() {
+        let json = r#"{"asset":{"version":"2.0"},"textures":[{}]}"#;
+        let root = serde_json::from_str::<crate::Root>(json).unwrap();
+        assert_eq!(u32::MAX as usize, root.textures[0].source.value());
+    }
+
+    #[test]
+    fn serialize_source() {
+        let root = crate::Root {
+            textures: vec![crate::Texture {
+                #[cfg(feature = "names")]
+                name: None,
+                sampler: None,
+                source: crate::Index::new(0),
+                extensions: None,
+                extras: Default::default(),
+            }],
+            ..Default::default()
+        };
+        let json = serde_json::to_string(&root).unwrap();
+        assert_eq!(
+            r#"{"asset":{"version":"2.0"},"textures":[{"source":0}]}"#,
+            &json
+        );
+    }
+
+    #[test]
+    fn serialize_empty_source() {
+        let root = crate::Root {
+            textures: vec![crate::Texture {
+                #[cfg(feature = "names")]
+                name: None,
+                sampler: None,
+                source: crate::Index::new(u32::MAX),
+                extensions: None,
+                extras: Default::default(),
+            }],
+            ..Default::default()
+        };
+        let json = serde_json::to_string(&root).unwrap();
+        assert_eq!(r#"{"asset":{"version":"2.0"},"textures":[{}]}"#, &json);
+    }
+
+    #[test]
+    fn validate_source() {
+        use crate::validation::{Error, Validate};
+        use crate::Path;
+        let json = r#"{"asset":{"version":"2.0"},"textures":[{"source":0}]}"#;
+        let root = serde_json::from_str::<crate::Root>(json).unwrap();
+        let mut errors = Vec::new();
+        root.textures[0].validate(
+            &root,
+            || Path::new().field("textures").index(0),
+            &mut |path, error| {
+                errors.push((path(), error));
+            },
+        );
+        assert_eq!(1, errors.len());
+        let (path, error) = &errors[0];
+        assert_eq!("textures[0].source", path.as_str());
+        assert_eq!(Error::IndexOutOfBounds, *error);
+    }
+
+    #[test]
+    fn validate_empty_source() {
+        use crate::validation::{Error, Validate};
+        use crate::Path;
+        let json = r#"{"asset":{"version":"2.0"},"textures":[{}]}"#;
+        let root = serde_json::from_str::<crate::Root>(json).unwrap();
+        let mut errors = Vec::new();
+        root.textures[0].validate(
+            &root,
+            || Path::new().field("textures").index(0),
+            &mut |path, error| {
+                errors.push((path(), error));
+            },
+        );
+        if cfg!(feature = "allow-empty-texture") {
+            assert!(errors.is_empty());
+        } else {
+            assert_eq!(1, errors.len());
+            let (path, error) = &errors[0];
+            assert_eq!("textures[0].source", path.as_str());
+            assert_eq!(Error::Missing, *error);
+        }
     }
 }
