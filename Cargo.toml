@@ -38,7 +38,7 @@ version = "0.25"
 
 [features]
 default = ["import", "utils", "names"]
-allow-empty-texture = ["gltf-json/allow-empty-texture"]
+allow_empty_texture = ["gltf-json/allow_empty_texture"]
 extensions = ["gltf-json/extensions"]
 extras = ["gltf-json/extras"]
 names = ["gltf-json/names"]

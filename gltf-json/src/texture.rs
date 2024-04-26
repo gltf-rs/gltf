@@ -179,7 +179,7 @@ where
     P: Fn() -> crate::Path,
     R: FnMut(&dyn Fn() -> crate::Path, crate::validation::Error),
 {
-    if cfg!(feature = "allow-empty-texture") {
+    if cfg!(feature = "allow_empty_texture") {
         if !source_is_empty(source) {
             source.validate(root, path, report);
         }
@@ -467,7 +467,7 @@ mod tests {
                 errors.push((path(), error));
             },
         );
-        if cfg!(feature = "allow-empty-texture") {
+        if cfg!(feature = "allow_empty_texture") {
             assert!(errors.is_empty());
         } else {
             assert_eq!(1, errors.len());
