@@ -14,13 +14,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Checkout glTF Sample Models
+      - name: Checkout glTF Sample Assets
         uses: actions/checkout@v2
         with:
-          repository: KhronosGroup/glTF-Sample-Models
-          path: glTF-Sample-Models
+          repository: KhronosGroup/glTF-Sample-Assets
+          path: glTF-Sample-Assets
 
-      - name: Tests
+      - name: Tests (default features)
+        run: cargo test --all --release
+      - name: Tests (all features)
         run: cargo test --all --all-features --release
       - name: Formatting
         run: cargo fmt --all -- --check

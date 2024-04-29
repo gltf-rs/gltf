@@ -4,7 +4,7 @@ use serde_derive::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
 /// A keyframe animation.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct Animation {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]
@@ -12,7 +12,7 @@ pub struct Animation {
 }
 
 /// Targets an animation's sampler at a node's property.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct Channel {}
 
 /// The index of the node and TRS property that an animation channel targets.

@@ -16,6 +16,7 @@ serde_json = { features = ["raw_value"], version = "1.0" }
 
 [features]
 default = []
+allow_empty_texture = []
 names = []
 extensions = []
 extras = []

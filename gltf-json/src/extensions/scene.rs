@@ -30,7 +30,7 @@ pub struct Node {
 
 #[cfg(feature = "KHR_lights_punctual")]
 pub mod khr_lights_punctual {
-    use crate::validation::{Checked, Error, Validate};
+    use crate::validation::{Checked, Error};
     use crate::{Extras, Index, Path, Root};
     use gltf_derive::Validate;
     use serde::{de, ser};
@@ -76,7 +76,8 @@ pub mod khr_lights_punctual {
         Spot,
     }
 
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[gltf(validate_hook = "light_validate_hook")]
     pub struct Light {
         /// Color of the light source.
         #[serde(default = "color_default")]
@@ -116,23 +117,15 @@ pub mod khr_lights_punctual {
         pub type_: Checked<Type>,
     }
 
-    impl Validate for Light {
-        fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-        where
-            P: Fn() -> Path,
-            R: FnMut(&dyn Fn() -> Path, Error),
-        {
-            if let Checked::Valid(ty) = self.type_.as_ref() {
-                if *ty == Type::Spot && self.spot.is_none() {
-                    report(&|| path().field("spot"), Error::Missing);
-                }
+    fn light_validate_hook<P, R>(light: &Light, _root: &Root, path: P, report: &mut R)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
+    {
+        if let Checked::Valid(ty) = light.type_.as_ref() {
+            if *ty == Type::Spot && light.spot.is_none() {
+                report(&|| path().field("spot"), Error::Missing);
             }
-
-            self.type_.validate(root, || path().field("type"), report);
-            self.extensions
-                .validate(root, || path().field("extensions"), report);
-            self.extras
-                .validate(root, || path().field("extras"), report);
         }
     }
 

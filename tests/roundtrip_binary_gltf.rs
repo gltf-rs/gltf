@@ -6,7 +6,7 @@
 use std::io::Read;
 use std::{boxed, error, fs, io, path};
 
-const SAMPLE_MODELS_DIRECTORY_PATH: &str = "glTF-Sample-Models/2.0";
+const SAMPLE_MODELS_DIRECTORY_PATH: &str = "glTF-Sample-Assets/Models";
 
 fn run() -> Result<(), boxed::Box<dyn error::Error>> {
     let mut all_tests_passed = true;

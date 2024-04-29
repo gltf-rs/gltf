@@ -1,4 +1,4 @@
-use crate::validation::{Checked, Error, USize64, Validate};
+use crate::validation::{Checked, Error, USize64};
 use crate::{buffer, extensions, Extras, Index, Path, Root};
 use gltf_derive::Validate;
 use serde::{de, ser};
@@ -169,7 +169,8 @@ pub mod sparse {
 }
 
 /// A typed view into a buffer view.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[gltf(validate_hook = "accessor_validate_hook")]
 pub struct Accessor {
     /// The parent buffer view this accessor reads from.
     ///
@@ -231,36 +232,15 @@ pub struct Accessor {
     pub sparse: Option<sparse::Sparse>,
 }
 
-impl Validate for Accessor {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-    where
-        P: Fn() -> Path,
-        R: FnMut(&dyn Fn() -> Path, Error),
-    {
-        if self.sparse.is_none() && self.buffer_view.is_none() {
-            // If sparse is missing, then bufferView must be present. Report that bufferView is
-            // missing since it is the more common one to require.
-            report(&|| path().field("bufferView"), Error::Missing);
-        }
-
-        self.buffer_view
-            .validate(root, || path().field("bufferView"), report);
-        self.byte_offset
-            .validate(root, || path().field("byteOffset"), report);
-        self.count.validate(root, || path().field("count"), report);
-        self.component_type
-            .validate(root, || path().field("componentType"), report);
-        self.extensions
-            .validate(root, || path().field("extensions"), report);
-        self.extras
-            .validate(root, || path().field("extras"), report);
-        self.type_.validate(root, || path().field("type"), report);
-        self.min.validate(root, || path().field("min"), report);
-        self.max.validate(root, || path().field("max"), report);
-        self.normalized
-            .validate(root, || path().field("normalized"), report);
-        self.sparse
-            .validate(root, || path().field("sparse"), report);
+fn accessor_validate_hook<P, R>(accessor: &Accessor, _root: &Root, path: P, report: &mut R)
+where
+    P: Fn() -> Path,
+    R: FnMut(&dyn Fn() -> Path, Error),
+{
+    if accessor.sparse.is_none() && accessor.buffer_view.is_none() {
+        // If sparse is missing, then bufferView must be present. Report that bufferView is
+        // missing since it is the more common one to require.
+        report(&|| path().field("bufferView"), Error::Missing);
     }
 }
 
