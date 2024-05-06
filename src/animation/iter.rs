@@ -1,4 +1,4 @@
-use std::slice;
+use std::{iter, slice};
 
 use crate::animation::{Animation, Channel, Sampler};
 
@@ -9,7 +9,7 @@ pub struct Channels<'a> {
     pub(crate) anim: Animation<'a>,
 
     /// The internal channel iterator.
-    pub(crate) iter: slice::Iter<'a, json::animation::Channel>,
+    pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::animation::Channel>>,
 }
 
 /// An `Iterator` that visits the samplers of an animation.
@@ -19,7 +19,7 @@ pub struct Samplers<'a> {
     pub(crate) anim: Animation<'a>,
 
     /// The internal channel iterator.
-    pub(crate) iter: slice::Iter<'a, json::animation::Sampler>,
+    pub(crate) iter: iter::Enumerate<slice::Iter<'a, json::animation::Sampler>>,
 }
 
 impl<'a> Iterator for Channels<'a> {
@@ -27,7 +27,7 @@ impl<'a> Iterator for Channels<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
-            .map(|json| Channel::new(self.anim.clone(), json))
+            .map(|(index, json)| Channel::new(self.anim.clone(), json, index))
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
@@ -37,12 +37,14 @@ impl<'a> Iterator for Channels<'a> {
     }
     fn last(self) -> Option<Self::Item> {
         let anim = self.anim;
-        self.iter.last().map(|json| Channel::new(anim, json))
+        self.iter
+            .last()
+            .map(|(index, json)| Channel::new(anim, json, index))
     }
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
         self.iter
             .nth(n)
-            .map(|json| Channel::new(self.anim.clone(), json))
+            .map(|(index, json)| Channel::new(self.anim.clone(), json, index))
     }
 }
 
@@ -51,7 +53,7 @@ impl<'a> Iterator for Samplers<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter
             .next()
-            .map(|json| Sampler::new(self.anim.clone(), json))
+            .map(|(index, json)| Sampler::new(self.anim.clone(), json, index))
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
@@ -61,11 +63,13 @@ impl<'a> Iterator for Samplers<'a> {
     }
     fn last(self) -> Option<Self::Item> {
         let anim = self.anim;
-        self.iter.last().map(|json| Sampler::new(anim, json))
+        self.iter
+            .last()
+            .map(|(index, json)| Sampler::new(anim, json, index))
     }
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
         self.iter
             .nth(n)
-            .map(|json| Sampler::new(self.anim.clone(), json))
+            .map(|(index, json)| Sampler::new(self.anim.clone(), json, index))
     }
 }
