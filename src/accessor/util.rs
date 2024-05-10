@@ -115,11 +115,20 @@ impl<'a, T: Item> SparseIter<'a, T> {
     /// Here `base` is allowed to be `None` when the base buffer view is not explicitly specified.
     pub fn new(
         base: Option<ItemIter<'a, T>>,
+        indices: SparseIndicesIter<'a>,
+        values: ItemIter<'a, T>,
+    ) -> Self {
+        Self::with_base_count(base, 0, indices, values)
+    }
+
+    /// Supplemental constructor.
+    pub fn with_base_count(
+        base: Option<ItemIter<'a, T>>,
         base_count: usize,
         indices: SparseIndicesIter<'a>,
         values: ItemIter<'a, T>,
     ) -> Self {
-        SparseIter {
+        Self {
             base,
             base_count,
             indices: indices.peekable(),
@@ -354,7 +363,7 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                     ItemIter::new(subslice, stride)
                 };
 
-                Some(Iter::Sparse(SparseIter::new(
+                Some(Iter::Sparse(SparseIter::with_base_count(
                     base_iter, base_count, index_iter, value_iter,
                 )))
             }
