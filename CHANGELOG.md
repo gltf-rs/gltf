@@ -24,7 +24,7 @@ The top-level `gltf` crate adheres to [Semantic Versioning](http://semver.org/sp
 ### Changed
 
 - Update `image` to `0.25.0`.
-- Validation will now fail if a glTF documentation requires extensions that are not supported by the crate.
+- Validation will now fail if a glTF document requires extensions that are not supported by the crate.
 
 ### Removed
 
