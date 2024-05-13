@@ -4,14 +4,31 @@ Notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+The top-level `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). Historically, semantic versioning has not applied to `gltf-json`. This is planned to change from version 2—see issue #409.
 
 ## Unreleased
 
+## [1.4.1] - 2024-05-09
+
+### Added
+
+- New functions `animation::Channel::index` and `animation::Sampler::index`.
+- New feature flag `allow_empty_texture` to avoid required extension checks.
+
 ### Fixed
-- Fix `attemt to to subtract with overflow`-panic in `size_hint()` of sparse accessor when collecting items.
-- Fix incorrect values returned from `size_hint()` in sparse accessor
-- Add support to read items from sparse accessor without base buffer view
+
+- Fix `attempt to to subtract with overflow`-panic in `size_hint()` of sparse accessor when collecting items.
+- Fix incorrect values returned from `size_hint()` in sparse accessor.
+- Add support to read items from sparse accessor without base buffer view.
+
+### Changed
+
+- Update `image` to `0.25.0`.
+- Validation will now fail if a glTF document requires extensions that are not supported by the crate.
+
+### Removed
+
+- Feature `image_jpeg_rayon` no longer needed, as `image 0.25.0` now uses `zune-jpeg` for jpeg decoding.
 
 ### Changed
 - Update `image` to `0.25.0`. 

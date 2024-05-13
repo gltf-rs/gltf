@@ -30,6 +30,9 @@ pub enum Error {
 
     /// A memory size or offset exceeds the system limits.
     Oversize,
+
+    /// One of more required extensions is not supported by this crate version.
+    Unsupported,
 }
 
 /// Specifies a type that has been pre-validated during deserialization or otherwise.
@@ -216,6 +219,7 @@ impl std::fmt::Display for Error {
                 Error::Invalid => "Invalid value",
                 Error::Missing => "Missing data",
                 Error::Oversize => "Size exceeds system limits",
+                Error::Unsupported => "Unsupported extension",
             }
         )
     }

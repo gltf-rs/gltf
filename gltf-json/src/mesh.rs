@@ -1,4 +1,4 @@
-use crate::validation::{Checked, Error, Validate};
+use crate::validation::{Checked, Error};
 use crate::{accessor, extensions, material, Extras, Index};
 use gltf_derive::Validate;
 use serde::{de, ser};
@@ -97,7 +97,8 @@ pub struct Mesh {
 }
 
 /// Geometry to be rendered with the given material.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[gltf(validate_hook = "primitive_validate_hook")]
 pub struct Primitive {
     /// Maps attribute semantic names to the `Accessor`s containing the
     /// corresponding attribute data.
@@ -136,54 +137,38 @@ fn is_primitive_mode_default(mode: &Checked<Mode>) -> bool {
     *mode == Checked::Valid(Mode::Triangles)
 }
 
-impl Validate for Primitive {
-    fn validate<P, R>(&self, root: &crate::Root, path: P, report: &mut R)
-    where
-        P: Fn() -> crate::Path,
-        R: FnMut(&dyn Fn() -> crate::Path, crate::validation::Error),
+fn primitive_validate_hook<P, R>(primitive: &Primitive, root: &crate::Root, path: P, report: &mut R)
+where
+    P: Fn() -> crate::Path,
+    R: FnMut(&dyn Fn() -> crate::Path, crate::validation::Error),
+{
+    let position_path = &|| path().field("attributes").key("POSITION");
+    if let Some(pos_accessor_index) = primitive
+        .attributes
+        .get(&Checked::Valid(Semantic::Positions))
     {
-        // Generated part
-        self.attributes
-            .validate(root, || path().field("attributes"), report);
-        self.extensions
-            .validate(root, || path().field("extensions"), report);
-        self.extras
-            .validate(root, || path().field("extras"), report);
-        self.indices
-            .validate(root, || path().field("indices"), report);
-        self.material
-            .validate(root, || path().field("material"), report);
-        self.mode.validate(root, || path().field("mode"), report);
-        self.targets
-            .validate(root, || path().field("targets"), report);
+        // spec: POSITION accessor **must** have `min` and `max` properties defined.
+        let pos_accessor = &root.accessors[pos_accessor_index.value()];
 
-        // Custom part
-        let position_path = &|| path().field("attributes").key("POSITION");
-        if let Some(pos_accessor_index) = self.attributes.get(&Checked::Valid(Semantic::Positions))
-        {
-            // spec: POSITION accessor **must** have `min` and `max` properties defined.
-            let pos_accessor = &root.accessors[pos_accessor_index.value()];
-
-            let min_path = &|| position_path().field("min");
-            if let Some(ref min) = pos_accessor.min {
-                if from_value::<[f32; 3]>(min.clone()).is_err() {
-                    report(min_path, Error::Invalid);
-                }
-            } else {
-                report(min_path, Error::Missing);
-            }
-
-            let max_path = &|| position_path().field("max");
-            if let Some(ref max) = pos_accessor.max {
-                if from_value::<[f32; 3]>(max.clone()).is_err() {
-                    report(max_path, Error::Invalid);
-                }
-            } else {
-                report(max_path, Error::Missing);
+        let min_path = &|| position_path().field("min");
+        if let Some(ref min) = pos_accessor.min {
+            if from_value::<[f32; 3]>(min.clone()).is_err() {
+                report(min_path, Error::Invalid);
             }
         } else {
-            report(position_path, Error::Missing);
+            report(min_path, Error::Missing);
         }
+
+        let max_path = &|| position_path().field("max");
+        if let Some(ref max) = pos_accessor.max {
+            if from_value::<[f32; 3]>(max.clone()).is_err() {
+                report(max_path, Error::Invalid);
+            }
+        } else {
+            report(max_path, Error::Missing);
+        }
+    } else {
+        report(position_path, Error::Missing);
     }
 }
 

@@ -40,9 +40,10 @@
 //! for accessor in gltf.accessors() {
 //!     match (accessor.data_type(), accessor.dimensions()) {
 //!         (DataType::F32, Dimensions::Vec3) => {
-//!             let iter = Iter::<[f32; 3]>::new(accessor, get_buffer_data);
-//!             for item in iter {
-//!                 println!("{:?}", item);
+//!             if let Some(iter) = Iter::<[f32; 3]>::new(accessor, get_buffer_data) {
+//!                 for item in iter {
+//!                     println!("{:?}", item);
+//!                 }
 //!             }
 //!         }
 //!         _ => {},

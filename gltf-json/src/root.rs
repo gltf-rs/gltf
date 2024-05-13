@@ -57,6 +57,7 @@ impl<T> Index<T> {
 
 /// The root object of a glTF 2.0 asset.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[gltf(validate_hook = "root_validate_hook")]
 pub struct Root {
     /// An array of accessors.
     #[serde(default)]
@@ -149,6 +150,26 @@ pub struct Root {
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub textures: Vec<Texture>,
+}
+
+fn root_validate_hook<P, R>(root: &Root, _also_root: &Root, path: P, report: &mut R)
+where
+    P: Fn() -> Path,
+    R: FnMut(&dyn Fn() -> Path, crate::validation::Error),
+{
+    for (i, ext) in root.extensions_required.iter().enumerate() {
+        if !crate::extensions::ENABLED_EXTENSIONS.contains(&ext.as_str()) {
+            report(
+                &|| {
+                    path()
+                        .field("extensionsRequired")
+                        .index(i)
+                        .value_str(ext.as_str())
+                },
+                crate::validation::Error::Unsupported,
+            );
+        }
+    }
 }
 
 impl Root {
@@ -432,5 +453,50 @@ mod tests {
         let mut root = Root::default();
         assert_eq!(root.push(some_object.clone()), Index::new(0));
         assert_eq!(root.push(some_object), Index::new(1));
+    }
+
+    #[test]
+    fn root_extensions() {
+        use crate::validation::Error;
+        use crate::Path;
+
+        let mut root = super::Root {
+            extensions_required: vec!["KHR_lights_punctual".to_owned()],
+            ..Default::default()
+        };
+
+        let mut errors = Vec::new();
+        root.validate(&root, Path::new, &mut |path, error| {
+            errors.push((path(), error));
+        });
+
+        #[cfg(feature = "KHR_lights_punctual")]
+        {
+            assert!(errors.is_empty());
+        }
+
+        #[cfg(not(feature = "KHR_lights_punctual"))]
+        {
+            assert_eq!(1, errors.len());
+            let (path, error) = errors.get(0).unwrap();
+            assert_eq!(
+                path.as_str(),
+                "extensionsRequired[0] = \"KHR_lights_punctual\""
+            );
+            assert_eq!(*error, Error::Unsupported);
+        }
+
+        root.extensions_required = vec!["KHR_mesh_quantization".to_owned()];
+        errors.clear();
+        root.validate(&root, Path::new, &mut |path, error| {
+            errors.push((path(), error));
+        });
+        assert_eq!(1, errors.len());
+        let (path, error) = errors.get(0).unwrap();
+        assert_eq!(
+            path.as_str(),
+            "extensionsRequired[0] = \"KHR_mesh_quantization\""
+        );
+        assert_eq!(*error, Error::Unsupported);
     }
 }

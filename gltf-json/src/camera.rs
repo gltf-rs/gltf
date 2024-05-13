@@ -1,4 +1,4 @@
-use crate::validation::{Checked, Error, Validate};
+use crate::validation::{Checked, Error};
 use crate::{extensions, Extras, Path, Root};
 use gltf_derive::Validate;
 use serde::{de, ser};
@@ -22,7 +22,8 @@ pub enum Type {
 ///
 /// A node can reference a camera to apply a transform to place the camera in the
 /// scene.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[gltf(validate_hook = "camera_validate_hook")]
 pub struct Camera {
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
@@ -52,6 +53,16 @@ pub struct Camera {
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
+}
+
+fn camera_validate_hook<P, R>(camera: &Camera, _root: &Root, path: P, report: &mut R)
+where
+    P: Fn() -> Path,
+    R: FnMut(&dyn Fn() -> Path, Error),
+{
+    if camera.orthographic.is_none() && camera.perspective.is_none() {
+        report(&path, Error::Missing);
+    }
 }
 
 /// Values for an orthographic camera.
@@ -107,28 +118,6 @@ pub struct Perspective {
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
-}
-
-impl Validate for Camera {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-    where
-        P: Fn() -> Path,
-        R: FnMut(&dyn Fn() -> Path, Error),
-    {
-        if self.orthographic.is_none() && self.perspective.is_none() {
-            report(&path, Error::Missing);
-        }
-
-        self.orthographic
-            .validate(root, || path().field("orthographic"), report);
-        self.perspective
-            .validate(root, || path().field("perspective"), report);
-        self.type_.validate(root, || path().field("type"), report);
-        self.extensions
-            .validate(root, || path().field("extensions"), report);
-        self.extras
-            .validate(root, || path().field("extras"), report);
-    }
 }
 
 impl<'de> de::Deserialize<'de> for Checked<Type> {
