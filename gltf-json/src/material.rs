@@ -135,7 +135,8 @@ pub struct Material {
 pub struct PbrMetallicRoughness {
     /// The material's base color factor.
     #[serde(rename = "baseColorFactor")]
-    pub base_color_factor: PbrBaseColorFactor,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub base_color_factor: Option<PbrBaseColorFactor>,
 
     /// The base color texture.
     #[serde(rename = "baseColorTexture")]
