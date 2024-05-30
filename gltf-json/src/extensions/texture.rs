@@ -22,6 +22,25 @@ pub struct Texture {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]
     pub others: Map<String, Value>,
+
+    #[cfg(feature = "EXT_texture_webp")]
+    #[serde(
+        default,
+        rename = "EXT_texture_webp",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub texture_webp: Option<TextureWebP>,
+}
+
+#[cfg(feature = "EXT_texture_webp")]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+pub struct TextureWebP {
+    /// The index of the webp image used by the texture.
+    pub source: Index<image::Image>,
+
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
+    pub extras: Extras,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]

@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use crate::{image, Document};
 
 pub use json::texture::{MagFilter, MinFilter, WrappingMode};
@@ -157,10 +159,29 @@ impl<'a> Texture<'a> {
             .unwrap_or_else(|| Sampler::default(self.document))
     }
 
+    fn source_index(&self) -> usize {
+        let default = self.json.source.value();
+
+        #[cfg(feature = "EXT_texture_webp")]
+        {
+            let opt_texture_webp = self
+                .json
+                .extensions
+                .as_ref()
+                .and_then(|ext| ext.texture_webp.as_ref());
+
+            if let Some(texture_webp) = opt_texture_webp {
+                return texture_webp.source.value();
+            }
+        }
+
+        return default;
+    }
+
     /// Returns the image used by this texture.
     #[cfg(feature = "allow_empty_texture")]
     pub fn source(&self) -> Option<image::Image<'a>> {
-        let index = self.json.source.value();
+        let index = self.source_index();
         if index == u32::MAX as usize {
             None
         } else {
@@ -171,10 +192,7 @@ impl<'a> Texture<'a> {
     /// Returns the image used by this texture.
     #[cfg(not(feature = "allow_empty_texture"))]
     pub fn source(&self) -> image::Image<'a> {
-        self.document
-            .images()
-            .nth(self.json.source.value())
-            .unwrap()
+        self.document.images().nth(self.source_index()).unwrap()
     }
 
     /// Returns extension data unknown to this crate version.
