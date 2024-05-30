@@ -4,12 +4,75 @@ Notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+The top-level `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). Historically, semantic versioning has not applied to `gltf-json`. This is planned to change from version 2—see issue #409.
 
 ## Unreleased
 
+## [1.4.1] - 2024-05-09
+
+### Added
+
+- New functions `animation::Channel::index` and `animation::Sampler::index`.
+- New feature flag `allow_empty_texture` to avoid required extension checks.
+
+### Fixed
+
+- Fix `attempt to to subtract with overflow`-panic in `size_hint()` of sparse accessor when collecting items.
+- Fix incorrect values returned from `size_hint()` in sparse accessor.
+- Add support to read items from sparse accessor without base buffer view.
+
+### Changed
+
+- Update `image` to `0.25.0`.
+- Validation will now fail if a glTF document requires extensions that are not supported by the crate.
+
+### Removed
+
+- Feature `image_jpeg_rayon` no longer needed, as `image 0.25.0` now uses `zune-jpeg` for jpeg decoding.
+
+## [1.4.0] - 2023-12-17
+
+### Added
+
+- New API for reading arbitary extension data.
+- Interval improvements to prevent panics on 32 bit systems when loading large glTF files.
+
+### Changed
+
+- Offsets and sizes in the `gltf-json` crate have been widened to 64 bits.
+- Loading glTF on a 32 bit system containing offsets or sizes larger than `u32` will
+  result in a validation error.
+
+### Fixed
+
+- `Gltf::from_reader` no longer winds the reader back to offset zero.
+- Broken link in `Material::unlit` documentation.
+
+## [1.3.0] - 2023-08-21
+
+### Added
+
+- Support for the `KHR_materials_emissive_strength` extension.
+
+### Fixed
+
+- `Accessor::byte_offset` is now optional for sparse accessors.
+
+## [1.2.0] - 2023-06-08
+
+### Added
+
+- New functions `import_buffers` and `import_images` for advanced import use cases.
+
+### Changed
+
+- `Primitive::attributes` now uses `BTreeMap` instead of `HashMap` deterministic serialization.
+
+## [1.1.0] - 2023-02-01
+
+### Fixed
+
 - Fix relative file path imports with url encoded characters.
-- Update dependency on `image` crate from 0.23 to 0.24.
 - Fix bounds calculation in export example.
 
 ## [1.0.0] - 2022-01-29
@@ -197,15 +260,15 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `fn Gltf::from_*` now imports binary glTF as well as standard glTF.
 - `fn Gltf::from_reader` now requires `reader` to implement `std::io::Seek`.
 - `Buffer::uri` now returns `None` in the case of binary glTF payload instead
-	of the magic string `"#bin"`.
+  of the magic string `"#bin"`.
 - The `POSITION` attribute is now required by all mesh primitives.
 - Several renames:
-	- `glb` → `binary`.
-	- `Error::Glb` → `Error::Binary`.
-	- `TrsProperty` → `Property`.
-	- `InterpolationAlgorithm` → `Interpolation`.
-	- `Target::path` → `Target::property`.
-	- `Primitive::position_bounds` → `Primitive::bounding_box`.
+  - `glb` → `binary`.
+  - `Error::Glb` → `Error::Binary`.
+  - `TrsProperty` → `Property`.
+  - `InterpolationAlgorithm` → `Interpolation`.
+  - `Target::path` → `Target::property`.
+  - `Primitive::position_bounds` → `Primitive::bounding_box`.
 - The `names` feature is now enabled by default, along with `utils` and
   `import`. Rationale: Pareto principle.
 
@@ -422,14 +485,14 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 
-- Allowed the crate to build on the latest stable `rustc` (1.15) 
+- Allowed the crate to build on the latest stable `rustc` (1.15)
   using the new `serde` frontend, i.e. with the serde `proc_macro`.
 
 ## [0.2.1] - 2016-11-17
 
 ### Changed
 
-- Allowed the crate to build on the latest stable `rustc` (1.14) 
+- Allowed the crate to build on the latest stable `rustc` (1.14)
   using the `serde_codegen` crate.
 
 ## [0.2.0] - 2016-11-15
@@ -449,4 +512,3 @@ The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 - Initial (incomplete) glTF 1.0 implementation.
-

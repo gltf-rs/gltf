@@ -3,11 +3,11 @@
 //! Visiting the accessors of a glTF asset.
 //!
 //! ```
-//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! # fn run() -> Result<(), Box<dyn std::error::Error>> {
 //! # let gltf = gltf::Gltf::open("examples/Box.gltf")?;
 //! for accessor in gltf.accessors() {
 //!     println!("Accessor #{}", accessor.index());
-//!     println!("offset: {}", accessor.offset());
+//!     println!("offset: {:?}", accessor.offset());
 //!     println!("count: {}", accessor.count());
 //!     println!("data_type: {:?}", accessor.data_type());
 //!     println!("dimensions: {:?}", accessor.dimensions());
@@ -40,9 +40,10 @@
 //! for accessor in gltf.accessors() {
 //!     match (accessor.data_type(), accessor.dimensions()) {
 //!         (DataType::F32, Dimensions::Vec3) => {
-//!             let iter = Iter::<[f32; 3]>::new(accessor, get_buffer_data);
-//!             for item in iter {
-//!                 println!("{:?}", item);
+//!             if let Some(iter) = Iter::<[f32; 3]>::new(accessor, get_buffer_data) {
+//!                 for item in iter {
+//!                     println!("{:?}", item);
+//!                 }
 //!             }
 //!         }
 //!         _ => {},
@@ -59,6 +60,8 @@ use crate::{buffer, Document};
 
 pub use json::accessor::ComponentType as DataType;
 pub use json::accessor::Type as Dimensions;
+#[cfg(feature = "extensions")]
+use serde_json::{Map, Value};
 
 /// Utility functions.
 #[cfg(feature = "utils")]
@@ -119,19 +122,39 @@ impl<'a> Accessor<'a> {
     }
 
     /// Returns the offset relative to the start of the parent buffer view in bytes.
+    ///
+    /// This will be 0 if the corresponding accessor is sparse.
     pub fn offset(&self) -> usize {
-        self.json.byte_offset as usize
+        // TODO: Change this function to return Option<usize> in the next
+        // version and return None for sparse accessors.
+        self.json.byte_offset.unwrap_or_default().0 as usize
     }
 
     /// Returns the number of components within the buffer view - not to be confused
     /// with the number of bytes in the buffer view.
     pub fn count(&self) -> usize {
-        self.json.count as usize
+        self.json.count.0 as usize
     }
 
     /// Returns the data type of components in the attribute.
     pub fn data_type(&self) -> DataType {
         self.json.component_type.unwrap().0
+    }
+
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Queries extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
     }
 
     /// Optional application specific data.

@@ -1,8 +1,11 @@
+#[allow(unused)]
 use crate::{buffer, Document, Error, Result};
 
 #[cfg(feature = "import")]
 #[cfg_attr(docsrs, doc(cfg(feature = "import")))]
 use image_crate::DynamicImage;
+#[cfg(feature = "extensions")]
+use serde_json::{Map, Value};
 
 /// Format of image pixel data.
 #[cfg(feature = "import")]
@@ -126,6 +129,22 @@ impl<'a> Image<'a> {
             let mime_type = self.json.mime_type.as_ref().map(|x| x.0.as_str());
             Source::Uri { uri, mime_type }
         }
+    }
+
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Queries extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
     }
 
     /// Optional application specific data.

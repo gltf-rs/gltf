@@ -1,3 +1,6 @@
+#[cfg(feature = "extensions")]
+use serde_json::{Map, Value};
+
 use crate::math::*;
 use crate::{Camera, Document, Mesh, Skin};
 
@@ -142,6 +145,22 @@ impl<'a> Node<'a> {
         }
     }
 
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Queries extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
+    }
+
     /// Optional application specific data.
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
@@ -190,9 +209,9 @@ impl<'a> Node<'a> {
             }
         } else {
             Transform::Decomposed {
-                translation: self.json.translation.unwrap_or_else(|| [0.0, 0.0, 0.0]),
+                translation: self.json.translation.unwrap_or([0.0, 0.0, 0.0]),
                 rotation: self.json.rotation.unwrap_or_default().0,
-                scale: self.json.scale.unwrap_or_else(|| [1.0, 1.0, 1.0]),
+                scale: self.json.scale.unwrap_or([1.0, 1.0, 1.0]),
             }
         }
     }
@@ -224,6 +243,22 @@ impl<'a> Scene<'a> {
     /// Returns the internal JSON index.
     pub fn index(&self) -> usize {
         self.index
+    }
+
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Queries extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
     }
 
     /// Optional application specific data.

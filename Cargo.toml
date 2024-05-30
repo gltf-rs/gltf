@@ -1,6 +1,6 @@
 [package]
 name = "gltf"
-version = "1.0.0"
+version = "1.4.1"
 authors = ["David Harvey-Macaulay <alteous@outlook.com>"]
 description = "glTF 2.0 loader"
 documentation = "https://docs.rs/gltf"
@@ -10,7 +10,8 @@ readme = "README.md"
 keywords = ["glTF", "3D", "asset", "model", "scene"]
 license = "MIT OR Apache-2.0"
 include = ["**/*.rs", "Cargo.toml", "LICENSE-*"]
-edition = "2018"
+edition = "2021"
+rust-version = "1.61"
 
 [badges]
 travis-ci = { repository = "gltf-rs/gltf" }
@@ -24,22 +25,25 @@ approx = "0.5"
 [dependencies]
 base64 = { optional = true, version = "0.13" }
 byteorder = "1.3"
-gltf-json = { path = "gltf-json", version = "1.0.0" }
+gltf-json = { path = "gltf-json", version = "=1.4.1" }
 lazy_static = "1"
-urlencoding = "2.1"
+urlencoding = { optional = true, version = "2.1" }
+serde_json = { features = ["raw_value"], version = "1.0" }
 
 [dependencies.image]
 default-features = false
 features = ["jpeg", "png"]
 optional = true
-version = "0.24"
+version = "0.25"
 
 [features]
 default = ["import", "utils", "names"]
+allow_empty_texture = ["gltf-json/allow_empty_texture"]
+extensions = ["gltf-json/extensions"]
 extras = ["gltf-json/extras"]
 names = ["gltf-json/names"]
 utils = []
-import = ["base64", "image"]
+import = ["base64", "image", "urlencoding"]
 KHR_lights_punctual = ["gltf-json/KHR_lights_punctual"]
 KHR_materials_pbrSpecularGlossiness = ["gltf-json/KHR_materials_pbrSpecularGlossiness"]
 KHR_materials_unlit = ["gltf-json/KHR_materials_unlit"]
@@ -49,8 +53,8 @@ KHR_materials_ior = ["gltf-json/KHR_materials_ior"]
 KHR_materials_variants = ["gltf-json/KHR_materials_variants"]
 KHR_materials_volume = ["gltf-json/KHR_materials_volume"]
 KHR_materials_specular = ["gltf-json/KHR_materials_specular"]
+KHR_materials_emissive_strength = ["gltf-json/KHR_materials_emissive_strength"]
 EXT_texture_webp = ["gltf-json/EXT_texture_webp", "image/webp"]
-image_jpeg_rayon = ["image/jpeg_rayon"]
 guess_mime_type = []
 
 [[example]]

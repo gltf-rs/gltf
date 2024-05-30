@@ -14,7 +14,7 @@
 //!
 //! ```toml
 //! [dependencies.gltf]
-//! version = "1.0"
+//! version = "1"
 //! ```
 //!
 //! # Examples
@@ -24,7 +24,7 @@
 //! Walking the node hierarchy.
 //!
 //! ```
-//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! # fn run() -> Result<(), Box<dyn std::error::Error>> {
 //! # use gltf::Gltf;
 //! let gltf = Gltf::open("examples/Box.gltf")?;
 //! for scene in gltf.scenes() {
@@ -49,7 +49,7 @@
 //! file system.
 //!
 //! ```
-//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! # fn run() -> Result<(), Box<dyn std::error::Error>> {
 //! let (document, buffers, images) = gltf::import("examples/Box.gltf")?;
 //! assert_eq!(buffers.len(), document.buffers().count());
 //! assert_eq!(images.len(), document.images().count());
@@ -69,7 +69,9 @@
 //! scenarios are delegated to the user.
 //!
 //! You can read glTF without loading resources by constructing the [`Gltf`]
-//! (standard glTF) or [`Glb`] (binary glTF) data structures explicitly.
+//! (standard glTF) or [`Glb`] (binary glTF) data structures explicitly. Buffer
+//! and image data can then be imported separately using [`import_buffers`] and
+//! [`import_images`] respectively.
 //!
 //! [glTF 2.0]: https://www.khronos.org/gltf
 //! [`Gltf`]: struct.Gltf.html
@@ -142,6 +144,11 @@ pub mod skin;
 /// Textures and their samplers.
 pub mod texture;
 
+#[cfg(feature = "extensions")]
+use json::Value;
+#[cfg(feature = "extensions")]
+use serde_json::Map;
+
 #[doc(inline)]
 pub use self::accessor::Accessor;
 #[doc(inline)]
@@ -157,6 +164,12 @@ pub use self::image::Image;
 #[cfg(feature = "import")]
 #[doc(inline)]
 pub use self::import::import;
+#[cfg(feature = "import")]
+#[doc(inline)]
+pub use self::import::import_buffers;
+#[cfg(feature = "import")]
+#[doc(inline)]
+pub use self::import::import_images;
 #[cfg(feature = "import")]
 #[doc(inline)]
 pub use self::import::import_slice;
@@ -279,7 +292,7 @@ impl Gltf {
     {
         let mut magic = [0u8; 4];
         reader.read_exact(&mut magic)?;
-        reader.seek(io::SeekFrom::Start(0))?;
+        reader.seek(io::SeekFrom::Current(-4))?;
         let (json, blob): (json::Root, Option<Vec<u8>>);
         if magic.starts_with(b"glTF") {
             let mut glb = binary::Glb::from_reader(reader)?;
@@ -300,7 +313,7 @@ impl Gltf {
         R: io::Read + io::Seek,
     {
         let gltf = Self::from_reader_without_validation(reader)?;
-        let _ = gltf.document.validate()?;
+        gltf.document.validate()?;
         Ok(gltf)
     }
 
@@ -323,7 +336,7 @@ impl Gltf {
     /// Loads glTF from a slice of bytes.
     pub fn from_slice(slice: &[u8]) -> Result<Self> {
         let gltf = Self::from_slice_without_validation(slice)?;
-        let _ = gltf.document.validate()?;
+        gltf.document.validate()?;
         Ok(gltf)
     }
 }
@@ -345,7 +358,7 @@ impl Document {
     /// Loads glTF from pre-deserialized JSON.
     pub fn from_json(json: json::Root) -> Result<Self> {
         let document = Self::from_json_without_validation(json);
-        let _ = document.validate()?;
+        document.validate()?;
         Ok(document)
     }
 
@@ -358,6 +371,11 @@ impl Document {
     /// Unwraps the glTF document.
     pub fn into_json(self) -> json::Root {
         self.0
+    }
+
+    /// Unwraps the glTF document, without consuming it.
+    pub fn as_json(&self) -> &json::Root {
+        &self.0
     }
 
     /// Perform validation checks on loaded glTF.
@@ -431,6 +449,22 @@ impl Document {
             iter: self.0.images.iter().enumerate(),
             document: self,
         }
+    }
+
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let root = self.0.extensions.as_ref()?;
+        Some(&root.others)
+    }
+
+    /// Queries extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let root = self.0.extensions.as_ref()?;
+        root.others.get(ext_name)
     }
 
     /// Returns an `Iterator` that visits the lights of the glTF asset as defined by the
@@ -579,7 +613,7 @@ impl std::fmt::Display for Error {
             Error::UnsupportedScheme => write!(f, "unsupported URI scheme"),
             Error::Validation(ref xs) => {
                 write!(f, "invalid glTF:")?;
-                for &(ref path, ref error) in xs {
+                for (ref path, ref error) in xs {
                     write!(f, " {}: {};", path, error)?;
                 }
                 Ok(())

@@ -9,14 +9,42 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 use syn::DeriveInput;
 
-#[proc_macro_derive(Validate)]
+#[proc_macro_derive(Validate, attributes(gltf))]
 pub fn derive_validate(input: TokenStream) -> TokenStream {
     expand(&syn::parse_macro_input!(input as DeriveInput)).into()
+}
+
+struct ValidateHook(pub syn::Ident);
+
+impl syn::parse::Parse for ValidateHook {
+    fn parse(input: syn::parse::ParseStream<'_>) -> syn::parse::Result<Self> {
+        let tag = input.parse::<syn::Ident>()?;
+        if tag == "validate_hook" {
+            let _eq = input.parse::<syn::Token![=]>()?;
+            let literal = input.parse::<syn::LitStr>()?;
+            let ident = syn::Ident::new(&literal.value(), tag.span());
+            Ok(ValidateHook(ident))
+        } else {
+            panic!("unrecognized gltf attribute");
+        }
+    }
 }
 
 fn expand(ast: &DeriveInput) -> proc_macro2::TokenStream {
     use proc_macro2::TokenStream;
     use quote::quote;
+
+    let mut validate_hook = quote! {};
+    for attr in &ast.attrs {
+        if attr.path().is_ident("gltf") {
+            let ValidateHook(ident) = attr
+                .parse_args::<ValidateHook>()
+                .expect("failed to parse attribute");
+            validate_hook = quote! {
+                #ident(self, _root, _path, _report);
+            };
+        }
+    }
 
     let fields = match ast.data {
         syn::Data::Struct(ref data_struct) => &data_struct.fields,
@@ -50,11 +78,13 @@ fn expand(ast: &DeriveInput) -> proc_macro2::TokenStream {
                 _report: &mut R
             ) where
                 P: Fn() -> crate::Path,
-                R: FnMut(&Fn() -> crate::Path, crate::validation::Error),
+                R: FnMut(&dyn Fn() -> crate::Path, crate::validation::Error),
             {
                 #(
                     #validations;
                 )*
+
+                #validate_hook
             }
         }
     )

@@ -1,5 +1,5 @@
-use crate::validation::Checked;
-use crate::{extensions, Extras, Index};
+use crate::validation::{Checked, Error, USize64, Validate};
+use crate::{extensions, Extras, Index, Path, Root};
 use gltf_derive::Validate;
 use serde::{de, ser};
 use serde_derive::{Deserialize, Serialize};
@@ -12,10 +12,10 @@ pub const ARRAY_BUFFER: u32 = 34_962;
 pub const ELEMENT_ARRAY_BUFFER: u32 = 34_963;
 
 /// The minimum byte stride.
-pub const MIN_BYTE_STRIDE: u32 = 4;
+pub const MIN_BYTE_STRIDE: usize = 4;
 
 /// The maximum byte stride.
-pub const MAX_BYTE_STRIDE: u32 = 252;
+pub const MAX_BYTE_STRIDE: usize = 252;
 
 /// All valid GPU buffer targets.
 pub const VALID_TARGETS: &[u32] = &[ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER];
@@ -42,12 +42,28 @@ impl ser::Serialize for Target {
     }
 }
 
+/// Distance between individual items in a buffer view, measured in bytes.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub struct Stride(pub usize);
+
+impl Validate for Stride {
+    fn validate<P, R>(&self, _root: &Root, path: P, report: &mut R)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
+    {
+        if self.0 < MIN_BYTE_STRIDE || self.0 > MAX_BYTE_STRIDE {
+            report(&path, Error::Invalid);
+        }
+    }
+}
+
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct Buffer {
     /// The length of the buffer in bytes.
     #[serde(default, rename = "byteLength")]
-    pub byte_length: u32,
+    pub byte_length: USize64,
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
@@ -81,7 +97,7 @@ pub struct View {
 
     /// The length of the `BufferView` in bytes.
     #[serde(rename = "byteLength")]
-    pub byte_length: u32,
+    pub byte_length: USize64,
 
     /// Offset into the parent buffer in bytes.
     #[serde(
@@ -89,14 +105,14 @@ pub struct View {
         rename = "byteOffset",
         skip_serializing_if = "Option::is_none"
     )]
-    pub byte_offset: Option<u32>,
+    pub byte_offset: Option<USize64>,
 
     /// The stride in bytes between vertex attributes or other interleavable data.
     ///
     /// When zero, data is assumed to be tightly packed.
     #[serde(rename = "byteStride")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub byte_stride: Option<u32>,
+    pub byte_stride: Option<Stride>,
 
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]

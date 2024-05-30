@@ -3,7 +3,7 @@
 //! Listing the attributes of each mesh primitive in a glTF asset.
 //!
 //! ```
-//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! # fn run() -> Result<(), Box<dyn std::error::Error>> {
 //! # let gltf = gltf::Gltf::open("examples/Box.gltf")?;
 //! for mesh in gltf.meshes() {
 //!    println!("Mesh #{}", mesh.index());
@@ -27,7 +27,7 @@
 //! a glTF asset.
 //!
 //! ```
-//! # fn run() -> Result<(), Box<std::error::Error>> {
+//! # fn run() -> Result<(), Box<dyn std::error::Error>> {
 //! let (gltf, buffers, _) = gltf::import("examples/Box.gltf")?;
 //! for mesh in gltf.meshes() {
 //!    println!("Mesh #{}", mesh.index());
@@ -63,6 +63,8 @@ use crate::accessor;
 
 pub use json::mesh::{Mode, Semantic};
 use json::validation::Checked;
+#[cfg(feature = "extensions")]
+use serde_json::{Map, Value};
 
 /// Vertex attribute data.
 pub type Attribute<'a> = (Semantic, Accessor<'a>);
@@ -125,7 +127,9 @@ pub struct Reader<'a, 's, F>
 where
     F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>,
 {
+    #[allow(dead_code)]
     pub(crate) primitive: &'a Primitive<'a>,
+    #[allow(dead_code)]
     pub(crate) get_buffer_data: F,
 }
 
@@ -142,6 +146,22 @@ impl<'a> Mesh<'a> {
     /// Returns the internal JSON index.
     pub fn index(&self) -> usize {
         self.index
+    }
+
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Queries extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
     }
 
     /// Optional application specific data.
@@ -193,6 +213,22 @@ impl<'a> Primitive<'a> {
         let min: [f32; 3] = json::deserialize::from_value(pos_accessor.min().unwrap()).unwrap();
         let max: [f32; 3] = json::deserialize::from_value(pos_accessor.max().unwrap()).unwrap();
         Bounds { min, max }
+    }
+
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Queries extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
     }
 
     /// Optional application specific data.
@@ -254,7 +290,7 @@ impl<'a> Primitive<'a> {
         } else {
             iter::MorphTargets {
                 document: self.mesh.document,
-                iter: (&[]).iter(),
+                iter: ([]).iter(),
             }
         }
     }
@@ -269,7 +305,7 @@ impl<'a> Primitive<'a> {
             .as_ref()
             .and_then(|extensions| extensions.khr_materials_variants.as_ref())
             .map(|variants| variants.mappings.iter())
-            .unwrap_or_else(|| (&[]).iter());
+            .unwrap_or_else(|| ([]).iter());
 
         iter::Mappings {
             document: self.mesh.document,

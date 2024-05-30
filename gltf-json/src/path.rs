@@ -70,6 +70,21 @@ impl Path {
         Path(format!("{}[\"{}\"]", self.0, key))
     }
 
+    /// Provides a string value for a JSON path.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage
+    ///
+    /// ```rust
+    /// # use gltf_json::Path;
+    /// let path = Path::new().field("foo").index(0).value_str("baz");
+    /// assert_eq!("foo[0] = \"baz\"", path.as_str());
+    /// ```
+    pub fn value_str(&self, value: &str) -> Self {
+        Path(format!("{} = \"{}\"", self.0, value))
+    }
+
     /// Returns a view into the internal representation.
     pub fn as_str(&self) -> &str {
         &self.0
