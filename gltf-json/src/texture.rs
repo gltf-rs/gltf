@@ -179,7 +179,10 @@ where
     P: Fn() -> crate::Path,
     R: FnMut(&dyn Fn() -> crate::Path, crate::validation::Error),
 {
-    if cfg!(feature = "allow_empty_texture") {
+    if cfg!(any(
+        feature = "allow_empty_texture",
+        feature = "EXT_texture_webp"
+    )) {
         if !source_is_empty(source) {
             source.validate(root, path, report);
         }
