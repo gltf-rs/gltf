@@ -371,3 +371,14 @@ impl From<Vec<(Path, validation::Error)>> for Error {
         Error::Validation(errs)
     }
 }
+
+/// Names of glTF 2.0 extensions supported by the library.
+pub const SUPPORTED_EXTENSIONS: &[&str] = &[
+    "KHR_lights_punctual",
+    "KHR_materials_pbrSpecularGlossiness",
+    "KHR_materials_unlit",
+    "KHR_texture_transform",
+    "KHR_materials_transmission",
+    "KHR_materials_ior",
+    "KHR_materials_emissive_strength",
+];

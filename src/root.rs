@@ -157,7 +157,7 @@ where
     R: FnMut(&dyn Fn() -> Path, crate::validation::Error),
 {
     for (i, ext) in root.extensions_required.iter().enumerate() {
-        if !crate::extensions::ENABLED_EXTENSIONS.contains(&ext.as_str()) {
+        if !crate::SUPPORTED_EXTENSIONS.contains(&ext.as_str()) {
             report(
                 &|| {
                     path()
@@ -508,22 +508,7 @@ mod tests {
         root.validate(&root, Path::new, &mut |path, error| {
             errors.push((path(), error));
         });
-
-        #[cfg(feature = "KHR_lights_punctual")]
-        {
-            assert!(errors.is_empty());
-        }
-
-        #[cfg(not(feature = "KHR_lights_punctual"))]
-        {
-            assert_eq!(1, errors.len());
-            let (path, error) = errors.get(0).unwrap();
-            assert_eq!(
-                path.as_str(),
-                "extensionsRequired[0] = \"KHR_lights_punctual\""
-            );
-            assert_eq!(*error, Error::Unsupported);
-        }
+        assert!(errors.is_empty());
 
         root.extensions_required = vec!["KHR_mesh_quantization".to_owned()];
         errors.clear();

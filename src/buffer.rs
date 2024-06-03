@@ -2,10 +2,10 @@ use crate::validation::{Error, USize64, Validate};
 use crate::{Extras, Index, Path, Root, UnrecognizedExtensions};
 
 /// The minimum byte stride.
-pub const MIN_BYTE_STRIDE: usize = 4;
+pub const MIN_BYTE_STRIDE: u8 = 4;
 
 /// The maximum byte stride.
-pub const MAX_BYTE_STRIDE: usize = 252;
+pub const MAX_BYTE_STRIDE: u8 = 252;
 
 /// Specifies the target a GPU buffer should be bound to.
 #[derive(
@@ -33,7 +33,14 @@ impl Validate for Target {}
     serde_derive::Deserialize,
     serde_derive::Serialize,
 )]
-pub struct Stride(pub usize);
+pub struct Stride(pub u8);
+
+impl Stride {
+    /// Widens the value to `usize`.
+    pub fn value(&self) -> usize {
+        self.0 as usize
+    }
+}
 
 impl Validate for Stride {
     fn validate<P, R>(&self, _root: &Root, path: P, report: &mut R)

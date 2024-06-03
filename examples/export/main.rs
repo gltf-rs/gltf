@@ -86,7 +86,7 @@ fn export(output: Output) {
         buffer,
         length: USize64::from(buffer_length),
         offset: USize64(0),
-        stride: Some(gltf::buffer::Stride(mem::size_of::<Vertex>())),
+        stride: Some(gltf::buffer::Stride(mem::size_of::<Vertex>() as u8)),
         name: None,
         target: Some(gltf::buffer::Target::ArrayBuffer),
         extras: Default::default(),

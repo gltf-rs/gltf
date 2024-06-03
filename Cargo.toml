@@ -41,7 +41,7 @@ features = ["jpeg", "png"]
 optional = true
 version = "0.25"
 
-[features]=
+[features]
 default = ["import", "utils"]
 allow_empty_texture = []
 extensions = []

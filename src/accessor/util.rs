@@ -1,16 +1,16 @@
-use byteorder::{ByteOrder, LE};
+use byteorder::{ByteOrder, LittleEndian};
 use std::marker::PhantomData;
 use std::{iter, mem};
 
-use crate::{accessor, buffer};
+use crate::{accessor, buffer, Accessor, Buffer, Index, Root};
 
 fn buffer_view_slice<'a, 's>(
-    view: buffer::View<'a>,
-    get_buffer_data: &dyn Fn(buffer::Buffer<'a>) -> Option<&'s [u8]>,
+    view: &'a buffer::View,
+    get_buffer_data: &dyn Fn(Index<Buffer>) -> Option<&'s [u8]>,
 ) -> Option<&'s [u8]> {
-    let start = view.offset();
-    let end = start + view.length();
-    get_buffer_data(view.buffer()).and_then(|slice| slice.get(start..end))
+    let start = view.offset.value();
+    let end = start + view.length.value();
+    get_buffer_data(view.buffer).and_then(|slice| slice.get(start..end))
 }
 
 /// General iterator for an accessor.
@@ -33,17 +33,10 @@ impl<'a, T: Item> Iterator for Iter<'a, T> {
         }
     }
 
-    fn nth(&mut self, nth: usize) -> Option<Self::Item> {
+    fn size_hint(&self) -> (usize, Option<usize>) {
         match self {
-            Iter::Standard(ref mut iter) => iter.nth(nth),
-            Iter::Sparse(ref mut iter) => iter.nth(nth),
-        }
-    }
-
-    fn last(self) -> Option<Self::Item> {
-        match self {
-            Iter::Standard(iter) => iter.last(),
-            Iter::Sparse(iter) => iter.last(),
+            Iter::Standard(ref iter) => iter.size_hint(),
+            Iter::Sparse(ref iter) => iter.size_hint(),
         }
     }
 
@@ -54,10 +47,17 @@ impl<'a, T: Item> Iterator for Iter<'a, T> {
         }
     }
 
-    fn size_hint(&self) -> (usize, Option<usize>) {
+    fn last(self) -> Option<Self::Item> {
         match self {
-            Iter::Standard(ref iter) => iter.size_hint(),
-            Iter::Sparse(ref iter) => iter.size_hint(),
+            Iter::Standard(iter) => iter.last(),
+            Iter::Sparse(iter) => iter.last(),
+        }
+    }
+
+    fn nth(&mut self, nth: usize) -> Option<Self::Item> {
+        match self {
+            Iter::Standard(ref mut iter) => iter.nth(nth),
+            Iter::Sparse(ref mut iter) => iter.nth(nth),
         }
     }
 }
@@ -114,15 +114,6 @@ impl<'a, T: Item> SparseIter<'a, T> {
     ///
     /// Here `base` is allowed to be `None` when the base buffer view is not explicitly specified.
     pub fn new(
-        base: Option<ItemIter<'a, T>>,
-        indices: SparseIndicesIter<'a>,
-        values: ItemIter<'a, T>,
-    ) -> Self {
-        Self::with_base_count(base, 0, indices, values)
-    }
-
-    /// Supplemental constructor.
-    pub fn with_base_count(
         base: Option<ItemIter<'a, T>>,
         base_count: usize,
         indices: SparseIndicesIter<'a>,
@@ -205,7 +196,7 @@ impl Item for i8 {
 
 impl Item for i16 {
     fn from_slice(slice: &[u8]) -> Self {
-        LE::read_i16(slice)
+        LittleEndian::read_i16(slice)
     }
     fn zero() -> Self {
         0
@@ -223,7 +214,7 @@ impl Item for u8 {
 
 impl Item for u16 {
     fn from_slice(slice: &[u8]) -> Self {
-        LE::read_u16(slice)
+        LittleEndian::read_u16(slice)
     }
     fn zero() -> Self {
         0
@@ -232,7 +223,7 @@ impl Item for u16 {
 
 impl Item for u32 {
     fn from_slice(slice: &[u8]) -> Self {
-        LE::read_u32(slice)
+        LittleEndian::read_u32(slice)
     }
     fn zero() -> Self {
         0
@@ -241,7 +232,7 @@ impl Item for u32 {
 
 impl Item for f32 {
     fn from_slice(slice: &[u8]) -> Self {
-        LE::read_f32(slice)
+        LittleEndian::read_f32(slice)
     }
     fn zero() -> Self {
         0.0
@@ -303,18 +294,25 @@ impl<'a, T: Item> ItemIter<'a, T> {
 
 impl<'a, 's, T: Item> Iter<'s, T> {
     /// Constructor.
-    pub fn new<F>(accessor: super::Accessor<'a>, get_buffer_data: F) -> Option<Iter<'s, T>>
+    pub fn new<F>(root: &'a Root, index: Index<Accessor>, get_buffer_data: F) -> Option<Iter<'s, T>>
     where
-        F: Clone + Fn(buffer::Buffer<'a>) -> Option<&'s [u8]>,
+        F: Clone + Fn(Index<Buffer>) -> Option<&'s [u8]>,
     {
-        match accessor.sparse() {
+        let accessor = root.get(index)?;
+        match accessor.sparse.as_ref() {
             Some(sparse) => {
                 // Using `if let` here instead of map to preserve the early return behavior.
-                let base_iter = if let Some(view) = accessor.view() {
-                    let stride = view.stride().unwrap_or(mem::size_of::<T>());
-
-                    let start = accessor.offset();
-                    let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
+                let base_iter = if let Some(view) = accessor
+                    .buffer_view
+                    .as_ref()
+                    .and_then(|index| root.get(*index))
+                {
+                    let stride = view
+                        .stride
+                        .map(|s| s.value())
+                        .unwrap_or(mem::size_of::<T>());
+                    let start = accessor.byte_offset.unwrap_or_default().value();
+                    let end = start + stride * (accessor.count.value() - 1) + mem::size_of::<T>();
                     let subslice = buffer_view_slice(view, &get_buffer_data)
                         .and_then(|slice| slice.get(start..end))?;
 
@@ -322,23 +320,22 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                 } else {
                     None
                 };
-                let base_count = accessor.count();
 
-                let indices = sparse.indices();
-                let values = sparse.values();
-                let sparse_count = sparse.count();
-
+                let sparse_count = sparse.count.value();
+                let base_count = accessor.count.value();
+                let indices = &sparse.indices;
+                let values = &sparse.values;
                 let index_iter = {
-                    let view = indices.view();
-                    let index_size = indices.index_type().size();
-                    let stride = view.stride().unwrap_or(index_size);
+                    let view = root.get(indices.buffer_view)?;
+                    let index_size = indices.index_type.size();
+                    let stride = view.stride.map(|s| s.value()).unwrap_or(index_size);
 
-                    let start = indices.offset();
+                    let start = indices.byte_offset.value();
                     let end = start + stride * (sparse_count - 1) + index_size;
                     let subslice = buffer_view_slice(view, &get_buffer_data)
                         .and_then(|slice| slice.get(start..end))?;
 
-                    match indices.index_type() {
+                    match indices.index_type {
                         accessor::sparse::IndexType::U8 => {
                             SparseIndicesIter::U8(ItemIter::new(subslice, stride))
                         }
@@ -352,10 +349,13 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                 };
 
                 let value_iter = {
-                    let view = values.view();
-                    let stride = view.stride().unwrap_or(mem::size_of::<T>());
+                    let view = root.get(values.buffer_view)?;
+                    let stride = view
+                        .stride
+                        .map(|s| s.value())
+                        .unwrap_or(mem::size_of::<T>());
 
-                    let start = values.offset();
+                    let start = values.byte_offset.value();
                     let end = start + stride * (sparse_count - 1) + mem::size_of::<T>();
                     let subslice = buffer_view_slice(view, &get_buffer_data)
                         .and_then(|slice| slice.get(start..end))?;
@@ -363,7 +363,7 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                     ItemIter::new(subslice, stride)
                 };
 
-                Some(Iter::Sparse(SparseIter::with_base_count(
+                Some(Iter::Sparse(SparseIter::new(
                     base_iter, base_count, index_iter, value_iter,
                 )))
             }
@@ -371,26 +371,34 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                 debug_assert_eq!(mem::size_of::<T>(), accessor.size());
                 debug_assert!(mem::size_of::<T>() > 0);
 
-                accessor.view().and_then(|view| {
-                    let stride = view.stride().unwrap_or(mem::size_of::<T>());
-                    debug_assert!(
-                        stride >= mem::size_of::<T>(),
-                        "Mismatch in stride, expected at least {} stride but found {}",
-                        mem::size_of::<T>(),
-                        stride
-                    );
+                accessor
+                    .buffer_view
+                    .as_ref()
+                    .and_then(|index| root.get(*index))
+                    .and_then(|view| {
+                        let stride = view
+                            .stride
+                            .map(|s| s.value())
+                            .unwrap_or(mem::size_of::<T>());
+                        debug_assert!(
+                            stride >= mem::size_of::<T>(),
+                            "Mismatch in stride, expected at least {} stride but found {}",
+                            mem::size_of::<T>(),
+                            stride
+                        );
 
-                    let start = accessor.offset();
-                    let end = start + stride * (accessor.count() - 1) + mem::size_of::<T>();
-                    let subslice = buffer_view_slice(view, &get_buffer_data)
-                        .and_then(|slice| slice.get(start..end))?;
+                        let start = accessor.byte_offset.unwrap_or_default().value();
+                        let end =
+                            start + stride * (accessor.count.value() - 1) + mem::size_of::<T>();
+                        let subslice = buffer_view_slice(view, &get_buffer_data)
+                            .and_then(|slice| slice.get(start..end))?;
 
-                    Some(Iter::Standard(ItemIter {
-                        stride,
-                        data: subslice,
-                        _phantom: PhantomData,
-                    }))
-                })
+                        Some(Iter::Standard(ItemIter {
+                            stride,
+                            data: subslice,
+                            _phantom: PhantomData,
+                        }))
+                    })
             }
         }
     }
@@ -418,18 +426,14 @@ impl<'a, T: Item> Iterator for ItemIter<'a, T> {
         }
     }
 
-    fn nth(&mut self, nth: usize) -> Option<Self::Item> {
-        if let Some(val_data) = self.data.get(nth * self.stride..) {
-            if val_data.len() >= mem::size_of::<T>() {
-                let val = T::from_slice(val_data);
-                self.data = &val_data[self.stride.min(val_data.len())..];
-                Some(val)
-            } else {
-                None
-            }
-        } else {
-            None
-        }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let hint = self.data.len() / self.stride
+            + (self.data.len() % self.stride >= mem::size_of::<T>()) as usize;
+        (hint, Some(hint))
+    }
+
+    fn count(self) -> usize {
+        self.size_hint().0
     }
 
     fn last(self) -> Option<Self::Item> {
@@ -442,13 +446,17 @@ impl<'a, T: Item> Iterator for ItemIter<'a, T> {
         }
     }
 
-    fn count(self) -> usize {
-        self.size_hint().0
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        let hint = self.data.len() / self.stride
-            + (self.data.len() % self.stride >= mem::size_of::<T>()) as usize;
-        (hint, Some(hint))
+    fn nth(&mut self, nth: usize) -> Option<Self::Item> {
+        if let Some(val_data) = self.data.get(nth * self.stride..) {
+            if val_data.len() >= mem::size_of::<T>() {
+                let val = T::from_slice(val_data);
+                self.data = &val_data[self.stride.min(val_data.len())..];
+                Some(val)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
     }
 }

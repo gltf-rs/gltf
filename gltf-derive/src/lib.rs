@@ -13,27 +13,6 @@ use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{parse_quote, DeriveInput};
 
-#[proc_macro_derive(Validate, attributes(gltf))]
-pub fn derive_validate(input: TokenStream) -> TokenStream {
-    expand(&syn::parse_macro_input!(input as DeriveInput)).into()
-}
-
-struct ValidateHook(pub syn::Ident);
-
-impl syn::parse::Parse for ValidateHook {
-    fn parse(input: syn::parse::ParseStream<'_>) -> syn::parse::Result<Self> {
-        let tag = input.parse::<syn::Ident>()?;
-        if tag == "validate_hook" {
-            let _eq = input.parse::<syn::Token![=]>()?;
-            let literal = input.parse::<syn::LitStr>()?;
-            let ident = syn::Ident::new(&literal.value(), tag.span());
-            Ok(ValidateHook(ident))
-        } else {
-            panic!("unrecognized gltf attribute");
-        }
-    }
-}
-
 /// Provided `struct` attributes.
 enum StructAttribute {
     /// Identifies a indexable data structure.
@@ -42,6 +21,9 @@ enum StructAttribute {
     /// extra `fn index(&self) -> usize` function defined in their
     /// generated reader type.
     Indexed,
+
+    /// A hook for extra validation steps.
+    ValidateHook(syn::Ident),
 }
 
 /// Provided attributes for named `struct` fields.
@@ -61,6 +43,12 @@ impl syn::parse::Parse for StructAttribute {
         let tag = input.parse::<syn::Ident>()?;
         match tag.to_string().as_str() {
             "indexed" => Ok(Self::Indexed),
+            "validate_hook" => {
+                let _eq = input.parse::<syn::Token![=]>()?;
+                let literal = input.parse::<syn::LitStr>()?;
+                let ident = syn::Ident::new(&literal.value(), tag.span());
+                Ok(Self::ValidateHook(ident))
+            }
             unrecognized => {
                 panic!("gltf({unrecognized}) is not a recognized `struct` attribute")
             }
@@ -400,6 +388,7 @@ fn wrap_indexed(attributes: &[syn::Attribute]) -> TokenStream2 {
                         }
                     }
                 }
+                StructAttribute::ValidateHook(_) => {}
             }
         }
     }
@@ -598,32 +587,18 @@ pub fn derive_validate(input: TokenStream) -> TokenStream {
     expand_validate(&syn::parse_macro_input!(input as DeriveInput)).into()
 }
 
-struct ValidateHook(pub syn::Ident);
-
-impl syn::parse::Parse for ValidateHook {
-    fn parse(input: syn::parse::ParseStream<'_>) -> syn::parse::Result<Self> {
-        let tag = input.parse::<syn::Ident>()?;
-        if tag == "validate_hook" {
-            let _eq = input.parse::<syn::Token![=]>()?;
-            let literal = input.parse::<syn::LitStr>()?;
-            let ident = syn::Ident::new(&literal.value(), tag.span());
-            Ok(ValidateHook(ident))
-        } else {
-            panic!("unrecognized gltf attribute");
-        }
-    }
-}
-
-fn expand_validate(ast: &DeriveInput) -> proc_macro2::TokenStream2 {
+fn expand_validate(ast: &DeriveInput) -> TokenStream2 {
     let mut validate_hook = quote! {};
     for attr in &ast.attrs {
         if attr.path().is_ident("gltf") {
-            let ValidateHook(ident) = attr
-                .parse_args::<ValidateHook>()
+            let parsed_attr = attr
+                .parse_args::<StructAttribute>()
                 .expect("failed to parse attribute");
-            validate_hook = quote! {
-                #ident(self, _root, _path, _report);
-            };
+            if let StructAttribute::ValidateHook(ident) = parsed_attr {
+                validate_hook = quote! {
+                    #ident(self, _root, _path, _report);
+                };
+            }
         }
     }
 
