@@ -83,7 +83,7 @@ pub struct Index<T>(u32, marker::PhantomData<fn() -> T>);
 #[derive(
     Clone, Debug, Default, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate,
 )]
-#[gltf(validate_hook = "root_validate_hook")]
+#[gltf(validate = "validate_root")]
 pub struct Root {
     /// An array of accessors.
     pub accessors: Vec<Accessor>,
@@ -151,7 +151,7 @@ pub struct Root {
     pub variants: Option<khr_materials_variants::Variants>,
 }
 
-fn root_validate_hook<P, R>(root: &Root, _also_root: &Root, path: P, report: &mut R)
+fn validate_root<P, R>(root: &Root, _also_root: &Root, path: P, report: &mut R)
 where
     P: Fn() -> Path,
     R: FnMut(&dyn Fn() -> Path, crate::validation::Error),

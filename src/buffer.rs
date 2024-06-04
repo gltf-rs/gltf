@@ -2,10 +2,10 @@ use crate::validation::{Error, USize64, Validate};
 use crate::{Extras, Index, Path, Root, UnrecognizedExtensions};
 
 /// The minimum byte stride.
-pub const MIN_BYTE_STRIDE: u8 = 4;
+pub const MIN_BYTE_STRIDE: usize = 4;
 
 /// The maximum byte stride.
-pub const MAX_BYTE_STRIDE: u8 = 252;
+pub const MAX_BYTE_STRIDE: usize = 252;
 
 /// Specifies the target a GPU buffer should be bound to.
 #[derive(
@@ -20,39 +20,6 @@ pub enum Target {
     ElementArrayBuffer = 34_963,
 }
 impl Validate for Target {}
-
-/// Distance between individual items in a buffer view, measured in bytes.
-#[derive(
-    Clone,
-    Copy,
-    Debug,
-    Default,
-    Eq,
-    Hash,
-    PartialEq,
-    serde_derive::Deserialize,
-    serde_derive::Serialize,
-)]
-pub struct Stride(pub u8);
-
-impl Stride {
-    /// Widens the value to `usize`.
-    pub fn value(&self) -> usize {
-        self.0 as usize
-    }
-}
-
-impl Validate for Stride {
-    fn validate<P, R>(&self, _root: &Root, path: P, report: &mut R)
-    where
-        P: Fn() -> Path,
-        R: FnMut(&dyn Fn() -> Path, Error),
-    {
-        if self.0 < MIN_BYTE_STRIDE || self.0 > MAX_BYTE_STRIDE {
-            report(&path, Error::Invalid);
-        }
-    }
-}
 
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
@@ -89,14 +56,16 @@ pub struct View {
     pub length: USize64,
 
     /// Offset into the parent buffer in bytes.
-    #[serde(default, rename = "byteOffset")]
+    #[serde(rename = "byteOffset")]
+    #[gltf(default)]
     pub offset: USize64,
 
     /// The stride in bytes between vertex attributes or other interleavable data.
     ///
     /// When zero, data is assumed to be tightly packed.
     #[serde(rename = "byteStride")]
-    pub stride: Option<Stride>,
+    #[gltf(validate = "validate_stride")]
+    pub stride: Option<usize>,
 
     /// Optional user-defined name for this object.
     pub name: Option<String>,
@@ -109,6 +78,18 @@ pub struct View {
 
     /// Optional application specific data.
     pub extras: Option<Extras>,
+}
+
+fn validate_stride<P, R>(stride: &Option<usize>, _root: &Root, path: P, report: &mut R)
+where
+    P: Fn() -> Path,
+    R: FnMut(&dyn Fn() -> Path, Error),
+{
+    if let Some(value) = stride {
+        if *value < MIN_BYTE_STRIDE || *value > MAX_BYTE_STRIDE {
+            report(&path, Error::Invalid);
+        }
+    }
 }
 
 mod tests {

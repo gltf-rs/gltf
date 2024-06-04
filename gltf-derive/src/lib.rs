@@ -15,15 +15,15 @@ use syn::{parse_quote, DeriveInput};
 
 /// Provided `struct` attributes.
 enum StructAttribute {
-    /// Identifies a indexable data structure.
+    /// Identifies an indexable data structure.
     ///
     /// Data structures marked with `#[gltf(indexed)]` will have an
     /// extra `fn index(&self) -> usize` function defined in their
     /// generated reader type.
     Indexed,
 
-    /// A hook for extra validation steps.
-    ValidateHook(syn::Ident),
+    /// A hook for extra validation steps applied to the whole struct.
+    Validate(syn::Ident),
 }
 
 /// Provided attributes for named `struct` fields.
@@ -36,6 +36,9 @@ enum FieldAttribute {
     /// Fields marked with `#[gltf(extension = "EXT_foo")]` are grouped together and
     /// (de)serialized in a separate extension JSON object.
     Extension(syn::Ident),
+
+    /// A hook for extra validation steps applied to a single field.
+    Validate(syn::Ident),
 }
 
 impl syn::parse::Parse for StructAttribute {
@@ -43,11 +46,11 @@ impl syn::parse::Parse for StructAttribute {
         let tag = input.parse::<syn::Ident>()?;
         match tag.to_string().as_str() {
             "indexed" => Ok(Self::Indexed),
-            "validate_hook" => {
+            "validate" => {
                 let _eq = input.parse::<syn::Token![=]>()?;
                 let literal = input.parse::<syn::LitStr>()?;
                 let ident = syn::Ident::new(&literal.value(), tag.span());
-                Ok(Self::ValidateHook(ident))
+                Ok(Self::Validate(ident))
             }
             unrecognized => {
                 panic!("gltf({unrecognized}) is not a recognized `struct` attribute")
@@ -75,6 +78,12 @@ impl syn::parse::Parse for FieldAttribute {
                 let ident = syn::Ident::new(&literal.value(), tag.span());
                 Ok(Self::Extension(ident))
             }
+            "validate" => {
+                let _eq = input.parse::<syn::Token![=]>()?;
+                let literal = input.parse::<syn::LitStr>()?;
+                let ident = syn::Ident::new(&literal.value(), tag.span());
+                Ok(Self::Validate(ident))
+            }
             unrecognized => {
                 panic!("gltf({unrecognized}) is not a recognized named `struct` field attribute")
             }
@@ -83,6 +92,26 @@ impl syn::parse::Parse for FieldAttribute {
 }
 
 /// Implements the `Default` trait.
+///
+/// This macro is similar to the built-in `#[derive(Default)]` but allows default values for fields
+/// to be defined inline using the `#[gltf(default = ...)]` attribute.
+///
+/// # Basic usage
+///
+/// Declaration
+///
+/// ```rust
+/// #[derive(gltf_derive::Default)]
+/// struct Example {
+///     #[gltf(default = 123)]
+///     pub foo: i32,
+///     pub bar: Option<i32>,
+/// }
+///
+/// let example: Example = Default::default();
+/// assert_eq!(example.foo, 123);
+/// assert_eq!(example.bar, None);
+/// ```
 #[proc_macro_derive(Default, attributes(gltf))]
 pub fn derive_default(input: TokenStream) -> TokenStream {
     expand_default(&syn::parse_macro_input!(input as DeriveInput)).into()
@@ -388,7 +417,7 @@ fn wrap_indexed(attributes: &[syn::Attribute]) -> TokenStream2 {
                         }
                     }
                 }
-                StructAttribute::ValidateHook(_) => {}
+                StructAttribute::Validate(_) => {}
             }
         }
     }
@@ -582,6 +611,173 @@ fn expand_wrap(ast: &DeriveInput) -> TokenStream2 {
 ///     }
 /// }
 /// ```
+///
+/// # Hooks
+///
+/// In addition to the standard per field code generation, ad hoc validation can be inserted using
+/// the `gltf(validate = "...")` attribute. This attribute can be applied to structs and fields.
+///
+/// Declaration:
+///
+/// ```rust,no_run
+/// # #[derive(Clone, Copy)]
+/// # pub struct Path;
+/// #
+/// # impl Path {
+/// #     pub fn field(self, _: &str) -> Self {
+/// #         self
+/// #     }
+/// # }
+/// # pub type Root = ();
+/// #
+/// # pub mod validation {
+/// #     use super::{Path, Root};
+/// #
+/// #     pub enum Error {
+/// #         Invalid,
+/// #         Missing,
+/// #     }
+/// #
+/// #     pub trait Validate {
+/// #         fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+/// #         where
+/// #             P: Fn() -> Path,
+/// #             R: FnMut(&dyn Fn() -> Path, Error),
+/// #         {
+/// #         }
+/// #     }
+/// #
+/// #     impl Validate for i32 {}
+/// # }
+/// #
+/// # use validation::{Error, Validate};
+/// #
+/// # impl Validate for Option<i32> {
+/// #     fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+/// #     where
+/// #         P: Fn() -> Path,
+/// #         R: FnMut(&dyn Fn() -> Path, Error),
+/// #     {
+/// #     }
+/// # }
+/// #
+/// # #[derive(gltf_derive::Validate)]
+/// # struct Foo {}
+/// #
+/// # fn main() {}
+/// #
+/// #[derive(gltf_derive::Validate)]
+/// #[gltf(validate = "validate_example_struct")]
+/// struct ExampleStruct {
+///     #[gltf(validate = "validate_example_field")]
+///     pub example_field: i32,
+///     pub regular_field: Option<i32>,
+/// }
+///
+/// fn validate_example_struct<P, R>(example: &ExampleStruct, _root: &Root, path: P, report: &mut R)
+/// where
+///     P: Fn() -> Path,
+///     R: FnMut(&dyn Fn() -> Path, Error),
+/// {
+///     if example.regular_field.is_none() {
+///         report(&|| path().field("regularField"), Error::Missing);
+///     }
+/// }
+///
+/// fn validate_example_field<P, R>(example: &i32, _root: &Root, path: P, report: &mut R)
+/// where
+///     P: Fn() -> Path,
+///     R: FnMut(&dyn Fn() -> Path, Error),
+/// {
+///     if *example != 42 {
+///         report(&path, Error::Invalid);
+///     }
+/// }
+/// ```
+///
+/// Generated code:
+///
+/// ```rust,no_run
+/// # #[derive(Clone, Copy)]
+/// # pub struct Path;
+/// #
+/// # impl Path {
+/// #     pub fn field(self, _: &str) -> Self {
+/// #         self
+/// #     }
+/// # }
+/// # pub type Root = ();
+/// #
+/// # pub mod validation {
+/// #     use super::{Path, Root};
+/// #
+/// #     pub enum Error {
+/// #         Invalid,
+/// #         Missing,
+/// #     }
+/// #
+/// #     pub trait Validate {
+/// #         fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+/// #         where
+/// #             P: Fn() -> Path,
+/// #             R: FnMut(&dyn Fn() -> Path, Error),
+/// #         {
+/// #         }
+/// #     }
+/// #
+/// #     impl Validate for i32 {}
+/// # }
+/// #
+/// # #[derive(gltf_derive::Validate)]
+/// # struct Foo {}
+/// #
+/// # fn main() {}
+/// #
+/// # use validation::{Error, Validate};
+/// #
+/// # struct ExampleStruct {
+/// #     pub example_field: i32,
+/// #     pub regular_field: Option<i32>,
+/// # }
+/// #
+/// # impl Validate for Option<i32> {
+/// #     fn validate<P, R>(&self, _root: &Root, _path: P, _report: &mut R)
+/// #     where
+/// #         P: Fn() -> Path,
+/// #         R: FnMut(&dyn Fn() -> Path, Error),
+/// #     {
+/// #     }
+/// # }
+/// #
+/// # fn validate_example_struct<P, R>(example: &ExampleStruct, _root: &Root, _path: P, _report: &mut R)
+/// # where
+/// #     P: Fn() -> Path,
+/// #     R: FnMut(&dyn Fn() -> Path, Error),
+/// # {
+/// # }
+/// #
+/// # fn validate_example_field<P, R>(example: &i32, _root: &Root, _path: P, _report: &mut R)
+/// # where
+/// #     P: Fn() -> Path,
+/// #     R: FnMut(&dyn Fn() -> Path, Error),
+/// # {
+/// # }
+/// #
+/// impl Validate for ExampleStruct {
+///     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+///     where
+///         P: Fn() -> Path,
+///         R: FnMut(&dyn Fn() -> Path, Error),
+///     {
+///         validate_example_struct(self, root, &path, report);
+///
+///         self.example_field.validate(root, || path().field("exampleField"), report);
+///         validate_example_field(&self.example_field, root, || path().field("exampleField"), report);
+///
+///         self.regular_field.validate(root, || path().field("regularField"), report);
+///     }
+/// }
+/// ```
 #[proc_macro_derive(Validate, attributes(gltf))]
 pub fn derive_validate(input: TokenStream) -> TokenStream {
     expand_validate(&syn::parse_macro_input!(input as DeriveInput)).into()
@@ -594,9 +790,9 @@ fn expand_validate(ast: &DeriveInput) -> TokenStream2 {
             let parsed_attr = attr
                 .parse_args::<StructAttribute>()
                 .expect("failed to parse attribute");
-            if let StructAttribute::ValidateHook(ident) = parsed_attr {
+            if let StructAttribute::Validate(hook_ident) = parsed_attr {
                 validate_hook = quote! {
-                    #ident(self, _root, _path, _report);
+                    #hook_ident(self, _root, _path, _report);
                 };
             }
         }
@@ -609,11 +805,28 @@ fn expand_validate(ast: &DeriveInput) -> TokenStream2 {
     let ident = &ast.ident;
     let validations = fields
         .iter()
-        .map(|f| f.ident.as_ref().unwrap())
-        .map(|ident| {
+        .map(|f| {
             use inflections::Inflect;
+            let ident = f.ident.as_ref().unwrap();
             let field = ident.to_string().to_camel_case();
+
+            let mut validate_hook = quote! {};
+            for attr in &f.attrs {
+                if attr.path().is_ident("gltf") {
+                    let parsed_attr = attr
+                        .parse_args::<FieldAttribute>()
+                        .expect("failed to parse attribute");
+                    if let FieldAttribute::Validate(hook_ident) = parsed_attr {
+                        validate_hook = quote! {
+                            #hook_ident(&self.#ident, _root, || _path().field(#field), _report);
+                        };
+                    }
+                }
+            }
+
             quote!(
+                #validate_hook
+
                 self.#ident.validate(
                     _root,
                     || _path().field(#field),
@@ -1001,6 +1214,7 @@ fn expand_for_struct(
                         is_extension = true;
                         ext_renames.push(ident);
                     }
+                    FieldAttribute::Validate(_) => {}
                 }
             }
         }

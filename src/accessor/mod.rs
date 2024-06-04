@@ -238,7 +238,7 @@ pub mod sparse {
 
 /// A typed view into a buffer view.
 #[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
-#[gltf(validate_hook = "accessor_validate_hook")]
+#[gltf(validate = "validate_accessor")]
 pub struct Accessor {
     /// Specifies if the attribute is a scalar, vector, or matrix.
     #[serde(rename = "type")]
@@ -284,7 +284,7 @@ pub struct Accessor {
     pub extras: Option<Extras>,
 }
 
-fn accessor_validate_hook<P, R>(accessor: &Accessor, _root: &Root, path: P, report: &mut R)
+fn validate_accessor<P, R>(accessor: &Accessor, _root: &Root, path: P, report: &mut R)
 where
     P: Fn() -> Path,
     R: FnMut(&dyn Fn() -> Path, Error),

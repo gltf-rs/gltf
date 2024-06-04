@@ -307,10 +307,7 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                     .as_ref()
                     .and_then(|index| root.get(*index))
                 {
-                    let stride = view
-                        .stride
-                        .map(|s| s.value())
-                        .unwrap_or(mem::size_of::<T>());
+                    let stride = view.stride.unwrap_or(mem::size_of::<T>());
                     let start = accessor.byte_offset.unwrap_or_default().value();
                     let end = start + stride * (accessor.count.value() - 1) + mem::size_of::<T>();
                     let subslice = buffer_view_slice(view, &get_buffer_data)
@@ -328,7 +325,7 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                 let index_iter = {
                     let view = root.get(indices.buffer_view)?;
                     let index_size = indices.index_type.size();
-                    let stride = view.stride.map(|s| s.value()).unwrap_or(index_size);
+                    let stride = view.stride.unwrap_or(index_size);
 
                     let start = indices.byte_offset.value();
                     let end = start + stride * (sparse_count - 1) + index_size;
@@ -350,10 +347,7 @@ impl<'a, 's, T: Item> Iter<'s, T> {
 
                 let value_iter = {
                     let view = root.get(values.buffer_view)?;
-                    let stride = view
-                        .stride
-                        .map(|s| s.value())
-                        .unwrap_or(mem::size_of::<T>());
+                    let stride = view.stride.unwrap_or(mem::size_of::<T>());
 
                     let start = values.byte_offset.value();
                     let end = start + stride * (sparse_count - 1) + mem::size_of::<T>();
@@ -376,10 +370,7 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                     .as_ref()
                     .and_then(|index| root.get(*index))
                     .and_then(|view| {
-                        let stride = view
-                            .stride
-                            .map(|s| s.value())
-                            .unwrap_or(mem::size_of::<T>());
+                        let stride = view.stride.unwrap_or(mem::size_of::<T>());
                         debug_assert!(
                             stride >= mem::size_of::<T>(),
                             "Mismatch in stride, expected at least {} stride but found {}",

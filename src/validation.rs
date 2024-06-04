@@ -148,6 +148,7 @@ impl std::fmt::Display for Error {
 // These types are assumed to be always valid.
 impl Validate for bool {}
 impl Validate for u32 {}
+impl Validate for usize {}
 impl Validate for i32 {}
 impl Validate for f32 {}
 impl Validate for [f32; 2] {}

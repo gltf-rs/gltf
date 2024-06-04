@@ -129,7 +129,7 @@ pub struct Mesh {
 
 /// Geometry to be rendered with the given material.
 #[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
-#[gltf(validate_hook = "primitive_validate_hook")]
+#[gltf(validate = "validate_primitive")]
 pub struct Primitive {
     /// Maps attribute semantic names to the `Accessor`s containing the
     /// corresponding attribute data.
@@ -161,7 +161,7 @@ pub struct Primitive {
     pub variants: Option<khr_materials_variants::Variants>,
 }
 
-fn primitive_validate_hook<P, R>(primitive: &Primitive, root: &crate::Root, path: P, report: &mut R)
+fn validate_primitive<P, R>(primitive: &Primitive, root: &crate::Root, path: P, report: &mut R)
 where
     P: Fn() -> crate::Path,
     R: FnMut(&dyn Fn() -> crate::Path, crate::validation::Error),
