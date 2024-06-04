@@ -17,7 +17,7 @@ rust-version = "1.61"
 travis-ci = { repository = "gltf-rs/gltf" }
 
 [workspace]
-members = ["gltf-derive", "gltf-json"]
+members = ["gltf-derive"]
 
 [dev-dependencies]
 approx = "0.5"
@@ -25,52 +25,29 @@ approx = "0.5"
 [dependencies]
 base64 = { optional = true, version = "0.13" }
 byteorder = "1.3"
-gltf-json = { path = "gltf-json", version = "=1.4.1" }
+gltf-derive = { path = "gltf-derive", version = "=1.4.1" }
 lazy_static = "1"
 urlencoding = { optional = true, version = "2.1" }
+serde = "1.0"
+serde_derive = "1.0"
 serde_json = { features = ["raw_value"], version = "1.0" }
+serde_repr = "0.1"
+serde_with = "3.6"
 
-[dependencies.image]
+[dependencies.image_crate]
 default-features = false
+package = "image"
 features = ["jpeg", "png"]
 optional = true
 version = "0.25"
 
 [features]
-default = ["import", "utils", "names"]
-allow_empty_texture = ["gltf-json/allow_empty_texture"]
-extensions = ["gltf-json/extensions"]
-extras = ["gltf-json/extras"]
-names = ["gltf-json/names"]
+default = ["import", "utils"]
+allow_empty_texture = []
+extensions = []
 utils = []
-import = ["base64", "image", "urlencoding"]
-KHR_lights_punctual = ["gltf-json/KHR_lights_punctual"]
-KHR_materials_pbrSpecularGlossiness = ["gltf-json/KHR_materials_pbrSpecularGlossiness"]
-KHR_materials_unlit = ["gltf-json/KHR_materials_unlit"]
-KHR_texture_transform = ["gltf-json/KHR_texture_transform"]
-KHR_materials_transmission = ["gltf-json/KHR_materials_transmission"]
-KHR_materials_ior = ["gltf-json/KHR_materials_ior"]
-KHR_materials_variants = ["gltf-json/KHR_materials_variants"]
-KHR_materials_volume = ["gltf-json/KHR_materials_volume"]
-KHR_materials_specular = ["gltf-json/KHR_materials_specular"]
-KHR_materials_emissive_strength = ["gltf-json/KHR_materials_emissive_strength"]
+import = ["base64", "image_crate", "urlencoding"]
 guess_mime_type = []
-
-[[example]]
-name = "gltf-display"
-path = "examples/display/main.rs"
-
-[[example]]
-name = "gltf-export"
-path = "examples/export/main.rs"
-
-[[example]]
-name = "gltf-roundtrip"
-path = "examples/roundtrip/main.rs"
-
-[[example]]
-name = "gltf-tree"
-path = "examples/tree/main.rs"
 
 [package.metadata.docs.rs]
 all-features = true

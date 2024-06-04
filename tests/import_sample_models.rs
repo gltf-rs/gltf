@@ -5,32 +5,31 @@ const SAMPLE_MODELS_DIRECTORY_PATH: &str = "glTF-Sample-Assets/Models";
 
 fn check_import_result(
     result: gltf::Result<(
-        gltf::Document,
-        Vec<gltf::buffer::Data>,
-        Vec<gltf::image::Data>,
+        gltf::Root,
+        Vec<gltf::import::BufferData>,
+        Vec<gltf::import::ImageData>,
     )>,
 ) {
-    use gltf::json::validation::Error;
     match result {
         Err(gltf::Error::Validation(errors)) => {
             assert!(errors
                 .iter()
-                .all(|(_path, error)| *error == Error::Unsupported));
+                .all(|(_path, error)| *error == gltf::validation::Error::Unsupported));
             println!("skipped");
         }
         Err(otherwise) => {
             panic!("{otherwise:#?}");
         }
-        Ok((document, buffer_data, image_data)) => {
+        Ok((root, buffer_data, image_data)) => {
             // Check buffers.
-            assert_eq!(document.buffers().len(), buffer_data.len());
+            assert_eq!(root.buffers.len(), buffer_data.len());
 
-            for (buf, data) in document.buffers().zip(buffer_data.iter()) {
-                assert!((buf.length() + 3) & !3 <= data.0.len())
+            for (buf, data) in root.buffers.iter().zip(buffer_data.iter()) {
+                assert!((buf.length.value() + 3) & !3 <= data.0.len())
             }
 
             // Check images.
-            assert_eq!(document.images().len(), image_data.len());
+            assert_eq!(root.images.len(), image_data.len());
 
             println!("ok");
         }

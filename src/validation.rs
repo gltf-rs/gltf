@@ -1,4 +1,3 @@
-use serde::{ser, Serialize, Serializer};
 use std::collections::BTreeMap;
 use std::hash::Hash;
 
@@ -35,80 +34,6 @@ pub enum Error {
     Unsupported,
 }
 
-/// Specifies a type that has been pre-validated during deserialization or otherwise.
-#[derive(Debug, Eq, Hash, PartialEq, Ord, PartialOrd)]
-pub enum Checked<T> {
-    /// The item is valid.
-    Valid(T),
-
-    /// The item is invalid.
-    Invalid,
-}
-
-impl<T> Checked<T> {
-    /// Converts from `Checked<T>` to `Checked<&T>`.
-    pub fn as_ref(&self) -> Checked<&T> {
-        match *self {
-            Checked::Valid(ref item) => Checked::Valid(item),
-            Checked::Invalid => Checked::Invalid,
-        }
-    }
-
-    /// Takes ownership of the contained item if it is `Valid`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called on an `Invalid` item.
-    pub fn unwrap(self) -> T {
-        match self {
-            Checked::Valid(item) => item,
-            Checked::Invalid => panic!("attempted to unwrap an invalid item"),
-        }
-    }
-}
-
-impl<T: Serialize> Serialize for Checked<T> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match *self {
-            Checked::Valid(ref item) => item.serialize(serializer),
-            Checked::Invalid => Err(ser::Error::custom("invalid item")),
-        }
-    }
-}
-
-impl<T: Clone> Clone for Checked<T> {
-    fn clone(&self) -> Self {
-        match *self {
-            Checked::Valid(ref item) => Checked::Valid(item.clone()),
-            Checked::Invalid => Checked::Invalid,
-        }
-    }
-}
-
-impl<T: Copy> Copy for Checked<T> {}
-
-impl<T: Default> Default for Checked<T> {
-    fn default() -> Self {
-        Checked::Valid(T::default())
-    }
-}
-
-impl<T> Validate for Checked<T> {
-    fn validate<P, R>(&self, _root: &Root, path: P, report: &mut R)
-    where
-        P: Fn() -> Path,
-        R: FnMut(&dyn Fn() -> Path, Error),
-    {
-        match *self {
-            Checked::Valid(_) => {}
-            Checked::Invalid => report(&path, Error::Invalid),
-        }
-    }
-}
-
 /// Validates the suitability of 64-bit byte offsets/sizes on 32-bit systems.
 #[derive(
     Clone,
@@ -122,6 +47,13 @@ impl<T> Validate for Checked<T> {
     serde_derive::Serialize,
 )]
 pub struct USize64(pub u64);
+
+impl USize64 {
+    /// Widens the value to `usize`.
+    pub fn value(&self) -> usize {
+        self.0 as usize
+    }
+}
 
 impl From<u64> for USize64 {
     fn from(value: u64) -> Self {
@@ -160,19 +92,6 @@ impl<K: ToString + Validate, V: Validate> Validate for BTreeMap<K, V> {
     }
 }
 
-impl Validate for serde_json::Map<String, serde_json::Value> {
-    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
-    where
-        P: Fn() -> Path,
-        R: FnMut(&dyn Fn() -> Path, Error),
-    {
-        for (key, value) in self.iter() {
-            key.validate(root, || path().key(&key.to_string()), report);
-            value.validate(root, || path().key(&key.to_string()), report);
-        }
-    }
-}
-
 impl<T: Validate> Validate for Option<T> {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
     where
@@ -197,13 +116,14 @@ impl<T: Validate> Validate for Vec<T> {
     }
 }
 
-impl Validate for std::boxed::Box<serde_json::value::RawValue> {
-    fn validate<P, R>(&self, _: &Root, _: P, _: &mut R)
+impl<T: Validate> Validate for std::boxed::Box<T> {
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
     where
         P: Fn() -> Path,
         R: FnMut(&dyn Fn() -> Path, Error),
     {
-        // nop
+        use std::ops::Deref;
+        self.deref().validate(root, path, report);
     }
 }
 
@@ -228,11 +148,15 @@ impl std::fmt::Display for Error {
 // These types are assumed to be always valid.
 impl Validate for bool {}
 impl Validate for u32 {}
+impl Validate for usize {}
 impl Validate for i32 {}
 impl Validate for f32 {}
+impl Validate for [f32; 2] {}
 impl Validate for [f32; 3] {}
 impl Validate for [f32; 4] {}
 impl Validate for [f32; 16] {}
 impl Validate for () {}
 impl Validate for String {}
+impl Validate for serde_json::Map<String, serde_json::Value> {}
 impl Validate for serde_json::Value {}
+impl Validate for std::boxed::Box<serde_json::value::RawValue> {}

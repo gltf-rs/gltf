@@ -1,24 +1,74 @@
 use crate::buffer;
-use crate::extensions;
 use crate::texture;
 use crate::validation;
-use gltf_derive::Validate;
-use serde_derive::{Deserialize, Serialize};
-use std::{self, fmt, io, marker};
+use std::{fmt, marker};
 
 use crate::path::Path;
 use crate::{
-    Accessor, Animation, Asset, Buffer, Camera, Error, Extras, Image, Material, Mesh, Node, Scene,
-    Skin, Texture, Value,
+    Accessor, Animation, Asset, Buffer, Camera, Extras, Image, Material, Mesh, Node, Scene, Skin,
+    Texture, UnrecognizedExtensions, Wrap,
 };
 use validation::Validate;
 
-// TODO: As a breaking change, simplify by replacing uses of `Get<T>` with `AsRef<[T]>`.
+/// Support for the `KHR_lights_punctual` extension.
+pub mod khr_lights_punctual {
+    /// Defines a set of lights that can be placed into a scene.
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        gltf_derive::Deserialize,
+        gltf_derive::Serialize,
+        gltf_derive::Validate,
+    )]
+    pub struct Lights {
+        /// An array of punctual light definitions.
+        pub lights: Vec<crate::scene::khr_lights_punctual::Light>,
 
-/// Helper trait for retrieving top-level objects by a universal identifier.
-pub trait Get<T> {
-    /// Retrieves a single value at the given index.
-    fn get(&self, id: Index<T>) -> Option<&T>;
+        /// Unrecognized extension data.
+        pub unrecognized_extensions: crate::UnrecognizedExtensions,
+
+        /// Optional application specific data.
+        pub extras: Option<crate::Extras>,
+    }
+}
+
+/// Support for the `KHR_materials_variants` extension.
+pub mod khr_materials_variants {
+    /// Defines an alternative material that may be applied to a mesh primitive.
+    #[derive(
+        Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate,
+    )]
+    pub struct Variant {
+        /// The name of the material variant.
+        pub name: String,
+
+        /// Unrecognized extension data.
+        pub unrecognized_extensions: crate::UnrecognizedExtensions,
+
+        /// Optional application specific data.
+        pub extras: Option<crate::Extras>,
+    }
+
+    /// Defines a set of alternative materials that may be applied to mesh primitives.
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        gltf_derive::Deserialize,
+        gltf_derive::Serialize,
+        gltf_derive::Validate,
+    )]
+    pub struct Variants {
+        /// The available material variants.
+        pub variants: Vec<Variant>,
+
+        /// Unrecognized extension data.
+        pub unrecognized_extensions: crate::UnrecognizedExtensions,
+
+        /// Optional application specific data.
+        pub extras: Option<crate::Extras>,
+    }
 }
 
 /// Represents an offset into a vector of type `T` owned by the root glTF object.
@@ -29,136 +79,85 @@ pub trait Get<T> {
 /// * [`Root::push()`] to add new objects to [`Root`].
 pub struct Index<T>(u32, marker::PhantomData<fn() -> T>);
 
-impl<T> Index<T> {
-    /// Given a vector of glTF objects, call [`Vec::push()`] to insert it into the vector,
-    /// then return an [`Index`] for it.
-    ///
-    /// This allows you to easily obtain [`Index`] values with the correct index and type when
-    /// creating a glTF asset. Note that for [`Root`], you can call [`Root::push()`] without
-    /// needing to retrieve the correct vector first.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the vector has [`u32::MAX`] or more elements, in which case an `Index` cannot be
-    /// created.
-    pub fn push(vec: &mut Vec<T>, value: T) -> Index<T> {
-        let len = vec.len();
-        let Ok(index): Result<u32, _> = len.try_into() else {
-            panic!(
-                "glTF vector of {ty} has {len} elements, which exceeds the Index limit",
-                ty = std::any::type_name::<T>(),
-            );
-        };
-
-        vec.push(value);
-        Index::new(index)
-    }
-}
-
 /// The root object of a glTF 2.0 asset.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-#[gltf(validate_hook = "root_validate_hook")]
+#[derive(
+    Clone, Debug, Default, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate,
+)]
+#[gltf(validate = "validate_root")]
 pub struct Root {
     /// An array of accessors.
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub accessors: Vec<Accessor>,
 
     /// An array of keyframe animations.
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub animations: Vec<Animation>,
 
     /// Metadata about the glTF asset.
     pub asset: Asset,
 
     /// An array of buffers.
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub buffers: Vec<Buffer>,
 
     /// An array of buffer views.
-    #[serde(default, rename = "bufferViews")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub buffer_views: Vec<buffer::View>,
 
     /// The default scene.
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub scene: Option<Index<Scene>>,
 
-    /// Extension specific data.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub extensions: Option<extensions::root::Root>,
-
-    /// Optional application specific data.
-    #[serde(default)]
-    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
-    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
-    pub extras: Extras,
-
     /// Names of glTF extensions used somewhere in this asset.
-    #[serde(default, rename = "extensionsUsed")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub extensions_used: Vec<String>,
 
     /// Names of glTF extensions required to properly load this asset.
-    #[serde(default, rename = "extensionsRequired")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub extensions_required: Vec<String>,
 
     /// An array of cameras.
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub cameras: Vec<Camera>,
 
     /// An array of images.
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub images: Vec<Image>,
 
     /// An array of materials.
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub materials: Vec<Material>,
 
     /// An array of meshes.
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub meshes: Vec<Mesh>,
 
     /// An array of nodes.
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub nodes: Vec<Node>,
 
     /// An array of samplers.
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub samplers: Vec<texture::Sampler>,
 
     /// An array of scenes.
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub scenes: Vec<Scene>,
 
     /// An array of skins.
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub skins: Vec<Skin>,
 
     /// An array of textures.
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub textures: Vec<Texture>,
+
+    /// Unrecognized extension data.
+    pub unrecognized_extensions: UnrecognizedExtensions,
+
+    /// Optional application specific data.
+    pub extras: Option<Extras>,
+
+    /// Support for the `KHR_lights_punctual` extension.
+    #[gltf(extension = "KHR_lights_punctual")]
+    pub lights: Option<khr_lights_punctual::Lights>,
+
+    /// Support for the `KHR_materials_variants` extension.
+    #[gltf(extension = "KHR_materials_variants")]
+    pub variants: Option<khr_materials_variants::Variants>,
 }
 
-fn root_validate_hook<P, R>(root: &Root, _also_root: &Root, path: P, report: &mut R)
+fn validate_root<P, R>(root: &Root, _also_root: &Root, path: P, report: &mut R)
 where
     P: Fn() -> Path,
     R: FnMut(&dyn Fn() -> Path, crate::validation::Error),
 {
     for (i, ext) in root.extensions_required.iter().enumerate() {
-        if !crate::extensions::ENABLED_EXTENSIONS.contains(&ext.as_str()) {
+        if !crate::SUPPORTED_EXTENSIONS.contains(&ext.as_str()) {
             report(
                 &|| {
                     path()
@@ -172,13 +171,35 @@ where
     }
 }
 
+impl<T> std::ops::Index<Index<T>> for Root
+where
+    Root: AsRef<[T]>,
+{
+    type Output = T;
+
+    fn index(&self, index: Index<T>) -> &Self::Output {
+        let slice: &[T] = self.as_ref();
+        &slice[index.value()]
+    }
+}
+
+impl<T> std::ops::IndexMut<Index<T>> for Root
+where
+    Root: AsRef<[T]> + AsMut<Vec<T>>,
+{
+    fn index_mut(&mut self, index: Index<T>) -> &mut Self::Output {
+        let slice: &mut Vec<T> = self.as_mut();
+        &mut slice[index.value()]
+    }
+}
+
 impl Root {
     /// Returns a single item from the root object.
     pub fn get<T>(&self, index: Index<T>) -> Option<&T>
     where
-        Self: Get<T>,
+        Self: AsRef<[T]>,
     {
-        (self as &dyn Get<T>).get(index)
+        self.as_ref().get(index.value())
     }
 
     /// Insert the given value into this (as via [`Vec::push()`]), then return the [`Index`] to it.
@@ -200,72 +221,35 @@ impl Root {
     {
         Index::push(self.as_mut(), value)
     }
-
-    /// Deserialize from a JSON string slice.
-    #[allow(clippy::should_implement_trait)]
-    pub fn from_str(str_: &str) -> Result<Self, Error> {
-        serde_json::from_str(str_)
-    }
-
-    /// Deserialize from a JSON byte slice.
-    pub fn from_slice(slice: &[u8]) -> Result<Self, Error> {
-        serde_json::from_slice(slice)
-    }
-
-    /// Deserialize from a stream of JSON.
-    pub fn from_reader<R>(reader: R) -> Result<Self, Error>
-    where
-        R: io::Read,
-    {
-        serde_json::from_reader(reader)
-    }
-
-    /// Serialize as a `String` of JSON.
-    pub fn to_string(&self) -> Result<String, Error> {
-        serde_json::to_string(self)
-    }
-
-    /// Serialize as a pretty-printed `String` of JSON.
-    pub fn to_string_pretty(&self) -> Result<String, Error> {
-        serde_json::to_string_pretty(self)
-    }
-
-    /// Serialize as a generic JSON value.
-    pub fn to_value(&self) -> Result<Value, Error> {
-        serde_json::to_value(self)
-    }
-
-    /// Serialize as a JSON byte vector.
-    pub fn to_vec(&self) -> Result<Vec<u8>, Error> {
-        serde_json::to_vec(self)
-    }
-
-    /// Serialize as a pretty-printed JSON byte vector.
-    pub fn to_vec_pretty(&self) -> Result<Vec<u8>, Error> {
-        serde_json::to_vec_pretty(self)
-    }
-
-    /// Serialize as a JSON byte writertor.
-    pub fn to_writer<W>(&self, writer: W) -> Result<(), Error>
-    where
-        W: io::Write,
-    {
-        serde_json::to_writer(writer, self)
-    }
-
-    /// Serialize as a pretty-printed JSON byte writertor.
-    pub fn to_writer_pretty<W>(&self, writer: W) -> Result<(), Error>
-    where
-        W: io::Write,
-    {
-        serde_json::to_writer_pretty(writer, self)
-    }
 }
 
 impl<T> Index<T> {
     /// Creates a new `Index` representing an offset into an array containing `T`.
     pub fn new(value: u32) -> Self {
         Index(value, std::marker::PhantomData)
+    }
+
+    /// Given a vector of glTF objects, call [`Vec::push()`] to insert it into the vector,
+    /// then return an [`Index`] for it.
+    ///
+    /// This allows you to easily obtain [`Index`] values with the correct index and type when
+    /// creating a glTF asset. Note that for [`Root`], you can call [`Root::push()`] without
+    /// needing to retrieve the correct vector first.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the vector has [`u32::MAX`] or more elements, in which case an `Index` cannot be
+    /// created.
+    pub fn push(vec: &mut Vec<T>, value: T) -> Index<T> {
+        let len = vec.len();
+        let Ok(index): Result<u32, _> = len.try_into() else {
+            panic!(
+                "glTF vector of {ty} has {len} elements, which exceeds the Index limit",
+                ty = std::any::type_name::<T>(),
+            );
+        };
+        vec.push(value);
+        Index::new(index)
     }
 
     /// Returns the internal offset value.
@@ -353,7 +337,7 @@ impl<T> fmt::Display for Index<T> {
 
 impl<T: Validate> Validate for Index<T>
 where
-    Root: Get<T>,
+    Root: AsRef<[T]>,
 {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
     where
@@ -366,39 +350,95 @@ where
     }
 }
 
-macro_rules! impl_get {
-    ($ty:ty, $field:ident) => {
-        impl<'a> Get<$ty> for Root {
-            fn get(&self, index: Index<$ty>) -> Option<&$ty> {
-                self.$field.get(index.value())
-            }
-        }
+impl<'a, T> Wrap<'a> for Index<T>
+where
+    T: 'a + Wrap<'a>,
+    Root: AsRef<[T]>,
+{
+    type Wrapped = <T as Wrap<'a>>::Wrapped;
+
+    fn wrap(&'a self, root: &'a Root) -> Self::Wrapped {
+        let items = root.as_ref();
+        items[self.value()].wrap_indexed(root, self.value())
+    }
+}
+
+impl<'a, T> Wrap<'a> for std::boxed::Box<T>
+where
+    T: 'a + Wrap<'a>,
+{
+    type Wrapped = <T as Wrap<'a>>::Wrapped;
+
+    fn wrap(&'a self, root: &'a Root) -> Self::Wrapped {
+        use std::ops::Deref;
+        self.deref().wrap(root)
+    }
+}
+
+impl<'a, K: 'a, V: 'a> Wrap<'a> for serde_json::Map<K, V> {
+    type Wrapped = &'a Self;
+
+    fn wrap(&'a self, _root: &'a Root) -> Self::Wrapped {
+        self
+    }
+}
+
+impl<'a> Wrap<'a> for serde_json::Value {
+    type Wrapped = &'a Self;
+
+    fn wrap(&'a self, _root: &'a Root) -> Self::Wrapped {
+        self
+    }
+}
+
+macro_rules! impl_as_ref {
+    ($field:ident, $ty:ty) => {
         impl AsRef<[$ty]> for Root {
             fn as_ref(&self) -> &[$ty] {
                 &self.$field
             }
         }
+
         impl AsMut<Vec<$ty>> for Root {
             fn as_mut(&mut self) -> &mut Vec<$ty> {
                 &mut self.$field
             }
         }
     };
+
+    ($extension:ident, $field:ident, $ty:ty) => {
+        impl AsRef<[$ty]> for Root {
+            fn as_ref(&self) -> &[$ty] {
+                self.$extension
+                    .as_ref()
+                    .map(|extension| extension.$field.as_slice())
+                    .unwrap_or(&[])
+            }
+        }
+
+        impl AsMut<Vec<$ty>> for Root {
+            fn as_mut(&mut self) -> &mut Vec<$ty> {
+                &mut self.$extension.get_or_insert_with(Default::default).$field
+            }
+        }
+    };
 }
 
-impl_get!(Accessor, accessors);
-impl_get!(Animation, animations);
-impl_get!(Buffer, buffers);
-impl_get!(buffer::View, buffer_views);
-impl_get!(Camera, cameras);
-impl_get!(Image, images);
-impl_get!(Material, materials);
-impl_get!(Mesh, meshes);
-impl_get!(Node, nodes);
-impl_get!(texture::Sampler, samplers);
-impl_get!(Scene, scenes);
-impl_get!(Skin, skins);
-impl_get!(Texture, textures);
+impl_as_ref!(accessors, Accessor);
+impl_as_ref!(animations, Animation);
+impl_as_ref!(buffers, Buffer);
+impl_as_ref!(buffer_views, buffer::View);
+impl_as_ref!(cameras, Camera);
+impl_as_ref!(images, Image);
+impl_as_ref!(materials, Material);
+impl_as_ref!(meshes, Mesh);
+impl_as_ref!(nodes, Node);
+impl_as_ref!(samplers, texture::Sampler);
+impl_as_ref!(scenes, Scene);
+impl_as_ref!(skins, Skin);
+impl_as_ref!(textures, Texture);
+impl_as_ref!(lights, lights, crate::scene::khr_lights_punctual::Light);
+impl_as_ref!(variants, variants, khr_materials_variants::Variant);
 
 #[cfg(test)]
 mod tests {
@@ -442,12 +482,11 @@ mod tests {
     #[test]
     fn root_push() {
         let some_object = Buffer {
-            byte_length: validation::USize64(1),
-            #[cfg(feature = "names")]
+            length: validation::USize64(1),
             name: None,
             uri: None,
-            extensions: None,
             extras: Default::default(),
+            unrecognized_extensions: Default::default(),
         };
 
         let mut root = Root::default();
@@ -469,22 +508,7 @@ mod tests {
         root.validate(&root, Path::new, &mut |path, error| {
             errors.push((path(), error));
         });
-
-        #[cfg(feature = "KHR_lights_punctual")]
-        {
-            assert!(errors.is_empty());
-        }
-
-        #[cfg(not(feature = "KHR_lights_punctual"))]
-        {
-            assert_eq!(1, errors.len());
-            let (path, error) = errors.get(0).unwrap();
-            assert_eq!(
-                path.as_str(),
-                "extensionsRequired[0] = \"KHR_lights_punctual\""
-            );
-            assert_eq!(*error, Error::Unsupported);
-        }
+        assert!(errors.is_empty());
 
         root.extensions_required = vec!["KHR_mesh_quantization".to_owned()];
         errors.clear();

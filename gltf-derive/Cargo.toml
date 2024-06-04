@@ -14,4 +14,9 @@ proc-macro = true
 inflections = "1.1"
 proc-macro2 = "1"
 quote = "1"
-syn = "2"
+syn = { version = "2", features = ["full"] }
+
+[dev-dependencies]
+serde = "1"
+serde_derive = "1"
+serde_json = "1"

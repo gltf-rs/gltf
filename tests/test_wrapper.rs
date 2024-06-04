@@ -11,9 +11,9 @@ fn test_accessor_bounds() {
     let mut buffer = vec![];
     reader.read_to_end(&mut buffer).unwrap();
     let gltf = gltf::Gltf::from_slice(&buffer).unwrap();
-    let mesh = &gltf.meshes().next().unwrap();
-    let prim = mesh.primitives().next().unwrap();
-    let bounds = prim.bounding_box();
+    let mesh = &gltf.meshes[0];
+    let primitive = &mesh.primitives[0];
+    let bounds = primitive.bounding_box(&gltf.root);
     assert_eq!(
         bounds,
         Bounds {
@@ -33,10 +33,11 @@ const SIMPLE_SPARSE_ACCESSOR_GLTF: &str =
 fn test_sparse_accessor_with_base_buffer_view_yield_exact_size_hints() {
     let (document, buffers, _) = gltf::import(SIMPLE_SPARSE_ACCESSOR_GLTF).unwrap();
 
-    let mesh = document.meshes().next().unwrap();
-    let primitive = mesh.primitives().next().unwrap();
-    let reader = primitive
-        .reader(|buffer: gltf::Buffer| buffers.get(buffer.index()).map(|data| &data.0[..]));
+    let mesh = &document.meshes[0];
+    let primitive = &mesh.primitives[0];
+    let reader = primitive.reader(&document, |buffer: gltf::Index<gltf::Buffer>| {
+        buffers.get(buffer.value()).map(|data| &data.0[..])
+    });
     let mut positions = reader.read_positions().unwrap();
 
     const EXPECTED_POSITION_COUNT: usize = 14;
@@ -50,10 +51,11 @@ fn test_sparse_accessor_with_base_buffer_view_yield_exact_size_hints() {
 fn test_sparse_accessor_with_base_buffer_view_yield_all_values() {
     let (document, buffers, _) = gltf::import(SIMPLE_SPARSE_ACCESSOR_GLTF).unwrap();
 
-    let mesh = document.meshes().next().unwrap();
-    let primitive = mesh.primitives().next().unwrap();
-    let reader = primitive
-        .reader(|buffer: gltf::Buffer| buffers.get(buffer.index()).map(|data| &data.0[..]));
+    let mesh = &document.meshes[0];
+    let primitive = &mesh.primitives[0];
+    let reader = primitive.reader(&document, |buffer: gltf::Index<gltf::Buffer>| {
+        buffers.get(buffer.value()).map(|data| &data.0[..])
+    });
     let positions: Vec<[f32; 3]> = reader.read_positions().unwrap().collect::<Vec<_>>();
 
     const EXPECTED_POSITIONS: [[f32; 3]; 14] = [
@@ -91,14 +93,15 @@ const BOX_SPARSE_GLTF: &str = "tests/box_sparse.gltf";
 fn test_sparse_accessor_without_base_buffer_view_yield_exact_size_hints() {
     let (document, buffers, _) = gltf::import(BOX_SPARSE_GLTF).unwrap();
 
-    let animation = document.animations().next().unwrap();
-    let sampler = animation.samplers().next().unwrap();
-    let output_accessor = sampler.output();
-    let mut outputs_iter =
-        gltf::accessor::Iter::<f32>::new(output_accessor, |buffer: gltf::Buffer| {
-            buffers.get(buffer.index()).map(|data| &data.0[..])
-        })
-        .unwrap();
+    let animation = &document.animations[0];
+    let sampler = &animation.samplers[0];
+    let output_accessor = &sampler.output;
+    let mut outputs_iter = gltf::accessor::Iter::<f32>::new(
+        &document,
+        *output_accessor,
+        |buffer: gltf::Index<gltf::Buffer>| buffers.get(buffer.value()).map(|data| &data.0[..]),
+    )
+    .unwrap();
 
     const EXPECTED_OUTPUT_COUNT: usize = 2;
     for i in (0..=EXPECTED_OUTPUT_COUNT).rev() {
@@ -111,12 +114,14 @@ fn test_sparse_accessor_without_base_buffer_view_yield_exact_size_hints() {
 fn test_sparse_accessor_without_base_buffer_view_yield_all_values() {
     let (document, buffers, _) = gltf::import(BOX_SPARSE_GLTF).unwrap();
 
-    let animation = document.animations().next().unwrap();
-    let sampler = animation.samplers().next().unwrap();
-    let output_accessor = sampler.output();
-    let output_iter = gltf::accessor::Iter::<f32>::new(output_accessor, |buffer: gltf::Buffer| {
-        buffers.get(buffer.index()).map(|data| &data.0[..])
-    })
+    let animation = &document.animations[0];
+    let sampler = &animation.samplers[0];
+    let output_accessor = sampler.output;
+    let output_iter = gltf::accessor::Iter::<f32>::new(
+        &document,
+        output_accessor,
+        |buffer: gltf::Index<gltf::Buffer>| buffers.get(buffer.value()).map(|data| &data.0[..]),
+    )
     .unwrap();
     let outputs = output_iter.collect::<Vec<_>>();
 

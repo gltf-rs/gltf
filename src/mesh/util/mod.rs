@@ -13,7 +13,10 @@ pub mod tex_coords;
 /// Casting iterator adapters for node weights.
 pub mod weights;
 
-use crate::mesh;
+/// Conversions for normalized integers.
+pub(crate) mod normalize;
+
+use crate::{mesh, Index};
 
 use crate::accessor::Iter;
 use crate::Buffer;
@@ -104,20 +107,20 @@ pub enum ReadWeights<'a> {
 #[derive(Clone, Debug)]
 pub struct ReadMorphTargets<'a, 's, F>
 where
-    F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>,
+    F: Clone + Fn(Index<Buffer>) -> Option<&'s [u8]>,
 {
     pub(crate) index: usize,
     pub(crate) reader: mesh::Reader<'a, 's, F>,
 }
 
 impl<'a, 's, F> ExactSizeIterator for ReadMorphTargets<'a, 's, F> where
-    F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>
+    F: Clone + Fn(Index<Buffer>) -> Option<&'s [u8]>
 {
 }
 
 impl<'a, 's, F> Iterator for ReadMorphTargets<'a, 's, F>
 where
-    F: Clone + Fn(Buffer<'a>) -> Option<&'s [u8]>,
+    F: Clone + Fn(Index<Buffer>) -> Option<&'s [u8]>,
 {
     type Item = (
         Option<ReadPositionDisplacements<'s>>,
@@ -128,24 +131,36 @@ where
         self.index += 1;
         self.reader
             .primitive
-            .morph_targets()
-            .nth(self.index - 1)
+            .targets
+            .get(self.index - 1)
             .map(|morph_target| {
-                let positions = morph_target
-                    .positions()
-                    .and_then(|accessor| Iter::new(accessor, self.reader.get_buffer_data.clone()));
-                let normals = morph_target
-                    .normals()
-                    .and_then(|accessor| Iter::new(accessor, self.reader.get_buffer_data.clone()));
-                let tangents = morph_target
-                    .tangents()
-                    .and_then(|accessor| Iter::new(accessor, self.reader.get_buffer_data.clone()));
+                let positions = morph_target.positions.and_then(|accessor| {
+                    Iter::new(
+                        self.reader.root,
+                        accessor,
+                        self.reader.get_buffer_data.clone(),
+                    )
+                });
+                let normals = morph_target.normals.and_then(|accessor| {
+                    Iter::new(
+                        self.reader.root,
+                        accessor,
+                        self.reader.get_buffer_data.clone(),
+                    )
+                });
+                let tangents = morph_target.tangents.and_then(|accessor| {
+                    Iter::new(
+                        self.reader.root,
+                        accessor,
+                        self.reader.get_buffer_data.clone(),
+                    )
+                });
                 (positions, normals, tangents)
             })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        self.reader.primitive.morph_targets().size_hint()
+        self.reader.primitive.targets.iter().size_hint()
     }
 }
 

@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::Normalize;
+use super::normalize::Normalize;
 
 use super::ReadColors;
 

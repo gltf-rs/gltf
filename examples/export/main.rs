@@ -1,11 +1,7 @@
-use gltf_json as json;
-
-use std::{fs, mem};
-
-use json::validation::Checked::Valid;
-use json::validation::USize64;
+use gltf::validation::USize64;
 use std::borrow::Cow;
 use std::io::Write;
+use std::{fs, mem};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 enum Output {
@@ -72,96 +68,92 @@ fn export(output: Output) {
 
     let (min, max) = bounding_coords(&triangle_vertices);
 
-    let mut root = gltf_json::Root::default();
+    let mut root = gltf::Root::default();
 
     let buffer_length = triangle_vertices.len() * mem::size_of::<Vertex>();
-    let buffer = root.push(json::Buffer {
-        byte_length: USize64::from(buffer_length),
-        extensions: Default::default(),
-        extras: Default::default(),
+    let buffer = root.push(gltf::Buffer {
+        length: USize64::from(buffer_length),
         name: None,
         uri: if output == Output::Standard {
             Some("buffer0.bin".into())
         } else {
             None
         },
-    });
-    let buffer_view = root.push(json::buffer::View {
-        buffer,
-        byte_length: USize64::from(buffer_length),
-        byte_offset: None,
-        byte_stride: Some(json::buffer::Stride(mem::size_of::<Vertex>())),
-        extensions: Default::default(),
         extras: Default::default(),
-        name: None,
-        target: Some(Valid(json::buffer::Target::ArrayBuffer)),
+        unrecognized_extensions: Default::default(),
     });
-    let positions = root.push(json::Accessor {
+    let buffer_view = root.push(gltf::buffer::View {
+        buffer,
+        length: USize64::from(buffer_length),
+        offset: USize64(0),
+        stride: Some(mem::size_of::<Vertex>()),
+        name: None,
+        target: Some(gltf::buffer::Target::ArrayBuffer),
+        extras: Default::default(),
+        unrecognized_extensions: Default::default(),
+    });
+    let positions = root.push(gltf::Accessor {
         buffer_view: Some(buffer_view),
         byte_offset: Some(USize64(0)),
         count: USize64::from(triangle_vertices.len()),
-        component_type: Valid(json::accessor::GenericComponentType(
-            json::accessor::ComponentType::F32,
-        )),
-        extensions: Default::default(),
-        extras: Default::default(),
-        type_: Valid(json::accessor::Type::Vec3),
-        min: Some(json::Value::from(Vec::from(min))),
-        max: Some(json::Value::from(Vec::from(max))),
+        component_type: gltf::accessor::ComponentType::F32,
+        attribute_type: gltf::accessor::AttributeType::Vec3,
+        min: Some(gltf::Value::from(Vec::from(min))),
+        max: Some(gltf::Value::from(Vec::from(max))),
         name: None,
         normalized: false,
         sparse: None,
+        extras: Default::default(),
+        unrecognized_extensions: Default::default(),
     });
-    let colors = root.push(json::Accessor {
+    let colors = root.push(gltf::Accessor {
         buffer_view: Some(buffer_view),
         byte_offset: Some(USize64::from(3 * mem::size_of::<f32>())),
         count: USize64::from(triangle_vertices.len()),
-        component_type: Valid(json::accessor::GenericComponentType(
-            json::accessor::ComponentType::F32,
-        )),
-        extensions: Default::default(),
-        extras: Default::default(),
-        type_: Valid(json::accessor::Type::Vec3),
+        component_type: gltf::accessor::ComponentType::F32,
+        attribute_type: gltf::accessor::AttributeType::Vec3,
         min: None,
         max: None,
         name: None,
         normalized: false,
         sparse: None,
+        extras: Default::default(),
+        unrecognized_extensions: Default::default(),
     });
 
-    let primitive = json::mesh::Primitive {
-        attributes: {
-            let mut map = std::collections::BTreeMap::new();
-            map.insert(Valid(json::mesh::Semantic::Positions), positions);
-            map.insert(Valid(json::mesh::Semantic::Colors(0)), colors);
-            map
-        },
-        extensions: Default::default(),
-        extras: Default::default(),
+    let primitive = gltf::mesh::Primitive {
+        attributes: [
+            (gltf::mesh::Semantic::Positions, positions),
+            (gltf::mesh::Semantic::Colors(0), colors),
+        ]
+        .into(),
         indices: None,
         material: None,
-        mode: Valid(json::mesh::Mode::Triangles),
-        targets: None,
+        mode: gltf::mesh::Mode::Triangles,
+        targets: Vec::new(),
+        variants: None,
+        extras: Default::default(),
+        unrecognized_extensions: Default::default(),
     };
 
-    let mesh = root.push(json::Mesh {
-        extensions: Default::default(),
-        extras: Default::default(),
+    let mesh = root.push(gltf::Mesh {
         name: None,
         primitives: vec![primitive],
-        weights: None,
+        weights: Vec::new(),
+        extras: Default::default(),
+        unrecognized_extensions: Default::default(),
     });
 
-    let node = root.push(json::Node {
+    let node = root.push(gltf::Node {
         mesh: Some(mesh),
         ..Default::default()
     });
 
-    root.push(json::Scene {
-        extensions: Default::default(),
-        extras: Default::default(),
+    root.push(gltf::Scene {
         name: None,
         nodes: vec![node],
+        extras: Default::default(),
+        unrecognized_extensions: Default::default(),
     });
 
     match output {
@@ -169,14 +161,14 @@ fn export(output: Output) {
             let _ = fs::create_dir("triangle");
 
             let writer = fs::File::create("triangle/triangle.gltf").expect("I/O error");
-            json::serialize::to_writer_pretty(writer, &root).expect("Serialization error");
+            serde_json::to_writer_pretty(writer, &root).expect("Serialization error");
 
             let bin = to_padded_byte_vector(triangle_vertices);
             let mut writer = fs::File::create("triangle/buffer0.bin").expect("I/O error");
             writer.write_all(&bin).expect("I/O error");
         }
         Output::Binary => {
-            let json_string = json::serialize::to_string(&root).expect("Serialization error");
+            let json_string = serde_json::to_string(&root).expect("Serialization error");
             let mut json_offset = json_string.len();
             align_to_multiple_of_four(&mut json_offset);
             let glb = gltf::binary::Glb {

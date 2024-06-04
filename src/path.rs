@@ -12,7 +12,7 @@ impl Path {
     /// Basic usage
     ///
     /// ```rust
-    /// # use gltf_json::Path;
+    /// # use gltf::Path;
     /// let path = Path::new();
     /// assert_eq!("", path.as_str());
     /// ```
@@ -27,7 +27,7 @@ impl Path {
     /// Basic usage
     ///
     /// ```rust
-    /// # use gltf_json::Path;
+    /// # use gltf::Path;
     /// let path = Path::new().field("foo");
     /// assert_eq!("foo", path.as_str());
     /// assert_eq!("foo.bar", path.field("bar").as_str());
@@ -47,7 +47,7 @@ impl Path {
     /// Basic usage
     ///
     /// ```rust
-    /// # use gltf_json::Path;
+    /// # use gltf::Path;
     /// let path = Path::new().field("foo");
     /// assert_eq!("foo[123]", path.index(123).as_str());
     /// ```
@@ -62,7 +62,7 @@ impl Path {
     /// Basic usage
     ///
     /// ```rust
-    /// # use gltf_json::Path;
+    /// # use gltf::Path;
     /// let path = Path::new().field("foo");
     /// assert_eq!("foo[\"bar\"]", path.key("bar").as_str());
     /// ```
@@ -77,7 +77,7 @@ impl Path {
     /// Basic usage
     ///
     /// ```rust
-    /// # use gltf_json::Path;
+    /// # use gltf::Path;
     /// let path = Path::new().field("foo").index(0).value_str("baz");
     /// assert_eq!("foo[0] = \"baz\"", path.as_str());
     /// ```
