@@ -160,7 +160,7 @@ impl<'a> Texture<'a> {
     /// Returns the image used by this texture.
     #[cfg(feature = "allow_empty_texture")]
     pub fn source(&self) -> Option<image::Image<'a>> {
-        let index = self.json.source().value();
+        let index = self.json.primary_source().value();
         if index == u32::MAX as usize {
             None
         } else {
@@ -173,7 +173,7 @@ impl<'a> Texture<'a> {
     pub fn source(&self) -> image::Image<'a> {
         self.document
             .images()
-            .nth(self.json.source().value())
+            .nth(self.json.primary_source().value())
             .unwrap()
     }
 

@@ -205,7 +205,7 @@ pub struct Texture {
 
     /// The index of the image used by this texture.
     #[serde(default = "source_default", skip_serializing_if = "source_is_empty")]
-    source: Index<image::Image>,
+    pub source: Index<image::Image>,
 
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -220,7 +220,7 @@ pub struct Texture {
 
 impl Texture {
     /// The index of the image used by this texture.
-    pub fn source(&self) -> Index<image::Image> {
+    pub fn primary_source(&self) -> Index<image::Image> {
         #[allow(unused_mut)]
         let mut source = self.source;
         #[cfg(feature = "EXT_texture_webp")]
@@ -250,7 +250,7 @@ impl Validate for Texture {
         self.extensions
             .validate(root, || path().field("extensions"), report);
 
-        source_validate(&self.source(), root, || path().field("source"), report);
+        source_validate(&self.primary_source(), root, || path().field("source"), report);
     }
 }
 
