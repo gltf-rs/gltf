@@ -55,7 +55,7 @@ pub const ENABLED_EXTENSIONS: &[&str] = &[
     // Allowlisted texture extensions. Processing is delegated to the user.
     #[cfg(feature = "allow_empty_texture")]
     "KHR_texture_basisu",
-    #[cfg(feature = "allow_empty_texture")]
+    #[cfg(feature = "EXT_texture_webp")]
     "EXT_texture_webp",
     #[cfg(feature = "allow_empty_texture")]
     "MSFT_texture_dds",
@@ -70,4 +70,5 @@ pub const SUPPORTED_EXTENSIONS: &[&str] = &[
     "KHR_materials_transmission",
     "KHR_materials_ior",
     "KHR_materials_emissive_strength",
+    "EXT_texture_webp",
 ];

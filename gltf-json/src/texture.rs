@@ -1,3 +1,4 @@
+use crate::extensions::texture;
 use crate::validation::{Checked, Validate};
 use crate::{extensions, image, Extras, Index};
 use gltf_derive::Validate;
@@ -179,7 +180,7 @@ where
     P: Fn() -> crate::Path,
     R: FnMut(&dyn Fn() -> crate::Path, crate::validation::Error),
 {
-    if cfg!(feature = "allow_empty_texture") {
+    if cfg!(any(feature = "allow_empty_texture",)) {
         if !source_is_empty(source) {
             source.validate(root, path, report);
         }
@@ -217,6 +218,27 @@ pub struct Texture {
     pub extras: Extras,
 }
 
+impl Texture {
+    /// The index of the image used by this texture.
+    pub fn primary_source(&self) -> Index<image::Image> {
+        #[allow(unused_mut)]
+        let mut source = self.source;
+        #[cfg(feature = "EXT_texture_webp")]
+        {
+            if let Some(texture_webp) = &self.extensions {
+                if let Some(texture_webp) = &texture_webp.texture_webp {
+                    // Only use the webp source if the source is not empty
+                    // Otherwise, fallback to whatever was there originally
+                    if !source_is_empty(&texture_webp.source) {
+                        source = texture_webp.source;
+                    }
+                }
+            }
+        }
+        source
+    }
+}
+
 impl Validate for Texture {
     fn validate<P, R>(&self, root: &crate::Root, path: P, report: &mut R)
     where
@@ -227,7 +249,13 @@ impl Validate for Texture {
             .validate(root, || path().field("sampler"), report);
         self.extensions
             .validate(root, || path().field("extensions"), report);
-        source_validate(&self.source, root, || path().field("source"), report);
+
+        source_validate(
+            &self.primary_source(),
+            root,
+            || path().field("source"),
+            report,
+        );
     }
 }
 
