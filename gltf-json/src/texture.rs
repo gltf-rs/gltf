@@ -250,7 +250,12 @@ impl Validate for Texture {
         self.extensions
             .validate(root, || path().field("extensions"), report);
 
-        source_validate(&self.primary_source(), root, || path().field("source"), report);
+        source_validate(
+            &self.primary_source(),
+            root,
+            || path().field("source"),
+            report,
+        );
     }
 }
 
