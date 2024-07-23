@@ -466,7 +466,7 @@ mod tests {
         };
 
         let mut errors = Vec::new();
-        root.validate(&root, Path::new, &mut |path, error| {
+        root.validate(&root, Path::new, &mut |path: &dyn Fn() -> Path, error| {
             errors.push((path(), error));
         });
 
@@ -486,17 +486,25 @@ mod tests {
             assert_eq!(*error, Error::Unsupported);
         }
 
-        root.extensions_required = vec!["KHR_mesh_quantization".to_owned()];
-        errors.clear();
-        root.validate(&root, Path::new, &mut |path, error| {
-            errors.push((path(), error));
-        });
-        assert_eq!(1, errors.len());
-        let (path, error) = errors.get(0).unwrap();
-        assert_eq!(
-            path.as_str(),
-            "extensionsRequired[0] = \"KHR_mesh_quantization\""
-        );
-        assert_eq!(*error, Error::Unsupported);
+        #[cfg(feature = "KHR_mesh_quantization")]
+        {
+            assert!(errors.is_empty());
+        }
+
+        #[cfg(not(feature = "KHR_mesh_quantization"))]
+        {
+            root.extensions_required = vec!["KHR_mesh_quantization".to_owned()];
+            errors.clear();
+            root.validate(&root, Path::new, &mut |path, error| {
+                errors.push((path(), error));
+            });
+            assert_eq!(1, errors.len());
+            let (path, error) = errors.get(0).unwrap();
+            assert_eq!(
+                path.as_str(),
+                "extensionsRequired[0] = \"KHR_mesh_quantization\""
+            );
+            assert_eq!(*error, Error::Unsupported);
+        }
     }
 }

@@ -19,14 +19,69 @@ use crate::accessor::Iter;
 use crate::Buffer;
 
 /// XYZ vertex positions of type `[f32; 3]`.
+#[cfg(not(feature = "KHR_mesh_quantization"))]
 pub type ReadPositions<'a> = Iter<'a, [f32; 3]>;
 
+/// XYZ vertex positions as potentially quantized data
+#[cfg(feature = "KHR_mesh_quantization")]
+pub enum ReadPositions<'a> {
+    /// Position data of type I8
+    I8(Iter<'a, [i8; 3]>),
+    /// Position data of type U8
+    U8(Iter<'a, [u8; 3]>),
+    /// Position data of type I16
+    I16(Iter<'a, [i16; 3]>),
+    /// Position data of type U16
+    U16(Iter<'a, [u16; 3]>),
+    /// Position data of type F32
+    F32(Iter<'a, [f32; 3]>),
+}
+
+#[cfg(feature = "KHR_mesh_quantization")]
+impl<'a> ReadPositions<'a> {
+    /// Returns size hint of internal iterator
+    pub fn size_hint(&self) -> (usize, Option<usize>) {
+        match self {
+            Self::I8(iter) => iter.size_hint(),
+            Self::U8(iter) => iter.size_hint(),
+            Self::I16(iter) => iter.size_hint(),
+            Self::U16(iter) => iter.size_hint(),
+            Self::F32(iter) => iter.size_hint(),
+        }
+    }
+}
+
 /// XYZ vertex normals of type `[f32; 3]`.
+#[cfg(not(feature = "KHR_mesh_quantization"))]
 pub type ReadNormals<'a> = Iter<'a, [f32; 3]>;
+
+/// XYZ vertex normals as potentially quantized data
+#[cfg(feature = "KHR_mesh_quantization")]
+pub enum ReadNormals<'a> {
+    /// Position data of type I8
+    I8(Iter<'a, [i8; 3]>),
+    /// Position data of type I16
+    I16(Iter<'a, [i16; 3]>),
+    /// Position data of type F32
+    F32(Iter<'a, [f32; 3]>),
+}
 
 /// XYZW vertex tangents of type `[f32; 4]` where the `w` component is a
 /// sign value (-1 or +1) indicating the handedness of the tangent basis.
+#[cfg(not(feature = "KHR_mesh_quantization"))]
 pub type ReadTangents<'a> = Iter<'a, [f32; 4]>;
+
+/// XYZW vertex tangents of potentially quantized data where the `w` component is a
+/// sign value (-1 or +1) indicating the handedness of the tangent basis.
+#[cfg(feature = "KHR_mesh_quantization")]
+pub enum ReadTangents<'a> {
+    /// Position data of type I8
+    I8(Iter<'a, [i8; 3]>),
+    /// Position data of type I16
+    I16(Iter<'a, [i16; 3]>),
+    /// Position data of type F32
+    F32(Iter<'a, [f32; 3]>),
+}
 
 /// XYZ vertex position displacements of type `[f32; 3]`.
 pub type ReadPositionDisplacements<'a> = Iter<'a, [f32; 3]>;

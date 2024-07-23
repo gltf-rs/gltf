@@ -1,6 +1,7 @@
 use std::io::Read;
 use std::{fs, io};
 
+use gltf::mesh::util::ReadPositions;
 use gltf::mesh::Bounds;
 
 #[test]
@@ -27,7 +28,7 @@ fn test_accessor_bounds() {
 /// The accessor use a base `bufferView` that contains 14 `Vec3`s and the sparse
 /// section overwrites 3 of these with other values when read.
 const SIMPLE_SPARSE_ACCESSOR_GLTF: &str =
-    "glTF-Sample-Assets/Models/SimpleSparseAccessor/glTF-Embedded/SimpleSparseAccessor.gltf";
+    "glTF-Sample-Models/2.0/SimpleSparseAccessor/glTF-Embedded/SimpleSparseAccessor.gltf";
 
 #[test]
 fn test_sparse_accessor_with_base_buffer_view_yield_exact_size_hints() {
@@ -37,7 +38,15 @@ fn test_sparse_accessor_with_base_buffer_view_yield_exact_size_hints() {
     let primitive = mesh.primitives().next().unwrap();
     let reader = primitive
         .reader(|buffer: gltf::Buffer| buffers.get(buffer.index()).map(|data| &data.0[..]));
+
+    #[cfg(not(feature = "KHR_mesh_quantization"))]
     let mut positions = reader.read_positions().unwrap();
+
+    #[cfg(feature = "KHR_mesh_quantization")]
+    let mut positions = match reader.read_positions().unwrap() {
+        ReadPositions::F32(iter) => iter,
+        _ => unreachable!("Meshes in gltf sample repo should not use quantization"),
+    };
 
     const EXPECTED_POSITION_COUNT: usize = 14;
     for i in (0..=EXPECTED_POSITION_COUNT).rev() {
@@ -54,7 +63,16 @@ fn test_sparse_accessor_with_base_buffer_view_yield_all_values() {
     let primitive = mesh.primitives().next().unwrap();
     let reader = primitive
         .reader(|buffer: gltf::Buffer| buffers.get(buffer.index()).map(|data| &data.0[..]));
+
+    #[cfg(not(feature = "KHR_mesh_quantization"))]
     let positions: Vec<[f32; 3]> = reader.read_positions().unwrap().collect::<Vec<_>>();
+
+    #[cfg(feature = "KHR_mesh_quantization")]
+    let positions = match reader.read_positions().unwrap() {
+        ReadPositions::F32(iter) => iter,
+        _ => unreachable!("Meshes in gltf sample repo should not use quantization"),
+    }
+    .collect::<Vec<_>>();
 
     const EXPECTED_POSITIONS: [[f32; 3]; 14] = [
         [0.0, 0.0, 0.0],

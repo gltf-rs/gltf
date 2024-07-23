@@ -1,7 +1,7 @@
 use std::error::Error as StdError;
 use std::{fs, path};
 
-const SAMPLE_MODELS_DIRECTORY_PATH: &str = "glTF-Sample-Assets/Models";
+const SAMPLE_MODELS_DIRECTORY_PATH: &str = "glTF-Sample-Models/2.0";
 
 fn check_import_result(
     result: gltf::Result<(
