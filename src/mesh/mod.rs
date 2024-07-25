@@ -34,10 +34,17 @@
 //!    for primitive in mesh.primitives() {
 //!        println!("- Primitive #{}", primitive.index());
 //!        let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
-//!        if let Some(iter) = reader.read_positions() {
-//!            for vertex_position in iter {
-//!                println!("{:?}", vertex_position);
-//!            }
+//!
+//!        #[cfg(not(feature="KHR_mesh_quantization"))]
+//!        let positions = reader.read_positions();
+//!        #[cfg(feature="KHR_mesh_quantization")]
+//!        let positions = match reader.read_positions() {
+//!            Some(gltf::mesh::util::ReadPositions::F32(iter)) => iter,
+//!            _ => unreachable!(),
+//!        };
+//!
+//!        for vertex_position in positions {
+//!            println!("{:?}", vertex_position);
 //!        }
 //!    }
 //! }
@@ -336,21 +343,84 @@ where
     pub fn read_positions(&self) -> Option<util::ReadPositions<'s>> {
         self.primitive
             .get(&Semantic::Positions)
-            .and_then(|accessor| accessor::Iter::new(accessor, self.get_buffer_data.clone()))
+            .and_then(|accessor| {
+                #[cfg(feature = "KHR_mesh_quantization")]
+                match accessor.data_type() {
+                    json::accessor::ComponentType::I8 => {
+                        accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                            .map(|iter| util::ReadPositions::I8(iter))
+                    }
+                    json::accessor::ComponentType::U8 => {
+                        accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                            .map(|iter| util::ReadPositions::U8(iter))
+                    }
+                    json::accessor::ComponentType::I16 => {
+                        accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                            .map(|iter| util::ReadPositions::I16(iter))
+                    }
+                    json::accessor::ComponentType::U16 => {
+                        accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                            .map(|iter| util::ReadPositions::U16(iter))
+                    }
+                    json::accessor::ComponentType::F32 => {
+                        accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                            .map(|iter| util::ReadPositions::F32(iter))
+                    }
+                    _ => None,
+                }
+                #[cfg(not(feature = "KHR_mesh_quantization"))]
+                accessor::Iter::new(accessor, self.get_buffer_data.clone())
+            })
     }
 
     /// Visits the vertex normals of a primitive.
     pub fn read_normals(&self) -> Option<util::ReadNormals<'s>> {
-        self.primitive
-            .get(&Semantic::Normals)
-            .and_then(|accessor| accessor::Iter::new(accessor, self.get_buffer_data.clone()))
+        self.primitive.get(&Semantic::Normals).and_then(|accessor| {
+            #[cfg(feature = "KHR_mesh_quantization")]
+            match accessor.data_type() {
+                json::accessor::ComponentType::I8 => {
+                    accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                        .map(|iter| util::ReadNormals::I8(iter))
+                }
+                json::accessor::ComponentType::I16 => {
+                    accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                        .map(|iter| util::ReadNormals::I16(iter))
+                }
+                json::accessor::ComponentType::F32 => {
+                    accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                        .map(|iter| util::ReadNormals::F32(iter))
+                }
+                _ => None,
+            }
+            #[cfg(not(feature = "KHR_mesh_quantization"))]
+            accessor::Iter::new(accessor, self.get_buffer_data.clone())
+        })
     }
 
     /// Visits the vertex tangents of a primitive.
     pub fn read_tangents(&self) -> Option<util::ReadTangents<'s>> {
         self.primitive
             .get(&Semantic::Tangents)
-            .and_then(|accessor| accessor::Iter::new(accessor, self.get_buffer_data.clone()))
+            .and_then(|accessor| {
+                #[cfg(feature = "KHR_mesh_quantization")]
+                match accessor.data_type() {
+                    json::accessor::ComponentType::I8 => {
+                        accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                            .map(|iter| util::ReadTangents::I8(iter))
+                    }
+                    json::accessor::ComponentType::I16 => {
+                        accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                            .map(|iter| util::ReadTangents::I16(iter))
+                    }
+                    json::accessor::ComponentType::F32 => {
+                        accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                            .map(|iter| util::ReadTangents::F32(iter))
+                    }
+                    _ => None,
+                }
+                #[cfg(not(feature = "KHR_mesh_quantization"))]
+                accessor::Iter::new(accessor, self.get_buffer_data.clone())
+            })
     }
 
     /// Visits the vertex colors of a primitive.

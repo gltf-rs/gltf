@@ -10,3 +10,4 @@ gltf-utils/target/
 gltf-utils/Cargo.lock
 *.bk
 glTF-Sample-Models
+glTF-Sample-Assets
