@@ -1,7 +1,7 @@
 use std::error::Error as StdError;
 use std::{fs, path};
 
-const SAMPLE_MODELS_DIRECTORY_PATH: &str = "glTF-Sample-Models/2.0";
+const SAMPLE_MODELS_DIRECTORY_PATH: &str = "glTF-Sample-Assets/Models";
 
 fn check_import_result(
     result: gltf::Result<(
@@ -15,7 +15,9 @@ fn check_import_result(
         Err(gltf::Error::Validation(errors)) => {
             assert!(errors
                 .iter()
-                .all(|(_path, error)| *error == Error::Unsupported));
+                .all(|(_path, error)| *error == Error::Unsupported),
+                "errors: {errors:?}",
+            );
             println!("skipped");
         }
         Err(otherwise) => {

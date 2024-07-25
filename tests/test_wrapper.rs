@@ -1,6 +1,7 @@
 use std::io::Read;
 use std::{fs, io};
 
+#[cfg(feature="KHR_mesh_quantization")]
 use gltf::mesh::util::ReadPositions;
 use gltf::mesh::Bounds;
 
@@ -28,7 +29,7 @@ fn test_accessor_bounds() {
 /// The accessor use a base `bufferView` that contains 14 `Vec3`s and the sparse
 /// section overwrites 3 of these with other values when read.
 const SIMPLE_SPARSE_ACCESSOR_GLTF: &str =
-    "glTF-Sample-Models/2.0/SimpleSparseAccessor/glTF-Embedded/SimpleSparseAccessor.gltf";
+    "glTF-Sample-Assets/Models/SimpleSparseAccessor/glTF-Embedded/SimpleSparseAccessor.gltf";
 
 #[test]
 fn test_sparse_accessor_with_base_buffer_view_yield_exact_size_hints() {
