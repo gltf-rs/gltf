@@ -1,4 +1,3 @@
-use crate::extensions::texture;
 use crate::validation::{Checked, Validate};
 use crate::{extensions, image, Extras, Index};
 use gltf_derive::Validate;
