@@ -20,8 +20,8 @@ jobs:
           repository: KhronosGroup/glTF-Sample-Assets
           path: glTF-Sample-Assets
 
-      - name: Tests (default features)
-        run: cargo test --all --release
+      - name: Tests (minimal features)
+        run: cargo test --all --release --features allow_empty_texture
 
       - name: Tests (all features)
         run: cargo test --all --all-features --release
