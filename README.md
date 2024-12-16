@@ -98,8 +98,8 @@ cargo run --example gltf-tree path/to/asset.gltf
 
 ### Tests
 
-Running tests locally requires to clone the [`glTF-Sample-Models`](https://github.com/KhronosGroup/glTF-Sample-Models) repository first.
+Running tests locally requires to clone the [`glTF-Sample-Assets`](https://github.com/KhronosGroup/glTF-Sample-Assets) repository first.
 
 ```sh
-git clone https://github.com/KhronosGroup/glTF-Sample-Models.git
+git clone https://github.com/KhronosGroup/glTF-Sample-Assets.git
 ```

@@ -15,7 +15,9 @@ fn check_import_result(
         Err(gltf::Error::Validation(errors)) => {
             assert!(errors
                 .iter()
-                .all(|(_path, error)| *error == Error::Unsupported));
+                .all(|(_path, error)| *error == Error::Unsupported),
+                "errors: {errors:?}",
+            );
             println!("skipped");
         }
         Err(otherwise) => {
