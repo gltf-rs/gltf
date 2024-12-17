@@ -4,7 +4,7 @@ use serde_derive::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
 /// Image data used to create a texture.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Image {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]

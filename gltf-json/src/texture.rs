@@ -130,7 +130,7 @@ impl WrappingMode {
 }
 
 /// Texture sampler properties for filtering and wrapping modes.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 #[serde(default)]
 pub struct Sampler {
     /// Magnification filter.
@@ -192,7 +192,7 @@ where
 }
 
 /// A texture and its sampler.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct Texture {
     /// Optional user-defined name for this object.
     #[cfg(feature = "names")]
@@ -259,7 +259,7 @@ impl Validate for Texture {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
 /// Reference to a `Texture`.
 pub struct Info {
     /// The index of the texture.

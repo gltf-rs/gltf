@@ -59,7 +59,7 @@ impl Validate for Stride {
 }
 
 /// A buffer points to binary data representing geometry, animations, or skins.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Buffer {
     /// The length of the buffer in bytes.
     #[serde(default, rename = "byteLength")]
@@ -90,7 +90,7 @@ pub struct Buffer {
 ///
 /// <https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#reference-bufferview>
 ///
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
 pub struct View {
     /// The parent `Buffer`.
     pub buffer: Index<Buffer>,

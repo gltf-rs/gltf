@@ -4,7 +4,7 @@ use serde_derive::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
 /// A buffer points to binary data representing geometry, animations, or skins.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Buffer {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]
@@ -12,7 +12,7 @@ pub struct Buffer {
 }
 
 /// A view into a buffer generally representing a subset of the buffer.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 pub struct View {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]

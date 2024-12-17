@@ -7,7 +7,7 @@ use serde_json::{Map, Value};
 ///
 /// A node can reference a camera to apply a transform to place the camera in the
 /// scene.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Camera {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]
@@ -15,7 +15,7 @@ pub struct Camera {
 }
 
 /// Values for an orthographic camera.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Orthographic {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]
@@ -23,7 +23,7 @@ pub struct Orthographic {
 }
 
 /// Values for a perspective camera.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Perspective {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]

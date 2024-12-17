@@ -22,7 +22,7 @@ pub enum Type {
 ///
 /// A node can reference a camera to apply a transform to place the camera in the
 /// scene.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
 #[gltf(validate_hook = "camera_validate_hook")]
 pub struct Camera {
     /// Optional user-defined name for this object.
@@ -66,7 +66,7 @@ where
 }
 
 /// Values for an orthographic camera.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Orthographic {
     /// The horizontal magnification of the view.
     pub xmag: f32,
@@ -92,7 +92,7 @@ pub struct Orthographic {
 }
 
 /// Values for a perspective camera.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Perspective {
     /// Aspect ratio of the field of view.
     #[serde(rename = "aspectRatio")]

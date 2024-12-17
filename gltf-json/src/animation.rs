@@ -53,7 +53,7 @@ pub enum Property {
 }
 
 /// A keyframe animation.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct Animation {
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -84,7 +84,7 @@ pub struct Animation {
 }
 
 /// Targets an animation's sampler at a node's property.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct Channel {
     /// The index of a sampler in this animation used to compute the value for the
     /// target.
@@ -105,7 +105,7 @@ pub struct Channel {
 }
 
 /// The index of the node and TRS property that an animation channel targets.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Target {
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -126,7 +126,7 @@ pub struct Target {
 }
 
 /// Defines a keyframe graph but not its target.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Sampler {
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
