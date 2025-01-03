@@ -44,11 +44,10 @@ pub struct TextureWebp {
 }
 
 #[cfg(feature = "KHR_texture_basisu")]
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
-#[serde(default, rename_all = "camelCase")]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct TextureBasisu {
     /// The index of the image used by this texture.
-    pub source: Option<Index<image::Image>>,
+    pub source: Index<image::Image>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
