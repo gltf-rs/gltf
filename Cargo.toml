@@ -1,6 +1,6 @@
 [package]
 name = "gltf"
-version = "1.3.0"
+version = "1.4.1"
 authors = ["David Harvey-Macaulay <alteous@outlook.com>"]
 description = "glTF 2.0 loader"
 documentation = "https://docs.rs/gltf"
@@ -25,7 +25,7 @@ approx = "0.5"
 [dependencies]
 base64 = { optional = true, version = "0.13" }
 byteorder = "1.3"
-gltf-json = { path = "gltf-json", version = "1.3.0" }
+gltf-json = { path = "gltf-json", version = "=1.4.1" }
 lazy_static = "1"
 urlencoding = { optional = true, version = "2.1" }
 serde_json = { features = ["raw_value"], version = "1.0" }
@@ -34,10 +34,11 @@ serde_json = { features = ["raw_value"], version = "1.0" }
 default-features = false
 features = ["jpeg", "png"]
 optional = true
-version = "0.24"
+version = "0.25"
 
 [features]
 default = ["import", "utils", "names"]
+allow_empty_texture = ["gltf-json/allow_empty_texture"]
 extensions = ["gltf-json/extensions"]
 extras = ["gltf-json/extras"]
 names = ["gltf-json/names"]
@@ -54,7 +55,7 @@ KHR_materials_variants = ["gltf-json/KHR_materials_variants"]
 KHR_materials_volume = ["gltf-json/KHR_materials_volume"]
 KHR_materials_specular = ["gltf-json/KHR_materials_specular"]
 KHR_materials_emissive_strength = ["gltf-json/KHR_materials_emissive_strength"]
-image_jpeg_rayon = ["image/jpeg_rayon"]
+EXT_texture_webp = ["gltf-json/EXT_texture_webp", "image/webp"]
 guess_mime_type = []
 
 [[example]]

@@ -40,9 +40,10 @@
 //! for accessor in gltf.accessors() {
 //!     match (accessor.data_type(), accessor.dimensions()) {
 //!         (DataType::F32, Dimensions::Vec3) => {
-//!             let iter = Iter::<[f32; 3]>::new(accessor, get_buffer_data);
-//!             for item in iter {
-//!                 println!("{:?}", item);
+//!             if let Some(iter) = Iter::<[f32; 3]>::new(accessor, get_buffer_data) {
+//!                 for item in iter {
+//!                     println!("{:?}", item);
+//!                 }
 //!             }
 //!         }
 //!         _ => {},
@@ -126,13 +127,13 @@ impl<'a> Accessor<'a> {
     pub fn offset(&self) -> usize {
         // TODO: Change this function to return Option<usize> in the next
         // version and return None for sparse accessors.
-        self.json.byte_offset.unwrap_or(0) as usize
+        self.json.byte_offset.unwrap_or_default().0 as usize
     }
 
     /// Returns the number of components within the buffer view - not to be confused
     /// with the number of bytes in the buffer view.
     pub fn count(&self) -> usize {
-        self.json.count as usize
+        self.json.count.0 as usize
     }
 
     /// Returns the data type of components in the attribute.
@@ -140,7 +141,7 @@ impl<'a> Accessor<'a> {
         self.json.component_type.unwrap().0
     }
 
-    /// Returns the extension values map
+    /// Returns extension data unknown to this crate version.
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
     pub fn extensions(&self) -> Option<&Map<String, Value>> {
@@ -148,7 +149,7 @@ impl<'a> Accessor<'a> {
         Some(&ext.others)
     }
 
-    /// Return a value for a given extension name
+    /// Queries extension data unknown to this crate version.
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
     pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {

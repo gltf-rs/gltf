@@ -101,7 +101,7 @@ impl<'a> Sampler<'a> {
         self.json.wrap_t.unwrap()
     }
 
-    /// Returns the extension values map
+    /// Returns extension data unknown to this crate version.
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
     pub fn extensions(&self) -> Option<&Map<String, Value>> {
@@ -109,7 +109,7 @@ impl<'a> Sampler<'a> {
         Some(&ext.others)
     }
 
-    /// Return a value for a given extension name
+    /// Queries extension data unknown to this crate version.
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
     pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
@@ -157,33 +157,27 @@ impl<'a> Texture<'a> {
             .unwrap_or_else(|| Sampler::default(self.document))
     }
 
-    /// Returns the image used by this texture. In the first place, checks the extensions. In case
-    /// there is no extension with an image, returns the fallback image.
+    /// Returns the image used by this texture.
+    #[cfg(feature = "allow_empty_texture")]
+    pub fn source(&self) -> Option<image::Image<'a>> {
+        let index = self.json.primary_source().value();
+        if index == u32::MAX as usize {
+            None
+        } else {
+            Some(self.document.images().nth(index).unwrap())
+        }
+    }
+
+    /// Returns the image used by this texture.
+    #[cfg(not(feature = "allow_empty_texture"))]
     pub fn source(&self) -> image::Image<'a> {
-        #[cfg(feature = "KHR_texture_basisu")]
-        return self.source_basisu().unwrap_or(self.source_fallback().unwrap());
-        #[cfg(not(feature = "KHR_texture_basisu"))]
-        return self.source_fallback().unwrap();
+        self.document
+            .images()
+            .nth(self.json.primary_source().value())
+            .unwrap()
     }
 
-    /// Returns the fallback image used by this texture.
-    pub fn source_fallback(&self) -> Option<image::Image<'a>> {
-        self.json.source.as_ref().and_then(|index| self.document.images().nth(index.value()))
-    }
-
-    /// Returns the basisu image used by this texture.
-    #[cfg(feature = "KHR_texture_basisu")]
-    pub fn source_basisu(&self) -> Option<image::Image<'a>> {
-        self
-            .json
-            .extensions
-            .as_ref()
-            .and_then(|extensions| extensions.texture_basisu.as_ref())
-            .and_then(|texture| texture.source.as_ref())
-            .and_then(|index| self.document.images().nth(index.value()))
-    }
-
-    /// Returns the extension values map
+    /// Returns extension data unknown to this crate version.
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
     pub fn extensions(&self) -> Option<&Map<String, Value>> {
@@ -191,7 +185,7 @@ impl<'a> Texture<'a> {
         Some(&ext.others)
     }
 
-    /// Return a value for a given extension name
+    /// Queries extension data unknown to this crate version.
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
     pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
@@ -233,7 +227,7 @@ impl<'a> Info<'a> {
             .map(TextureTransform::new)
     }
 
-    /// Returns the extension values map
+    /// Returns extension data unknown to this crate version.
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
     pub fn extensions(&self) -> Option<&Map<String, Value>> {
@@ -241,7 +235,7 @@ impl<'a> Info<'a> {
         Some(&ext.others)
     }
 
-    /// Return a value for a given extension name
+    /// Queries extension data unknown to this crate version.
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
     pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {

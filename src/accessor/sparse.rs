@@ -37,8 +37,8 @@ impl<'a> Indices<'a> {
     }
 
     /// The offset relative to the start of the parent buffer view in bytes.
-    pub fn offset(&self) -> u32 {
-        self.json.byte_offset
+    pub fn offset(&self) -> usize {
+        self.json.byte_offset.0 as usize
     }
 
     /// The data type of each index.
@@ -73,8 +73,8 @@ impl<'a> Sparse<'a> {
     }
 
     /// Returns the number of attributes encoded in this sparse accessor.
-    pub fn count(&self) -> u32 {
-        self.json.count
+    pub fn count(&self) -> usize {
+        self.json.count.0 as usize
     }
 
     /// Returns an index array of size `count` that points to those accessor
@@ -120,8 +120,8 @@ impl<'a> Values<'a> {
     }
 
     /// The offset relative to the start of the parent buffer view in bytes.
-    pub fn offset(&self) -> u32 {
-        self.json.byte_offset
+    pub fn offset(&self) -> usize {
+        self.json.byte_offset.0 as usize
     }
 
     /// Optional application specific data.

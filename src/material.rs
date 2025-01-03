@@ -96,7 +96,7 @@ impl<'a> Material<'a> {
         PbrMetallicRoughness::new(self.document, &self.json.pbr_metallic_roughness)
     }
 
-    /// Returns the extension values map
+    /// Returns extension data unknown to this crate version.
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
     pub fn extensions(&self) -> Option<&Map<String, Value>> {
@@ -239,7 +239,7 @@ impl<'a> Material<'a> {
     /// Returns `true` if the [`KHR_materials_unlit`] property was specified, in which
     /// case the renderer should prefer to ignore all PBR values except `baseColor`.
     ///
-    /// [`KHR_materials_unlit`](https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit#overview)
+    /// [`KHR_materials_unlit`]: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit#overview
     #[cfg(feature = "KHR_materials_unlit")]
     #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_unlit")))]
     pub fn unlit(&self) -> bool {
@@ -320,7 +320,7 @@ impl<'a> PbrMetallicRoughness<'a> {
         })
     }
 
-    /// Returns the extension values map
+    /// Returns extension data unknown to this crate version.
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
     pub fn extensions(&self) -> Option<&Map<String, Value>> {
@@ -610,7 +610,7 @@ impl<'a> NormalTexture<'a> {
         self.texture.clone()
     }
 
-    /// Returns the extension values map
+    /// Returns extension data unknown to this crate version.
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
     pub fn extensions(&self) -> Option<&Map<String, Value>> {
@@ -665,7 +665,7 @@ impl<'a> OcclusionTexture<'a> {
         self.texture.clone()
     }
 
-    /// Returns the extension values map
+    /// Returns extension data unknown to this crate version.
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
     pub fn extensions(&self) -> Option<&Map<String, Value>> {

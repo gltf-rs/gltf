@@ -35,7 +35,7 @@ By default, `gltf` ignores all `extras` and `names` included with glTF assets. Y
 
 ```toml
 [dependencies.gltf]
-version = "1.2"
+version = "1.4"
 features = ["extras", "names"]
 ```
 
@@ -53,6 +53,7 @@ The following glTF extensions are supported by the crate:
 - `KHR_materials_transmission`
 - `KHR_materials_ior`
 - `KHR_materials_emissive_strength `
+- `EXT_texture_webp`
 
 To use an extension, list its name in the `features` section.
 

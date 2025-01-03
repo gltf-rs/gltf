@@ -373,6 +373,11 @@ impl Document {
         self.0
     }
 
+    /// Unwraps the glTF document, without consuming it.
+    pub fn as_json(&self) -> &json::Root {
+        &self.0
+    }
+
     /// Perform validation checks on loaded glTF.
     pub(crate) fn validate(&self) -> Result<()> {
         use json::validation::Validate;
@@ -446,7 +451,7 @@ impl Document {
         }
     }
 
-    /// Returns the extension values map
+    /// Returns extension data unknown to this crate version.
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
     pub fn extensions(&self) -> Option<&Map<String, Value>> {
@@ -454,7 +459,7 @@ impl Document {
         Some(&root.others)
     }
 
-    /// Return a value for a given extension name
+    /// Queries extension data unknown to this crate version.
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
     pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {

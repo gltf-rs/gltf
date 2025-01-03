@@ -9,6 +9,8 @@ pub const VALID_MIME_TYPES: &[&str] = &[
     "image/png",
     #[cfg(feature = "KHR_texture_basisu")]
     "image/ktx2",
+    #[cfg(feature = "EXT_texture_webp")]
+    "image/webp",
 ];
 
 /// Image data used to create a texture.
