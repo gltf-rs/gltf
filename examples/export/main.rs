@@ -16,7 +16,7 @@ enum Output {
     Binary,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, bytemuck::NoUninit)]
 #[repr(C)]
 struct Vertex {
     position: [f32; 3],
@@ -42,15 +42,14 @@ fn align_to_multiple_of_four(n: &mut usize) {
     *n = (*n + 3) & !3;
 }
 
-fn to_padded_byte_vector<T>(vec: Vec<T>) -> Vec<u8> {
-    let byte_length = vec.len() * mem::size_of::<T>();
-    let byte_capacity = vec.capacity() * mem::size_of::<T>();
-    let alloc = vec.into_boxed_slice();
-    let ptr = Box::<[T]>::into_raw(alloc) as *mut u8;
-    let mut new_vec = unsafe { Vec::from_raw_parts(ptr, byte_length, byte_capacity) };
+fn to_padded_byte_vector<T: bytemuck::NoUninit>(data: &[T]) -> Vec<u8> {
+    let byte_slice: &[u8] = bytemuck::cast_slice(data);
+    let mut new_vec: Vec<u8> = byte_slice.to_owned();
+
     while new_vec.len() % 4 != 0 {
         new_vec.push(0); // pad to multiple of four bytes
     }
+
     new_vec
 }
 
@@ -171,7 +170,7 @@ fn export(output: Output) {
             let writer = fs::File::create("triangle/triangle.gltf").expect("I/O error");
             json::serialize::to_writer_pretty(writer, &root).expect("Serialization error");
 
-            let bin = to_padded_byte_vector(triangle_vertices);
+            let bin = to_padded_byte_vector(&triangle_vertices);
             let mut writer = fs::File::create("triangle/buffer0.bin").expect("I/O error");
             writer.write_all(&bin).expect("I/O error");
         }
@@ -188,7 +187,7 @@ fn export(output: Output) {
                         .try_into()
                         .expect("file size exceeds binary glTF limit"),
                 },
-                bin: Some(Cow::Owned(to_padded_byte_vector(triangle_vertices))),
+                bin: Some(Cow::Owned(to_padded_byte_vector(&triangle_vertices))),
                 json: Cow::Owned(json_string.into_bytes()),
             };
             let writer = std::fs::File::create("triangle.glb").expect("I/O error");

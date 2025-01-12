@@ -21,6 +21,7 @@ members = ["gltf-derive", "gltf-json"]
 
 [dev-dependencies]
 approx = "0.5"
+bytemuck = { version = "1.21.0", features = ["derive"] }
 
 [dependencies]
 base64 = { optional = true, version = "0.13" }
