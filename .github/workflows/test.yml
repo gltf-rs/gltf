@@ -21,10 +21,10 @@ jobs:
           path: glTF-Sample-Assets
 
       - name: Tests (minimal features)
-        run: cargo test --all --release --features allow_empty_texture
+        run: cargo test --all --release --features allow_empty_texture,allow_empty_animation_target_node -- --nocapture
 
       - name: Tests (all features)
-        run: cargo test --all --all-features --release
+        run: cargo test --all --all-features --release -- --nocapture
 
       - name: Formatting
         run: cargo fmt --all -- --check

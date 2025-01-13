@@ -13,9 +13,13 @@ fn check_import_result(
     use gltf::json::validation::Error;
     match result {
         Err(gltf::Error::Validation(errors)) => {
-            assert!(errors
+            let all_unsupported = errors
                 .iter()
-                .all(|(_path, error)| *error == Error::Unsupported));
+                .all(|(_path, error)| *error == Error::Unsupported);
+            if !all_unsupported {
+                println!("{errors:#?}");
+            }
+            assert!(all_unsupported);
             println!("skipped");
         }
         Err(otherwise) => {
