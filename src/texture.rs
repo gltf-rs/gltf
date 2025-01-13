@@ -1,6 +1,8 @@
 use crate::{image, Document};
 
 pub use json::texture::{MagFilter, MinFilter, WrappingMode};
+#[cfg(feature = "extensions")]
+use serde_json::{Map, Value};
 
 lazy_static! {
     static ref DEFAULT_SAMPLER: json::texture::Sampler = Default::default();
@@ -99,6 +101,22 @@ impl<'a> Sampler<'a> {
         self.json.wrap_t.unwrap()
     }
 
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Queries extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
+    }
+
     /// Optional application specific data.
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
@@ -140,11 +158,39 @@ impl<'a> Texture<'a> {
     }
 
     /// Returns the image used by this texture.
+    #[cfg(feature = "allow_empty_texture")]
+    pub fn source(&self) -> Option<image::Image<'a>> {
+        let index = self.json.primary_source().value();
+        if index == u32::MAX as usize {
+            None
+        } else {
+            Some(self.document.images().nth(index).unwrap())
+        }
+    }
+
+    /// Returns the image used by this texture.
+    #[cfg(not(feature = "allow_empty_texture"))]
     pub fn source(&self) -> image::Image<'a> {
         self.document
             .images()
-            .nth(self.json.source.value())
+            .nth(self.json.primary_source().value())
             .unwrap()
+    }
+
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Queries extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
     }
 
     /// Optional application specific data.
@@ -179,6 +225,22 @@ impl<'a> Info<'a> {
             .texture_transform
             .as_ref()
             .map(TextureTransform::new)
+    }
+
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Queries extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
     }
 
     /// Optional application specific data.

@@ -4,6 +4,8 @@ use crate::{accessor, scene, Document};
 use crate::Buffer;
 
 pub use json::animation::{Interpolation, Property};
+#[cfg(feature = "extensions")]
+use serde_json::{Map, Value};
 
 /// Iterators.
 pub mod iter;
@@ -36,6 +38,9 @@ pub struct Channel<'a> {
     /// The parent `Animation` struct.
     anim: Animation<'a>,
 
+    /// The corresponding JSON index.
+    index: usize,
+
     /// The corresponding JSON struct.
     json: &'a json::animation::Channel,
 }
@@ -45,6 +50,9 @@ pub struct Channel<'a> {
 pub struct Sampler<'a> {
     /// The parent `Animation` struct.
     anim: Animation<'a>,
+
+    /// The corresponding JSON index.
+    index: usize,
 
     /// The corresponding JSON struct.
     json: &'a json::animation::Sampler,
@@ -90,7 +98,7 @@ impl<'a> Animation<'a> {
     pub fn channels(&self) -> iter::Channels<'a> {
         iter::Channels {
             anim: self.clone(),
-            iter: self.json.channels.iter(),
+            iter: self.json.channels.iter().enumerate(),
         }
     }
 
@@ -107,15 +115,35 @@ impl<'a> Animation<'a> {
     pub fn samplers(&self) -> iter::Samplers<'a> {
         iter::Samplers {
             anim: self.clone(),
-            iter: self.json.samplers.iter(),
+            iter: self.json.samplers.iter().enumerate(),
         }
+    }
+
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Queries extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
     }
 }
 
 impl<'a> Channel<'a> {
     /// Constructs a `Channel`.
-    pub(crate) fn new(anim: Animation<'a>, json: &'a json::animation::Channel) -> Self {
-        Self { anim, json }
+    pub(crate) fn new(
+        anim: Animation<'a>,
+        json: &'a json::animation::Channel,
+        index: usize,
+    ) -> Self {
+        Self { anim, json, index }
     }
 
     /// Returns the parent `Animation` struct.
@@ -150,6 +178,11 @@ impl<'a> Channel<'a> {
     /// Optional application specific data.
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
+    }
+
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 }
 
@@ -187,8 +220,12 @@ impl<'a> Target<'a> {
 
 impl<'a> Sampler<'a> {
     /// Constructs a `Sampler`.
-    pub(crate) fn new(anim: Animation<'a>, json: &'a json::animation::Sampler) -> Self {
-        Self { anim, json }
+    pub(crate) fn new(
+        anim: Animation<'a>,
+        json: &'a json::animation::Sampler,
+        index: usize,
+    ) -> Self {
+        Self { anim, json, index }
     }
 
     /// Returns the parent `Animation` struct.
@@ -199,6 +236,11 @@ impl<'a> Sampler<'a> {
     /// Optional application specific data.
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
+    }
+
+    /// Returns the internal JSON index.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// Returns the accessor containing the keyframe input values (e.g. time).

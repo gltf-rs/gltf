@@ -4,6 +4,8 @@ use std::ops;
 use crate::Document;
 
 pub use json::buffer::Target;
+#[cfg(feature = "extensions")]
+use serde_json::{Map, Value};
 
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Clone, Debug)]
@@ -91,7 +93,7 @@ impl<'a> Buffer<'a> {
 
     /// The length of the buffer in bytes.
     pub fn length(&self) -> usize {
-        self.json.byte_length as usize
+        self.json.byte_length.0 as usize
     }
 
     /// Optional user-defined name for this object.
@@ -99,6 +101,22 @@ impl<'a> Buffer<'a> {
     #[cfg_attr(docsrs, doc(cfg(feature = "names")))]
     pub fn name(&self) -> Option<&'a str> {
         self.json.name.as_deref()
+    }
+
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Queries extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
     }
 
     /// Optional application specific data.
@@ -134,12 +152,12 @@ impl<'a> View<'a> {
 
     /// Returns the length of the buffer view in bytes.
     pub fn length(&self) -> usize {
-        self.json.byte_length as usize
+        self.json.byte_length.0 as usize
     }
 
     /// Returns the offset into the parent buffer in bytes.
     pub fn offset(&self) -> usize {
-        self.json.byte_offset.unwrap_or(0) as usize
+        self.json.byte_offset.unwrap_or_default().0 as usize
     }
 
     /// Returns the stride in bytes between vertex attributes or other interleavable
@@ -148,10 +166,10 @@ impl<'a> View<'a> {
         self.json.byte_stride.and_then(|x| {
             // Treat byte_stride == 0 same as not specifying stride.
             // This is technically a validation error, but best way we can handle it here
-            if x == 0 {
+            if x.0 == 0 {
                 None
             } else {
-                Some(x as usize)
+                Some(x.0)
             }
         })
     }
@@ -166,6 +184,22 @@ impl<'a> View<'a> {
     /// Optional target the buffer should be bound to.
     pub fn target(&self) -> Option<Target> {
         self.json.target.map(|target| target.unwrap())
+    }
+
+    /// Returns extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extensions(&self) -> Option<&Map<String, Value>> {
+        let ext = self.json.extensions.as_ref()?;
+        Some(&ext.others)
+    }
+
+    /// Queries extension data unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
+        let ext = self.json.extensions.as_ref()?;
+        ext.others.get(ext_name)
     }
 
     /// Optional application specific data.

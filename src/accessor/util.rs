@@ -94,6 +94,11 @@ pub struct SparseIter<'a, T: Item> {
     /// This can be `None` if the base buffer view is not set. In this case the base values are all zero.
     base: Option<ItemIter<'a, T>>,
 
+    /// Number of values in the base accessor
+    ///
+    /// Valid even when `base` is not set.
+    base_count: usize,
+
     /// Sparse indices iterator.
     indices: iter::Peekable<SparseIndicesIter<'a>>,
 
@@ -113,8 +118,19 @@ impl<'a, T: Item> SparseIter<'a, T> {
         indices: SparseIndicesIter<'a>,
         values: ItemIter<'a, T>,
     ) -> Self {
-        SparseIter {
+        Self::with_base_count(base, 0, indices, values)
+    }
+
+    /// Supplemental constructor.
+    pub fn with_base_count(
+        base: Option<ItemIter<'a, T>>,
+        base_count: usize,
+        indices: SparseIndicesIter<'a>,
+        values: ItemIter<'a, T>,
+    ) -> Self {
+        Self {
             base,
+            base_count,
             indices: indices.peekable(),
             values,
             counter: 0,
@@ -125,11 +141,17 @@ impl<'a, T: Item> SparseIter<'a, T> {
 impl<'a, T: Item> Iterator for SparseIter<'a, T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
-        let mut next_value = self
-            .base
-            .as_mut()
-            .map(|iter| iter.next())
-            .unwrap_or_else(|| Some(T::zero()))?;
+        let mut next_value = if let Some(base) = self.base.as_mut() {
+            // If accessor.bufferView is set we let base decide when we have reached the end
+            // of the iteration sequence.
+            base.next()?
+        } else if (self.counter as usize) < self.base_count {
+            // Else, we continue iterating until we have generated the number of items
+            // specified by accessor.count
+            T::zero()
+        } else {
+            return None;
+        };
 
         let next_sparse_index = self.indices.peek();
         if let Some(index) = next_sparse_index {
@@ -145,7 +167,7 @@ impl<'a, T: Item> Iterator for SparseIter<'a, T> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let hint = self.values.len() - self.counter as usize;
+        let hint = self.base_count - (self.counter as usize).min(self.base_count);
         (hint, Some(hint))
     }
 }
@@ -300,17 +322,18 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                 } else {
                     None
                 };
+                let base_count = accessor.count();
 
                 let indices = sparse.indices();
                 let values = sparse.values();
-                let sparse_count = sparse.count() as usize;
+                let sparse_count = sparse.count();
 
                 let index_iter = {
                     let view = indices.view();
                     let index_size = indices.index_type().size();
                     let stride = view.stride().unwrap_or(index_size);
 
-                    let start = indices.offset() as usize;
+                    let start = indices.offset();
                     let end = start + stride * (sparse_count - 1) + index_size;
                     let subslice = buffer_view_slice(view, &get_buffer_data)
                         .and_then(|slice| slice.get(start..end))?;
@@ -332,7 +355,7 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                     let view = values.view();
                     let stride = view.stride().unwrap_or(mem::size_of::<T>());
 
-                    let start = values.offset() as usize;
+                    let start = values.offset();
                     let end = start + stride * (sparse_count - 1) + mem::size_of::<T>();
                     let subslice = buffer_view_slice(view, &get_buffer_data)
                         .and_then(|slice| slice.get(start..end))?;
@@ -340,8 +363,8 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                     ItemIter::new(subslice, stride)
                 };
 
-                Some(Iter::Sparse(SparseIter::new(
-                    base_iter, index_iter, value_iter,
+                Some(Iter::Sparse(SparseIter::with_base_count(
+                    base_iter, base_count, index_iter, value_iter,
                 )))
             }
             None => {

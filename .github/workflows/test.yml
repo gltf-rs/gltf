@@ -14,15 +14,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Checkout glTF Sample Models
+      - name: Checkout glTF Sample Assets
         uses: actions/checkout@v2
         with:
-          repository: KhronosGroup/glTF-Sample-Models
-          path: glTF-Sample-Models
+          repository: KhronosGroup/glTF-Sample-Assets
+          path: glTF-Sample-Assets
 
-      - name: Tests
+      - name: Tests (minimal features)
+        run: cargo test --all --release --features allow_empty_texture
+
+      - name: Tests (all features)
         run: cargo test --all --all-features --release
+
       - name: Formatting
         run: cargo fmt --all -- --check
+
       - name: Clippy
         run: cargo clippy --all-features
+
+      - name: Semantic versioning checks
+        uses: obi1kenobi/cargo-semver-checks-action@v2

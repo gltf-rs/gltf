@@ -4,9 +4,49 @@ Notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-The `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+The top-level `gltf` crate adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). Historically, semantic versioning has not applied to `gltf-json`. This is planned to change from version 2—see issue #409.
 
 ## Unreleased
+
+## [1.4.1] - 2024-05-09
+
+### Added
+
+- New functions `animation::Channel::index` and `animation::Sampler::index`.
+- New feature flag `allow_empty_texture` to avoid required extension checks.
+
+### Fixed
+
+- Fix `attempt to to subtract with overflow`-panic in `size_hint()` of sparse accessor when collecting items.
+- Fix incorrect values returned from `size_hint()` in sparse accessor.
+- Add support to read items from sparse accessor without base buffer view.
+
+### Changed
+
+- Update `image` to `0.25.0`.
+- Validation will now fail if a glTF document requires extensions that are not supported by the crate.
+
+### Removed
+
+- Feature `image_jpeg_rayon` no longer needed, as `image 0.25.0` now uses `zune-jpeg` for jpeg decoding.
+
+## [1.4.0] - 2023-12-17
+
+### Added
+
+- New API for reading arbitary extension data.
+- Interval improvements to prevent panics on 32 bit systems when loading large glTF files.
+
+### Changed
+
+- Offsets and sizes in the `gltf-json` crate have been widened to 64 bits.
+- Loading glTF on a 32 bit system containing offsets or sizes larger than `u32` will
+  result in a validation error.
+
+### Fixed
+
+- `Gltf::from_reader` no longer winds the reader back to offset zero.
+- Broken link in `Material::unlit` documentation.
 
 ## [1.3.0] - 2023-08-21
 

@@ -27,6 +27,12 @@ pub enum Error {
 
     /// Some required data has been omitted.
     Missing,
+
+    /// A memory size or offset exceeds the system limits.
+    Oversize,
+
+    /// One of more required extensions is not supported by this crate version.
+    Unsupported,
 }
 
 /// Specifies a type that has been pre-validated during deserialization or otherwise.
@@ -103,7 +109,58 @@ impl<T> Validate for Checked<T> {
     }
 }
 
+/// Validates the suitability of 64-bit byte offsets/sizes on 32-bit systems.
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Default,
+    Eq,
+    Hash,
+    PartialEq,
+    serde_derive::Deserialize,
+    serde_derive::Serialize,
+)]
+pub struct USize64(pub u64);
+
+impl From<u64> for USize64 {
+    fn from(value: u64) -> Self {
+        Self(value)
+    }
+}
+
+impl From<usize> for USize64 {
+    fn from(value: usize) -> Self {
+        Self(value as u64)
+    }
+}
+
+impl Validate for USize64 {
+    fn validate<P, R>(&self, _root: &Root, path: P, report: &mut R)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
+    {
+        if usize::try_from(self.0).is_err() {
+            report(&path, Error::Oversize);
+        }
+    }
+}
+
 impl<K: ToString + Validate, V: Validate> Validate for BTreeMap<K, V> {
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
+    {
+        for (key, value) in self.iter() {
+            key.validate(root, || path().key(&key.to_string()), report);
+            value.validate(root, || path().key(&key.to_string()), report);
+        }
+    }
+}
+
+impl Validate for serde_json::Map<String, serde_json::Value> {
     fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
     where
         P: Fn() -> Path,
@@ -161,6 +218,8 @@ impl std::fmt::Display for Error {
                 Error::IndexOutOfBounds => "Index out of bounds",
                 Error::Invalid => "Invalid value",
                 Error::Missing => "Missing data",
+                Error::Oversize => "Size exceeds system limits",
+                Error::Unsupported => "Unsupported extension",
             }
         )
     }

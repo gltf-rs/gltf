@@ -13,17 +13,51 @@ use crate::{
 };
 use validation::Validate;
 
+// TODO: As a breaking change, simplify by replacing uses of `Get<T>` with `AsRef<[T]>`.
+
 /// Helper trait for retrieving top-level objects by a universal identifier.
 pub trait Get<T> {
     /// Retrieves a single value at the given index.
     fn get(&self, id: Index<T>) -> Option<&T>;
 }
 
-/// Represents an offset into an array of type `T` owned by the root glTF object.
+/// Represents an offset into a vector of type `T` owned by the root glTF object.
+///
+/// This type may be used with the following functions:
+///
+/// * [`Root::get()`] to retrieve objects from [`Root`].
+/// * [`Root::push()`] to add new objects to [`Root`].
 pub struct Index<T>(u32, marker::PhantomData<fn() -> T>);
+
+impl<T> Index<T> {
+    /// Given a vector of glTF objects, call [`Vec::push()`] to insert it into the vector,
+    /// then return an [`Index`] for it.
+    ///
+    /// This allows you to easily obtain [`Index`] values with the correct index and type when
+    /// creating a glTF asset. Note that for [`Root`], you can call [`Root::push()`] without
+    /// needing to retrieve the correct vector first.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the vector has [`u32::MAX`] or more elements, in which case an `Index` cannot be
+    /// created.
+    pub fn push(vec: &mut Vec<T>, value: T) -> Index<T> {
+        let len = vec.len();
+        let Ok(index): Result<u32, _> = len.try_into() else {
+            panic!(
+                "glTF vector of {ty} has {len} elements, which exceeds the Index limit",
+                ty = std::any::type_name::<T>(),
+            );
+        };
+
+        vec.push(value);
+        Index::new(index)
+    }
+}
 
 /// The root object of a glTF 2.0 asset.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[gltf(validate_hook = "root_validate_hook")]
 pub struct Root {
     /// An array of accessors.
     #[serde(default)]
@@ -118,6 +152,26 @@ pub struct Root {
     pub textures: Vec<Texture>,
 }
 
+fn root_validate_hook<P, R>(root: &Root, _also_root: &Root, path: P, report: &mut R)
+where
+    P: Fn() -> Path,
+    R: FnMut(&dyn Fn() -> Path, crate::validation::Error),
+{
+    for (i, ext) in root.extensions_required.iter().enumerate() {
+        if !crate::extensions::ENABLED_EXTENSIONS.contains(&ext.as_str()) {
+            report(
+                &|| {
+                    path()
+                        .field("extensionsRequired")
+                        .index(i)
+                        .value_str(ext.as_str())
+                },
+                crate::validation::Error::Unsupported,
+            );
+        }
+    }
+}
+
 impl Root {
     /// Returns a single item from the root object.
     pub fn get<T>(&self, index: Index<T>) -> Option<&T>
@@ -125,6 +179,26 @@ impl Root {
         Self: Get<T>,
     {
         (self as &dyn Get<T>).get(index)
+    }
+
+    /// Insert the given value into this (as via [`Vec::push()`]), then return the [`Index`] to it.
+    ///
+    /// This allows you to easily obtain [`Index`] values with the correct index and type when
+    /// creating a glTF asset.
+    ///
+    /// If you have a mutable borrow conflict when using this method, consider using the more
+    /// explicit [`Index::push()`] method, passing it only the necessary vector.
+    ///
+    /// # Panics
+    ///
+    /// Panics if there are already [`u32::MAX`] or more elements of this type,
+    /// in which case an `Index` cannot be created.
+    #[track_caller]
+    pub fn push<T>(&mut self, value: T) -> Index<T>
+    where
+        Self: AsMut<Vec<T>>,
+    {
+        Index::push(self.as_mut(), value)
     }
 
     /// Deserialize from a JSON string slice.
@@ -299,6 +373,16 @@ macro_rules! impl_get {
                 self.$field.get(index.value())
             }
         }
+        impl AsRef<[$ty]> for Root {
+            fn as_ref(&self) -> &[$ty] {
+                &self.$field
+            }
+        }
+        impl AsMut<Vec<$ty>> for Root {
+            fn as_mut(&mut self) -> &mut Vec<$ty> {
+                &mut self.$field
+            }
+        }
     };
 }
 
@@ -344,5 +428,75 @@ mod tests {
     where
         Index<Material>: Send + Sync,
     {
+    }
+
+    #[test]
+    fn index_push() {
+        let some_object = "hello";
+
+        let mut vec = Vec::new();
+        assert_eq!(Index::push(&mut vec, some_object), Index::new(0));
+        assert_eq!(Index::push(&mut vec, some_object), Index::new(1));
+    }
+
+    #[test]
+    fn root_push() {
+        let some_object = Buffer {
+            byte_length: validation::USize64(1),
+            #[cfg(feature = "names")]
+            name: None,
+            uri: None,
+            extensions: None,
+            extras: Default::default(),
+        };
+
+        let mut root = Root::default();
+        assert_eq!(root.push(some_object.clone()), Index::new(0));
+        assert_eq!(root.push(some_object), Index::new(1));
+    }
+
+    #[test]
+    fn root_extensions() {
+        use crate::validation::Error;
+        use crate::Path;
+
+        let mut root = super::Root {
+            extensions_required: vec!["KHR_lights_punctual".to_owned()],
+            ..Default::default()
+        };
+
+        let mut errors = Vec::new();
+        root.validate(&root, Path::new, &mut |path, error| {
+            errors.push((path(), error));
+        });
+
+        #[cfg(feature = "KHR_lights_punctual")]
+        {
+            assert!(errors.is_empty());
+        }
+
+        #[cfg(not(feature = "KHR_lights_punctual"))]
+        {
+            assert_eq!(1, errors.len());
+            let (path, error) = errors.get(0).unwrap();
+            assert_eq!(
+                path.as_str(),
+                "extensionsRequired[0] = \"KHR_lights_punctual\""
+            );
+            assert_eq!(*error, Error::Unsupported);
+        }
+
+        root.extensions_required = vec!["KHR_mesh_quantization".to_owned()];
+        errors.clear();
+        root.validate(&root, Path::new, &mut |path, error| {
+            errors.push((path(), error));
+        });
+        assert_eq!(1, errors.len());
+        let (path, error) = errors.get(0).unwrap();
+        assert_eq!(
+            path.as_str(),
+            "extensionsRequired[0] = \"KHR_mesh_quantization\""
+        );
+        assert_eq!(*error, Error::Unsupported);
     }
 }

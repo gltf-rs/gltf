@@ -3,6 +3,7 @@ use gltf_json as json;
 use std::{fs, mem};
 
 use json::validation::Checked::Valid;
+use json::validation::USize64;
 use std::borrow::Cow;
 use std::io::Write;
 
@@ -37,7 +38,7 @@ fn bounding_coords(points: &[Vertex]) -> ([f32; 3], [f32; 3]) {
     (min, max)
 }
 
-fn align_to_multiple_of_four(n: &mut u32) {
+fn align_to_multiple_of_four(n: &mut usize) {
     *n = (*n + 3) & !3;
 }
 
@@ -71,9 +72,11 @@ fn export(output: Output) {
 
     let (min, max) = bounding_coords(&triangle_vertices);
 
-    let buffer_length = (triangle_vertices.len() * mem::size_of::<Vertex>()) as u32;
-    let buffer = json::Buffer {
-        byte_length: buffer_length,
+    let mut root = gltf_json::Root::default();
+
+    let buffer_length = triangle_vertices.len() * mem::size_of::<Vertex>();
+    let buffer = root.push(json::Buffer {
+        byte_length: USize64::from(buffer_length),
         extensions: Default::default(),
         extras: Default::default(),
         name: None,
@@ -82,21 +85,21 @@ fn export(output: Output) {
         } else {
             None
         },
-    };
-    let buffer_view = json::buffer::View {
-        buffer: json::Index::new(0),
-        byte_length: buffer.byte_length,
+    });
+    let buffer_view = root.push(json::buffer::View {
+        buffer,
+        byte_length: USize64::from(buffer_length),
         byte_offset: None,
-        byte_stride: Some(mem::size_of::<Vertex>() as u32),
+        byte_stride: Some(json::buffer::Stride(mem::size_of::<Vertex>())),
         extensions: Default::default(),
         extras: Default::default(),
         name: None,
         target: Some(Valid(json::buffer::Target::ArrayBuffer)),
-    };
-    let positions = json::Accessor {
-        buffer_view: Some(json::Index::new(0)),
-        byte_offset: Some(0),
-        count: triangle_vertices.len() as u32,
+    });
+    let positions = root.push(json::Accessor {
+        buffer_view: Some(buffer_view),
+        byte_offset: Some(USize64(0)),
+        count: USize64::from(triangle_vertices.len()),
         component_type: Valid(json::accessor::GenericComponentType(
             json::accessor::ComponentType::F32,
         )),
@@ -108,11 +111,11 @@ fn export(output: Output) {
         name: None,
         normalized: false,
         sparse: None,
-    };
-    let colors = json::Accessor {
-        buffer_view: Some(json::Index::new(0)),
-        byte_offset: Some((3 * mem::size_of::<f32>()) as u32),
-        count: triangle_vertices.len() as u32,
+    });
+    let colors = root.push(json::Accessor {
+        buffer_view: Some(buffer_view),
+        byte_offset: Some(USize64::from(3 * mem::size_of::<f32>())),
+        count: USize64::from(triangle_vertices.len()),
         component_type: Valid(json::accessor::GenericComponentType(
             json::accessor::ComponentType::F32,
         )),
@@ -124,13 +127,13 @@ fn export(output: Output) {
         name: None,
         normalized: false,
         sparse: None,
-    };
+    });
 
     let primitive = json::mesh::Primitive {
         attributes: {
             let mut map = std::collections::BTreeMap::new();
-            map.insert(Valid(json::mesh::Semantic::Positions), json::Index::new(0));
-            map.insert(Valid(json::mesh::Semantic::Colors(0)), json::Index::new(1));
+            map.insert(Valid(json::mesh::Semantic::Positions), positions);
+            map.insert(Valid(json::mesh::Semantic::Colors(0)), colors);
             map
         },
         extensions: Default::default(),
@@ -141,43 +144,25 @@ fn export(output: Output) {
         targets: None,
     };
 
-    let mesh = json::Mesh {
+    let mesh = root.push(json::Mesh {
         extensions: Default::default(),
         extras: Default::default(),
         name: None,
         primitives: vec![primitive],
         weights: None,
-    };
+    });
 
-    let node = json::Node {
-        camera: None,
-        children: None,
+    let node = root.push(json::Node {
+        mesh: Some(mesh),
+        ..Default::default()
+    });
+
+    root.push(json::Scene {
         extensions: Default::default(),
         extras: Default::default(),
-        matrix: None,
-        mesh: Some(json::Index::new(0)),
         name: None,
-        rotation: None,
-        scale: None,
-        translation: None,
-        skin: None,
-        weights: None,
-    };
-
-    let root = json::Root {
-        accessors: vec![positions, colors],
-        buffers: vec![buffer],
-        buffer_views: vec![buffer_view],
-        meshes: vec![mesh],
         nodes: vec![node],
-        scenes: vec![json::Scene {
-            extensions: Default::default(),
-            extras: Default::default(),
-            name: None,
-            nodes: vec![json::Index::new(0)],
-        }],
-        ..Default::default()
-    };
+    });
 
     match output {
         Output::Standard => {
@@ -192,13 +177,16 @@ fn export(output: Output) {
         }
         Output::Binary => {
             let json_string = json::serialize::to_string(&root).expect("Serialization error");
-            let mut json_offset = json_string.len() as u32;
+            let mut json_offset = json_string.len();
             align_to_multiple_of_four(&mut json_offset);
             let glb = gltf::binary::Glb {
                 header: gltf::binary::Header {
                     magic: *b"glTF",
                     version: 2,
-                    length: json_offset + buffer_length,
+                    // N.B., the size of binary glTF file is limited to range of `u32`.
+                    length: (json_offset + buffer_length)
+                        .try_into()
+                        .expect("file size exceeds binary glTF limit"),
                 },
                 bin: Some(Cow::Owned(to_padded_byte_vector(triangle_vertices))),
                 json: Cow::Owned(json_string.into_bytes()),

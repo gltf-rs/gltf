@@ -4,7 +4,12 @@ use gltf_derive::Validate;
 use serde_derive::{Deserialize, Serialize};
 
 /// All valid MIME types.
-pub const VALID_MIME_TYPES: &[&str] = &["image/jpeg", "image/png"];
+pub const VALID_MIME_TYPES: &[&str] = &[
+    "image/jpeg",
+    "image/png",
+    #[cfg(feature = "EXT_texture_webp")]
+    "image/webp",
+];
 
 /// Image data used to create a texture.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]

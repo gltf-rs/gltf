@@ -4,6 +4,8 @@ use std::borrow::Cow;
 use std::{fs, io};
 
 use crate::{Document, Error, Gltf, Result};
+#[cfg(feature = "EXT_texture_webp")]
+use image_crate::ImageFormat::WebP;
 use image_crate::ImageFormat::{Jpeg, Png};
 use std::path::Path;
 
@@ -148,6 +150,8 @@ impl image::Data {
         let guess_format = |encoded_image: &[u8]| match image_crate::guess_format(encoded_image) {
             Ok(image_crate::ImageFormat::Png) => Some(Png),
             Ok(image_crate::ImageFormat::Jpeg) => Some(Jpeg),
+            #[cfg(feature = "EXT_texture_webp")]
+            Ok(image_crate::ImageFormat::WebP) => Some(WebP),
             _ => None,
         };
         #[cfg(not(feature = "guess_mime_type"))]
@@ -159,6 +163,8 @@ impl image::Data {
                     let encoded_format = match annoying_case {
                         "image/png" => Png,
                         "image/jpeg" => Jpeg,
+                        #[cfg(feature = "EXT_texture_webp")]
+                        "image/webp" => WebP,
                         _ => match guess_format(&encoded_image) {
                             Some(format) => format,
                             None => return Err(Error::UnsupportedImageEncoding),
@@ -173,6 +179,8 @@ impl image::Data {
                     let encoded_format = match mime_type {
                         Some("image/png") => Png,
                         Some("image/jpeg") => Jpeg,
+                        #[cfg(feature = "EXT_texture_webp")]
+                        Some("image/webp") => WebP,
                         Some(_) => match guess_format(&encoded_image) {
                             Some(format) => format,
                             None => return Err(Error::UnsupportedImageEncoding),
@@ -180,6 +188,8 @@ impl image::Data {
                         None => match uri.rsplit('.').next() {
                             Some("png") => Png,
                             Some("jpg") | Some("jpeg") => Jpeg,
+                            #[cfg(feature = "EXT_texture_webp")]
+                            Some("webp") => WebP,
                             _ => match guess_format(&encoded_image) {
                                 Some(format) => format,
                                 None => return Err(Error::UnsupportedImageEncoding),
@@ -197,6 +207,8 @@ impl image::Data {
                 let encoded_format = match mime_type {
                     "image/png" => Png,
                     "image/jpeg" => Jpeg,
+                    #[cfg(feature = "EXT_texture_webp")]
+                    "image/webp" => WebP,
                     _ => match guess_format(encoded_image) {
                         Some(format) => format,
                         None => return Err(Error::UnsupportedImageEncoding),
