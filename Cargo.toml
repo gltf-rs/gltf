@@ -38,6 +38,7 @@ version = "0.25"
 
 [features]
 default = ["import", "utils", "names"]
+allow_empty_animation_target_node = ["gltf-json/allow_empty_animation_target_node"]
 allow_empty_texture = ["gltf-json/allow_empty_texture"]
 extensions = ["gltf-json/extensions"]
 extras = ["gltf-json/extras"]

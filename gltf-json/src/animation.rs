@@ -104,8 +104,32 @@ pub struct Channel {
     pub extras: Extras,
 }
 
-/// The index of the node and TRS property that an animation channel targets.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+fn node_default() -> Index<scene::Node> {
+    Index::new(u32::MAX)
+}
+
+fn node_is_empty(node: &Index<scene::Node>) -> bool {
+    node.value() == u32::MAX as usize
+}
+
+fn node_validate<P, R>(node: &Index<scene::Node>, root: &Root, path: P, report: &mut R)
+where
+    P: Fn() -> Path,
+    R: FnMut(&dyn Fn() -> Path, Error),
+{
+    if cfg!(feature = "allow_empty_animation_target_node") {
+        if !node_is_empty(node) {
+            node.validate(root, path, report);
+        }
+    } else if node_is_empty(node) {
+        report(&path, Error::Missing);
+    } else {
+        node.validate(root, &path, report);
+    }
+}
+
+/// Selects the target of an animation channel.
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Target {
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -118,11 +142,25 @@ pub struct Target {
     pub extras: Extras,
 
     /// The index of the node to target.
+    #[serde(default = "node_default", skip_serializing_if = "node_is_empty")]
     pub node: Index<scene::Node>,
 
     /// The name of the node's property to modify or the 'weights' of the
     /// morph targets it instantiates.
     pub path: Checked<Property>,
+}
+
+impl Validate for Target {
+    fn validate<P, R>(&self, root: &Root, path: P, report: &mut R)
+    where
+        P: Fn() -> Path,
+        R: FnMut(&dyn Fn() -> Path, Error),
+    {
+        self.extensions
+            .validate(root, || path().field("extensions"), report);
+        node_validate(&self.node, root, || path().field("node"), report);
+        self.path.validate(root, || path().field("path"), report);
+    }
 }
 
 /// Defines a keyframe graph but not its target.
