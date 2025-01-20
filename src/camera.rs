@@ -1,5 +1,5 @@
 use crate::validation::{Error, Validate};
-use crate::{Extras, Path, Root, UnrecognizedExtensions};
+use crate::{Extras, Path, Root, Stub, UnrecognizedExtensions};
 
 /// Projection matrix parameters.
 #[derive(Clone, Debug, serde_derive::Deserialize, serde_derive::Serialize, gltf_derive::Wrap)]
@@ -17,6 +17,14 @@ pub enum Projection {
     },
 }
 
+impl Stub for Projection {
+    fn stub() -> Self {
+        Self::Perspective {
+            perspective: Stub::stub(),
+        }
+    }
+}
+
 /// A viewpoint in the scene.
 ///
 /// A node can reference a camera to apply a transform to place the camera in the
@@ -26,6 +34,7 @@ pub enum Projection {
     Debug,
     gltf_derive::Deserialize,
     gltf_derive::Serialize,
+    gltf_derive::Stub,
     gltf_derive::Validate,
     gltf_derive::Wrap,
 )]
@@ -51,6 +60,7 @@ pub struct Camera {
     Debug,
     gltf_derive::Deserialize,
     gltf_derive::Serialize,
+    gltf_derive::Stub,
     gltf_derive::Validate,
     gltf_derive::Wrap,
 )]
@@ -80,6 +90,7 @@ pub struct Orthographic {
     Debug,
     gltf_derive::Deserialize,
     gltf_derive::Serialize,
+    gltf_derive::Stub,
     gltf_derive::Validate,
     gltf_derive::Wrap,
 )]

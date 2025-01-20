@@ -163,7 +163,14 @@ pub struct Sampler {
 }
 
 /// A texture and its sampler.
-#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Stub,
+    gltf_derive::Validate,
+)]
 pub struct Texture {
     /// Optional user-defined name for this object.
     pub name: Option<String>,
@@ -181,7 +188,14 @@ pub struct Texture {
     pub extras: Option<Extras>,
 }
 
-#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Stub,
+    gltf_derive::Validate,
+)]
 /// Reference to a `Texture`.
 pub struct Info {
     /// The index of the texture.

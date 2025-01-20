@@ -1,5 +1,5 @@
 use crate::validation::{Error, USize64, Validate};
-use crate::{Extras, Index, Path, Root, UnrecognizedExtensions};
+use crate::{Extras, Index, Path, Root, Stub, UnrecognizedExtensions};
 
 /// The minimum byte stride.
 pub const MIN_BYTE_STRIDE: usize = 4;
@@ -19,10 +19,24 @@ pub enum Target {
     /// Corresponds to `GL_ELEMENT_ARRAY_BUFFER`.
     ElementArrayBuffer = 34_963,
 }
+
 impl Validate for Target {}
 
+impl Stub for Target {
+    fn stub() -> Self {
+        Self::ArrayBuffer
+    }
+}
+
 /// A buffer points to binary data representing geometry, animations, or skins.
-#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Stub,
+    gltf_derive::Validate,
+)]
 pub struct Buffer {
     /// The length of the buffer in bytes.
     #[serde(rename = "byteLength")]
@@ -46,7 +60,14 @@ pub struct Buffer {
 ///
 /// <https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#reference-bufferview>
 ///
-#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Stub,
+    gltf_derive::Validate,
+)]
 pub struct View {
     /// The parent `Buffer`.
     pub buffer: Index<Buffer>,

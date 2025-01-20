@@ -5,7 +5,14 @@ use crate::{buffer, Extras, Index, UnrecognizedExtensions};
 pub const VALID_MIME_TYPES: &[&str] = &["image/jpeg", "image/png"];
 
 /// Image data used to create a texture.
-#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Stub,
+    gltf_derive::Validate,
+)]
 pub struct Image {
     /// The index of the buffer view that contains the image. Use this instead of
     /// the image's uri property.

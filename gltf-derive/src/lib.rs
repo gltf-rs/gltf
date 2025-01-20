@@ -163,6 +163,76 @@ fn impl_default_for_struct(ident: &syn::Ident, data: &syn::DataStruct) -> TokenS
     }
 }
 
+/// Implements the `Stub` trait.
+///
+/// # Basic usage
+///
+/// Declaration
+///
+/// ```rust
+/// #[derive(gltf_derive::Stub)]
+/// struct Example {
+///     pub foo: i32,
+///     pub bar: Option<i32>,
+/// }
+///
+/// let example: Example = Stub::stub();
+/// assert_eq!(example.foo, 0);
+/// assert_eq!(example.bar, None);
+/// ```
+#[proc_macro_derive(Stub, attributes(gltf))]
+pub fn derive_stub(input: TokenStream) -> TokenStream {
+    expand_stub(&syn::parse_macro_input!(input as DeriveInput)).into()
+}
+
+fn expand_stub(ast: &DeriveInput) -> TokenStream2 {
+    let ident = &ast.ident;
+    match ast.data {
+        syn::Data::Struct(ref data) => impl_stub_for_struct(ident, data),
+        _ => panic!("#[derive(Stub)] only works on `struct` declarations"),
+    }
+}
+
+fn impl_stub_for_struct(ident: &syn::Ident, data: &syn::DataStruct) -> TokenStream2 {
+    let mut per_field_idents = Vec::new();
+    let mut per_field_stubs = Vec::new();
+    for field in &data.fields {
+        let mut default = None;
+        for attr in &field.attrs {
+            if attr.path().is_ident("gltf") {
+                let parsed_attribute = attr
+                    .parse_args::<FieldAttribute>()
+                    .expect("failed to parse attribute");
+                if let FieldAttribute::Default(Some(expr)) = parsed_attribute {
+                    default = Some(quote! { #expr });
+                } else {
+                    default = Some(quote! { Default::default() });
+                }
+            }
+        }
+
+        per_field_idents.push(&field.ident);
+        if let Some(expr) = default {
+            per_field_stubs.push(quote! { #expr });
+        } else {
+            let type_ = &field.ty;
+            per_field_stubs.push(quote! { <#type_>::stub() });
+        }
+    }
+
+    quote! {
+        impl crate::Stub for #ident {
+            fn stub() -> Self {
+                Self {
+                    #(
+                        #per_field_idents: #per_field_stubs,
+                    )*
+                }
+            }
+        }
+    }
+}
+
 /// Implements the `Wrap` trait for a data structure and provides an associated reader type.
 ///
 /// # Basic usage

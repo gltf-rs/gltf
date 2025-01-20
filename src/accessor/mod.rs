@@ -65,7 +65,7 @@ pub mod util;
 #[doc(inline)]
 pub use self::util::{Item, Iter};
 use crate::validation::{Error, USize64, Validate};
-use crate::{buffer, Extras, Index, Path, Root, UnrecognizedExtensions};
+use crate::{buffer, Extras, Index, Path, Root, Stub, UnrecognizedExtensions};
 use serde_json::Value;
 
 /// The component data type.
@@ -87,6 +87,7 @@ pub enum ComponentType {
     /// Corresponds to `GL_FLOAT`.
     F32 = 5126,
 }
+
 impl Validate for ComponentType {}
 
 impl From<sparse::IndexType> for ComponentType {
@@ -96,6 +97,12 @@ impl From<sparse::IndexType> for ComponentType {
             sparse::IndexType::U16 => ComponentType::U16,
             sparse::IndexType::U32 => ComponentType::U32,
         }
+    }
+}
+
+impl Stub for ComponentType {
+    fn stub() -> Self {
+        Self::I8
     }
 }
 
@@ -124,12 +131,19 @@ pub enum AttributeType {
     #[serde(rename = "MAT4")]
     Mat4,
 }
+
 impl Validate for AttributeType {}
+
+impl Stub for AttributeType {
+    fn stub() -> Self {
+        Self::Scalar
+    }
+}
 
 /// Contains data structures for sparse storage.
 pub mod sparse {
     use crate::validation::{USize64, Validate};
-    use crate::{buffer, Extras, Index, UnrecognizedExtensions};
+    use crate::{buffer, Extras, Index, Stub, UnrecognizedExtensions};
 
     /// Data type specific to sparse indices.
     #[derive(
@@ -144,7 +158,14 @@ pub mod sparse {
         /// Corresponds to `GL_UNSIGNED_INT`.
         U32 = super::ComponentType::U32 as u32,
     }
+
     impl Validate for IndexType {}
+
+    impl Stub for IndexType {
+        fn stub() -> Self {
+            Self::U8
+        }
+    }
 
     impl IndexType {
         /// Returns the number of bytes this value represents.
@@ -160,7 +181,12 @@ pub mod sparse {
 
     /// Indices of those attributes that deviate from their initialization value.
     #[derive(
-        Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate,
+        Clone,
+        Debug,
+        gltf_derive::Deserialize,
+        gltf_derive::Serialize,
+        gltf_derive::Stub,
+        gltf_derive::Validate,
     )]
     pub struct Indices {
         /// The parent buffer view containing the sparse indices.
@@ -186,7 +212,12 @@ pub mod sparse {
 
     /// Sparse storage of attributes that deviate from their initialization value.
     #[derive(
-        Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate,
+        Clone,
+        Debug,
+        gltf_derive::Deserialize,
+        gltf_derive::Serialize,
+        gltf_derive::Stub,
+        gltf_derive::Validate,
     )]
     pub struct Sparse {
         /// The number of attributes encoded in this sparse accessor.
@@ -215,7 +246,12 @@ pub mod sparse {
     /// Array of size `count * number_of_components` storing the displaced
     /// accessor attributes pointed by `accessor::sparse::Indices`.
     #[derive(
-        Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate,
+        Clone,
+        Debug,
+        gltf_derive::Deserialize,
+        gltf_derive::Serialize,
+        gltf_derive::Stub,
+        gltf_derive::Validate,
     )]
     pub struct Values {
         /// The parent buffer view containing the sparse indices.
@@ -237,7 +273,14 @@ pub mod sparse {
 }
 
 /// A typed view into a buffer view.
-#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Stub,
+    gltf_derive::Validate,
+)]
 #[gltf(validate = "validate_accessor")]
 pub struct Accessor {
     /// Specifies if the attribute is a scalar, vector, or matrix.

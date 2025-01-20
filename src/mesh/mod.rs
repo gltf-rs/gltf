@@ -15,7 +15,12 @@ pub mod khr_materials_variants {
 
     /// Identifies all material variants applicable to a particular primitive.
     #[derive(
-        Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate,
+        Clone,
+        Debug,
+        gltf_derive::Deserialize,
+        gltf_derive::Serialize,
+        gltf_derive::Stub,
+        gltf_derive::Validate,
     )]
     pub struct Variants {
         /// Applicable material variant mappings.
@@ -30,7 +35,12 @@ pub mod khr_materials_variants {
 
     /// Identifies a single material variant applicable to a particular primitive.
     #[derive(
-        Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate,
+        Clone,
+        Debug,
+        gltf_derive::Deserialize,
+        gltf_derive::Serialize,
+        gltf_derive::Stub,
+        gltf_derive::Validate,
     )]
     pub struct Mapping {
         /// Base material index.
@@ -109,7 +119,14 @@ impl Mode {
 ///
 /// A node can contain one or more meshes and its transform places the meshes in
 /// the scene.
-#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Stub,
+    gltf_derive::Validate,
+)]
 pub struct Mesh {
     /// Optional user-defined name for this object.
     pub name: Option<String>,
@@ -128,7 +145,14 @@ pub struct Mesh {
 }
 
 /// Geometry to be rendered with the given material.
-#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Stub,
+    gltf_derive::Validate,
+)]
 #[gltf(validate = "validate_primitive")]
 pub struct Primitive {
     /// Maps attribute semantic names to the `Accessor`s containing the
@@ -397,7 +421,14 @@ where
 }
 
 /// A dictionary mapping attributes to their deviations in the Morph Target.
-#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Stub,
+    gltf_derive::Validate,
+)]
 pub struct MorphTarget {
     /// XYZ vertex position displacements of type `[f32; 3]`.
     #[serde(rename = "POSITION")]

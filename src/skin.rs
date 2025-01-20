@@ -1,7 +1,14 @@
 use crate::{accessor, scene, Extras, Index, UnrecognizedExtensions};
 
 /// Joints and matrices defining a skin.
-#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Stub,
+    gltf_derive::Validate,
+)]
 pub struct Skin {
     /// The index of the accessor containing the 4x4 inverse-bind matrices.
     ///

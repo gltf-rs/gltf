@@ -1,4 +1,5 @@
 use gltf::validation::USize64;
+use gltf::Stub;
 use std::borrow::Cow;
 use std::io::Write;
 use std::{fs, mem};
@@ -73,24 +74,20 @@ fn export(output: Output) {
     let buffer_length = triangle_vertices.len() * mem::size_of::<Vertex>();
     let buffer = root.push(gltf::Buffer {
         length: USize64::from(buffer_length),
-        name: None,
         uri: if output == Output::Standard {
             Some("buffer0.bin".into())
         } else {
             None
         },
-        extras: Default::default(),
-        unrecognized_extensions: Default::default(),
+        ..Stub::stub()
     });
     let buffer_view = root.push(gltf::buffer::View {
         buffer,
         length: USize64::from(buffer_length),
         offset: USize64(0),
         stride: Some(mem::size_of::<Vertex>()),
-        name: None,
         target: Some(gltf::buffer::Target::ArrayBuffer),
-        extras: Default::default(),
-        unrecognized_extensions: Default::default(),
+        ..Stub::stub()
     });
     let positions = root.push(gltf::Accessor {
         buffer_view: Some(buffer_view),
@@ -100,11 +97,8 @@ fn export(output: Output) {
         attribute_type: gltf::accessor::AttributeType::Vec3,
         min: Some(gltf::Value::from(Vec::from(min))),
         max: Some(gltf::Value::from(Vec::from(max))),
-        name: None,
         normalized: false,
-        sparse: None,
-        extras: Default::default(),
-        unrecognized_extensions: Default::default(),
+        ..Stub::stub()
     });
     let colors = root.push(gltf::Accessor {
         buffer_view: Some(buffer_view),
@@ -112,13 +106,8 @@ fn export(output: Output) {
         count: USize64::from(triangle_vertices.len()),
         component_type: gltf::accessor::ComponentType::F32,
         attribute_type: gltf::accessor::AttributeType::Vec3,
-        min: None,
-        max: None,
-        name: None,
         normalized: false,
-        sparse: None,
-        extras: Default::default(),
-        unrecognized_extensions: Default::default(),
+        ..Stub::stub()
     });
 
     let primitive = gltf::mesh::Primitive {
@@ -130,18 +119,12 @@ fn export(output: Output) {
         indices: None,
         material: None,
         mode: gltf::mesh::Mode::Triangles,
-        targets: Vec::new(),
-        variants: None,
-        extras: Default::default(),
-        unrecognized_extensions: Default::default(),
+        ..Stub::stub()
     };
 
     let mesh = root.push(gltf::Mesh {
-        name: None,
         primitives: vec![primitive],
-        weights: Vec::new(),
-        extras: Default::default(),
-        unrecognized_extensions: Default::default(),
+        ..Stub::stub()
     });
 
     let node = root.push(gltf::Node {
@@ -150,10 +133,8 @@ fn export(output: Output) {
     });
 
     root.push(gltf::Scene {
-        name: None,
         nodes: vec![node],
-        extras: Default::default(),
-        unrecognized_extensions: Default::default(),
+        ..Stub::stub()
     });
 
     match output {

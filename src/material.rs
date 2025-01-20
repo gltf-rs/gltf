@@ -435,7 +435,14 @@ pub struct PbrMetallicRoughness {
 }
 
 /// Defines the normal texture of a material.
-#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Stub,
+    gltf_derive::Validate,
+)]
 pub struct NormalTexture {
     /// The index of the texture.
     pub index: Index<texture::Texture>,
@@ -458,7 +465,14 @@ pub struct NormalTexture {
 }
 
 /// Defines the occlusion texture of a material.
-#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Stub,
+    gltf_derive::Validate,
+)]
 pub struct OcclusionTexture {
     /// The index of the texture.
     pub index: Index<texture::Texture>,

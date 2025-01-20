@@ -108,6 +108,26 @@ pub type UnrecognizedExtensions = serde_json::Map<String, serde_json::Value>;
 /// Data type of the `extras` attribute on all glTF objects.
 pub type Extras = std::boxed::Box<serde_json::value::RawValue>;
 
+/// Provides a type with a well-defined but not necessarily valid default value.
+///
+/// If a type implements `Default` then its stub value will simply be its default value.
+pub trait Stub {
+    /// Stub value for this type.
+    fn stub() -> Self;
+}
+
+impl<T: Default> Stub for T {
+    fn stub() -> Self {
+        T::default()
+    }
+}
+
+impl<T> Stub for Index<T> {
+    fn stub() -> Self {
+        Index::new(u32::MAX)
+    }
+}
+
 macro_rules! trivial_impl_wrap {
     ($($ty:ty),*) => {
         $(

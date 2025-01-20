@@ -7,7 +7,12 @@ pub mod khr_lights_punctual {
 
     /// Introduces a light source to a scene node.
     #[derive(
-        Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate,
+        Clone,
+        Debug,
+        gltf_derive::Deserialize,
+        gltf_derive::Serialize,
+        gltf_derive::Stub,
+        gltf_derive::Validate,
     )]
     pub struct LightInstance {
         /// The index of the light referenced by this node.
@@ -58,8 +63,14 @@ pub mod khr_lights_punctual {
 
     impl Validate for Type {}
 
+    impl crate::Stub for Type {
+        fn stub() -> Self {
+            Self::Directional
+        }
+    }
+
     /// A directional, point, or spot light placeable within a scene.
-    #[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize)]
+    #[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Stub)]
     pub struct Light {
         /// Color of the light source.
         #[gltf(default = [1.0, 1.0, 1.0])]
@@ -190,7 +201,14 @@ pub struct Node {
 }
 
 /// The root `Node`s of a scene.
-#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Stub,
+    gltf_derive::Validate,
+)]
 pub struct Scene {
     /// Optional user-defined name for this object.
     pub name: Option<String>,

@@ -37,7 +37,12 @@ pub mod khr_lights_punctual {
 pub mod khr_materials_variants {
     /// Defines an alternative material that may be applied to a mesh primitive.
     #[derive(
-        Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate,
+        Clone,
+        Debug,
+        gltf_derive::Deserialize,
+        gltf_derive::Serialize,
+        gltf_derive::Stub,
+        gltf_derive::Validate,
     )]
     pub struct Variant {
         /// The name of the material variant.

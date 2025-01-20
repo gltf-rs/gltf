@@ -1,5 +1,5 @@
 use crate::validation::{Error, Validate};
-use crate::{accessor, scene, Extras, Index, Path, Root, UnrecognizedExtensions};
+use crate::{accessor, scene, Extras, Index, Path, Root, Stub, UnrecognizedExtensions};
 
 /// Specifies an interpolation algorithm.
 #[derive(
@@ -52,10 +52,17 @@ pub enum Property {
     #[serde(rename = "weights")]
     MorphTargetWeights,
 }
+
 impl Validate for Property {}
 
+impl Stub for Property {
+    fn stub() -> Self {
+        Self::Translation
+    }
+}
+
 /// A keyframe animation.
-#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize)]
+#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Stub)]
 pub struct Animation {
     /// Unrecognized extension data.
     pub unrecognized_extensions: UnrecognizedExtensions,
@@ -78,7 +85,7 @@ pub struct Animation {
 }
 
 /// Targets an animation's sampler at a node's property.
-#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize)]
+#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Stub)]
 pub struct Channel {
     /// The index of a sampler in this animation used to compute the value for the
     /// target.
@@ -95,7 +102,14 @@ pub struct Channel {
 }
 
 /// The index of the node and TRS property that an animation channel targets.
-#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Validate,
+    gltf_derive::Stub,
+)]
 pub struct Target {
     /// Unrecognized extension data.
     pub unrecognized_extensions: UnrecognizedExtensions,
@@ -112,7 +126,14 @@ pub struct Target {
 }
 
 /// Defines a keyframe graph but not its target.
-#[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Validate)]
+#[derive(
+    Clone,
+    Debug,
+    gltf_derive::Deserialize,
+    gltf_derive::Serialize,
+    gltf_derive::Stub,
+    gltf_derive::Validate,
+)]
 pub struct Sampler {
     /// Unrecognized extension data.
     pub unrecognized_extensions: UnrecognizedExtensions,
