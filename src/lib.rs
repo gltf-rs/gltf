@@ -398,10 +398,11 @@ impl From<Vec<(Path, validation::Error)>> for Error {
 pub const SUPPORTED_EXTENSIONS: &[&str] = &[
     "KHR_animation_pointer",
     "KHR_lights_punctual",
+    "KHR_materials_emissive_strength",
+    "KHR_materials_ior",
     "KHR_materials_pbrSpecularGlossiness",
     "KHR_materials_unlit",
-    "KHR_texture_transform",
     "KHR_materials_transmission",
-    "KHR_materials_ior",
-    "KHR_materials_emissive_strength",
+    "KHR_texture_basisu",
+    "KHR_texture_transform",
 ];

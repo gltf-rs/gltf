@@ -1,6 +1,29 @@
 use crate::validation::Validate;
 use crate::{image, Extras, Index, UnrecognizedExtensions};
 
+/// Support for the `KHR_texture_basisu` extension.
+pub mod khr_texture_basisu {
+    /// Specifies a texture that uses a KTX v2 image with basis universal compression.
+    #[derive(
+        Clone,
+        Debug,
+        gltf_derive::Deserialize,
+        gltf_derive::Serialize,
+        gltf_derive::Stub,
+        gltf_derive::Validate,
+    )]
+    pub struct Basisu {
+        /// The index of the KTX v2 image with basis universal compression.
+        pub source: crate::Index<crate::image::Image>,
+
+        /// Unrecognized extension data.
+        pub unrecognized_extensions: crate::UnrecognizedExtensions,
+
+        /// Optional application specific data.
+        pub extras: Option<crate::Extras>,
+    }
+}
+
 /// Support for the `KHR_texture_transform` extension.
 pub mod khr_texture_transform {
     /// Many techniques can be used to optimize resource usage for a 3d scene.
@@ -179,7 +202,10 @@ pub struct Texture {
     pub sampler: Option<Index<Sampler>>,
 
     /// The index of the image used by this texture.
-    pub source: Index<image::Image>,
+    pub source: Option<Index<image::Image>>,
+
+    /// The KTX v2 image with basis universal compression used by this texture.
+    pub basisu: Option<khr_texture_basisu::Basisu>,
 
     /// Unrecognized extension data.
     pub unrecognized_extensions: UnrecognizedExtensions,
