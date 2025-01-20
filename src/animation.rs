@@ -1,6 +1,29 @@
 use crate::validation::{Error, Validate};
 use crate::{accessor, scene, Extras, Index, Path, Root, Stub, UnrecognizedExtensions};
 
+/// Support for the `KHR_animation_pointer` extension.
+pub mod khr_animation_pointer {
+    /// Provides a JSON pointer to the target property.
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        gltf_derive::Deserialize,
+        gltf_derive::Serialize,
+        gltf_derive::Validate,
+    )]
+    pub struct Pointer {
+        /// JSON pointer to the target property.
+        pub pointer: String,
+
+        /// Unrecognized extension data.
+        pub unrecognized_extensions: crate::UnrecognizedExtensions,
+
+        /// Optional application specific data.
+        pub extras: Option<crate::Extras>,
+    }
+}
+
 /// Specifies an interpolation algorithm.
 #[derive(
     Clone, Copy, Debug, Default, serde_derive::Deserialize, Eq, PartialEq, serde_derive::Serialize,
@@ -45,6 +68,9 @@ pub enum Property {
     /// XYZW rotation quaternion.
     #[serde(rename = "rotation")]
     Rotation,
+    /// Animation pointer as defined by the `KHR_animation_pointer` extension.
+    #[serde(rename = "pointer")]
+    Pointer,
     /// XYZ scale vector.
     #[serde(rename = "scale")]
     Scale,
@@ -64,12 +90,6 @@ impl Stub for Property {
 /// A keyframe animation.
 #[derive(Clone, Debug, gltf_derive::Deserialize, gltf_derive::Serialize, gltf_derive::Stub)]
 pub struct Animation {
-    /// Unrecognized extension data.
-    pub unrecognized_extensions: UnrecognizedExtensions,
-
-    /// Optional application specific data.
-    pub extras: Option<Extras>,
-
     /// An array of channels, each of which targets an animation's sampler at a
     /// node's property.
     ///
@@ -82,6 +102,12 @@ pub struct Animation {
     /// An array of samplers that combine input and output accessors with an
     /// interpolation algorithm to define a keyframe graph (but not its target).
     pub samplers: Vec<Sampler>,
+
+    /// Unrecognized extension data.
+    pub unrecognized_extensions: UnrecognizedExtensions,
+
+    /// Optional application specific data.
+    pub extras: Option<Extras>,
 }
 
 /// Targets an animation's sampler at a node's property.
@@ -111,18 +137,22 @@ pub struct Channel {
     gltf_derive::Stub,
 )]
 pub struct Target {
+    /// The index of the node to target.
+    pub node: Option<Index<scene::Node>>,
+
+    /// The name of the node's property to modify or the 'weights' of the
+    /// morph targets it instantiates.
+    pub path: Property,
+
+    /// Animation pointer.
+    #[gltf(extension = "KHR_animation_pointer")]
+    pub pointer: Option<khr_animation_pointer::Pointer>,
+
     /// Unrecognized extension data.
     pub unrecognized_extensions: UnrecognizedExtensions,
 
     /// Optional application specific data.
     pub extras: Option<Extras>,
-
-    /// The index of the node to target.
-    pub node: Index<scene::Node>,
-
-    /// The name of the node's property to modify or the 'weights' of the
-    /// morph targets it instantiates.
-    pub path: Property,
 }
 
 /// Defines a keyframe graph but not its target.

@@ -396,6 +396,7 @@ impl From<Vec<(Path, validation::Error)>> for Error {
 
 /// Names of glTF 2.0 extensions supported by the library.
 pub const SUPPORTED_EXTENSIONS: &[&str] = &[
+    "KHR_animation_pointer",
     "KHR_lights_punctual",
     "KHR_materials_pbrSpecularGlossiness",
     "KHR_materials_unlit",
