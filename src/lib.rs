@@ -34,6 +34,7 @@ pub mod camera;
 pub mod image;
 
 /// Reference importer implementation.
+#[cfg(feature = "import")]
 pub mod import;
 
 /// Material properties for rendering primitives.
@@ -76,6 +77,7 @@ pub use camera::Camera;
 #[doc(inline)]
 pub use image::Image;
 #[doc(inline)]
+#[cfg(feature = "import")]
 pub use import::{import, import_slice};
 #[doc(inline)]
 pub use material::Material;
