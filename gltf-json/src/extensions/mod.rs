@@ -44,6 +44,8 @@ pub const ENABLED_EXTENSIONS: &[&str] = &[
     "KHR_materials_pbrSpecularGlossiness",
     #[cfg(feature = "KHR_materials_unlit")]
     "KHR_materials_unlit",
+    #[cfg(feature = "KHR_texture_basisu")]
+    "KHR_texture_basisu",
     #[cfg(feature = "KHR_texture_transform")]
     "KHR_texture_transform",
     #[cfg(feature = "KHR_materials_transmission")]
@@ -53,8 +55,6 @@ pub const ENABLED_EXTENSIONS: &[&str] = &[
     #[cfg(feature = "KHR_materials_emissive_strength")]
     "KHR_materials_emissive_strength",
     // Allowlisted texture extensions. Processing is delegated to the user.
-    #[cfg(feature = "allow_empty_texture")]
-    "KHR_texture_basisu",
     #[cfg(feature = "EXT_texture_webp")]
     "EXT_texture_webp",
     #[cfg(feature = "allow_empty_texture")]
@@ -66,6 +66,7 @@ pub const SUPPORTED_EXTENSIONS: &[&str] = &[
     "KHR_lights_punctual",
     "KHR_materials_pbrSpecularGlossiness",
     "KHR_materials_unlit",
+    "KHR_texture_basisu",
     "KHR_texture_transform",
     "KHR_materials_transmission",
     "KHR_materials_ior",
