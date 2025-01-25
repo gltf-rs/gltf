@@ -9,7 +9,7 @@ use serde_derive::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
 /// Texture sampler properties for filtering and wrapping modes.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Sampler {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]
@@ -17,7 +17,7 @@ pub struct Sampler {
 }
 
 /// A texture and its sampler.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Texture {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]
@@ -39,7 +39,7 @@ pub struct TextureWebp {
     pub source: Index<image::Image>,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 /// Reference to a `Texture`.
 pub struct Info {
     #[cfg(feature = "KHR_texture_transform")]

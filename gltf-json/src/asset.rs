@@ -3,7 +3,7 @@ use gltf_derive::Validate;
 use serde_derive::{Deserialize, Serialize};
 
 /// Metadata about the glTF asset.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Asset {
     /// A copyright message suitable for display to credit the content creator.
     #[serde(skip_serializing_if = "Option::is_none")]

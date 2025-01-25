@@ -6,7 +6,7 @@ use serde_derive::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
 /// The material appearance of a primitive.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Material {
     #[cfg(feature = "KHR_materials_pbrSpecularGlossiness")]
     #[serde(
@@ -71,7 +71,7 @@ pub struct Material {
 
 /// A set of parameter values that are used to define the metallic-roughness
 /// material model from Physically-Based Rendering (PBR) methodology.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 pub struct PbrMetallicRoughness {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]
@@ -135,7 +135,7 @@ pub struct PbrSpecularGlossiness {
 }
 
 /// Defines the normal texture of a material.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 pub struct NormalTexture {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]
@@ -143,7 +143,7 @@ pub struct NormalTexture {
 }
 
 /// Defines the occlusion texture of a material.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 pub struct OcclusionTexture {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]

@@ -83,7 +83,7 @@ pub mod sparse {
     use crate::extensions;
 
     /// Indices of those attributes that deviate from their initialization value.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
     pub struct Indices {
         /// The parent buffer view containing the sparse indices.
         ///
@@ -112,7 +112,7 @@ pub mod sparse {
     }
 
     /// Sparse storage of attributes that deviate from their initialization value.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
     pub struct Sparse {
         /// The number of attributes encoded in this sparse accessor.
         pub count: USize64,
@@ -143,7 +143,7 @@ pub mod sparse {
 
     /// Array of size `count * number_of_components` storing the displaced
     /// accessor attributes pointed by `accessor::sparse::Indices`.
-    #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+    #[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
     pub struct Values {
         /// The parent buffer view containing the sparse indices.
         ///
@@ -169,7 +169,7 @@ pub mod sparse {
 }
 
 /// A typed view into a buffer view.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
 #[gltf(validate_hook = "accessor_validate_hook")]
 pub struct Accessor {
     /// The parent buffer view this accessor reads from.
@@ -250,11 +250,11 @@ fn is_normalized_default(b: &bool) -> bool {
 }
 
 /// The data type of an index.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
 pub struct IndexComponentType(pub ComponentType);
 
 /// The data type of a generic vertex attribute.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
 pub struct GenericComponentType(pub ComponentType);
 
 impl<'de> de::Deserialize<'de> for Checked<GenericComponentType> {

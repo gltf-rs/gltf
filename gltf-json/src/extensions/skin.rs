@@ -4,7 +4,7 @@ use serde_derive::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
 /// Joints and matrices defining a skin.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Skin {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]

@@ -13,7 +13,7 @@ use serde_derive::{Deserialize, Serialize};
 /// identity. When a node is targeted for animation (referenced by an
 /// animation.channel.target), only TRS properties may be present; `matrix` will not
 /// be present.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Node {
     /// The index of the camera referenced by this node.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -79,7 +79,7 @@ pub struct Node {
 }
 
 /// The root `Node`s of a scene.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Scene {
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -102,7 +102,7 @@ pub struct Scene {
 }
 
 /// Unit quaternion rotation in the order (x, y, z, w), where w is the scalar.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
 pub struct UnitQuaternion(pub [f32; 4]);
 
 impl Default for UnitQuaternion {

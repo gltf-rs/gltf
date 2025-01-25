@@ -71,7 +71,7 @@ pub enum Mode {
 ///
 /// A node can contain one or more meshes and its transform places the meshes in
 /// the scene.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Mesh {
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -97,7 +97,7 @@ pub struct Mesh {
 }
 
 /// Geometry to be rendered with the given material.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
 #[gltf(validate_hook = "primitive_validate_hook")]
 pub struct Primitive {
     /// Maps attribute semantic names to the `Accessor`s containing the
@@ -173,7 +173,7 @@ where
 }
 
 /// A dictionary mapping attributes to their deviations in the Morph Target.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
 pub struct MorphTarget {
     /// XYZ vertex position displacements of type `[f32; 3]`.
     #[serde(rename = "POSITION")]

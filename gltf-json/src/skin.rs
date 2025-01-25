@@ -3,7 +3,7 @@ use gltf_derive::Validate;
 use serde_derive::{Deserialize, Serialize};
 
 /// Joints and matrices defining a skin.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Skin {
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]

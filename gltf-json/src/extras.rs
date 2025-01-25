@@ -14,7 +14,7 @@ pub type Extras = Option<::std::boxed::Box<RawValue>>;
 pub type Extras = Void;
 
 /// Type representing no user-defined data.
-#[derive(Clone, Default, Serialize, Deserialize, Validate)]
+#[derive(Clone, Default, Serialize, Deserialize, Validate, PartialEq)]
 pub struct Void {
     #[serde(default, skip_serializing)]
     _allow_unknown_fields: (),

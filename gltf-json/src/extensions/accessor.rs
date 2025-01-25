@@ -8,21 +8,21 @@ pub mod sparse {
     use super::*;
 
     /// Indices of those attributes that deviate from their initialization value.
-    #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+    #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
     pub struct Indices {}
 
     /// Sparse storage of attributes that deviate from their initialization value.
-    #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+    #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
     pub struct Sparse {}
 
     /// Array of size `count * number_of_components` storing the displaced
     /// accessor attributes pointed by `accessor::sparse::Indices`.
-    #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+    #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
     pub struct Values {}
 }
 
 /// A typed view into a buffer view.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 pub struct Accessor {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]

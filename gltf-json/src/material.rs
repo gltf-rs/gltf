@@ -37,7 +37,7 @@ impl ser::Serialize for AlphaMode {
 }
 
 /// The material appearance of a primitive.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 #[serde(default)]
 pub struct Material {
     /// The alpha cutoff value of the material.
@@ -130,7 +130,7 @@ pub struct Material {
 
 /// A set of parameter values that are used to define the metallic-roughness
 /// material model from Physically-Based Rendering (PBR) methodology.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate, PartialEq)]
 #[serde(default)]
 pub struct PbrMetallicRoughness {
     /// The material's base color factor.
@@ -176,7 +176,7 @@ pub struct PbrMetallicRoughness {
 }
 
 /// Defines the normal texture of a material.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
 pub struct NormalTexture {
     /// The index of the texture.
     pub index: Index<texture::Texture>,
@@ -207,7 +207,7 @@ fn material_normal_texture_scale_default() -> f32 {
 }
 
 /// Defines the occlusion texture of a material.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate, PartialEq)]
 pub struct OcclusionTexture {
     /// The index of the texture.
     pub index: Index<texture::Texture>,
@@ -232,19 +232,19 @@ pub struct OcclusionTexture {
 }
 
 /// The alpha cutoff value of a material.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
 pub struct AlphaCutoff(pub f32);
 
 /// The emissive color of a material.
-#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq)]
 pub struct EmissiveFactor(pub [f32; 3]);
 
 /// The base color factor of a material.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
 pub struct PbrBaseColorFactor(pub [f32; 4]);
 
 /// A number in the inclusive range [0.0, 1.0] with a default value of 1.0.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
 pub struct StrengthFactor(pub f32);
 
 impl Default for AlphaCutoff {
