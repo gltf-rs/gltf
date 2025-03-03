@@ -64,6 +64,14 @@ pub struct Material {
     )]
     pub emissive_strength: Option<EmissiveStrength>,
 
+    #[cfg(feature = "KHR_materials_clearcoat")]
+    #[serde(
+        default,
+        rename = "KHR_materials_clearcoat",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub clearcoat: Option<Clearcoat>,
+
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]
     pub others: Map<String, Value>,
@@ -409,6 +417,67 @@ pub struct Specular {
     /// will be multiplied by `specular_color_factor`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub specular_color_texture: Option<texture::Info>,
+
+    /// Optional application specific data.
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
+    pub extras: Extras,
+}
+
+#[cfg(feature = "KHR_materials_clearcoat")]
+#[derive(Clone, Debug, Deserialize, Serialize)]
+/// Default is `0.0`
+pub struct ClearcoatFactor(pub f32);
+
+#[cfg(feature = "KHR_materials_clearcoat")]
+impl Default for ClearcoatFactor {
+    fn default() -> Self {
+        Self(0f32)
+    }
+}
+
+#[cfg(feature = "KHR_materials_clearcoat")]
+impl Validate for ClearcoatFactor {}
+
+#[cfg(feature = "KHR_materials_clearcoat")]
+#[derive(Clone, Debug, Deserialize, Serialize)]
+/// Default is `0.0`
+pub struct ClearcoatRoughnessFactor(pub f32);
+
+#[cfg(feature = "KHR_materials_clearcoat")]
+impl Default for ClearcoatRoughnessFactor {
+    fn default() -> Self {
+        Self(0f32)
+    }
+}
+
+#[cfg(feature = "KHR_materials_clearcoat")]
+impl Validate for ClearcoatRoughnessFactor {}
+
+#[cfg(feature = "KHR_materials_clearcoat")]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[serde(default, rename_all = "camelCase")]
+pub struct Clearcoat {
+    /// The clearcoat layer intensity.
+    /// If clearcoat_factor is zero, the whole clearcoat layer is disabled.
+    pub clearcoat_factor: ClearcoatFactor,
+
+    /// The clearcoat layer intensity texture.
+    /// Contains RGB components in linear space.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub clearcoat_texture: Option<crate::texture::Info>,
+
+    /// The clearcoat layer roughness.
+    pub clearcoat_roughness_factor: ClearcoatRoughnessFactor,
+
+    /// The clearcoat layer roughness texture.
+    /// Contains RGB components in linear space.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub clearcoat_roughness_texture: Option<crate::texture::Info>,
+
+    /// The clearcoat normal map texture.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub clearcoat_normal_texture: Option<crate::material::NormalTexture>,
 
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
