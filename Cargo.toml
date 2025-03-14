@@ -56,6 +56,7 @@ KHR_materials_variants = ["gltf-json/KHR_materials_variants"]
 KHR_materials_volume = ["gltf-json/KHR_materials_volume"]
 KHR_materials_specular = ["gltf-json/KHR_materials_specular"]
 KHR_materials_emissive_strength = ["gltf-json/KHR_materials_emissive_strength"]
+KHR_materials_clearcoat = ["gltf-json/KHR_materials_clearcoat"]
 EXT_texture_webp = ["gltf-json/EXT_texture_webp", "image/webp"]
 guess_mime_type = []
 
