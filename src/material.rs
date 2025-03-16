@@ -261,6 +261,17 @@ impl<'a> Material<'a> {
             .map(|x| Clearcoat::new(self.document, x))
     }
 
+    /// Parameter values that define the sheen effect.
+    #[cfg(feature = "KHR_materials_sheen")]
+    pub fn sheen(&self) -> Option<Sheen<'a>> {
+        self.json
+            .extensions
+            .as_ref()?
+            .sheen
+            .as_ref()
+            .map(|x| Sheen::new(self.document, x))
+    }
+
     /// Optional application specific data.
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
@@ -766,6 +777,65 @@ impl<'a> Clearcoat<'a> {
     /// Returns the clearcoat normal texture.
     pub fn clearcoat_normal_texture(&self) -> Option<texture::Info<'a>> {
         self.json.clearcoat_normal_texture.as_ref().map(|json| {
+            let texture = self.document.textures().nth(json.index.value()).unwrap();
+            texture::Info::new(texture, json)
+        })
+    }
+
+    /// Optional application specific data.
+    pub fn extras(&self) -> &'a json::Extras {
+        &self.json.extras
+    }
+}
+
+/// A set of parameter values that are used to define the sheen effect.
+#[cfg(feature = "KHR_materials_sheen")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_sheen")))]
+pub struct Sheen<'a> {
+    /// The parent `Document` struct.
+    document: &'a Document,
+
+    /// The corresponding JSON struct.
+    json: &'a json::extensions::material::Sheen,
+}
+
+/// A set of parameter values that are used to define the sheen effect.
+#[cfg(feature = "KHR_materials_sheen")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_sheen")))]
+impl<'a> Sheen<'a> {
+    /// Constructs `PbrSpecularGlossiness`.
+    pub(crate) fn new(
+        document: &'a Document,
+        json: &'a json::extensions::material::Sheen,
+    ) -> Self {
+        Self { document, json }
+    }
+
+    /// Returns the material's sheen color factor.
+    ///
+    /// The default value is `0.0; 4`.
+    pub fn sheen_color_factor(&self) -> [f32; 4] {
+        self.json.sheen_color_factor.0
+    }
+
+    /// Returns the sheen color texture.
+    pub fn sheen_color_texture(&self) -> Option<texture::Info<'a>> {
+        self.json.sheen_color_texture.as_ref().map(|json| {
+            let texture = self.document.textures().nth(json.index.value()).unwrap();
+            texture::Info::new(texture, json)
+        })
+    }
+
+    /// Returns the material's sheen roughness factor.
+    ///
+    /// The default value is `0.0`.
+    pub fn sheen_roughness_factor(&self) -> f32 {
+        self.json.sheen_roughness_factor.0
+    }
+
+    /// Returns the sheen roughness texture.
+    pub fn sheen_roughness_texture(&self) -> Option<texture::Info<'a>> {
+        self.json.sheen_roughness_texture.as_ref().map(|json| {
             let texture = self.document.textures().nth(json.index.value()).unwrap();
             texture::Info::new(texture, json)
         })

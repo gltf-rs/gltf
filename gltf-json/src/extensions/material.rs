@@ -72,6 +72,14 @@ pub struct Material {
     )]
     pub clearcoat: Option<Clearcoat>,
 
+    #[cfg(feature = "KHR_materials_sheen")]
+    #[serde(
+        default,
+        rename = "KHR_materials_sheen",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub sheen: Option<Sheen>,
+
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]
     pub others: Map<String, Value>,
@@ -482,6 +490,61 @@ pub struct Clearcoat {
     /// If not supplied, no normal mapping is applied to the clear coat layer.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub clearcoat_normal_texture: Option<texture::Info>,
+
+    /// Optional application specific data.
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
+    pub extras: Extras,
+}
+
+#[cfg(feature = "KHR_materials_sheen")]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct SheenColorFactor(pub [f32; 4]);
+
+#[cfg(feature = "KHR_materials_sheen")]
+impl Default for SheenColorFactor {
+    fn default() -> Self {
+        SheenColorFactor([0.0, 0.0, 0.0, 1.0])
+    }
+}
+
+#[cfg(feature = "KHR_materials_sheen")]
+impl Validate for SheenColorFactor {}
+
+#[cfg(feature = "KHR_materials_sheen")]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct SheenRoughnessFactor(pub f32);
+
+#[cfg(feature = "KHR_materials_sheen")]
+impl Default for SheenRoughnessFactor {
+    fn default() -> Self {
+        SheenRoughnessFactor(0.0)
+    }
+}
+
+#[cfg(feature = "KHR_materials_sheen")]
+impl Validate for SheenRoughnessFactor {}
+
+#[cfg(feature = "KHR_materials_sheen")]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[serde(default, rename_all = "camelCase")]
+pub struct Sheen {
+    pub sheen_color_factor: SheenColorFactor,
+
+    /// The sheen layer color texture.
+    /// These values are sampled from the RGB channel.
+    /// The values are linear. Use value 1.0 if no texture is supplied.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sheen_color_texture: Option<texture::Info>,
+
+    /// The sheen layer roughness of the material.
+    pub sheen_roughness_factor: SheenRoughnessFactor,
+
+    /// The sheen layer roughness texture.
+    /// These values are sampled from the Alpha channel.
+    /// The values are linear. Use value 1.0 if no texture is supplied.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sheen_roughness_texture: Option<texture::Info>,
 
     /// Optional application specific data.
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]

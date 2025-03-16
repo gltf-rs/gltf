@@ -39,7 +39,9 @@ version = "0.25"
 
 [features]
 default = ["import", "utils", "names"]
-allow_empty_animation_target_node = ["gltf-json/allow_empty_animation_target_node"]
+allow_empty_animation_target_node = [
+    "gltf-json/allow_empty_animation_target_node",
+]
 allow_empty_texture = ["gltf-json/allow_empty_texture"]
 extensions = ["gltf-json/extensions"]
 extras = ["gltf-json/extras"]
@@ -47,7 +49,9 @@ names = ["gltf-json/names"]
 utils = []
 import = ["base64", "image", "urlencoding"]
 KHR_lights_punctual = ["gltf-json/KHR_lights_punctual"]
-KHR_materials_pbrSpecularGlossiness = ["gltf-json/KHR_materials_pbrSpecularGlossiness"]
+KHR_materials_pbrSpecularGlossiness = [
+    "gltf-json/KHR_materials_pbrSpecularGlossiness",
+]
 KHR_materials_unlit = ["gltf-json/KHR_materials_unlit"]
 KHR_texture_transform = ["gltf-json/KHR_texture_transform"]
 KHR_materials_transmission = ["gltf-json/KHR_materials_transmission"]
@@ -57,6 +61,7 @@ KHR_materials_volume = ["gltf-json/KHR_materials_volume"]
 KHR_materials_specular = ["gltf-json/KHR_materials_specular"]
 KHR_materials_emissive_strength = ["gltf-json/KHR_materials_emissive_strength"]
 KHR_materials_clearcoat = ["gltf-json/KHR_materials_clearcoat"]
+KHR_materials_sheen = ["gltf-json/KHR_materials_sheen"]
 EXT_texture_webp = ["gltf-json/EXT_texture_webp", "image/webp"]
 guess_mime_type = []
 
