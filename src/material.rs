@@ -249,6 +249,18 @@ impl<'a> Material<'a> {
             .map_or(false, |extensions| extensions.unlit.is_some())
     }
 
+    /// Parameter values that define the clearcoat effect.
+    #[cfg(feature = "KHR_materials_clearcoat")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_clearcoat")))]
+    pub fn clearcoat(&self) -> Option<Clearcoat<'a>> {
+        self.json
+            .extensions
+            .as_ref()?
+            .clearcoat
+            .as_ref()
+            .map(|x| Clearcoat::new(self.document, x))
+    }
+
     /// Optional application specific data.
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
@@ -696,5 +708,71 @@ impl<'a> AsRef<texture::Texture<'a>> for NormalTexture<'a> {
 impl<'a> AsRef<texture::Texture<'a>> for OcclusionTexture<'a> {
     fn as_ref(&self) -> &texture::Texture<'a> {
         &self.texture
+    }
+}
+
+/// A set of parameter values that are used to define the clearcoat effect.
+#[cfg(feature = "KHR_materials_clearcoat")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_clearcoat")))]
+pub struct Clearcoat<'a> {
+    /// The parent `Document` struct.
+    document: &'a Document,
+
+    /// The corresponding JSON struct.
+    json: &'a json::extensions::material::Clearcoat,
+}
+
+#[cfg(feature = "KHR_materials_clearcoat")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_clearcoat")))]
+impl<'a> Clearcoat<'a> {
+    /// Constructs `PbrSpecularGlossiness`.
+    pub(crate) fn new(
+        document: &'a Document,
+        json: &'a json::extensions::material::Clearcoat,
+    ) -> Self {
+        Self { document, json }
+    }
+
+    /// Returns the material's clearcoat factor.
+    ///
+    /// The default value is `0.0`.
+    pub fn clearcoat_factor(&self) -> f32 {
+        self.json.clearcoat_factor.0
+    }
+
+    /// Returns the clearcoat texture.
+    pub fn clearcoat_texture(&self) -> Option<texture::Info<'a>> {
+        self.json.clearcoat_texture.as_ref().map(|json| {
+            let texture = self.document.textures().nth(json.index.value()).unwrap();
+            texture::Info::new(texture, json)
+        })
+    }
+
+    /// Returns the material's clearcoat roughness factor.
+    ///
+    /// The default value is `0.0`.
+    pub fn clearcoat_roughness_factor(&self) -> f32 {
+        self.json.clearcoat_roughness_factor.0
+    }
+
+    /// Returns the clearcoat roughness texture.
+    pub fn clearcoat_roughness_texture(&self) -> Option<texture::Info<'a>> {
+        self.json.clearcoat_roughness_texture.as_ref().map(|json| {
+            let texture = self.document.textures().nth(json.index.value()).unwrap();
+            texture::Info::new(texture, json)
+        })
+    }
+
+    /// Returns the clearcoat normal texture.
+    pub fn clearcoat_normal_texture(&self) -> Option<texture::Info<'a>> {
+        self.json.clearcoat_normal_texture.as_ref().map(|json| {
+            let texture = self.document.textures().nth(json.index.value()).unwrap();
+            texture::Info::new(texture, json)
+        })
+    }
+
+    /// Optional application specific data.
+    pub fn extras(&self) -> &'a json::Extras {
+        &self.json.extras
     }
 }
