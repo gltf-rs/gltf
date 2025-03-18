@@ -3,6 +3,12 @@ use serde_derive::{Deserialize, Serialize};
 #[cfg(feature = "extensions")]
 use serde_json::{Map, Value};
 
+#[cfg(feature = "KHR_materials_variants")]
+use alloc::vec::Vec;
+
+#[cfg(feature = "extensions")]
+use alloc::string::String;
+
 /// A set of primitives to be rendered.
 ///
 /// A node can contain one or more meshes and its transform places the meshes in

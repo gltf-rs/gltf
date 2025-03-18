@@ -5,6 +5,9 @@ use serde_derive::{Deserialize, Serialize};
 #[cfg(feature = "extensions")]
 use serde_json::{Map, Value};
 
+#[cfg(feature = "extensions")]
+use alloc::string::String;
+
 /// The material appearance of a primitive.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct Material {

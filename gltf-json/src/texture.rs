@@ -1,9 +1,12 @@
 use crate::validation::{Checked, Validate};
 use crate::{extensions, image, Extras, Index};
+use core::fmt;
 use gltf_derive::Validate;
 use serde::{de, ser};
 use serde_derive::{Deserialize, Serialize};
-use std::fmt;
+
+#[cfg(feature = "names")]
+use alloc::string::String;
 
 /// Corresponds to `GL_NEAREST`.
 pub const NEAREST: u32 = 9728;

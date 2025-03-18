@@ -8,6 +8,9 @@ use serde_derive::{Deserialize, Serialize};
 #[cfg(feature = "extensions")]
 use serde_json::{Map, Value};
 
+#[cfg(feature = "names")]
+use alloc::string::String;
+
 /// Texture sampler properties for filtering and wrapping modes.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct Sampler {
