@@ -1,4 +1,5 @@
-use std::{collections, iter, slice};
+use alloc::collections;
+use core::{iter, slice};
 
 use super::{Attribute, Mesh, MorphTarget, Primitive};
 use crate::Document;

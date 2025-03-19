@@ -1,8 +1,12 @@
 use crate::{image, Document};
 
 pub use json::texture::{MagFilter, MinFilter, WrappingMode};
+
 #[cfg(feature = "extensions")]
-use serde_json::{Map, Value};
+use {
+    alloc::string::String,
+    serde_json::{Map, Value},
+};
 
 lazy_static! {
     static ref DEFAULT_SAMPLER: json::texture::Sampler = Default::default();

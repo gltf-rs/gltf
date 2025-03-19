@@ -1,6 +1,6 @@
 use super::MorphTargetWeights;
 use crate::Normalize;
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 /// Casting iterator for `MorphTargetWeights`.
 #[derive(Clone, Debug)]

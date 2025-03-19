@@ -1,7 +1,7 @@
 use alloc::{
+    collections::BTreeMap,
     string::{String, ToString},
     vec::Vec,
-    collections::BTreeMap,
 };
 use core::hash::Hash;
 use serde::{ser, Serialize, Serializer};

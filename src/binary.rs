@@ -1,11 +1,19 @@
-use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use std::borrow::Cow;
-use std::{fmt, io, mem};
+use alloc::borrow::Cow;
+use core::fmt;
+
+#[cfg(feature = "std")]
+use {
+    alloc::{vec, vec::Vec},
+    byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt},
+    core::mem,
+    std::io,
+};
 
 /// Represents a Glb loader error.
 #[derive(Debug)]
 pub enum Error {
     /// Io error occured.
+    #[cfg(feature = "std")]
     Io(::std::io::Error),
     /// Unsupported version.
     Version(u32),
@@ -66,6 +74,7 @@ pub enum ChunkType {
 }
 
 /// Chunk header with no data read yet.
+#[cfg_attr(not(feature = "std"), allow(dead_code))]
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]
 struct ChunkHeader {
@@ -76,6 +85,7 @@ struct ChunkHeader {
 }
 
 impl Header {
+    #[cfg(feature = "std")]
     fn from_reader<R: io::Read>(mut reader: R) -> Result<Self, Error> {
         use self::Error::Io;
         let mut magic = [0; 4];
@@ -94,11 +104,13 @@ impl Header {
         }
     }
 
+    #[cfg_attr(not(feature = "std"), allow(dead_code))]
     fn size_of() -> usize {
         12
     }
 }
 
+#[cfg(feature = "std")]
 impl ChunkHeader {
     fn from_reader<R: io::Read>(mut reader: R) -> Result<Self, Error> {
         use self::Error::Io;
@@ -114,10 +126,12 @@ impl ChunkHeader {
     }
 }
 
+#[cfg_attr(not(feature = "std"), allow(dead_code))]
 fn align_to_multiple_of_four(n: &mut usize) {
     *n = (*n + 3) & !3;
 }
 
+#[cfg(feature = "std")]
 fn split_binary_gltf(mut data: &[u8]) -> Result<(&[u8], Option<&[u8]>), Error> {
     let (json, mut data) = ChunkHeader::from_reader(&mut data)
         .and_then(|json_h| {
@@ -172,6 +186,7 @@ fn split_binary_gltf(mut data: &[u8]) -> Result<(&[u8], Option<&[u8]>), Error> {
     Ok((json, bin))
 }
 
+#[cfg(feature = "std")]
 impl<'a> Glb<'a> {
     /// Writes binary glTF to a writer.
     pub fn to_writer<W>(&self, mut writer: W) -> Result<(), crate::Error>
@@ -307,6 +322,7 @@ impl fmt::Display for Error {
             f,
             "{}",
             match *self {
+                #[cfg(feature = "std")]
                 Error::Io(ref e) => return e.fmt(f),
                 Error::Version(_) => "unsupported version",
                 Error::Magic(_) => "not glTF magic",
@@ -325,4 +341,8 @@ impl fmt::Display for Error {
     }
 }
 
+#[cfg(feature = "std")]
 impl ::std::error::Error for Error {}
+
+#[cfg(not(feature = "std"))]
+impl ::core::error::Error for Error {}

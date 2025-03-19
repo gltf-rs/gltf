@@ -1,7 +1,10 @@
 use crate::Document;
 
 #[cfg(feature = "extensions")]
-use serde_json::{Map, Value};
+use {
+    alloc::string::String,
+    serde_json::{Map, Value},
+};
 
 /// A camera's projection.
 #[derive(Clone, Debug)]

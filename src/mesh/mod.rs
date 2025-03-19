@@ -63,8 +63,12 @@ use crate::accessor;
 
 pub use json::mesh::{Mode, Semantic};
 use json::validation::Checked;
+
 #[cfg(feature = "extensions")]
-use serde_json::{Map, Value};
+use {
+    alloc::string::String,
+    serde_json::{Map, Value},
+};
 
 /// Vertex attribute data.
 pub type Attribute<'a> = (Semantic, Accessor<'a>);

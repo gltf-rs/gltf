@@ -61,7 +61,10 @@ use crate::{buffer, Document};
 pub use json::accessor::ComponentType as DataType;
 pub use json::accessor::Type as Dimensions;
 #[cfg(feature = "extensions")]
-use serde_json::{Map, Value};
+use {
+    alloc::string::String,
+    serde_json::{Map, Value},
+};
 
 /// Utility functions.
 #[cfg(feature = "utils")]

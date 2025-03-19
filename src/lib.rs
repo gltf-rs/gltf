@@ -79,6 +79,13 @@
 //! [`Node`]: struct.Node.html
 //! [`Scene`]: struct.Scene.html
 
+#![no_std]
+
+#[cfg(any(feature = "std", test))]
+extern crate std;
+
+extern crate alloc;
+
 #[cfg(test)]
 #[macro_use]
 extern crate approx;
@@ -145,9 +152,7 @@ pub mod skin;
 pub mod texture;
 
 #[cfg(feature = "extensions")]
-use json::Value;
-#[cfg(feature = "extensions")]
-use serde_json::Map;
+use {alloc::string::String, json::Value, serde_json::Map};
 
 #[doc(inline)]
 pub use self::accessor::Accessor;
@@ -184,8 +189,11 @@ pub use self::skin::Skin;
 #[doc(inline)]
 pub use self::texture::Texture;
 
-use std::path::Path;
-use std::{fs, io, ops, result};
+use alloc::vec::Vec;
+use core::{ops, result};
+
+#[cfg(feature = "std")]
+use std::{fs, io, path::Path};
 
 pub(crate) trait Normalize<T> {
     fn normalize(self) -> T;
@@ -223,6 +231,7 @@ pub enum Error {
     Deserialize(json::Error),
 
     /// Standard I/O error.
+    #[cfg(feature = "std")]
     Io(std::io::Error),
 
     /// Image decoding error.
@@ -273,6 +282,7 @@ pub struct Gltf {
 #[derive(Clone, Debug)]
 pub struct Document(json::Root);
 
+#[cfg(feature = "std")]
 impl Gltf {
     /// Convenience function that loads glTF from the file system.
     pub fn open<P>(path: P) -> Result<Self>
@@ -575,8 +585,8 @@ impl Document {
     }
 }
 
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for Error {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
             #[cfg(feature = "import")]
             Error::Base64(ref e) => e.fmt(f),
@@ -594,6 +604,7 @@ impl std::fmt::Display for Error {
                 )
             }
             Error::Deserialize(ref e) => e.fmt(f),
+            #[cfg(feature = "std")]
             Error::Io(ref e) => e.fmt(f),
             #[cfg(feature = "import")]
             Error::Image(ref e) => e.fmt(f),
@@ -622,7 +633,11 @@ impl std::fmt::Display for Error {
     }
 }
 
+#[cfg(feature = "std")]
 impl std::error::Error for Error {}
+
+#[cfg(not(feature = "std"))]
+impl core::error::Error for Error {}
 
 impl From<binary::Error> for Error {
     fn from(err: binary::Error) -> Self {
@@ -630,6 +645,7 @@ impl From<binary::Error> for Error {
     }
 }
 
+#[cfg(feature = "std")]
 impl From<std::io::Error> for Error {
     fn from(err: std::io::Error) -> Self {
         Error::Io(err)

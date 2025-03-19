@@ -1,4 +1,4 @@
-use std::{iter, slice};
+use core::{iter, slice};
 
 use crate::animation::{Animation, Channel, Sampler};
 

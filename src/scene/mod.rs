@@ -1,5 +1,8 @@
 #[cfg(feature = "extensions")]
-use serde_json::{Map, Value};
+use {
+    alloc::string::String,
+    serde_json::{Map, Value},
+};
 
 use crate::math::*;
 use crate::{Camera, Document, Mesh, Skin};
@@ -54,6 +57,7 @@ impl Transform {
     ///
     /// If the transform is `Matrix`, then the decomposition is extracted from the
     /// matrix.
+    #[cfg(any(feature = "std", feature = "libm"))]
     pub fn decomposed(self) -> ([f32; 3], [f32; 4], [f32; 3]) {
         match self {
             Transform::Matrix { matrix: m } => {
@@ -285,7 +289,7 @@ impl<'a> Scene<'a> {
 mod tests {
     use crate::math::*;
     use crate::scene::Transform;
-    use std::f32::consts::PI;
+    use core::f32::consts::PI;
 
     fn rotate(x: f32, y: f32, z: f32, r: f32) -> [f32; 4] {
         let r = Quaternion::from_axis_angle(Vector3::new(x, y, z).normalize(), r);

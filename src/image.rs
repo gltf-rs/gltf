@@ -2,10 +2,17 @@
 use crate::{buffer, Document, Error, Result};
 
 #[cfg(feature = "import")]
+use alloc::vec::Vec;
+
+#[cfg(feature = "import")]
 #[cfg_attr(docsrs, doc(cfg(feature = "import")))]
 use image_crate::DynamicImage;
+
 #[cfg(feature = "extensions")]
-use serde_json::{Map, Value};
+use {
+    alloc::string::String,
+    serde_json::{Map, Value},
+};
 
 /// Format of image pixel data.
 #[cfg(feature = "import")]

@@ -1,11 +1,14 @@
 #[cfg(feature = "import")]
-use std::ops;
+use {alloc::vec::Vec, core::ops};
 
 use crate::Document;
 
 pub use json::buffer::Target;
 #[cfg(feature = "extensions")]
-use serde_json::{Map, Value};
+use {
+    alloc::string::String,
+    serde_json::{Map, Value},
+};
 
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Clone, Debug)]

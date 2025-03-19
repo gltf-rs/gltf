@@ -1,6 +1,5 @@
 use byteorder::{ByteOrder, LE};
-use std::marker::PhantomData;
-use std::{iter, mem};
+use core::{iter, marker::PhantomData, mem};
 
 use crate::{accessor, buffer};
 
