@@ -1,9 +1,12 @@
 use crate::validation::{Checked, Validate};
 use crate::{extensions, texture, Extras, Index};
+use core::fmt;
 use gltf_derive::Validate;
 use serde::{de, ser};
 use serde_derive::{Deserialize, Serialize};
-use std::fmt;
+
+#[cfg(feature = "names")]
+use alloc::string::String;
 
 /// All valid alpha modes.
 pub const VALID_ALPHA_MODES: &[&str] = &["OPAQUE", "MASK", "BLEND"];

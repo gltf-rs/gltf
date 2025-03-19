@@ -1,4 +1,5 @@
-use std::{iter, slice};
+use alloc::string::String;
+use core::{iter, slice};
 
 use crate::accessor::Accessor;
 use crate::animation::Animation;

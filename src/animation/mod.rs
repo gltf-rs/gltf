@@ -5,7 +5,10 @@ use crate::Buffer;
 
 pub use json::animation::{Interpolation, Property};
 #[cfg(feature = "extensions")]
-use serde_json::{Map, Value};
+use {
+    alloc::string::String,
+    serde_json::{Map, Value},
+};
 
 /// Iterators.
 pub mod iter;

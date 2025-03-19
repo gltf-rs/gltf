@@ -1,9 +1,13 @@
 use crate::validation::{Checked, Error, Validate};
 use crate::{accessor, extensions, scene, Extras, Index, Path, Root};
+use alloc::vec::Vec;
+use core::fmt;
 use gltf_derive::Validate;
 use serde::{de, ser};
 use serde_derive::{Deserialize, Serialize};
-use std::fmt;
+
+#[cfg(feature = "names")]
+use alloc::string::String;
 
 /// All valid animation interpolation algorithms.
 pub const VALID_INTERPOLATIONS: &[&str] = &["LINEAR", "STEP", "CUBICSPLINE"];

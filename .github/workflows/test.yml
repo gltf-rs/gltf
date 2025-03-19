@@ -34,3 +34,19 @@ jobs:
 
       - name: Semantic versioning checks
         uses: obi1kenobi/cargo-semver-checks-action@v2
+  
+  check-compiles-no-std:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - "x86_64-unknown-none"
+          - "wasm32v1-none"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: Check Compile
+        run: cargo check --no-default-features --features spin,allow_empty_animation_target_node,allow_empty_texture,extensions,extras,names,utils,KHR_lights_punctual,KHR_materials_pbrSpecularGlossiness,KHR_materials_unlit,KHR_texture_transform,KHR_materials_transmission,KHR_materials_ior,KHR_materials_variants,KHR_materials_volume,KHR_materials_specular,KHR_materials_emissive_strength,guess_mime_type,libm --target ${{ matrix.target }}

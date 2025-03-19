@@ -10,12 +10,12 @@ rust-version = "1.61"
 
 [dependencies]
 gltf-derive = { path = "../gltf-derive", version = "=1.4.1" }
-serde = "1.0"
-serde_derive = "1.0"
-serde_json = { features = ["raw_value"], version = "1.0" }
+serde = { version = "1.0", default-features = false }
+serde_derive = { version = "1.0", default-features = false }
+serde_json = { version = "1.0", default-features = false, features = ["alloc", "raw_value"] }
 
 [features]
-default = []
+default = ["std"]
 allow_empty_animation_target_node = []
 allow_empty_texture = []
 names = []
@@ -32,3 +32,4 @@ KHR_materials_volume = []
 KHR_texture_transform = []
 KHR_materials_emissive_strength = []
 EXT_texture_webp = []
+std = ["serde_json/std"]

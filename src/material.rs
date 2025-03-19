@@ -1,8 +1,12 @@
 use crate::{texture, Document};
 
 pub use json::material::AlphaMode;
+
 #[cfg(feature = "extensions")]
-use serde_json::{Map, Value};
+use {
+    alloc::string::String,
+    serde_json::{Map, Value},
+};
 
 lazy_static! {
     static ref DEFAULT_MATERIAL: json::material::Material = Default::default();

@@ -3,6 +3,9 @@ use serde_derive::{Deserialize, Serialize};
 #[cfg(feature = "extensions")]
 use serde_json::{Map, Value};
 
+#[cfg(feature = "extensions")]
+use alloc::string::String;
+
 /// A camera's projection.
 ///
 /// A node can reference a camera to apply a transform to place the camera in the

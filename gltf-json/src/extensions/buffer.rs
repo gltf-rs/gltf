@@ -3,6 +3,9 @@ use serde_derive::{Deserialize, Serialize};
 #[cfg(feature = "extensions")]
 use serde_json::{Map, Value};
 
+#[cfg(feature = "extensions")]
+use alloc::string::String;
+
 /// A buffer points to binary data representing geometry, animations, or skins.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct Buffer {

@@ -1,5 +1,8 @@
 #[cfg(feature = "extensions")]
-use serde_json::{Map, Value};
+use {
+    alloc::string::String,
+    serde_json::{Map, Value},
+};
 
 use crate::{Accessor, Document, Node};
 

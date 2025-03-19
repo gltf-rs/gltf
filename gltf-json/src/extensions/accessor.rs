@@ -3,6 +3,9 @@ use serde_derive::{Deserialize, Serialize};
 #[cfg(feature = "extensions")]
 use serde_json::{Map, Value};
 
+#[cfg(feature = "extensions")]
+use alloc::string::String;
+
 /// Contains data structures for sparse storage.
 pub mod sparse {
     use super::*;

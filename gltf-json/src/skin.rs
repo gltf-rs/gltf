@@ -1,6 +1,10 @@
 use crate::{accessor, extensions, scene, Extras, Index};
+use alloc::vec::Vec;
 use gltf_derive::Validate;
 use serde_derive::{Deserialize, Serialize};
+
+#[cfg(feature = "names")]
+use alloc::string::String;
 
 /// Joints and matrices defining a skin.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]

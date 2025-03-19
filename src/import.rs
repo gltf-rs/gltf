@@ -1,13 +1,12 @@
 use crate::buffer;
 use crate::image;
-use std::borrow::Cow;
-use std::{fs, io};
+use alloc::{borrow::Cow, vec::Vec};
+use std::{fs, io, path::Path};
 
 use crate::{Document, Error, Gltf, Result};
 #[cfg(feature = "EXT_texture_webp")]
 use image_crate::ImageFormat::WebP;
 use image_crate::ImageFormat::{Jpeg, Png};
-use std::path::Path;
 
 /// Return type of `import`.
 type Import = (Document, Vec<buffer::Data>, Vec<image::Data>);

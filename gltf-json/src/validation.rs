@@ -1,6 +1,10 @@
+use alloc::{
+    collections::BTreeMap,
+    string::{String, ToString},
+    vec::Vec,
+};
+use core::hash::Hash;
 use serde::{ser, Serialize, Serializer};
-use std::collections::BTreeMap;
-use std::hash::Hash;
 
 use crate::{Path, Root};
 
@@ -197,7 +201,7 @@ impl<T: Validate> Validate for Vec<T> {
     }
 }
 
-impl Validate for std::boxed::Box<serde_json::value::RawValue> {
+impl Validate for alloc::boxed::Box<serde_json::value::RawValue> {
     fn validate<P, R>(&self, _: &Root, _: P, _: &mut R)
     where
         P: Fn() -> Path,
@@ -207,10 +211,14 @@ impl Validate for std::boxed::Box<serde_json::value::RawValue> {
     }
 }
 
+#[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+#[cfg(not(feature = "std"))]
+impl core::error::Error for Error {}
+
+impl core::fmt::Display for Error {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(
             f,
             "{}",

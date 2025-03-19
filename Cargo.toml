@@ -24,12 +24,13 @@ approx = "0.5"
 bytemuck = { version = "1.21.0", features = ["derive"] }
 
 [dependencies]
+gltf-json = { path = "gltf-json", version = "=1.4.1", default-features = false }
+byteorder = { version = "1.3", default-features = false }
+lazy_static = { version = "1", default-features = false }
+serde_json = { version = "1.0", default-features = false, features = ["raw_value"] }
 base64 = { optional = true, version = "0.13" }
-byteorder = "1.3"
-gltf-json = { path = "gltf-json", version = "=1.4.1" }
-lazy_static = "1"
 urlencoding = { optional = true, version = "2.1" }
-serde_json = { features = ["raw_value"], version = "1.0" }
+libm = { version = "0.2", optional = true }
 
 [dependencies.image]
 default-features = false
@@ -38,14 +39,14 @@ optional = true
 version = "0.25"
 
 [features]
-default = ["import", "utils", "names"]
+default = ["std", "import", "utils", "names"]
 allow_empty_animation_target_node = ["gltf-json/allow_empty_animation_target_node"]
 allow_empty_texture = ["gltf-json/allow_empty_texture"]
 extensions = ["gltf-json/extensions"]
 extras = ["gltf-json/extras"]
 names = ["gltf-json/names"]
 utils = []
-import = ["base64", "image", "urlencoding"]
+import = ["base64", "image", "urlencoding", "std"]
 KHR_lights_punctual = ["gltf-json/KHR_lights_punctual"]
 KHR_materials_pbrSpecularGlossiness = ["gltf-json/KHR_materials_pbrSpecularGlossiness"]
 KHR_materials_unlit = ["gltf-json/KHR_materials_unlit"]
@@ -56,8 +57,11 @@ KHR_materials_variants = ["gltf-json/KHR_materials_variants"]
 KHR_materials_volume = ["gltf-json/KHR_materials_volume"]
 KHR_materials_specular = ["gltf-json/KHR_materials_specular"]
 KHR_materials_emissive_strength = ["gltf-json/KHR_materials_emissive_strength"]
-EXT_texture_webp = ["gltf-json/EXT_texture_webp", "image/webp"]
+EXT_texture_webp = ["gltf-json/EXT_texture_webp", "image/webp", "std"]
 guess_mime_type = []
+std = ["gltf-json/std", "serde_json/std", "byteorder/std"]
+spin = ["lazy_static/spin_no_std"]
+libm = ["dep:libm"]
 
 [[example]]
 name = "gltf-display"

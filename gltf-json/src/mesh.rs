@@ -1,11 +1,16 @@
 use crate::validation::{Checked, Error};
 use crate::{accessor, extensions, material, Extras, Index};
+use alloc::{
+    collections::BTreeMap,
+    format,
+    string::{String, ToString},
+    vec::Vec,
+};
+use core::fmt;
 use gltf_derive::Validate;
 use serde::{de, ser};
 use serde_derive::{Deserialize, Serialize};
 use serde_json::from_value;
-use std::collections::BTreeMap;
-use std::fmt;
 
 /// Corresponds to `GL_POINTS`.
 pub const POINTS: u32 = 0;
