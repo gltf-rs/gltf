@@ -285,7 +285,7 @@ impl<'de> de::Deserialize<'de> for Checked<MagFilter> {
         D: de::Deserializer<'de>,
     {
         struct Visitor;
-        impl<'de> de::Visitor<'de> for Visitor {
+        impl de::Visitor<'_> for Visitor {
             type Value = Checked<MagFilter>;
 
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -315,7 +315,7 @@ impl<'de> de::Deserialize<'de> for Checked<MinFilter> {
         D: de::Deserializer<'de>,
     {
         struct Visitor;
-        impl<'de> de::Visitor<'de> for Visitor {
+        impl de::Visitor<'_> for Visitor {
             type Value = Checked<MinFilter>;
 
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -358,7 +358,7 @@ impl<'de> de::Deserialize<'de> for Checked<WrappingMode> {
         D: de::Deserializer<'de>,
     {
         struct Visitor;
-        impl<'de> de::Visitor<'de> for Visitor {
+        impl de::Visitor<'_> for Visitor {
             type Value = Checked<WrappingMode>;
 
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {

@@ -289,7 +289,7 @@ impl<'de, T> serde::Deserialize<'de> for Index<T> {
         D: serde::Deserializer<'de>,
     {
         struct Visitor<T>(marker::PhantomData<T>);
-        impl<'de, T> serde::de::Visitor<'de> for Visitor<T> {
+        impl<T> serde::de::Visitor<'_> for Visitor<T> {
             type Value = Index<T>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {

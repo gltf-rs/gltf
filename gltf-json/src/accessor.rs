@@ -263,7 +263,7 @@ impl<'de> de::Deserialize<'de> for Checked<GenericComponentType> {
         D: de::Deserializer<'de>,
     {
         struct Visitor;
-        impl<'de> de::Visitor<'de> for Visitor {
+        impl de::Visitor<'_> for Visitor {
             type Value = Checked<GenericComponentType>;
 
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -297,7 +297,7 @@ impl<'de> de::Deserialize<'de> for Checked<IndexComponentType> {
         D: de::Deserializer<'de>,
     {
         struct Visitor;
-        impl<'de> de::Visitor<'de> for Visitor {
+        impl de::Visitor<'_> for Visitor {
             type Value = Checked<IndexComponentType>;
 
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -328,7 +328,7 @@ impl<'de> de::Deserialize<'de> for Checked<Type> {
         D: de::Deserializer<'de>,
     {
         struct Visitor;
-        impl<'de> de::Visitor<'de> for Visitor {
+        impl de::Visitor<'_> for Visitor {
             type Value = Checked<Type>;
 
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
