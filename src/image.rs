@@ -83,7 +83,7 @@ pub struct Image<'a> {
 #[cfg_attr(docsrs, doc(cfg(feature = "import")))]
 #[derive(Clone, Debug)]
 pub struct Data {
-    /// The image pixel data (8 bits per channel).
+    /// The image pixel data bytes.
     pub pixels: Vec<u8>,
 
     /// The image pixel data format.
