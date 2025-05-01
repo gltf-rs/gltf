@@ -140,7 +140,7 @@ impl<'de> de::Deserialize<'de> for Checked<Target> {
         D: de::Deserializer<'de>,
     {
         struct Visitor;
-        impl<'de> de::Visitor<'de> for Visitor {
+        impl de::Visitor<'_> for Visitor {
             type Value = Checked<Target>;
 
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {

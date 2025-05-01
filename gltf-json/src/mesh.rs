@@ -248,7 +248,7 @@ impl<'de> de::Deserialize<'de> for Checked<Mode> {
         D: de::Deserializer<'de>,
     {
         struct Visitor;
-        impl<'de> de::Visitor<'de> for Visitor {
+        impl de::Visitor<'_> for Visitor {
             type Value = Checked<Mode>;
 
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -358,7 +358,7 @@ impl<'de> de::Deserialize<'de> for Checked<Semantic> {
         D: de::Deserializer<'de>,
     {
         struct Visitor;
-        impl<'de> de::Visitor<'de> for Visitor {
+        impl de::Visitor<'_> for Visitor {
             type Value = Checked<Semantic>;
 
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {

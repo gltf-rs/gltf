@@ -216,7 +216,7 @@ impl<'de> de::Deserialize<'de> for Checked<Interpolation> {
         D: de::Deserializer<'de>,
     {
         struct Visitor;
-        impl<'de> de::Visitor<'de> for Visitor {
+        impl de::Visitor<'_> for Visitor {
             type Value = Checked<Interpolation>;
 
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -260,7 +260,7 @@ impl<'de> de::Deserialize<'de> for Checked<Property> {
         D: de::Deserializer<'de>,
     {
         struct Visitor;
-        impl<'de> de::Visitor<'de> for Visitor {
+        impl de::Visitor<'_> for Visitor {
             type Value = Checked<Property>;
 
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
