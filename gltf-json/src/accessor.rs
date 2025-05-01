@@ -1,5 +1,5 @@
-use crate::validation::{Checked, Error, USize64};
-use crate::{buffer, extensions, Extras, Index, Path, Root};
+use crate::validation::{Checked, USize64};
+use crate::{buffer, extensions, Extras, Index};
 use gltf_derive::Validate;
 use serde::{de, ser};
 use serde_derive::{Deserialize, Serialize};
@@ -170,7 +170,6 @@ pub mod sparse {
 
 /// A typed view into a buffer view.
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
-#[gltf(validate_hook = "accessor_validate_hook")]
 pub struct Accessor {
     /// The parent buffer view this accessor reads from.
     ///
@@ -230,18 +229,6 @@ pub struct Accessor {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sparse: Option<sparse::Sparse>,
-}
-
-fn accessor_validate_hook<P, R>(accessor: &Accessor, _root: &Root, path: P, report: &mut R)
-where
-    P: Fn() -> Path,
-    R: FnMut(&dyn Fn() -> Path, Error),
-{
-    if accessor.sparse.is_none() && accessor.buffer_view.is_none() {
-        // If sparse is missing, then bufferView must be present. Report that bufferView is
-        // missing since it is the more common one to require.
-        report(&|| path().field("bufferView"), Error::Missing);
-    }
 }
 
 // Help serde avoid serializing this glTF 2.0 default value.

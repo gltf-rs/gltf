@@ -132,7 +132,27 @@ impl<'a, T: Item> SparseIter<'a, T> {
             base,
             base_count,
             indices: indices.peekable(),
-            values,
+            values: values,
+            counter: 0,
+        }
+    }
+
+    /// Constructor for an empty sparse iterator.
+    pub fn empty(base_count: usize) -> Self {
+        Self {
+            base: None,
+            base_count,
+            indices: SparseIndicesIter::U32(ItemIter {
+                stride: 1,
+                data: &[],
+                _phantom: Default::default(),
+            })
+            .peekable(),
+            values: ItemIter {
+                stride: 1,
+                data: &[],
+                _phantom: Default::default(),
+            },
             counter: 0,
         }
     }
@@ -371,7 +391,7 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                 debug_assert_eq!(mem::size_of::<T>(), accessor.size());
                 debug_assert!(mem::size_of::<T>() > 0);
 
-                accessor.view().and_then(|view| {
+                if let Some(view) = accessor.view() {
                     let stride = view.stride().unwrap_or(mem::size_of::<T>());
                     debug_assert!(
                         stride >= mem::size_of::<T>(),
@@ -390,7 +410,9 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                         data: subslice,
                         _phantom: PhantomData,
                     }))
-                })
+                } else {
+                    Some(Iter::Sparse(SparseIter::empty(accessor.count())))
+                }
             }
         }
     }
