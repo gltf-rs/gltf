@@ -84,8 +84,6 @@
 extern crate approx;
 #[cfg(feature = "import")]
 extern crate image as image_crate;
-#[macro_use]
-extern crate lazy_static;
 
 /// Contains (de)serializable data structures that match the glTF JSON text.
 pub extern crate gltf_json as json;

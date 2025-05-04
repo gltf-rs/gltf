@@ -34,6 +34,12 @@ The top-level `gltf` crate adheres to [Semantic Versioning](http://semver.org/sp
 
 - Feature `image_jpeg_rayon` no longer needed, as `image 0.25.0` now uses `zune-jpeg` for jpeg decoding.
 
+### Changed
+- Update `image` to `0.25.0`. 
+
+### Removed
+- Feature `image_jpeg_rayon` no longer needed, as `image 0.25.0` now uses `zune-jpeg` for jpeg decoding.
+
 ## [1.4.0] - 2023-12-17
 
 ### Added

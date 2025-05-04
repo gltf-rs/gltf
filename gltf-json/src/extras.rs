@@ -17,7 +17,7 @@ pub type Extras = Void;
 #[derive(Clone, Default, Serialize, Deserialize, Validate)]
 pub struct Void {
     #[serde(default, skip_serializing)]
-    _allow_unknown_fields: (),
+    pub(crate) _allow_unknown_fields: (),
 }
 
 impl fmt::Debug for Void {

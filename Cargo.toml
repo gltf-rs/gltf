@@ -27,7 +27,6 @@ bytemuck = { version = "1.21.0", features = ["derive"] }
 base64 = { optional = true, version = "0.13" }
 byteorder = "1.3"
 gltf-json = { path = "gltf-json", version = "=1.4.1" }
-lazy_static = "1"
 urlencoding = { optional = true, version = "2.1" }
 serde_json = { features = ["raw_value"], version = "1.0" }
 

@@ -1,5 +1,5 @@
 use crate::validation::{Checked, Validate};
-use crate::{extensions, texture, Extras, Index};
+use crate::{extensions, extras::Void, texture, Extras, Index};
 use gltf_derive::Validate;
 use serde::{de, ser};
 use serde_derive::{Deserialize, Serialize};
@@ -126,6 +126,41 @@ pub struct Material {
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
+}
+
+impl Material {
+    // A const version of the material returned when calling [`Material::default`]
+    pub const DEFAULT_MATERIAL: Material = Material {
+        alpha_cutoff: None,
+        alpha_mode: Checked::Valid(AlphaMode::Opaque),
+        double_sided: false,
+        name: None,
+        pbr_metallic_roughness: PbrMetallicRoughness {
+            base_color_factor: PbrBaseColorFactor([0.0, 0.0, 0.0, 0.0]),
+            base_color_texture: None,
+            metallic_factor: StrengthFactor(0.0),
+            roughness_factor: StrengthFactor(0.0),
+            metallic_roughness_texture: None,
+            extensions: None,
+            #[cfg(feature = "extras")]
+            extras: None,
+            #[cfg(not(feature = "extras"))]
+            extras: Void {
+                _allow_unknown_fields: (),
+            },
+        },
+        normal_texture: None,
+        occlusion_texture: None,
+        emissive_texture: None,
+        emissive_factor: EmissiveFactor([0.0, 0.0, 0.0]),
+        extensions: None,
+        #[cfg(feature = "extras")]
+        extras: None,
+        #[cfg(not(feature = "extras"))]
+        extras: Void {
+            _allow_unknown_fields: (),
+        },
+    };
 }
 
 /// A set of parameter values that are used to define the metallic-roughness

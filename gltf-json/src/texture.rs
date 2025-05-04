@@ -1,5 +1,5 @@
 use crate::validation::{Checked, Validate};
-use crate::{extensions, image, Extras, Index};
+use crate::{extensions, extras::Void, image, Extras, Index};
 use gltf_derive::Validate;
 use serde::{de, ser};
 use serde_derive::{Deserialize, Serialize};
@@ -164,6 +164,24 @@ pub struct Sampler {
     #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
     #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
+}
+  
+impl Sampler {
+    // A const version of the material returned when calling [`Sampler::default`]
+    pub const DEFAULT_SAMPLER: Sampler = Sampler {
+        mag_filter: None,
+        min_filter: None,
+        name: None,
+        wrap_s: Checked::Valid(WrappingMode::Repeat),
+        wrap_t: Checked::Valid(WrappingMode::Repeat),
+        extensions: None,
+        #[cfg(feature = "extras")]
+        extras: None,
+        #[cfg(not(feature = "extras"))]
+        extras: Void {
+            _allow_unknown_fields: (),
+        },
+    };
 }
 
 fn source_default() -> Index<image::Image> {
