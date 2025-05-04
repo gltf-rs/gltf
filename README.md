@@ -29,14 +29,14 @@ See the [crate documentation](https://docs.rs/gltf) for example usage.
 
 ### Features
 
-#### Extras and names
+#### Extras
 
-By default, `gltf` ignores all `extras` and `names` included with glTF assets. You can negate this by enabling the `extras` and `names` features, respectively.
+By default, `gltf` ignores all `extras` included with glTF assets. To Enable it:
 
 ```toml
 [dependencies.gltf]
 version = "1.4"
-features = ["extras", "names"]
+features = ["extras"]
 ```
 
 #### glTF extensions
