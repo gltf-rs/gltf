@@ -5,6 +5,9 @@ use serde_derive::{Deserialize, Serialize};
 #[cfg(feature = "extensions")]
 use serde_json::{Map, Value};
 
+#[cfg(feature = "KHR_texture_transform")]
+use super::texture::TextureTransform;
+
 /// The material appearance of a primitive.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct Material {
@@ -137,17 +140,43 @@ pub struct PbrSpecularGlossiness {
 /// Defines the normal texture of a material.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct NormalTexture {
+    #[cfg(feature = "KHR_texture_transform")]
+    #[serde(
+        default,
+        rename = "KHR_texture_transform",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub texture_transform: Option<TextureTransform>,
+
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]
     pub others: Map<String, Value>,
+
+    /// Optional application specific data.
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
+    pub extras: Extras,
 }
 
 /// Defines the occlusion texture of a material.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
 pub struct OcclusionTexture {
+    #[cfg(feature = "KHR_texture_transform")]
+    #[serde(
+        default,
+        rename = "KHR_texture_transform",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub texture_transform: Option<TextureTransform>,
+
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]
     pub others: Map<String, Value>,
+
+    /// Optional application specific data.
+    #[cfg_attr(feature = "extras", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
+    pub extras: Extras,
 }
 
 /// The diffuse factor of a material.
