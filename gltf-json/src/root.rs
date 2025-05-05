@@ -39,7 +39,7 @@ impl<T> Index<T> {
     ///
     /// # Panics
     ///
-    /// Panics if the vector has [`u32::MAX`] or more elements, in which case an `Index` cannot be
+    /// Panics if the vec.len > [`u32::MAX`], in which case an `Index` cannot be
     /// created.
     pub fn push(vec: &mut Vec<T>, value: T) -> Index<T> {
         let len = vec.len();
@@ -191,7 +191,7 @@ impl Root {
     ///
     /// # Panics
     ///
-    /// Panics if there are already [`u32::MAX`] or more elements of this type,
+    /// Panics if there are already more than [`u32::MAX`] elements of this type,
     /// in which case an `Index` cannot be created.
     #[track_caller]
     pub fn push<T>(&mut self, value: T) -> Index<T>
@@ -437,6 +437,21 @@ mod tests {
         let mut vec = Vec::new();
         assert_eq!(Index::push(&mut vec, some_object), Index::new(0));
         assert_eq!(Index::push(&mut vec, some_object), Index::new(1));
+    }
+
+    #[test]
+    #[should_panic]
+    fn index_push_exceeds_limit(){
+        let some_object = "hello";
+        let mut vec = vec!["hello";u32::MAX as usize + 1];
+        Index::push(&mut vec, some_object);
+    }
+
+    #[test]
+    fn index_push_reach_limit(){
+        let some_object = "hello";
+        let mut vec = vec!["hello";u32::MAX as usize];
+        assert_eq!(Index::push(&mut vec, some_object), Index::new(u32::MAX));
     }
 
     #[test]
