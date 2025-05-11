@@ -7,6 +7,8 @@ use serde_derive::{Deserialize, Serialize};
 pub const VALID_MIME_TYPES: &[&str] = &[
     "image/jpeg",
     "image/png",
+    #[cfg(feature = "KHR_texture_basisu")]
+    "image/ktx2",
     #[cfg(feature = "EXT_texture_webp")]
     "image/webp",
 ];

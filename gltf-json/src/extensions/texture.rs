@@ -1,6 +1,7 @@
 #[cfg(any(feature = "KHR_texture_transform", feature = "EXT_texture_webp"))]
 use crate::{extras::Extras, validation::Validate};
-#[cfg(feature = "EXT_texture_webp")]
+
+#[cfg(any(feature = "KHR_texture_basisu", feature = "EXT_texture_webp"))]
 use crate::{image, Index};
 
 use gltf_derive::Validate;
@@ -22,6 +23,10 @@ pub struct Texture {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]
     pub others: Map<String, Value>,
+
+    #[cfg(feature = "KHR_texture_basisu")]
+    #[serde(default, rename = "KHR_texture_basisu", skip_serializing_if = "Option::is_none")]
+    pub texture_basisu: Option<TextureBasisu>,
 
     #[cfg(feature = "EXT_texture_webp")]
     #[serde(
@@ -52,6 +57,14 @@ pub struct Info {
     #[cfg(feature = "extensions")]
     #[serde(default, flatten)]
     pub others: Map<String, Value>,
+}
+
+#[cfg(feature = "KHR_texture_basisu")]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Validate)]
+#[serde(default, rename_all = "camelCase")]
+pub struct TextureBasisu {
+    /// The index of the image used by this texture.
+    pub source: Option<Index<image::Image>>,
 }
 
 /// Many techniques can be used to optimize resource usage for a 3d scene.
