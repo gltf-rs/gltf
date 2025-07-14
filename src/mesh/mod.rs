@@ -456,6 +456,23 @@ where
             reader: self.clone(),
         }
     }
+
+    /// Visits the extension attributes of the primitive in given path
+    pub fn read_extension<T:accessor::Item>(&self,path:&[&str])->Option<accessor::Iter<'s,T>>{
+        fn get_by_path<'b>(value: &Value, path: impl Iterator<Item = &'b str>) -> Option<&Value> {
+            let mut current = value;
+            for key in path {
+                current = current.get(key)?;
+            }
+            Some(current)
+        }
+        if let Value::Number(n) = get_by_path(self.primitive.json.extensions.as_ref()?.others.get(path[0])?,path.iter().skip(1).map(|x|*x))?{
+            self.primitive.mesh.document.accessors().nth(n.as_u64()? as usize).and_then(|accessor| accessor::Iter::new(accessor, self.get_buffer_data.clone()))
+        }else{
+            None
+        }
+        
+    }
 }
 
 impl<'a> MorphTarget<'a> {
