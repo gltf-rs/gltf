@@ -457,6 +457,7 @@ where
         }
     }
 
+    #[cfg(feature = "extensions")]
     /// Visits the extension attributes of the primitive in given path
     pub fn read_extension<T:accessor::Item>(&self,path:&[&str])->Option<accessor::Iter<'s,T>>{
         fn get_by_path<'b>(value: &Value, path: impl Iterator<Item = &'b str>) -> Option<&Value> {
