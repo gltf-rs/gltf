@@ -56,6 +56,9 @@ pub mod iter;
 #[cfg_attr(docsrs, doc(cfg(feature = "utils")))]
 pub mod util;
 
+#[cfg(feature = "extensions")]
+use std::array::IntoIter;
+
 use crate::{Accessor, Buffer, Document, Material};
 
 #[cfg(feature = "utils")]
@@ -164,6 +167,15 @@ impl<'a> Mesh<'a> {
         ext.others.get(ext_name)
     }
 
+    /// Queries data in extension unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn value_in_extension<'b>(&self, path: impl IntoIterator<Item = &'b str>) -> Option<&Value> {
+        let mut path = path.into_iter();
+        let extension_key = path.next().unwrap();
+        get_by_path(self.json.extensions.as_ref()?.others.get(extension_key)?,path)
+    }
+
     /// Optional application specific data.
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
@@ -229,6 +241,15 @@ impl<'a> Primitive<'a> {
     pub fn extension_value(&self, ext_name: &str) -> Option<&Value> {
         let ext = self.json.extensions.as_ref()?;
         ext.others.get(ext_name)
+    }
+
+    /// Queries data in extension unknown to this crate version.
+    #[cfg(feature = "extensions")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
+    pub fn value_in_extension<'b>(&self, path: impl IntoIterator<Item = &'b str>) -> Option<&Value> {
+        let mut path = path.into_iter();
+        let extension_key = path.next().unwrap();
+        get_by_path(self.json.extensions.as_ref()?.others.get(extension_key)?,path)
     }
 
     /// Optional application specific data.
@@ -459,15 +480,8 @@ where
 
     #[cfg(feature = "extensions")]
     /// Visits the extension attributes of the primitive in given path
-    pub fn read_extension<T:accessor::Item>(&self,path:&[&str])->Option<accessor::Iter<'s,T>>{
-        fn get_by_path<'b>(value: &Value, path: impl Iterator<Item = &'b str>) -> Option<&Value> {
-            let mut current = value;
-            for key in path {
-                current = current.get(key)?;
-            }
-            Some(current)
-        }
-        if let Value::Number(n) = get_by_path(self.primitive.json.extensions.as_ref()?.others.get(path[0])?,path.iter().skip(1).map(|x|*x))?{
+    pub fn read_extension<'b,T:accessor::Item>(&self,path:impl IntoIterator<Item = &'b str>)->Option<accessor::Iter<'s,T>>{
+        if let Value::Number(n) = self.primitive.value_in_extension(path)?{
             self.primitive.mesh.document.accessors().nth(n.as_u64()? as usize).and_then(|accessor| accessor::Iter::new(accessor, self.get_buffer_data.clone()))
         }else{
             None
@@ -491,4 +505,12 @@ impl<'a> MorphTarget<'a> {
     pub fn tangents(&self) -> Option<Accessor<'a>> {
         self.tangents.clone()
     }
+}
+
+fn get_by_path<'b>(value: &Value, path: impl Iterator<Item = &'b str>) -> Option<&Value> {
+    let mut current = value;
+    for key in path {
+        current = current.get(key)?;
+    }
+    Some(current)
 }
