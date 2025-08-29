@@ -180,6 +180,34 @@ impl<'a> Material<'a> {
             .map(|x| Specular::new(self.document, x))
     }
 
+    /// Parameter values that define the clearcoat material model.
+    ///
+    /// [`KHR_materials_clearcoat`](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_clearcoat/README.md)
+    #[cfg(feature = "KHR_materials_clearcoat")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_clearcoat")))]
+    pub fn clearcoat(&self) -> Option<Clearcoat> {
+        self.json
+            .extensions
+            .as_ref()?
+            .clearcoat
+            .as_ref()
+            .map(|clearcoat| Clearcoat::new(self.document, clearcoat))
+    }
+
+    /// Parameter values that define the sheen material model.
+    ///
+    /// [`KHR_materials_sheen`](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_sheen/README.md)
+    #[cfg(feature = "KHR_materials_sheen")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_sheen")))]
+    pub fn sheen(&self) -> Option<Sheen> {
+        self.json
+            .extensions
+            .as_ref()?
+            .sheen
+            .as_ref()
+            .map(|sheen| Sheen::new(self.document, sheen))
+    }
+
     /// A tangent space normal map.
     ///
     /// The texture contains RGB components in linear space. Each texel represents
@@ -610,6 +638,18 @@ impl<'a> NormalTexture<'a> {
         self.texture.clone()
     }
 
+    /// Returns texture transform information
+    #[cfg(feature = "KHR_texture_transform")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_texture_transform")))]
+    pub fn texture_transform(&self) -> Option<texture::TextureTransform<'a>> {
+        self.json
+            .extensions
+            .as_ref()?
+            .texture_transform
+            .as_ref()
+            .map(texture::TextureTransform::new)
+    }
+
     /// Returns extension data unknown to this crate version.
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
@@ -665,6 +705,18 @@ impl<'a> OcclusionTexture<'a> {
         self.texture.clone()
     }
 
+    /// Returns texture transform information
+    #[cfg(feature = "KHR_texture_transform")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "KHR_texture_transform")))]
+    pub fn texture_transform(&self) -> Option<texture::TextureTransform<'a>> {
+        self.json
+            .extensions
+            .as_ref()?
+            .texture_transform
+            .as_ref()
+            .map(texture::TextureTransform::new)
+    }
+
     /// Returns extension data unknown to this crate version.
     #[cfg(feature = "extensions")]
     #[cfg_attr(docsrs, doc(cfg(feature = "extensions")))]
@@ -696,5 +748,130 @@ impl<'a> AsRef<texture::Texture<'a>> for NormalTexture<'a> {
 impl<'a> AsRef<texture::Texture<'a>> for OcclusionTexture<'a> {
     fn as_ref(&self) -> &texture::Texture<'a> {
         &self.texture
+    }
+}
+
+/// Parameter values that define the clearcoat material model.
+///
+/// [`KHR_materials_clearcoat`](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_clearcoat/README.md)
+#[cfg(feature = "KHR_materials_clearcoat")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_clearcoat")))]
+pub struct Clearcoat<'a> {
+    /// The parent `Document` struct.
+    document: &'a Document,
+
+    /// The corresponding JSON struct.
+    json: &'a json::extensions::material::Clearcoat,
+}
+
+#[cfg(feature = "KHR_materials_clearcoat")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_clearcoat")))]
+impl<'a> Clearcoat<'a> {
+    /// Constructs `Clearcoat`.
+    pub(crate) fn new(
+        document: &'a Document,
+        json: &'a json::extensions::material::Clearcoat,
+    ) -> Self {
+        Self { document, json }
+    }
+
+    /// Returns the clearcoat layer intensity.
+    ///
+    /// The default value is `0.0`.
+    pub fn clearcoat_factor(&self) -> f32 {
+        self.json.clearcoat_factor.0
+    }
+
+    /// Returns the clearcoat layer intensity texture.
+    pub fn clearcoat_texture(&self) -> Option<texture::Info<'a>> {
+        self.json.clearcoat_texture.as_ref().map(|json| {
+            let texture = self.document.textures().nth(json.index.value()).unwrap();
+            texture::Info::new(texture, json)
+        })
+    }
+
+    /// Returns the clearcoat layer roughness.
+    ///
+    /// The default value is `0.0`.
+    pub fn clearcoat_roughness_factor(&self) -> f32 {
+        self.json.clearcoat_roughness_factor.0
+    }
+
+    /// Returns the clearcoat layer roughness texture.
+    pub fn clearcoat_roughness_texture(&self) -> Option<texture::Info<'a>> {
+        self.json.clearcoat_roughness_texture.as_ref().map(|json| {
+            let texture = self.document.textures().nth(json.index.value()).unwrap();
+            texture::Info::new(texture, json)
+        })
+    }
+
+    /// Returns the clearcoat normal map texture.
+    pub fn clearcoat_normal_texture(&self) -> Option<NormalTexture> {
+        self.json.clearcoat_normal_texture.as_ref().map(|json| {
+            let texture = self.document.textures().nth(json.index.value()).unwrap();
+            NormalTexture::new(texture, json)
+        })
+    }
+
+    /// Optional application specific data.
+    pub fn extras(&self) -> &'a json::Extras {
+        &self.json.extras
+    }
+}
+
+/// Parameter values that define the clearcoat material model.
+///
+/// [`KHR_materials_sheen`](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_sheen/README.md)
+#[cfg(feature = "KHR_materials_sheen")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_sheen")))]
+pub struct Sheen<'a> {
+    /// The parent `Document` struct.
+    document: &'a Document,
+
+    /// The corresponding JSON struct.
+    json: &'a json::extensions::material::Sheen,
+}
+
+#[cfg(feature = "KHR_materials_sheen")]
+#[cfg_attr(docsrs, doc(cfg(feature = "KHR_materials_sheen")))]
+impl<'a> Sheen<'a> {
+    /// Constructs `Sheen`.
+    pub(crate) fn new(document: &'a Document, json: &'a json::extensions::material::Sheen) -> Self {
+        Self { document, json }
+    }
+
+    /// Returns the sheen color in linear space.
+    ///
+    /// The default value is `0.0, 0.0, 0.0`.
+    pub fn sheen_color_factor(&self) -> [f32; 3] {
+        self.json.sheen_color_factor.0
+    }
+
+    /// Returns the sheen layer color texture (sRGB).
+    pub fn sheen_color_texture(&self) -> Option<texture::Info<'a>> {
+        self.json.sheen_color_texture.as_ref().map(|json| {
+            let texture = self.document.textures().nth(json.index.value()).unwrap();
+            texture::Info::new(texture, json)
+        })
+    }
+
+    /// Returns the sheen layer roughness.
+    ///
+    /// The default value is `0.0`.
+    pub fn sheen_roughness_factor(&self) -> f32 {
+        self.json.sheen_roughness_factor.0
+    }
+
+    /// Returns the sheen layer roughness texture.
+    pub fn sheen_roughness_texture(&self) -> Option<texture::Info<'a>> {
+        self.json.sheen_roughness_texture.as_ref().map(|json| {
+            let texture = self.document.textures().nth(json.index.value()).unwrap();
+            texture::Info::new(texture, json)
+        })
+    }
+
+    /// Optional application specific data.
+    pub fn extras(&self) -> &'a json::Extras {
+        &self.json.extras
     }
 }
