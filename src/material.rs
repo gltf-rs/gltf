@@ -306,7 +306,7 @@ impl<'a> PbrMetallicRoughness<'a> {
     ///
     /// The default value is `[1.0, 1.0, 1.0, 1.0]`.
     pub fn base_color_factor(&self) -> [f32; 4] {
-        self.json.base_color_factor.0
+        self.json.base_color_factor.unwrap_or(json::material::PbrBaseColorFactor([1.0, 1.0, 1.0, 1.0])).0
     }
 
     /// Returns the base color texture. The texture contains RGB(A) components
