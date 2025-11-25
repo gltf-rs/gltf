@@ -134,6 +134,17 @@ impl<'a> Animation<'a> {
         let ext = self.json.extensions.as_ref()?;
         ext.others.get(ext_name)
     }
+
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    fn nth_sampler(&self, index: usize) -> Result<Sampler<'a>, json::validation::Error> {
+        let json = self
+            .json
+            .samplers
+            .get(index)
+            .ok_or(json::validation::Error::IndexOutOfBounds)?;
+        Ok(Sampler::new(self.clone(), json, index))
+    }
 }
 
 impl<'a> Channel<'a> {
@@ -184,6 +195,14 @@ impl<'a> Channel<'a> {
     pub fn index(&self) -> usize {
         self.index
     }
+
+    /// Identical to `Channel::sampler` other than returning an error in the case of invalid
+    /// data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_sampler(&self) -> Result<Sampler<'a>, json::validation::Error> {
+        self.anim.nth_sampler(self.json.sampler.value())
+    }
 }
 
 impl<'a> Target<'a> {
@@ -215,6 +234,14 @@ impl<'a> Target<'a> {
     /// targets it instantiates.
     pub fn property(&self) -> Property {
         self.json.path.unwrap()
+    }
+
+    /// Identical to `Target::node` other than returning an error in the case of invalid
+    /// data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_node(&self) -> Result<scene::Node<'a>, json::validation::Error> {
+        self.anim.document.nth_node(self.json.node.value())
     }
 }
 
@@ -264,5 +291,21 @@ impl<'a> Sampler<'a> {
             .accessors()
             .nth(self.json.output.value())
             .unwrap()
+    }
+
+    /// Identical to `Sampler::input` other than returning an error in the case of invalid
+    /// data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_input(&self) -> Result<accessor::Accessor<'a>, json::validation::Error> {
+        self.anim.document.nth_accessor(self.json.input.value())
+    }
+
+    /// Identical to `Sampler::output` other than returning an error in the case of invalid
+    /// data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_output(&self) -> Result<accessor::Accessor<'a>, json::validation::Error> {
+        self.anim.document.nth_accessor(self.json.output.value())
     }
 }

@@ -193,6 +193,26 @@ impl<'a> Texture<'a> {
     pub fn extras(&self) -> &json::Extras {
         &self.json.extras
     }
+
+    /// Identical to `Texture::sampler` other than returning an error in the case of invalid
+    /// data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_sampler(&self) -> Result<Sampler<'a>, json::validation::Error> {
+        self.json
+            .sampler
+            .as_ref()
+            .map(|index| self.document.nth_sampler(index.value()))
+            .unwrap_or_else(|| Ok(Sampler::default(self.document)))
+    }
+
+    /// Identical to `Texture::source` other than returning an error in the case of invalid
+    /// data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_source(&self) -> Result<image::Image<'a>, json::validation::Error> {
+        self.document.nth_image(self.json.primary_source().value())
+    }
 }
 
 impl<'a> Info<'a> {

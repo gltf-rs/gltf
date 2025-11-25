@@ -115,4 +115,27 @@ impl<'a> Skin<'a> {
             .as_ref()
             .map(|index| self.document.nodes().nth(index.value()).unwrap())
     }
+
+    /// Identical to `Skin::inverse_bind_matrices` other than returning an error in the case of
+    /// invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_inverse_bind_matrices(
+        &self,
+    ) -> Option<Result<Accessor<'a>, json::validation::Error>> {
+        self.json
+            .inverse_bind_matrices
+            .as_ref()
+            .map(|index| self.document.nth_accessor(index.value()))
+    }
+
+    /// Identical to `Skin::skeleton` other than returning an error in the case of invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_skeleton(&self) -> Option<Result<Node<'a>, json::validation::Error>> {
+        self.json
+            .skeleton
+            .as_ref()
+            .map(|index| self.document.nth_node(index.value()))
+    }
 }

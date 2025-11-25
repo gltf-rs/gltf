@@ -197,4 +197,20 @@ impl<'a> Accessor<'a> {
             .as_ref()
             .map(|json| sparse::Sparse::new(self.document, json))
     }
+
+    /// Identical to `Accessor::view` other than returning an error in the case of
+    /// invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_view(&self) -> Option<Result<buffer::View<'a>, json::validation::Error>> {
+        let view = self.json.buffer_view.as_ref()?;
+        Some(
+            self.document
+                .0
+                .buffer_views
+                .get(view.value())
+                .ok_or(json::validation::Error::IndexOutOfBounds)
+                .map(|json| buffer::View::new(self.document, view.value(), json)),
+        )
+    }
 }

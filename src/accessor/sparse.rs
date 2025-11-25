@@ -55,6 +55,13 @@ impl<'a> Indices<'a> {
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
+
+    /// Identical to `Indices::view` other than returning an error in the case of invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_view(&self) -> Result<buffer::View<'a>, json::validation::Error> {
+        self.document.nth_view(self.json.buffer_view.value())
+    }
 }
 
 /// Sparse storage of attributes that deviate from their initialization value.
@@ -127,6 +134,13 @@ impl<'a> Values<'a> {
     /// Optional application specific data.
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
+    }
+
+    /// Identical to `Values::view` other than returning an error in the case of invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_view(&self) -> Result<buffer::View<'a>, json::validation::Error> {
+        self.document.nth_view(self.json.buffer_view.value())
     }
 }
 

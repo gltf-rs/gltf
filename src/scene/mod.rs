@@ -228,6 +228,56 @@ impl<'a> Node<'a> {
     pub fn weights(&self) -> Option<&'a [f32]> {
         self.json.weights.as_deref()
     }
+
+    /// Identical to `Node::camera` other than returning an error in the case of invalid
+    /// data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_camera(&self) -> Option<Result<Camera<'a>, json::validation::Error>> {
+        self.json
+            .camera
+            .as_ref()
+            .map(|index| self.document.nth_camera(index.value()))
+    }
+
+    #[cfg(all(feature = "KHR_lights_punctual", feature = "unvalidated_data"))]
+    #[cfg_attr(
+        docsrs,
+        doc(cfg(all(feature = "KHR_lights_punctual", feature = "unvalidated_data")))
+    )]
+    pub fn try_light(
+        &self,
+    ) -> Option<Result<crate::khr_lights_punctual::Light<'a>, json::validation::Error>> {
+        if let Some(extensions) = self.json.extensions.as_ref() {
+            if let Some(khr_lights_punctual) = extensions.khr_lights_punctual.as_ref() {
+                self.document.nth_light(khr_lights_punctual.light.value())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    /// Identical to `Node::mesh` other than returning an error in the case of invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_mesh(&self) -> Option<Result<Mesh<'a>, json::validation::Error>> {
+        self.json
+            .mesh
+            .as_ref()
+            .map(|index| self.document.nth_mesh(index.value()))
+    }
+
+    /// Identical to `Node::skin` other than returning an error in the case of invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_skin(&self) -> Option<Result<Skin<'a>, json::validation::Error>> {
+        self.json
+            .skin
+            .as_ref()
+            .map(|index| self.document.nth_skin(index.value()))
+    }
 }
 
 impl<'a> Scene<'a> {

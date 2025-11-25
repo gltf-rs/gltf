@@ -206,4 +206,29 @@ impl<'a> View<'a> {
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
+
+    /// Tries to construct a view with an unvalidated index.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_new(
+        document: &'a Document,
+        index: usize,
+        json: &'a json::buffer::View,
+    ) -> Result<Self, json::validation::Error> {
+        let parent = document.nth_buffer(index)?;
+
+        Ok(Self {
+            document,
+            index,
+            json,
+            parent,
+        })
+    }
+
+    /// Identical to `View::buffer` other than returning an error in the case of invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_buffer(&self) -> Result<Buffer<'a>, json::validation::Error> {
+        self.document.nth_buffer(self.json.buffer.value())
+    }
 }

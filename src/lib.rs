@@ -1,4 +1,3 @@
-#![deny(missing_docs)]
 #![allow(unknown_lints)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
@@ -190,7 +189,7 @@ pub(crate) trait Normalize<T> {
 }
 
 /// Result type for convenience.
-pub type Result<T> = result::Result<T, Error>;
+pub type Result<T, E = Error> = result::Result<T, E>;
 
 /// Represents a runtime error.
 #[derive(Debug)]
@@ -570,6 +569,168 @@ impl Document {
             iter: self.0.buffer_views.iter().enumerate(),
             document: self,
         }
+    }
+
+    #[cfg(feature = "unvalidated_data")]
+    pub(crate) fn nth_accessor(
+        &self,
+        index: usize,
+    ) -> Result<Accessor<'_>, json::validation::Error> {
+        let json = self
+            .0
+            .accessors
+            .get(index)
+            .ok_or(json::validation::Error::IndexOutOfBounds)?;
+        Ok(Accessor::new(self, index, json))
+    }
+
+    #[cfg(feature = "unvalidated_data")]
+    pub(crate) fn nth_buffer(&self, index: usize) -> Result<Buffer<'_>, json::validation::Error> {
+        let json = self
+            .0
+            .buffers
+            .get(index)
+            .ok_or(json::validation::Error::IndexOutOfBounds)?;
+        Ok(Buffer::new(self, index, json))
+    }
+
+    #[cfg(feature = "unvalidated_data")]
+    pub(crate) fn nth_camera(&self, index: usize) -> Result<Camera<'_>, json::validation::Error> {
+        let json = self
+            .0
+            .cameras
+            .get(index)
+            .ok_or(json::validation::Error::IndexOutOfBounds)?;
+        Ok(Camera::new(self, index, json))
+    }
+
+    #[cfg(feature = "unvalidated_data")]
+    pub(crate) fn nth_image(&self, index: usize) -> Result<Image<'_>, json::validation::Error> {
+        let json = self
+            .0
+            .images
+            .get(index)
+            .ok_or(json::validation::Error::IndexOutOfBounds)?;
+        Ok(Image::new(self, index, json))
+    }
+
+    #[cfg(all(feature = "KHR_lights_punctual", feature = "unvalidated_data"))]
+    pub(crate) fn nth_light(
+        &self,
+        index: usize,
+    ) -> Option<Result<khr_lights_punctual::Light<'_>, json::validation::Error>> {
+        use json::extensions;
+
+        self.0
+            .extensions
+            .as_ref()
+            .and_then(|extensions| extensions.khr_lights_punctual.as_ref())
+            .map(|khr_lights_punctual| {
+                let json = khr_lights_punctual
+                    .lights
+                    .get(index)
+                    .ok_or(json::validation::Error::IndexOutOfBounds)?;
+
+                Ok(khr_lights_punctual::Light::new(self, index, json))
+            })
+    }
+
+    #[cfg(feature = "unvalidated_data")]
+    pub(crate) fn nth_material(
+        &self,
+        index: usize,
+    ) -> Result<Material<'_>, json::validation::Error> {
+        let json = self
+            .0
+            .materials
+            .get(index)
+            .ok_or(json::validation::Error::IndexOutOfBounds)?;
+        Ok(Material::new(self, index, json))
+    }
+
+    #[cfg(feature = "unvalidated_data")]
+    pub(crate) fn nth_mesh(&self, index: usize) -> Result<Mesh<'_>, json::validation::Error> {
+        let json = self
+            .0
+            .meshes
+            .get(index)
+            .ok_or(json::validation::Error::IndexOutOfBounds)?;
+        Ok(Mesh::new(self, index, json))
+    }
+
+    #[cfg(feature = "unvalidated_data")]
+    pub(crate) fn nth_node(&self, index: usize) -> Result<Node<'_>, json::validation::Error> {
+        let json = self
+            .0
+            .nodes
+            .get(index)
+            .ok_or(json::validation::Error::IndexOutOfBounds)?;
+        Ok(Node::new(self, index, json))
+    }
+
+    #[cfg(feature = "unvalidated_data")]
+    pub(crate) fn nth_sampler(
+        &self,
+        index: usize,
+    ) -> Result<texture::Sampler<'_>, json::validation::Error> {
+        let json = self
+            .0
+            .samplers
+            .get(index)
+            .ok_or(json::validation::Error::IndexOutOfBounds)?;
+        Ok(texture::Sampler::new(self, index, json))
+    }
+
+    #[cfg(feature = "unvalidated_data")]
+    pub(crate) fn nth_scene(&self, index: usize) -> Result<Scene<'_>, json::validation::Error> {
+        let json = self
+            .0
+            .scenes
+            .get(index)
+            .ok_or(json::validation::Error::IndexOutOfBounds)?;
+        Ok(Scene::new(self, index, json))
+    }
+
+    #[cfg(feature = "unvalidated_data")]
+    pub(crate) fn nth_skin(&self, index: usize) -> Result<Skin<'_>, json::validation::Error> {
+        let json = self
+            .0
+            .skins
+            .get(index)
+            .ok_or(json::validation::Error::IndexOutOfBounds)?;
+        Ok(Skin::new(self, index, json))
+    }
+
+    #[cfg(feature = "unvalidated_data")]
+    pub(crate) fn nth_texture(&self, index: usize) -> Result<Texture<'_>, json::validation::Error> {
+        let json = self
+            .0
+            .textures
+            .get(index)
+            .ok_or(json::validation::Error::IndexOutOfBounds)?;
+        Ok(Texture::new(self, index, json))
+    }
+
+    #[cfg(feature = "unvalidated_data")]
+    pub(crate) fn nth_view(
+        &self,
+        index: usize,
+    ) -> Result<buffer::View<'_>, json::validation::Error> {
+        let json = self
+            .0
+            .buffer_views
+            .get(index)
+            .ok_or(json::validation::Error::IndexOutOfBounds)?;
+        Ok(buffer::View::new(self, index, json))
+    }
+
+    /// Identical to `Document::default_scene` other than returning an error in the case of invalid
+    /// data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_default_scene(&self) -> Option<Result<Scene<'_>, json::validation::Error>> {
+        let index = self.0.scene.as_ref()?;
+        Some(self.nth_scene(index.value()))
     }
 }
 

@@ -277,6 +277,43 @@ impl<'a> Material<'a> {
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
+
+    /// Identical to `Material::normal_texture` other than returning an error in the case of
+    /// invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_normal_texture(&self) -> Option<Result<NormalTexture<'a>, json::validation::Error>> {
+        self.json.normal_texture.as_ref().map(|json| {
+            let texture = self.document.nth_texture(json.index.value())?;
+            Ok(NormalTexture::new(texture, json))
+        })
+    }
+
+    /// Identical to `Material::occlusion_texture` other than returning an error in the case of
+    /// invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_occlusion_texture(
+        &self,
+    ) -> Option<Result<OcclusionTexture<'a>, json::validation::Error>> {
+        self.json.occlusion_texture.as_ref().map(|json| {
+            let texture = self.document.nth_texture(json.index.value())?;
+            Ok(OcclusionTexture::new(texture, json))
+        })
+    }
+
+    /// Identical to `Material::emissive_texture` other than returning an error in the case of
+    /// invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_emissive_texture(
+        &self,
+    ) -> Option<Result<texture::Info<'a>, json::validation::Error>> {
+        self.json.emissive_texture.as_ref().map(|json| {
+            let texture = self.document.nth_texture(json.index.value())?;
+            Ok(texture::Info::new(texture, json))
+        })
+    }
 }
 
 /// A set of parameter values that are used to define the metallic-roughness
@@ -364,6 +401,32 @@ impl<'a> PbrMetallicRoughness<'a> {
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
+
+    /// Identical to `PbrMetallicRoughness::base_color_texture` other than returning an error in
+    /// the case of invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_base_color_texture(
+        &self,
+    ) -> Option<Result<texture::Info<'a>, json::validation::Error>> {
+        self.json.base_color_texture.as_ref().map(|json| {
+            let texture = self.document.nth_texture(json.index.value())?;
+            Ok(texture::Info::new(texture, json))
+        })
+    }
+
+    /// Identical to `PbrMetallicRoughness::metallic_roughness_texture` other than returning an
+    /// error in the case of invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_metallic_roughness_texture(
+        &self,
+    ) -> Option<Result<texture::Info<'a>, json::validation::Error>> {
+        self.json.metallic_roughness_texture.as_ref().map(|json| {
+            let texture = self.document.nth_texture(json.index.value())?;
+            Ok(texture::Info::new(texture, json))
+        })
+    }
 }
 
 /// A set of parameter values that are used to define the transmissions
@@ -407,6 +470,19 @@ impl<'a> Transmission<'a> {
     /// Optional application specific data.
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
+    }
+
+    /// Identical to `Transmission::transmission_texture` other than returning an error in the
+    /// case of invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_transmission_texture(
+        &self,
+    ) -> Option<Result<texture::Info<'a>, json::validation::Error>> {
+        self.json.transmission_texture.as_ref().map(|json| {
+            let texture = self.document.nth_texture(json.index.value())?;
+            Ok(texture::Info::new(texture, json))
+        })
     }
 }
 
@@ -467,6 +543,19 @@ impl<'a> Volume<'a> {
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
+
+    /// Identical to `Volume::thickness_texture` other than returning an error in the case of
+    /// invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_thickness_texture(
+        &self,
+    ) -> Option<Result<texture::Info<'a>, json::validation::Error>> {
+        self.json.thickness_texture.as_ref().map(|json| {
+            let texture = self.document.nth_texture(json.index.value())?;
+            Ok(texture::Info::new(texture, json))
+        })
+    }
 }
 
 /// Parameter values that define the strength and colour of the specular reflection of the material
@@ -524,6 +613,32 @@ impl<'a> Specular<'a> {
     /// Optional application specific data.
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
+    }
+
+    /// Identical to `Specular::specular_texture` other than returning an error in the case of
+    /// invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_specular_texture(
+        &self,
+    ) -> Option<Result<texture::Info<'a>, json::validation::Error>> {
+        self.json.specular_texture.as_ref().map(|json| {
+            let texture = self.document.nth_texture(json.index.value())?;
+            Ok(texture::Info::new(texture, json))
+        })
+    }
+
+    /// Identical to `Specular::specular_color_texture` other than returning an error in the
+    /// case of invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_specular_color_texture(
+        &self,
+    ) -> Option<Result<texture::Info<'a>, json::validation::Error>> {
+        self.json.specular_color_texture.as_ref().map(|json| {
+            let texture = self.document.nth_texture(json.index.value())?;
+            Ok(texture::Info::new(texture, json))
+        })
     }
 }
 
@@ -598,6 +713,32 @@ impl<'a> PbrSpecularGlossiness<'a> {
     /// Optional application specific data.
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
+    }
+
+    /// Identical to `PbrSpecularGlossiness::diffuse_texture` other than returning an error in
+    /// the case of invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_diffuse_texture(
+        &self,
+    ) -> Option<Result<texture::Info<'a>, json::validation::Error>> {
+        self.json.diffuse_texture.as_ref().map(|json| {
+            let texture = self.document.nth_texture(json.index.value())?;
+            Ok(texture::Info::new(texture, json))
+        })
+    }
+
+    /// Identical to `PbrSpecularGlossiness::specular_glossiness_texture` other than returning
+    /// an error in the case of invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_specular_glossiness_texture(
+        &self,
+    ) -> Option<Result<texture::Info<'a>, json::validation::Error>> {
+        self.json.specular_glossiness_texture.as_ref().map(|json| {
+            let texture = self.document.nth_texture(json.index.value())?;
+            Ok(texture::Info::new(texture, json))
+        })
     }
 }
 
@@ -813,6 +954,45 @@ impl<'a> Clearcoat<'a> {
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
+
+    /// Identical to `Clearcoat::clearcoat_texture` other than returning an error in the case of
+    /// invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_clearcoat_texture(
+        &self,
+    ) -> Option<Result<texture::Info<'a>, json::validation::Error>> {
+        self.json.clearcoat_texture.as_ref().map(|json| {
+            let texture = self.document.nth_texture(json.index.value())?;
+            Ok(texture::Info::new(texture, json))
+        })
+    }
+
+    /// Identical to `Clearcoat::clearcoat_roughness_texture` other than returning an error in
+    /// the case of invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_clearcoat_roughness_texture(
+        &self,
+    ) -> Option<Result<texture::Info<'a>, json::validation::Error>> {
+        self.json.clearcoat_roughness_texture.as_ref().map(|json| {
+            let texture = self.document.nth_texture(json.index.value())?;
+            Ok(texture::Info::new(texture, json))
+        })
+    }
+
+    /// Identical to `Clearcoat::clearcoat_normal_texture` other than returning an error in the
+    /// case of invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_clearcoat_normal_texture(
+        &self,
+    ) -> Option<Result<NormalTexture<'_>, json::validation::Error>> {
+        self.json.clearcoat_normal_texture.as_ref().map(|json| {
+            let texture = self.document.nth_texture(json.index.value())?;
+            Ok(NormalTexture::new(texture, json))
+        })
+    }
 }
 
 /// Parameter values that define the clearcoat material model.
@@ -870,4 +1050,33 @@ impl<'a> Sheen<'a> {
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
+
+    /// Identical to `Sheen::sheen_color_texture` other than returning an error in the case of
+    /// invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_sheen_color_texture(
+        &self,
+    ) -> Option<Result<texture::Info<'a>, json::validation::Error>> {
+        self.json.sheen_color_texture.as_ref().map(|json| {
+            let texture = self.document.nth_texture(json.index.value())?;
+            Ok(texture::Info::new(texture, json))
+        })
+    }
+
+    /// Identical to `Sheen::sheen_roughness_texture` other than returning an error in the case
+    /// of invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_sheen_roughness_texture(
+        &self,
+    ) -> Option<Result<texture::Info<'a>, json::validation::Error>> {
+        self.json.sheen_roughness_texture.as_ref().map(|json| {
+            let texture = self.document.nth_texture(json.index.value())?;
+            Ok(texture::Info::new(texture, json))
+        })
+    }
 }
+
+#[cfg(all(test, feature = "unvalidated_data"))]
+mod try_tests;

@@ -325,6 +325,61 @@ impl<'a> Primitive<'a> {
             get_buffer_data,
         }
     }
+
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_bounding_box(&self) -> Result<BoundingBox, json::validation::Error> {
+        let pos_accessor_index = self
+            .json
+            .attributes
+            .get(&Checked::Valid(Semantic::Positions))
+            .ok_or(json::validation::Error::Missing)?;
+        let pos_accessor = self
+            .mesh
+            .document
+            .nth_accessor(pos_accessor_index.value())?;
+
+        let min_value = pos_accessor.min().ok_or(json::validation::Error::Missing)?;
+        let max_value = pos_accessor.max().ok_or(json::validation::Error::Missing)?;
+
+        let min: [f32; 3] = json::deserialize::from_value(min_value)
+            .map_err(|_| json::validation::Error::Invalid)?;
+        let max: [f32; 3] = json::deserialize::from_value(max_value)
+            .map_err(|_| json::validation::Error::Invalid)?;
+        Ok(Bounds { min, max })
+    }
+
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_get(
+        &self,
+        semantic: &Semantic,
+    ) -> Option<Result<Accessor<'a>, json::validation::Error>> {
+        let index = self
+            .json
+            .attributes
+            .get(&json::validation::Checked::Valid(semantic.clone()))?;
+        Some(self.mesh.document.nth_accessor(index.value()))
+    }
+
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_indices(&self) -> Option<Result<Accessor<'a>, json::validation::Error>> {
+        self.json
+            .indices
+            .as_ref()
+            .map(|index| self.mesh.document.nth_accessor(index.value()))
+    }
+
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_material(&self) -> Result<Material<'a>, json::validation::Error> {
+        self.json
+            .material
+            .as_ref()
+            .map(|index| self.mesh.document.nth_material(index.value()))
+            .unwrap_or_else(|| Ok(Material::default(self.mesh.document)))
+    }
 }
 
 #[cfg(feature = "utils")]

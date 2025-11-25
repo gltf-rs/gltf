@@ -151,6 +151,21 @@ impl<'a> Image<'a> {
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
+
+    /// Identical to `Image::source` other than returning an error in the case of invalid data.
+    #[cfg(feature = "unvalidated_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unvalidated_data")))]
+    pub fn try_source(&self) -> Result<Source<'a>, json::validation::Error> {
+        if let Some(index) = self.json.buffer_view.as_ref() {
+            let view = self.document.nth_view(index.value())?;
+            let mime_type = self.json.mime_type.as_ref().map(|x| x.0.as_str()).unwrap();
+            Ok(Source::View { view, mime_type })
+        } else {
+            let uri = self.json.uri.as_ref().unwrap();
+            let mime_type = self.json.mime_type.as_ref().map(|x| x.0.as_str());
+            Ok(Source::Uri { uri, mime_type })
+        }
+    }
 }
 
 #[cfg(feature = "import")]
