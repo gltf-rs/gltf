@@ -206,4 +206,11 @@ impl<'a> View<'a> {
     pub fn extras(&self) -> &'a json::Extras {
         &self.json.extras
     }
+
+    /// Returns the EXT_meshopt_compression extension data if present.
+    #[cfg(feature = "EXT_meshopt_compression")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "EXT_meshopt_compression")))]
+    pub fn meshopt_compression(&self) -> Option<&'a json::extensions::buffer::MeshoptCompression> {
+        self.json.extensions.as_ref()?.meshopt_compression.as_ref()
+    }
 }

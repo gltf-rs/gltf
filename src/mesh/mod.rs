@@ -336,21 +336,113 @@ where
     pub fn read_positions(&self) -> Option<util::ReadPositions<'s>> {
         self.primitive
             .get(&Semantic::Positions)
-            .and_then(|accessor| accessor::Iter::new(accessor, self.get_buffer_data.clone()))
+            .and_then(|accessor| {
+                #[cfg(feature = "KHR_mesh_quantization")]
+                {
+                    let normalized = accessor.normalized();
+                    match accessor.data_type() {
+                        json::accessor::ComponentType::I8 => {
+                            // POSITION supports both normalized and unnormalized BYTE
+                            accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                                .map(|iter| util::ReadPositions::I8(iter, normalized))
+                        }
+                        json::accessor::ComponentType::U8 => {
+                            // POSITION supports both normalized and unnormalized UNSIGNED_BYTE
+                            accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                                .map(|iter| util::ReadPositions::U8(iter, normalized))
+                        }
+                        json::accessor::ComponentType::I16 => {
+                            // POSITION supports both normalized and unnormalized SHORT
+                            accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                                .map(|iter| util::ReadPositions::I16(iter, normalized))
+                        }
+                        json::accessor::ComponentType::U16 => {
+                            // POSITION supports both normalized and unnormalized UNSIGNED_SHORT
+                            accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                                .map(|iter| util::ReadPositions::U16(iter, normalized))
+                        }
+                        json::accessor::ComponentType::F32 => {
+                            accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                                .map(util::ReadPositions::F32)
+                        }
+                        _ => None, // Invalid component types for positions (e.g., U32)
+                    }
+                }
+                #[cfg(not(feature = "KHR_mesh_quantization"))]
+                accessor::Iter::new(accessor, self.get_buffer_data.clone())
+            })
     }
 
     /// Visits the vertex normals of a primitive.
     pub fn read_normals(&self) -> Option<util::ReadNormals<'s>> {
-        self.primitive
-            .get(&Semantic::Normals)
-            .and_then(|accessor| accessor::Iter::new(accessor, self.get_buffer_data.clone()))
+        self.primitive.get(&Semantic::Normals).and_then(|accessor| {
+            #[cfg(feature = "KHR_mesh_quantization")]
+            {
+                let normalized = accessor.normalized();
+                match accessor.data_type() {
+                    json::accessor::ComponentType::I8 => {
+                        // For KHR_mesh_quantization: NORMAL with BYTE must be normalized
+                        if !normalized {
+                            return None; // Invalid: unnormalized byte normals not allowed
+                        }
+                        accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                            .map(|iter| util::ReadNormals::I8(iter, normalized))
+                    }
+                    json::accessor::ComponentType::I16 => {
+                        // For KHR_mesh_quantization: NORMAL with SHORT must be normalized
+                        if !normalized {
+                            return None; // Invalid: unnormalized short normals not allowed
+                        }
+                        accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                            .map(|iter| util::ReadNormals::I16(iter, normalized))
+                    }
+                    json::accessor::ComponentType::F32 => {
+                        accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                            .map(util::ReadNormals::F32)
+                    }
+                    _ => None, // Invalid component types for normals
+                }
+            }
+            #[cfg(not(feature = "KHR_mesh_quantization"))]
+            accessor::Iter::new(accessor, self.get_buffer_data.clone())
+        })
     }
 
     /// Visits the vertex tangents of a primitive.
     pub fn read_tangents(&self) -> Option<util::ReadTangents<'s>> {
         self.primitive
             .get(&Semantic::Tangents)
-            .and_then(|accessor| accessor::Iter::new(accessor, self.get_buffer_data.clone()))
+            .and_then(|accessor| {
+                #[cfg(feature = "KHR_mesh_quantization")]
+                {
+                    let normalized = accessor.normalized();
+                    match accessor.data_type() {
+                        json::accessor::ComponentType::I8 => {
+                            // For KHR_mesh_quantization: TANGENT with BYTE must be normalized
+                            if !normalized {
+                                return None; // Invalid: unnormalized byte tangents not allowed
+                            }
+                            accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                                .map(|iter| util::ReadTangents::I8(iter, normalized))
+                        }
+                        json::accessor::ComponentType::I16 => {
+                            // For KHR_mesh_quantization: TANGENT with SHORT must be normalized
+                            if !normalized {
+                                return None; // Invalid: unnormalized short tangents not allowed
+                            }
+                            accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                                .map(|iter| util::ReadTangents::I16(iter, normalized))
+                        }
+                        json::accessor::ComponentType::F32 => {
+                            accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                                .map(util::ReadTangents::F32)
+                        }
+                        _ => None, // Invalid component types for tangents
+                    }
+                }
+                #[cfg(not(feature = "KHR_mesh_quantization"))]
+                accessor::Iter::new(accessor, self.get_buffer_data.clone())
+            })
     }
 
     /// Visits the vertex colors of a primitive.
@@ -420,14 +512,55 @@ where
         use accessor::DataType;
         self.primitive
             .get(&Semantic::TexCoords(set))
-            .and_then(|accessor| match accessor.data_type() {
-                DataType::U8 => accessor::Iter::new(accessor, self.get_buffer_data.clone())
-                    .map(ReadTexCoords::U8),
-                DataType::U16 => accessor::Iter::new(accessor, self.get_buffer_data.clone())
-                    .map(ReadTexCoords::U16),
-                DataType::F32 => accessor::Iter::new(accessor, self.get_buffer_data.clone())
-                    .map(ReadTexCoords::F32),
-                _ => unreachable!(),
+            .and_then(|accessor| {
+                #[cfg(feature = "KHR_mesh_quantization")]
+                {
+                    let normalized = accessor.normalized();
+                    match accessor.data_type() {
+                        DataType::I8 => {
+                            // TEXCOORD supports both normalized and unnormalized BYTE
+                            accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                                .map(|iter| ReadTexCoords::I8(iter, normalized))
+                        }
+                        DataType::U8 => {
+                            // TEXCOORD supports UNSIGNED_BYTE
+                            accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                                .map(|iter| ReadTexCoords::U8(iter, normalized))
+                        }
+                        DataType::I16 => {
+                            // TEXCOORD supports both normalized and unnormalized SHORT
+                            accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                                .map(|iter| ReadTexCoords::I16(iter, normalized))
+                        }
+                        DataType::U16 => {
+                            // TEXCOORD supports UNSIGNED_SHORT
+                            accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                                .map(|iter| ReadTexCoords::U16(iter, normalized))
+                        }
+                        DataType::F32 => {
+                            accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                                .map(ReadTexCoords::F32)
+                        }
+                        _ => None, // Invalid component types for texture coordinates (e.g., U32)
+                    }
+                }
+                #[cfg(not(feature = "KHR_mesh_quantization"))]
+                {
+                    // Base glTF requires U8/U16 texture coordinates to be normalized
+                    match accessor.data_type() {
+                        DataType::U8 => accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                            .map(|iter| ReadTexCoords::U8(iter, true)),
+                        DataType::U16 => {
+                            accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                                .map(|iter| ReadTexCoords::U16(iter, true))
+                        }
+                        DataType::F32 => {
+                            accessor::Iter::new(accessor, self.get_buffer_data.clone())
+                                .map(ReadTexCoords::F32)
+                        }
+                        _ => unreachable!(),
+                    }
+                }
             })
     }
 

@@ -56,6 +56,8 @@ pub const ENABLED_EXTENSIONS: &[&str] = &[
     "KHR_materials_clearcoat",
     #[cfg(feature = "KHR_materials_sheen")]
     "KHR_materials_sheen",
+    #[cfg(feature = "KHR_mesh_quantization")]
+    "KHR_mesh_quantization",
     // Allowlisted texture extensions. Processing is delegated to the user.
     #[cfg(feature = "allow_empty_texture")]
     "KHR_texture_basisu",
@@ -63,6 +65,8 @@ pub const ENABLED_EXTENSIONS: &[&str] = &[
     "EXT_texture_webp",
     #[cfg(feature = "allow_empty_texture")]
     "MSFT_texture_dds",
+    #[cfg(feature = "EXT_meshopt_compression")]
+    "EXT_meshopt_compression",
 ];
 
 /// Names of glTF 2.0 extensions supported by the library.
@@ -76,5 +80,7 @@ pub const SUPPORTED_EXTENSIONS: &[&str] = &[
     "KHR_materials_emissive_strength",
     "KHR_materials_clearcoat",
     "KHR_materials_sheen",
+    "KHR_mesh_quantization",
     "EXT_texture_webp",
+    "EXT_meshopt_compression",
 ];

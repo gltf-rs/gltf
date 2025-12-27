@@ -165,7 +165,7 @@ pub struct Sampler {
     #[cfg_attr(not(feature = "extras"), serde(skip_serializing))]
     pub extras: Extras,
 }
-  
+
 impl Sampler {
     // A const version of the material returned when calling [`Sampler::default`]
     pub const DEFAULT_SAMPLER: Sampler = Sampler {
