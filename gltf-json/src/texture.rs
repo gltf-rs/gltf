@@ -240,6 +240,16 @@ impl Texture {
     pub fn primary_source(&self) -> Index<image::Image> {
         #[allow(unused_mut)]
         let mut source = self.source;
+        #[cfg(feature = "KHR_texture_basisu")]
+        {
+            if let Some(extensions) = &self.extensions {
+                if let Some(texture_basisu) = &extensions.texture_basisu {
+                    if !source_is_empty(&texture_basisu.source) {
+                        source = texture_basisu.source;
+                    }
+                }
+            }
+        }
         #[cfg(feature = "EXT_texture_webp")]
         {
             if let Some(texture_webp) = &self.extensions {
