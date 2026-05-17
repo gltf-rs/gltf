@@ -6,6 +6,8 @@ use std::{fs, io};
 use crate::{Document, Error, Gltf, Result};
 #[cfg(feature = "EXT_texture_webp")]
 use image_crate::ImageFormat::WebP;
+#[cfg(feature = "EXT_texture_avif")]
+use image_crate::ImageFormat::Avif;
 use image_crate::ImageFormat::{Jpeg, Png};
 use std::path::Path;
 
@@ -155,6 +157,8 @@ impl image::Data {
             Ok(image_crate::ImageFormat::Jpeg) => Some(Jpeg),
             #[cfg(feature = "EXT_texture_webp")]
             Ok(image_crate::ImageFormat::WebP) => Some(WebP),
+            #[cfg(feature = "EXT_texture_avif")]
+            Ok(image_crate::ImageFormat::Avif) => Some(Avif),
             _ => None,
         };
         #[cfg(not(feature = "guess_mime_type"))]
@@ -168,6 +172,8 @@ impl image::Data {
                         "image/jpeg" => Jpeg,
                         #[cfg(feature = "EXT_texture_webp")]
                         "image/webp" => WebP,
+                        #[cfg(feature = "EXT_texture_avif")]
+                        "image/avif" => Avif,
                         _ => match guess_format(&encoded_image) {
                             Some(format) => format,
                             None => return Err(Error::UnsupportedImageEncoding),
@@ -184,6 +190,8 @@ impl image::Data {
                         Some("image/jpeg") => Jpeg,
                         #[cfg(feature = "EXT_texture_webp")]
                         Some("image/webp") => WebP,
+                        #[cfg(feature = "EXT_texture_avif")]
+                        Some("image/avif") => Avif,
                         Some(_) => match guess_format(&encoded_image) {
                             Some(format) => format,
                             None => return Err(Error::UnsupportedImageEncoding),
@@ -193,6 +201,8 @@ impl image::Data {
                             Some("jpg") | Some("jpeg") => Jpeg,
                             #[cfg(feature = "EXT_texture_webp")]
                             Some("webp") => WebP,
+                            #[cfg(feature = "EXT_texture_avif")]
+                            Some("avif") => Avif,
                             _ => match guess_format(&encoded_image) {
                                 Some(format) => format,
                                 None => return Err(Error::UnsupportedImageEncoding),
@@ -212,6 +222,8 @@ impl image::Data {
                     "image/jpeg" => Jpeg,
                     #[cfg(feature = "EXT_texture_webp")]
                     "image/webp" => WebP,
+                    #[cfg(feature = "EXT_texture_avif")]
+                    "image/avif" => Avif,
                     _ => match guess_format(encoded_image) {
                         Some(format) => format,
                         None => return Err(Error::UnsupportedImageEncoding),

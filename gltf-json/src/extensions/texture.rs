@@ -1,6 +1,6 @@
 #[cfg(any(feature = "KHR_texture_transform", feature = "EXT_texture_webp"))]
 use crate::{extras::Extras, validation::Validate};
-#[cfg(feature = "EXT_texture_webp")]
+#[cfg(any(feature = "EXT_texture_webp", feature = "EXT_texture_avif"))]
 use crate::{image, Index};
 
 use gltf_derive::Validate;
@@ -30,12 +30,27 @@ pub struct Texture {
         skip_serializing_if = "Option::is_none"
     )]
     pub texture_webp: Option<TextureWebp>,
+
+    #[cfg(feature = "EXT_texture_avif")]
+    #[serde(
+        default,
+        rename = "EXT_texture_avif",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub texture_avif: Option<TextureAvif>,
 }
 
 #[cfg(feature = "EXT_texture_webp")]
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct TextureWebp {
     /// The index of the webp image used by the texture.
+    pub source: Index<image::Image>,
+}
+
+#[cfg(feature = "EXT_texture_avif")]
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+pub struct TextureAvif {
+    /// The index of the avif image used by the texture.
     pub source: Index<image::Image>,
 }
 

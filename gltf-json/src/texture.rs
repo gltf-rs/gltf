@@ -254,6 +254,18 @@ impl Texture {
                 }
             }
         }
+        #[cfg(feature = "EXT_texture_avif")]
+        {
+            if let Some(texture_avif) = &self.extensions {
+                if let Some(texture_avif) = &texture_avif.texture_avif {
+                    // Only use the avif source if the source is not empty
+                    // Otherwise, fallback to whatever was there originally
+                    if !source_is_empty(&texture_avif.source) {
+                        source = texture_avif.source;
+                    }
+                }
+            }
+        }
         source
     }
 }

@@ -54,6 +54,7 @@ The following glTF extensions are supported by the crate:
 - `KHR_materials_ior`
 - `KHR_materials_emissive_strength `
 - `EXT_texture_webp`
+- `EXT_texture_avif`
 
 To use an extension, list its name in the `features` section.
 

@@ -59,6 +59,7 @@ KHR_materials_clearcoat = ["gltf-json/KHR_materials_clearcoat"]
 KHR_materials_emissive_strength = ["gltf-json/KHR_materials_emissive_strength"]
 KHR_animation_pointer = ["gltf-json/KHR_animation_pointer", "allow_empty_animation_target_node"]
 EXT_texture_webp = ["gltf-json/EXT_texture_webp", "image/webp"]
+EXT_texture_avif = ["gltf-json/EXT_texture_avif", "image/avif"]
 guess_mime_type = []
 
 [[example]]
