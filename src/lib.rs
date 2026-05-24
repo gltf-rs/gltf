@@ -284,6 +284,9 @@ impl Gltf {
     }
 
     /// Loads glTF from a reader without performing validation checks.
+    ///
+    /// Note that this function will trigger monomorphization of many internal functions which
+    /// can slow down compilation. Consider using [`Self::from_slice_without_validation`].
     pub fn from_reader_without_validation<R>(mut reader: R) -> Result<Self>
     where
         R: io::Read + io::Seek,
@@ -306,6 +309,9 @@ impl Gltf {
     }
 
     /// Loads glTF from a reader.
+    ///
+    /// Note that this function will trigger monomorphization of many internal functions which
+    /// can slow down compilation. Consider using [`Self::from_slice`].
     pub fn from_reader<R>(reader: R) -> Result<Self>
     where
         R: io::Read + io::Seek,
