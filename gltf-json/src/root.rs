@@ -491,12 +491,43 @@ mod tests {
         root.validate(&root, Path::new, &mut |path, error| {
             errors.push((path(), error));
         });
-        assert_eq!(1, errors.len());
-        let (path, error) = errors.get(0).unwrap();
-        assert_eq!(
-            path.as_str(),
-            "extensionsRequired[0] = \"KHR_mesh_quantization\""
-        );
-        assert_eq!(*error, Error::Unsupported);
+
+        #[cfg(feature = "KHR_mesh_quantization")]
+        {
+            assert!(errors.is_empty());
+        }
+
+        #[cfg(not(feature = "KHR_mesh_quantization"))]
+        {
+            assert_eq!(1, errors.len());
+            let (path, error) = errors.get(0).unwrap();
+            assert_eq!(
+                path.as_str(),
+                "extensionsRequired[0] = \"KHR_mesh_quantization\""
+            );
+            assert_eq!(*error, Error::Unsupported);
+        }
+
+        root.extensions_required = vec!["EXT_meshopt_compression".to_owned()];
+        errors.clear();
+        root.validate(&root, Path::new, &mut |path, error| {
+            errors.push((path(), error));
+        });
+
+        #[cfg(feature = "EXT_meshopt_compression")]
+        {
+            assert!(errors.is_empty());
+        }
+
+        #[cfg(not(feature = "EXT_meshopt_compression"))]
+        {
+            assert_eq!(1, errors.len());
+            let (path, error) = errors.get(0).unwrap();
+            assert_eq!(
+                path.as_str(),
+                "extensionsRequired[0] = \"EXT_meshopt_compression\""
+            );
+            assert_eq!(*error, Error::Unsupported);
+        }
     }
 }

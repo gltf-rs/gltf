@@ -65,6 +65,11 @@ pub const ENABLED_EXTENSIONS: &[&str] = &[
     "EXT_texture_webp",
     #[cfg(feature = "allow_empty_texture")]
     "MSFT_texture_dds",
+    // Allowlisted compression / quantization extensions. Processing is delegated to the user.
+    #[cfg(feature = "EXT_meshopt_compression")]
+    "EXT_meshopt_compression",
+    #[cfg(feature = "KHR_mesh_quantization")]
+    "KHR_mesh_quantization",
 ];
 
 /// Names of glTF 2.0 extensions supported by the library.
@@ -80,4 +85,8 @@ pub const SUPPORTED_EXTENSIONS: &[&str] = &[
     "KHR_materials_sheen",
     "KHR_animation_pointer",
     "EXT_texture_webp",
+    #[cfg(feature = "EXT_meshopt_compression")]
+    "EXT_meshopt_compression",
+    #[cfg(feature = "KHR_mesh_quantization")]
+    "KHR_mesh_quantization",
 ];
