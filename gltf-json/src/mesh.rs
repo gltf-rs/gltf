@@ -1,7 +1,7 @@
 use crate::validation::{Checked, Error};
 use crate::{accessor, extensions, material, Extras, Index};
 use gltf_derive::Validate;
-use serde::{de, ser};
+use serde::{de, ser, Serialize};
 use serde_derive::{Deserialize, Serialize};
 use serde_json::from_value;
 use std::collections::BTreeMap;
@@ -39,8 +39,12 @@ pub const VALID_MODES: &[u32] = &[
     TRIANGLE_FAN,
 ];
 
-/// All valid semantic names for Morph targets.
-pub const VALID_MORPH_TARGETS: &[&str] = &["POSITION", "NORMAL", "TANGENT"];
+/// All valid base semantic names for Morph targets.
+///
+/// Per the glTF 2.0 specification, a morph target dictionary may contain
+/// `POSITION`, `NORMAL`, `TANGENT`, plus numbered `TEXCOORD_<n>` and
+/// `COLOR_<n>` attribute deviations.
+pub const VALID_MORPH_TARGETS: &[&str] = &["POSITION", "NORMAL", "TANGENT", "TEXCOORD", "COLOR"];
 
 /// The type of primitives to render.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
@@ -126,9 +130,9 @@ pub struct Primitive {
     #[serde(default, skip_serializing_if = "is_primitive_mode_default")]
     pub mode: Checked<Mode>,
 
-    /// An array of Morph Targets, each  Morph Target is a dictionary mapping
-    /// attributes (only `POSITION`, `NORMAL`, and `TANGENT` supported) to their
-    /// deviations in the Morph Target.
+    /// An array of Morph Targets, each Morph Target is a dictionary mapping
+    /// attributes (`POSITION`, `NORMAL`, `TANGENT`, and numbered `TEXCOORD_<n>`
+    /// / `COLOR_<n>` attributes) to their deviations in the Morph Target.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub targets: Option<Vec<MorphTarget>>,
 }
@@ -179,22 +183,153 @@ where
 }
 
 /// A dictionary mapping attributes to their deviations in the Morph Target.
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+///
+/// Per the glTF 2.0 specification, a morph target dictionary may contain the
+/// fixed attributes `POSITION`, `NORMAL` and `TANGENT`, plus numbered
+/// `TEXCOORD_<n>` and `COLOR_<n>` attribute deviations. The numbered
+/// attributes are stored in [`MorphTarget::tex_coords`] and
+/// [`MorphTarget::colors`] as maps keyed by the set index `n`.
+#[derive(Clone, Debug, Validate)]
 pub struct MorphTarget {
     /// XYZ vertex position displacements of type `[f32; 3]`.
-    #[serde(rename = "POSITION")]
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub positions: Option<Index<accessor::Accessor>>,
 
     /// XYZ vertex normal displacements of type `[f32; 3]`.
-    #[serde(rename = "NORMAL")]
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub normals: Option<Index<accessor::Accessor>>,
 
     /// XYZ vertex tangent displacements of type `[f32; 3]`.
-    #[serde(rename = "TANGENT")]
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub tangents: Option<Index<accessor::Accessor>>,
+
+    /// UV texture co-ordinate displacements of type `[f32; 2]`, keyed by
+    /// `TEXCOORD_<n>` set index.
+    pub tex_coords: BTreeMap<u32, Index<accessor::Accessor>>,
+
+    /// Vertex color displacements of type `[f32; 3]` or `[f32; 4]` (RGB or
+    /// RGBA), keyed by `COLOR_<n>` set index.
+    pub colors: BTreeMap<u32, Index<accessor::Accessor>>,
+}
+
+impl Default for MorphTarget {
+    fn default() -> Self {
+        MorphTarget {
+            positions: None,
+            normals: None,
+            tangents: None,
+            tex_coords: BTreeMap::new(),
+            colors: BTreeMap::new(),
+        }
+    }
+}
+
+impl Serialize for MorphTarget {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: ser::Serializer,
+    {
+        use ser::SerializeMap;
+        let mut map = serializer.serialize_map(None)?;
+        if let Some(ref p) = self.positions {
+            map.serialize_entry("POSITION", p)?;
+        }
+        if let Some(ref n) = self.normals {
+            map.serialize_entry("NORMAL", n)?;
+        }
+        if let Some(ref t) = self.tangents {
+            map.serialize_entry("TANGENT", t)?;
+        }
+        for (set, index) in &self.tex_coords {
+            map.serialize_entry(&format!("TEXCOORD_{}", set), index)?;
+        }
+        for (set, index) in &self.colors {
+            map.serialize_entry(&format!("COLOR_{}", set), index)?;
+        }
+        map.end()
+    }
+}
+
+impl<'de> de::Deserialize<'de> for MorphTarget {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: de::Deserializer<'de>,
+    {
+        struct MorphTargetVisitor;
+
+        impl<'de> de::Visitor<'de> for MorphTargetVisitor {
+            type Value = MorphTarget;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "a morph target attribute dictionary")
+            }
+
+            fn visit_map<A>(self, mut access: A) -> Result<Self::Value, A::Error>
+            where
+                A: de::MapAccess<'de>,
+            {
+                let mut positions = None;
+                let mut normals = None;
+                let mut tangents = None;
+                let mut tex_coords: BTreeMap<u32, Index<accessor::Accessor>> = BTreeMap::new();
+                let mut colors: BTreeMap<u32, Index<accessor::Accessor>> = BTreeMap::new();
+                while let Some(key) = access.next_key::<String>()? {
+                    match key.as_str() {
+                        "POSITION" => {
+                            positions = Some(access.next_value()?);
+                        }
+                        "NORMAL" => {
+                            normals = Some(access.next_value()?);
+                        }
+                        "TANGENT" => {
+                            tangents = Some(access.next_value()?);
+                        }
+                        other => {
+                            if let Some(rest) = other.strip_prefix("TEXCOORD_") {
+                                match rest.parse::<u32>() {
+                                    Ok(set) => {
+                                        let index = access.next_value()?;
+                                        tex_coords.insert(set, index);
+                                    }
+                                    Err(_) => {
+                                        return Err(de::Error::custom(format!(
+                                            "invalid TEXCOORD set index: {}",
+                                            other
+                                        )))
+                                    }
+                                }
+                            } else if let Some(rest) = other.strip_prefix("COLOR_") {
+                                match rest.parse::<u32>() {
+                                    Ok(set) => {
+                                        let index = access.next_value()?;
+                                        colors.insert(set, index);
+                                    }
+                                    Err(_) => {
+                                        return Err(de::Error::custom(format!(
+                                            "invalid COLOR set index: {}",
+                                            other
+                                        )))
+                                    }
+                                }
+                            } else {
+                                // Unknown key: skip its value so the
+                                // deserializer stays forward-compatible with
+                                // new fixed attributes added by future spec
+                                // revisions.
+                                let _: de::IgnoredAny = access.next_value()?;
+                            }
+                        }
+                    }
+                }
+                Ok(MorphTarget {
+                    positions,
+                    normals,
+                    tangents,
+                    tex_coords,
+                    colors,
+                })
+            }
+        }
+
+        deserializer.deserialize_map(MorphTargetVisitor)
+    }
 }
 
 /// Vertex attribute semantic name.

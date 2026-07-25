@@ -10,6 +10,12 @@ The top-level `gltf` crate adheres to [Semantic Versioning](http://semver.org/sp
 
 ### Added
 
+- Support morphed `TEXCOORD_<n>` and `COLOR_<n>` attributes in morph target
+  dictionaries, per the glTF 2.0 specification. `gltf::mesh::MorphTarget` now
+  exposes `tex_coords(set)`, `colors(set)`, `tex_coords_sets()` and
+  `colors_sets()`, and `gltf::mesh::Reader` gains `read_morph_target_tex_coords`
+  and `read_morph_target_colors` for reading per-set displacement streams.
+  Closes #432.
 - Support for the `KHR_animation_pointer` extension.
 
 ### Added

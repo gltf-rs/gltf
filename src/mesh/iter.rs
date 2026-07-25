@@ -100,10 +100,22 @@ fn map_morph_target<'a>(
         .tangents
         .as_ref()
         .map(|index| document.accessors().nth(index.value()).unwrap());
+    let tex_coords = json
+        .tex_coords
+        .iter()
+        .map(|(set, index)| (*set, document.accessors().nth(index.value()).unwrap()))
+        .collect();
+    let colors = json
+        .colors
+        .iter()
+        .map(|(set, index)| (*set, document.accessors().nth(index.value()).unwrap()))
+        .collect();
     MorphTarget {
         positions,
         normals,
         tangents,
+        tex_coords,
+        colors,
     }
 }
 

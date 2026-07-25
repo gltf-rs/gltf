@@ -126,3 +126,124 @@ fn test_sparse_accessor_without_base_buffer_view_yield_all_values() {
         assert_eq!(o - EXPECTED_OUTPUTS[i], 0.0);
     }
 }
+
+/// `morphed_texcoord_color.gltf` contains a single primitive with one morph
+/// target that defines `POSITION`, `TEXCOORD_0`/`TEXCOORD_1` and
+/// `COLOR_0`/`COLOR_1` displacements, exercising the numbered morphed attribute
+/// support added for gltf-rs/gltf#432.
+const MORPHED_TEXCOORD_COLOR_GLTF: &str = "tests/morphed_texcoord_color.gltf";
+
+#[test]
+fn test_morph_target_tex_coords_and_colors() {
+    let (document, buffers, _) = gltf::import(MORPHED_TEXCOORD_COLOR_GLTF).unwrap();
+
+    let mesh = document.meshes().next().unwrap();
+    let primitive = mesh.primitives().next().unwrap();
+
+    // The primitive exposes a single morph target.
+    let morph_targets: Vec<_> = primitive.morph_targets().collect();
+    assert_eq!(morph_targets.len(), 1);
+    let morph_target = &morph_targets[0];
+
+    // POSITION displacement is present.
+    assert!(morph_target.positions().is_some());
+    // Both TEXCOORD_0 and TEXCOORD_1 displacements are present and accessible
+    // via the per-set accessor; a set that isn't defined yields None.
+    assert!(morph_target.tex_coords(0).is_some());
+    assert!(morph_target.tex_coords(1).is_some());
+    assert!(morph_target.tex_coords(2).is_none());
+    // Both COLOR_0 and COLOR_1 displacements are present.
+    assert!(morph_target.colors(0).is_some());
+    assert!(morph_target.colors(1).is_some());
+    assert!(morph_target.colors(2).is_none());
+
+    // Set-index iterators report the expected sets, ordered by set index.
+    let tex_coords_sets: Vec<u32> = morph_target.tex_coords_sets().collect();
+    assert_eq!(tex_coords_sets, [0, 1]);
+    let colors_sets: Vec<u32> = morph_target.colors_sets().collect();
+    assert_eq!(colors_sets, [0, 1]);
+
+    let reader = primitive
+        .reader(|buffer: gltf::Buffer| buffers.get(buffer.index()).map(|data| &data.0[..]));
+
+    // The existing read_morph_targets() iterator still yields the P/N/T tuple.
+    {
+        let mut morph_targets = reader.read_morph_targets();
+        let (positions, normals, tangents) = morph_targets.next().unwrap();
+        assert!(positions.is_some());
+        assert!(normals.is_none());
+        assert!(tangents.is_none());
+        assert!(morph_targets.next().is_none());
+    }
+
+    // read_morph_target_tex_coords(0) yields one item (one morph target),
+    // which is Some(ReadTexCoords::F32(..)) for this asset.
+    {
+        let mut mt_tex_coords = reader.read_morph_target_tex_coords(0);
+        let tex_coords_opt = mt_tex_coords.next().unwrap();
+        assert!(tex_coords_opt.is_some(), "TEXCOORD_0 displacement expected");
+        let tex_coords = tex_coords_opt.unwrap();
+        let uv: Vec<[f32; 2]> = tex_coords.into_f32().collect();
+        assert_eq!(
+            uv,
+            [[0.05, 0.05], [0.1, 0.0], [0.0, 0.1]],
+            "morph target TEXCOORD_0 displacements"
+        );
+        assert!(mt_tex_coords.next().is_none());
+    }
+
+    // read_morph_target_tex_coords(1) returns the *distinct* set-1 deltas,
+    // proving the reader dispatches by set index and not just set 0.
+    {
+        let mut mt_tex_coords = reader.read_morph_target_tex_coords(1);
+        let tex_coords_opt = mt_tex_coords.next().unwrap();
+        assert!(tex_coords_opt.is_some(), "TEXCOORD_1 displacement expected");
+        let tex_coords = tex_coords_opt.unwrap();
+        let uv: Vec<[f32; 2]> = tex_coords.into_f32().collect();
+        assert_eq!(
+            uv,
+            [[0.02, 0.02], [0.03, 0.0], [0.0, 0.03]],
+            "morph target TEXCOORD_1 displacements"
+        );
+        assert!(mt_tex_coords.next().is_none());
+    }
+
+    // Requesting a set that doesn't exist on any morph target still iterates
+    // once (one morph target), yielding None for that morph target.
+    {
+        let mut mt_tex_coords_missing = reader.read_morph_target_tex_coords(7);
+        assert!(mt_tex_coords_missing.next().unwrap().is_none());
+        assert!(mt_tex_coords_missing.next().is_none());
+    }
+
+    // read_morph_target_colors(0) yields one item, which is
+    // Some(ReadColors::RgbF32(..)) for this asset.
+    {
+        let mut mt_colors = reader.read_morph_target_colors(0);
+        let colors_opt = mt_colors.next().unwrap();
+        assert!(colors_opt.is_some(), "COLOR_0 displacement expected");
+        let colors = colors_opt.unwrap();
+        let rgb: Vec<[f32; 3]> = colors.into_rgb_f32().collect();
+        assert_eq!(
+            rgb,
+            [[0.1, 0.0, 0.0], [0.0, 0.1, 0.0], [0.0, 0.0, 0.1]],
+            "morph target COLOR_0 displacements"
+        );
+        assert!(mt_colors.next().is_none());
+    }
+
+    // read_morph_target_colors(1) returns the distinct set-1 color deltas.
+    {
+        let mut mt_colors = reader.read_morph_target_colors(1);
+        let colors_opt = mt_colors.next().unwrap();
+        assert!(colors_opt.is_some(), "COLOR_1 displacement expected");
+        let colors = colors_opt.unwrap();
+        let rgb: Vec<[f32; 3]> = colors.into_rgb_f32().collect();
+        assert_eq!(
+            rgb,
+            [[0.02, 0.0, 0.0], [0.0, 0.02, 0.0], [0.0, 0.0, 0.02]],
+            "morph target COLOR_1 displacements"
+        );
+        assert!(mt_colors.next().is_none());
+    }
+}
