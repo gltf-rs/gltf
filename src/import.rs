@@ -4,6 +4,8 @@ use std::borrow::Cow;
 use std::{fs, io};
 
 use crate::{Document, Error, Gltf, Result};
+use base64::engine::general_purpose::STANDARD;
+use base64::Engine;
 #[cfg(feature = "EXT_texture_webp")]
 use image_crate::ImageFormat::WebP;
 use image_crate::ImageFormat::{Jpeg, Png};
@@ -60,7 +62,7 @@ impl<'a> Scheme<'a> {
         match Scheme::parse(uri) {
             // The path may be unused in the Scheme::Data case
             // Example: "uri" : "data:application/octet-stream;base64,wsVHPgA...."
-            Scheme::Data(_, base64) => base64::decode(base64).map_err(Error::Base64),
+            Scheme::Data(_, base64) => STANDARD.decode(base64).map_err(Error::Base64),
             Scheme::File(path) if base.is_some() => read_to_end(path),
             Scheme::Relative(path) if base.is_some() => read_to_end(base.unwrap().join(&*path)),
             Scheme::Unsupported => Err(Error::UnsupportedScheme),
@@ -162,7 +164,7 @@ impl image::Data {
         let decoded_image = match source {
             image::Source::Uri { uri, mime_type } if base.is_some() => match Scheme::parse(uri) {
                 Scheme::Data(Some(annoying_case), base64) => {
-                    let encoded_image = base64::decode(base64).map_err(Error::Base64)?;
+                    let encoded_image = STANDARD.decode(base64).map_err(Error::Base64)?;
                     let encoded_format = match annoying_case {
                         "image/png" => Png,
                         "image/jpeg" => Jpeg,
