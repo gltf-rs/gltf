@@ -265,8 +265,15 @@ impl<'a> Glb<'a> {
                 }
             })
             .map_err(crate::Error::Binary)?;
+        // `header.length` is the authoritative total size of the GLB per the
+        // glTF specification, so any bytes past it (mmap padding, a GLB embedded
+        // in or followed by a larger buffer, ...) must be ignored. This mirrors
+        // `from_reader`, which reads exactly `header.length - 12` bytes. The
+        // `contents_length <= data.len()` check above guarantees the slice below
+        // is in bounds, and the earlier `checked_sub` guarantees no underflow.
+        let contents_length = header.length as usize - Header::size_of();
         match header.version {
-            2 => split_binary_gltf(data)
+            2 => split_binary_gltf(&data[..contents_length])
                 .map(|(json, bin)| Glb {
                     header,
                     json: json.into(),
@@ -361,5 +368,38 @@ mod tests {
     fn from_reader_rejects_length_below_header_size() {
         let buf = make_glb_header(0);
         assert!(Glb::from_reader(io::Cursor::new(buf)).is_err());
+    }
+
+    #[test]
+    fn from_slice_ignores_trailing_bytes_past_header_length() {
+        // A minimal but valid GLB: a 12-byte header plus an empty JSON chunk
+        // (8-byte chunk header, zero-length payload), so `header.length == 20`.
+        let mut glb = Vec::new();
+        glb.extend_from_slice(&make_glb_header(20));
+        glb.extend_from_slice(&0u32.to_le_bytes()); // JSON chunk length = 0
+        glb.extend_from_slice(b"JSON"); // JSON chunk type
+        assert_eq!(glb.len(), 20);
+
+        // Append a byte past `header.length` (e.g. mmap padding, or a GLB
+        // embedded in / followed by a larger buffer). Per the glTF spec
+        // `header.length` is the authoritative total size, so it must be
+        // ignored -- and both public entry points must agree on that.
+        let mut with_trailing = glb.clone();
+        with_trailing.push(0xFF);
+
+        let from_slice =
+            Glb::from_slice(&with_trailing).expect("from_slice should ignore trailing bytes");
+        let from_reader = Glb::from_reader(io::Cursor::new(&with_trailing))
+            .expect("from_reader should ignore trailing bytes");
+
+        // The two APIs must produce the same parsed result on identical bytes.
+        assert_eq!(from_slice.header.length, from_reader.header.length);
+        assert_eq!(from_slice.json.as_ref(), from_reader.json.as_ref());
+        assert!(from_slice.bin.is_none());
+        assert!(from_reader.bin.is_none());
+
+        // The trailing byte must not change what is parsed versus the exact GLB.
+        let exact = Glb::from_slice(&glb).expect("exact GLB parses");
+        assert_eq!(from_slice.json.as_ref(), exact.json.as_ref());
     }
 }

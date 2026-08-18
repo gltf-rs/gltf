@@ -16,6 +16,10 @@ The top-level `gltf` crate adheres to [Semantic Versioning](http://semver.org/sp
 
 - New feature flag `allow_empty_animation_target_node` to be able to parse newer animated assets.
 
+### Fixed
+
+- Fix `binary::Glb::from_slice` erroring on trailing bytes past the header-declared `length`. It now truncates the slice to the spec-authoritative content length, matching `Glb::from_reader` (#475).
+
 ## [1.4.1] - 2024-05-09
 
 ### Added
