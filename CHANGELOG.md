@@ -16,6 +16,12 @@ The top-level `gltf` crate adheres to [Semantic Versioning](http://semver.org/sp
 
 - New feature flag `allow_empty_animation_target_node` to be able to parse newer animated assets.
 
+### Fixed
+
+- Normalized integers are converted with the equations of the glTF 2.0 specification, section 3.11:
+  decoding divides (`c / 255.0`) instead of multiplying by the reciprocal, and encoding rounds
+  (`round(f * 255.0)`) instead of truncating.
+
 ## [1.4.1] - 2024-05-09
 
 ### Added
