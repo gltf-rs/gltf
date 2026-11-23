@@ -185,6 +185,10 @@ pub use self::texture::Texture;
 use std::path::Path;
 use std::{fs, io, ops, result};
 
+/// Converts a normalized integer to another component type.
+///
+/// The conversions to and from `f32` use the equations of the glTF 2.0 specification, section
+/// 3.11: for example `f = c / 255.0` and `c = round(f * 255.0)` for an unsigned byte.
 pub(crate) trait Normalize<T> {
     fn normalize(self) -> T;
 }
@@ -679,7 +683,7 @@ impl Normalize<u16> for i8 {
 
 impl Normalize<f32> for i8 {
     fn normalize(self) -> f32 {
-        (self as f32 * 127.0_f32.recip()).max(-1.0)
+        (self as f32 / 127.0).max(-1.0)
     }
 }
 
@@ -709,7 +713,7 @@ impl Normalize<u16> for u8 {
 
 impl Normalize<f32> for u8 {
     fn normalize(self) -> f32 {
-        self as f32 * 255.0_f32.recip()
+        self as f32 / 255.0
     }
 }
 
@@ -739,7 +743,7 @@ impl Normalize<u16> for i16 {
 
 impl Normalize<f32> for i16 {
     fn normalize(self) -> f32 {
-        (self as f32 * 32767.0_f32.recip()).max(-1.0)
+        (self as f32 / 32767.0).max(-1.0)
     }
 }
 
@@ -769,31 +773,31 @@ impl Normalize<u16> for u16 {
 
 impl Normalize<f32> for u16 {
     fn normalize(self) -> f32 {
-        self as f32 * 65535.0_f32.recip()
+        self as f32 / 65535.0
     }
 }
 
 impl Normalize<i8> for f32 {
     fn normalize(self) -> i8 {
-        (self * 127.0) as i8
+        (self * 127.0).round() as i8
     }
 }
 
 impl Normalize<u8> for f32 {
     fn normalize(self) -> u8 {
-        (self.max(0.0) * 255.0) as u8
+        (self.max(0.0) * 255.0).round() as u8
     }
 }
 
 impl Normalize<i16> for f32 {
     fn normalize(self) -> i16 {
-        (self * 32767.0) as i16
+        (self * 32767.0).round() as i16
     }
 }
 
 impl Normalize<u16> for f32 {
     fn normalize(self) -> u16 {
-        (self.max(0.0) * 65535.0) as u16
+        (self.max(0.0) * 65535.0).round() as u16
     }
 }
 
@@ -836,5 +840,71 @@ where
             self[2].normalize(),
             self[3].normalize(),
         ]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Normalize;
+
+    // The glTF 2.0 specification, section 3.11, decodes a normalized integer `c` with
+    // `f = max(c / 127.0, -1.0)` (signed byte), `f = c / 255.0` (unsigned byte),
+    // `f = max(c / 32767.0, -1.0)` (signed short) and `f = c / 65535.0` (unsigned short).
+    #[test]
+    fn normalized_integers_decode_by_division() {
+        let f: f32 = 51u8.normalize();
+        assert_eq!(f, 0.2);
+        for c in i8::MIN..=i8::MAX {
+            let f: f32 = c.normalize();
+            assert_eq!(f, (c as f32 / 127.0).max(-1.0), "i8 {c}");
+        }
+        for c in u8::MIN..=u8::MAX {
+            let f: f32 = c.normalize();
+            assert_eq!(f, c as f32 / 255.0, "u8 {c}");
+        }
+        for c in i16::MIN..=i16::MAX {
+            let f: f32 = c.normalize();
+            assert_eq!(f, (c as f32 / 32767.0).max(-1.0), "i16 {c}");
+        }
+        for c in u16::MIN..=u16::MAX {
+            let f: f32 = c.normalize();
+            assert_eq!(f, c as f32 / 65535.0, "u16 {c}");
+        }
+    }
+
+    // Section 3.11 encodes a float `f` with `c = round(f * 127.0)`, `c = round(f * 255.0)`,
+    // `c = round(f * 32767.0)` and `c = round(f * 65535.0)`.
+    #[test]
+    fn floats_encode_by_rounding() {
+        let c: i8 = 0.5.normalize();
+        assert_eq!(c, 64);
+        let c: u8 = 0.5.normalize();
+        assert_eq!(c, 128);
+        let c: i16 = 0.5.normalize();
+        assert_eq!(c, 16384);
+        let c: u16 = 0.5.normalize();
+        assert_eq!(c, 32768);
+    }
+
+    // With both equations of section 3.11, every normalized integer decodes and encodes back
+    // to itself, except the minimum of a signed type, which decodes to -1.0 like its successor.
+    #[test]
+    fn normalized_integers_survive_a_round_trip() {
+        for c in i8::MIN + 1..=i8::MAX {
+            let f: f32 = c.normalize();
+            assert_eq!(Normalize::<i8>::normalize(f), c);
+        }
+        for c in u8::MIN..=u8::MAX {
+            let f: f32 = c.normalize();
+            assert_eq!(Normalize::<u8>::normalize(f), c);
+        }
+        for c in i16::MIN + 1..=i16::MAX {
+            let f: f32 = c.normalize();
+            assert_eq!(Normalize::<i16>::normalize(f), c);
+        }
+        for c in u16::MIN..=u16::MAX {
+            let f: f32 = c.normalize();
+            assert_eq!(Normalize::<u16>::normalize(f), c);
+        }
     }
 }
